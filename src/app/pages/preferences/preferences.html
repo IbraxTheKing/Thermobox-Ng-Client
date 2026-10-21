@@ -1,0 +1,117 @@
+<div class="tb-narrow">
+  <header class="tb-page-head">
+    <div class="tb-page-title">
+      <span class="tb-eyebrow">Mon expérience</span>
+      <h1>Préférences</h1>
+    </div>
+  </header>
+
+  <!-- Kept on this device, applied at once -->
+  <section class="tb-panel">
+    <div class="tb-prefs">
+      <div class="tb-pref">
+        <span class="tb-section-icon"><i class="pi pi-play"></i></span>
+        <div class="tb-pref-text">
+          <strong>Animations</strong>
+          <span class="tb-muted">
+            Transitions entre les pages, apparition des cartes, tracé des courbes, effets au toucher. Désactivées, tout s'affiche
+            directement.
+          </span>
+          @if (prefs.mouvementReduit) {
+            <span class="tb-pref-note">Votre appareil demande déjà de réduire les animations : elles restent réduites.</span>
+          }
+        </div>
+        <tb-switch [checked]="prefs.animations()" (checkedChange)="prefs.animations.set($event)" label="Animations" />
+      </div>
+      <div class="tb-pref">
+        <span class="tb-section-icon"><i class="pi pi-palette"></i></span>
+        <div class="tb-pref-text">
+          <strong>Couleurs selon l'état</strong>
+          <span class="tb-muted">
+            La page prend la teinte de ce qui est affiché : verte pour une salle stable, orange en chauffe, rouge trop chaude.
+            Désactivées, les couleurs restent les mêmes partout.
+          </span>
+        </div>
+        <tb-switch [checked]="prefs.teinte()" (checkedChange)="prefs.teinte.set($event)" label="Couleurs selon l'état" />
+      </div>
+      <div class="tb-pref">
+        <span class="tb-section-icon"><i class="pi pi-sun"></i></span>
+        <div class="tb-pref-text">
+          <strong>Unité des températures</strong>
+          <span class="tb-muted">
+            Affichage et saisie des températures et des consignes. Elles restent enregistrées en Celsius : les autres utilisateurs gardent
+            leur unité.
+          </span>
+        </div>
+        <div class="tb-segmented tb-unite" role="radiogroup" aria-label="Unité des températures">
+          <button type="button" role="radio" [attr.aria-checked]="!prefs.fahrenheit()" [class.tb-seg-on]="!prefs.fahrenheit()" (click)="prefs.unite.set('C')">°C</button>
+          <button type="button" role="radio" [attr.aria-checked]="prefs.fahrenheit()" [class.tb-seg-on]="prefs.fahrenheit()" (click)="prefs.unite.set('F')">°F</button>
+        </div>
+      </div>
+      <div class="tb-pref">
+        <span class="tb-section-icon"><i class="pi pi-moon"></i></span>
+        <div class="tb-pref-text">
+          <strong>Thème sombre</strong>
+          <span class="tb-muted">Aussi avec le bouton <i class="pi pi-moon"></i> en haut de l'écran.</span>
+        </div>
+        <tb-switch [checked]="prefs.theme() === 'dark'" (checkedChange)="prefs.theme.set($event ? 'dark' : 'light')" label="Thème sombre" />
+      </div>
+    </div>
+    <p class="tb-muted tb-pref-portee">Enregistré sur cet appareil uniquement. Interface : {{ nomPlateforme }}.</p>
+  </section>
+
+  <!-- Keyboard shortcuts: the list comes from ClavierService, the only place they are defined -->
+  @if (avecClavier) {
+    <section class="tb-panel tb-pref-admin tb-pref-clavier">
+      <div class="tb-prefs">
+        <div class="tb-pref">
+          <span class="tb-section-icon"><i class="pi pi-desktop"></i></span>
+          <div class="tb-pref-text">
+            <strong>Raccourcis clavier</strong>
+            <span class="tb-muted">Sur ordinateur : naviguer, chercher, revenir à l'aperçu… sans la souris. <kbd>?</kbd> affiche cette liste depuis n'importe quelle page.</span>
+          </div>
+          <tb-switch [checked]="prefs.clavier()" (checkedChange)="prefs.clavier.set($event)" label="Raccourcis clavier" />
+        </div>
+      </div>
+      <div class="tb-raccourcis">
+        @for (g of clavier.groupes(); track g.groupe) {
+          <section class="tb-raccourcis-groupe">
+            <h3>{{ g.groupe }}</h3>
+            <dl>
+              @for (r of g.raccourcis; track r.texte) {
+                <div class="tb-raccourci">
+                  <dt>
+                    @for (t of r.touches; track $index) {
+                      @if (t === '…') { … } @else { <kbd>{{ t }}</kbd> }
+                    }
+                  </dt>
+                  <dd>{{ r.texte }}</dd>
+                </div>
+              }
+            </dl>
+          </section>
+        }
+      </div>
+    </section>
+  }
+
+  <!-- Every user's look, chosen by an ADMIN -->
+  @if (auth.admin()) {
+    <section class="tb-panel tb-pref-admin">
+      <div class="tb-prefs">
+        <div class="tb-pref">
+          <span class="tb-section-icon"><i class="pi pi-th-large"></i></span>
+          <div class="tb-pref-text">
+            <strong>Style panneau de configuration</strong>
+            <span class="tb-muted">
+              Pour tous les utilisateurs : surfaces unies, sans effet de verre, de flou ni de fond coloré, coins plus droits. Le thème clair
+              ou sombre de chacun est conservé.
+            </span>
+          </div>
+          <tb-switch [checked]="panneau()" [disabled]="enregistrementStyle()" (checkedChange)="changerStyle($event)" label="Style panneau de configuration" />
+        </div>
+      </div>
+      <p class="tb-muted tb-pref-portee"><i class="pi pi-shield"></i> Réglage administrateur : s'applique à tout le monde, sur tous les appareils.</p>
+    </section>
+  }
+</div>

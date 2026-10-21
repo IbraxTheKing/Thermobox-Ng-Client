@@ -1,0 +1,264 @@
+/*
+ * Android: Material 3 ([data-plateforme="android"]).
+ *
+ * The chrome follows Material 3 (Expressive): flat tonal surfaces instead of glass, a navigation
+ * bar with a pill indicator behind the selected icon, a navigation rail on wide screens, a top app
+ * bar that takes a tonal surface once the content scrolls under it, an extended FAB, ripples,
+ * Material switches, segmented buttons, bottom sheets and snackbars. Colours, logo and type stay
+ * ThermoBox's: the Material roles are mapped on the ThermoBox palette (--md-*).
+ */
+
+:root[data-plateforme="android"] {
+    --tb-m3-surface: color-mix(in srgb, var(--md-surface-container-low) 96%, var(--md-primary));
+    --tb-m3-container: color-mix(in srgb, var(--md-surface-container) 92%, var(--md-primary));
+    --tb-m3-container-high: color-mix(in srgb, var(--md-surface-container-high) 90%, var(--md-primary));
+    --tb-m3-indicateur: color-mix(in srgb, var(--md-primary-container) 92%, var(--md-primary));
+    --tb-m3-on-indicateur: var(--md-on-primary-container);
+    --tb-m3-standard: cubic-bezier(.2, 0, 0, 1);
+    --tb-m3-emphase: cubic-bezier(.05, .7, .1, 1);
+}
+:root[data-plateforme="android"][data-theme="dark"] {
+    --tb-m3-surface: color-mix(in srgb, var(--md-surface-container-low) 94%, var(--md-primary));
+    --tb-m3-container: color-mix(in srgb, var(--md-surface-container) 90%, var(--md-primary));
+    --tb-m3-container-high: color-mix(in srgb, var(--md-surface-container-high) 88%, var(--md-primary));
+}
+
+/* ============================== Navigation rail (wide screens) ============================== */
+
+:root[data-plateforme="android"] .tb-rail {
+    inset: 0 auto 0 0;
+    width: 88px;
+    padding: calc(20px + env(safe-area-inset-top)) 0 20px env(safe-area-inset-left);
+    gap: 4px;
+    border: 0;
+    border-radius: 0;
+    background: var(--tb-m3-surface);
+    box-shadow: none;
+}
+:root[data-plateforme="android"] { --tb-rail: 96px; }
+:root[data-plateforme="android"] .tb-rail-brand { margin-bottom: 28px; }
+:root[data-plateforme="android"] .tb-rail-brand .tb-logo { width: 44px; height: 44px; border-radius: 16px; }
+:root[data-plateforme="android"] .tb-dests { gap: 12px; }
+:root[data-plateforme="android"] .tb-dest {
+    width: 80px;
+    gap: 4px;
+    padding: 0;
+    border-radius: 0;
+    color: var(--md-on-surface-variant);
+    font-size: .75rem;
+    font-weight: 600;
+    letter-spacing: .03em;
+}
+:root[data-plateforme="android"] .tb-dest:hover { background: none; }
+:root[data-plateforme="android"] .tb-dest .tb-dest-icon {
+    width: 56px;
+    height: 32px;
+    border-radius: 16px;
+    overflow: hidden;
+    transition: background-color .2s linear;
+}
+/* State layer of the indicator under the pointer */
+:root[data-plateforme="android"] .tb-dest:hover .tb-dest-icon { background: color-mix(in srgb, var(--md-on-surface) 8%, transparent); }
+:root[data-plateforme="android"] .tb-dest.tb-dest-on { color: var(--md-on-surface); font-weight: 750; }
+:root[data-plateforme="android"] .tb-dest.tb-dest-on .tb-dest-icon {
+    background: var(--tb-m3-indicateur);
+    color: var(--tb-m3-on-indicateur);
+    box-shadow: none;
+    /* The indicator grows from the centre */
+    animation: tb-m3-indicateur .35s var(--tb-m3-emphase);
+}
+@keyframes tb-m3-indicateur { from { clip-path: inset(0 50% round 16px); } to { clip-path: inset(0 0 round 16px); } }
+:root[data-plateforme="android"] .tb-dest-badge { top: 4px; right: 14px; width: 8px; height: 8px; box-shadow: none; }
+:root[data-plateforme="android"] .tb-rail .tb-icon-btn { border-radius: 50%; }
+
+/* ============================== Phones ============================== */
+
+@media (max-width: 840px) {
+    :root[data-plateforme="android"] {
+        --tb-topbar-h: calc(64px + env(safe-area-inset-top));
+        --tb-nav-bas: calc(80px + env(safe-area-inset-bottom));
+    }
+
+    /* Top app bar: the page colour at rest, a tonal surface once content scrolls under it */
+    :root[data-plateforme="android"] .tb-topbar {
+        gap: 0;
+        padding: env(safe-area-inset-top) calc(4px + env(safe-area-inset-right)) 0 calc(16px + env(safe-area-inset-left));
+        border-bottom: 0;
+        background: var(--md-surface);
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+        transition: background-color .3s var(--tb-m3-standard), box-shadow .3s var(--tb-m3-standard);
+    }
+    :root[data-plateforme="android"] .tb-defile .tb-topbar { background: var(--tb-m3-container); }
+    :root[data-plateforme="android"] .tb-brand { gap: 12px; font-size: 1.375rem; font-weight: 750; letter-spacing: -.01em; }
+    :root[data-plateforme="android"] .tb-brand .tb-logo { width: 32px; height: 32px; border-radius: 10px; box-shadow: none; }
+    /* Once the large page title is gone, the bar takes it */
+    :root[data-plateforme="android"] .tb-topbar-titre {
+        position: absolute;
+        left: calc(16px + 32px + 12px + env(safe-area-inset-left));
+        bottom: 0;
+        display: flex;
+        align-items: center;
+        height: 64px;
+        max-width: calc(100% - 260px);
+        overflow: hidden;
+        color: var(--md-on-surface);
+        font-size: 1.375rem;
+        font-weight: 650;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        opacity: 0;
+        transform: translateY(8px);
+        transition: opacity .2s var(--tb-m3-standard), transform .3s var(--tb-m3-emphase);
+        pointer-events: none;
+    }
+    :root[data-plateforme="android"] .tb-brand-name { transition: opacity .2s var(--tb-m3-standard); }
+    :root[data-plateforme="android"] .tb-defile-titre .tb-brand-name { opacity: 0; }
+    :root[data-plateforme="android"] .tb-defile-titre .tb-topbar-titre { opacity: 1; transform: none; }
+    :root[data-plateforme="android"] .tb-topbar .tb-icon-btn { width: 48px; height: 48px; border: 0; border-radius: 50%; color: var(--md-on-surface-variant); }
+    :root[data-plateforme="android"] .tb-topbar .tb-icon-btn:hover { background: color-mix(in srgb, var(--md-on-surface) 8%, transparent); }
+    :root[data-plateforme="android"] .tb-topbar .tb-avatar { width: 32px; height: 32px; margin: 0 8px; }
+
+    /* Navigation bar: flat tonal surface, pill indicator behind the icon */
+    :root[data-plateforme="android"] .tb-rail {
+        inset: auto 0 0 0;
+        width: auto;
+        height: var(--tb-nav-bas);
+        padding: 12px env(safe-area-inset-right) calc(16px + env(safe-area-inset-bottom)) env(safe-area-inset-left);
+        background: var(--tb-m3-container);
+        box-shadow: none;
+    }
+    :root[data-plateforme="android"] .tb-dests { gap: 0; max-width: 640px; align-items: flex-start; }
+    :root[data-plateforme="android"] .tb-dest { width: auto; gap: 4px; font-size: .75rem; }
+    :root[data-plateforme="android"] .tb-dest .tb-dest-icon { width: 56px; height: 32px; }
+    :root[data-plateforme="android"] .tb-dest .tb-dest-icon .pi { font-size: 1.25rem; }
+
+    /* More than five destinations: the last ones go behind "Plus" (Material: 3 to 5 in the bar) */
+    :root[data-plateforme="android"] .tb-dest-cache { display: none; }
+    :root[data-plateforme="android"] .tb-dest-plus { display: flex; }
+
+    /* Extended FAB: a rounded square in the primary container, above the bar */
+    :root[data-plateforme="android"] .tb-page-head > .tb-btn.tb-fab {
+        right: calc(16px + env(safe-area-inset-right));
+        bottom: calc(var(--tb-nav-bas) + 16px);
+        min-height: 56px;
+        padding: 0 20px 0 16px;
+        border: 0;
+        border-radius: 16px;
+        background: var(--tb-m3-indicateur);
+        color: var(--tb-m3-on-indicateur);
+        font-size: .95rem;
+        box-shadow: 0 3px 6px rgba(0, 0, 0, .14), 0 6px 18px rgba(0, 0, 0, .12);
+    }
+
+    :root[data-plateforme="android"] .tb-barre {
+        bottom: calc(var(--tb-nav-bas) + 12px);
+        border: 0;
+        border-radius: 16px;
+        background: var(--tb-m3-container-high);
+        box-shadow: 0 3px 8px rgba(0, 0, 0, .14), 0 8px 24px rgba(0, 0, 0, .12);
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+    }
+}
+
+@media (orientation: landscape) and (max-height: 520px) {
+    :root[data-plateforme="android"] .tb-rail { inset: 0 auto 0 0; width: 72px; height: auto; padding: 8px 0 8px env(safe-area-inset-left); border-radius: 0; background: var(--tb-m3-surface); }
+    :root[data-plateforme="android"] .tb-dest { width: 64px; }
+}
+
+/* ============================== Sheets, dialogs, snackbars, controls ============================== */
+
+:root[data-plateforme="android"] .tb-dialog {
+    border: 0;
+    border-radius: 28px;
+    background: var(--tb-m3-container-high);
+    box-shadow: 0 8px 12px 6px rgba(0, 0, 0, .15), 0 4px 4px rgba(0, 0, 0, .3);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    animation: tb-m3-dialogue .4s var(--tb-m3-emphase);
+}
+:root[data-plateforme="android"] .tb-dialog-head h2 { font-size: 1.5rem; font-weight: 600; letter-spacing: 0; }
+:root[data-plateforme="android"] .tb-dialog-body .tb-actions { background: var(--tb-m3-container-high); }
+:root[data-plateforme="android"] .tb-scrim { background: rgba(0, 0, 0, .32); }
+@keyframes tb-m3-dialogue { from { opacity: 0; transform: scale(.88); } }
+@media (max-width: 640px) {
+    /* Bottom sheet: 28 dp corners, drag handle, slides up */
+    :root[data-plateforme="android"] .tb-dialog { border-radius: 28px 28px 0 0; background: var(--tb-m3-surface); animation: tb-sheet-in .45s var(--tb-m3-emphase); }
+    :root[data-plateforme="android"] .tb-dialog-body .tb-actions { background: var(--tb-m3-surface); }
+    :root[data-plateforme="android"] .tb-grabber { width: 32px; height: 4px; margin-top: 16px; border-radius: 2px; background: var(--md-on-surface-variant); opacity: .4; }
+}
+
+/* Snackbars at the bottom, above the navigation */
+:root[data-plateforme="android"] .tb-toasts {
+    top: auto;
+    bottom: calc(var(--tb-nav-bas) + 12px);
+    left: calc(12px + env(safe-area-inset-left));
+    right: auto;
+    width: min(560px, calc(100vw - 24px));
+    flex-direction: column-reverse;
+}
+@media (min-width: 841px) { :root[data-plateforme="android"] .tb-toasts { left: calc(var(--tb-rail) + 24px); bottom: 24px; } }
+:root[data-plateforme="android"] .tb-toast {
+    align-items: center;
+    padding: 14px 48px 14px 16px;
+    border: 0;
+    border-radius: 8px;
+    background: var(--md-inverse-surface);
+    color: var(--md-inverse-on-surface);
+    box-shadow: 0 3px 5px rgba(0, 0, 0, .2), 0 6px 14px rgba(0, 0, 0, .14);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    animation: tb-m3-snack .3s var(--tb-m3-emphase);
+}
+:root[data-plateforme="android"] .tb-toast > button { top: 50%; transform: translateY(-50%); }
+@keyframes tb-m3-snack { from { transform: translateY(20px); opacity: 0; } }
+
+/* Material switch: outlined track, the thumb grows and shows a check when on */
+:root[data-plateforme="android"] .tb-switch {
+    width: 52px;
+    height: 32px;
+    border: 2px solid var(--md-outline);
+    background: var(--md-surface-container-highest);
+    box-shadow: none;
+}
+:root[data-plateforme="android"] .tb-switch::before {
+    top: 50%;
+    left: 6px;
+    width: 16px;
+    height: 16px;
+    margin-top: -8px;
+    background: var(--md-outline);
+    box-shadow: none;
+    transition: transform .3s var(--tb-m3-emphase), width .2s var(--tb-m3-standard), height .2s var(--tb-m3-standard), margin .2s var(--tb-m3-standard), left .2s var(--tb-m3-standard);
+}
+:root[data-plateforme="android"] .tb-switch[aria-checked="true"] { border-color: var(--md-primary); background: var(--md-primary); }
+:root[data-plateforme="android"] .tb-switch[aria-checked="true"]::before {
+    left: 2px;
+    width: 24px;
+    height: 24px;
+    margin-top: -12px;
+    transform: translateX(22px);
+    background: var(--md-on-primary) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9.5 16.2 5.8 12.5l-1.3 1.3 5 5L19.6 8.7l-1.3-1.3z' fill='%232160cc'/%3E%3C/svg%3E") center / 16px no-repeat;
+}
+:root[data-plateforme="android"] .tb-switch:active::before { width: 28px; height: 28px; margin-top: -14px; }
+
+/* Segmented buttons: outlined pill, the selected segment filled with a check */
+:root[data-plateforme="android"] .tb-segmented { gap: 0; padding: 0; border: 1px solid var(--md-outline); border-radius: 999px; background: transparent; overflow: hidden; }
+:root[data-plateforme="android"] .tb-segmented > button { min-height: 40px; border-radius: 0; color: var(--md-on-surface); }
+:root[data-plateforme="android"] .tb-segmented > button + button { border-left: 1px solid var(--md-outline); }
+:root[data-plateforme="android"] .tb-segmented > button.tb-seg-on { background: var(--tb-m3-indicateur); color: var(--tb-m3-on-indicateur); box-shadow: none; }
+:root[data-plateforme="android"] .tb-segmented > button.tb-seg-on::before { content: "\e94f"; font-family: primeicons; font-size: .8rem; }
+
+/* Buttons: Material shapes, no gradients */
+:root[data-plateforme="android"] .tb-btn { border-radius: 999px; background: var(--md-primary); box-shadow: none; letter-spacing: .01em; }
+:root[data-plateforme="android"] .tb-btn:hover { background: color-mix(in srgb, var(--md-primary) 92%, var(--md-on-primary)); box-shadow: 0 1px 3px rgba(0, 0, 0, .2); }
+:root[data-plateforme="android"] .tb-btn.tb-tonal { border: 0; background: var(--tb-m3-indicateur); color: var(--tb-m3-on-indicateur); }
+:root[data-plateforme="android"] .tb-btn.tb-flat, :root[data-plateforme="android"] .tb-btn.tb-flat:hover { background: transparent; box-shadow: none; }
+:root[data-plateforme="android"] .tb-btn.tb-flat:hover { background: color-mix(in srgb, var(--md-primary) 8%, transparent); }
+:root[data-plateforme="android"] .tb-btn.tb-btn-danger { background: var(--md-error); }
+:root[data-plateforme="android"] .tb-btn.tb-btn-danger.tb-flat { background: transparent; }
+:root[data-plateforme="android"] .tb-btn:active { transform: none; }
+:root[data-plateforme="android"] .tb-input, :root[data-plateforme="android"] .tb-select { border-radius: 4px; box-shadow: none; }
+:root[data-plateforme="android"] .tb-search > .tb-input { border-radius: 28px; }
+:root[data-plateforme="android"] .tb-select.tb-filter { border-radius: 28px; }

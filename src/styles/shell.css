@@ -1,0 +1,384 @@
+/*
+ * Shell: top bar, navigation (rail on wide screens, bar at the bottom of phones), main area.
+ *
+ * Same markup on every platform (shell.component.html). This file is the ThermoBox look of the JSF
+ * interface, used as is on the web ([data-plateforme="web"]); shell-ios.css and shell-android.css
+ * restyle the navigation as Liquid Glass (iOS) or Material 3 (Android), keeping the ThermoBox
+ * colours, logo and type.
+ */
+
+:root {
+    --tb-topbar-h: 0px;
+    /* Height taken by the navigation at the bottom of phones (0 on wide screens) */
+    --tb-nav-bas: 0px;
+}
+
+/* ============================== Navigation rail (wide screens) ============================== */
+
+.tb-rail {
+    position: fixed;
+    inset: 12px auto 12px calc(12px + env(safe-area-inset-left));
+    z-index: 50;
+    width: calc(var(--tb-rail) - 20px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px 0;
+    gap: 8px;
+    border: 1px solid var(--tb-glass-line);
+    border-radius: var(--tb-shape-xl);
+    background: var(--tb-glass);
+    box-shadow: var(--tb-glass-shadow);
+    view-transition-name: tb-rail;
+}
+.tb-rail-brand { display: grid; place-items: center; margin-bottom: 20px; text-decoration: none; }
+.tb-dests { position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.tb-dest {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    width: 64px;
+    padding: 6px 0;
+    border: 0;
+    border-radius: var(--tb-shape-lg);
+    background: none;
+    text-decoration: none;
+    color: var(--md-on-surface-variant);
+    font: inherit;
+    font-size: .7rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color var(--tb-fast) linear, color var(--tb-fast) linear;
+    -webkit-tap-highlight-color: transparent;
+}
+.tb-dest-icon { position: relative; display: grid; place-items: center; width: 40px; height: 32px; border-radius: var(--tb-shape-md); }
+.tb-dest-icon .pi { font-size: 1.2rem; }
+.tb-dest-label { white-space: nowrap; }
+.tb-dest:hover { color: var(--md-on-surface); background: var(--md-secondary-container); }
+.tb-dest.tb-dest-on { color: var(--md-primary); }
+.tb-dest.tb-dest-on .tb-dest-icon {
+    background: var(--md-primary);
+    color: var(--md-on-primary);
+    box-shadow: 0 4px 14px color-mix(in srgb, var(--md-primary) 35%, transparent);
+    animation: tb-dest-in .5s var(--tb-spring);
+}
+@keyframes tb-dest-in { from { transform: scale(.55); opacity: .3; } }
+.tb-dest-badge {
+    position: absolute;
+    top: 3px;
+    right: 7px;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--md-error);
+    box-shadow: 0 0 0 2px var(--tb-glass-solid);
+}
+/* The lens of Liquid Glass (iOS): hidden elsewhere */
+.tb-lentille { display: none; }
+/* "Plus" (iOS / Android phones with more than five destinations) */
+.tb-dest-plus { display: none; }
+
+.tb-rail-end { margin-top: auto; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+
+/* "…" of the slim rail of phones held sideways only */
+.tb-icon-btn.tb-rail-more { display: none; }
+.tb-rail-extras { display: contents; }
+
+/* Logo: a thermometer on a blue-to-teal glass tile */
+.tb-logo {
+    position: relative;
+    display: inline-block;
+    flex: none;
+    width: 48px;
+    height: 48px;
+    border-radius: 30%;
+    background: var(--tb-brand);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45), 0 6px 16px rgba(33, 96, 204, .3);
+    transition: transform var(--tb-medium) var(--tb-spring);
+}
+.tb-logo::after {
+    content: "";
+    position: absolute;
+    inset: 18%;
+    background: #fff;
+    -webkit-mask: var(--tb-mark) center / contain no-repeat;
+    mask: var(--tb-mark) center / contain no-repeat;
+}
+a:hover > .tb-logo { transform: rotate(-6deg) scale(1.05); }
+.tb-logo-xl { width: 104px; height: 104px; }
+:root {
+    --tb-mark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M10 4.5a2 2 0 0 1 4 0v8.6a4.2 4.2 0 1 1-4 0z'/%3E%3Cpath d='M12 9.5v6.3'/%3E%3Ccircle cx='12' cy='17' r='1.6' fill='%23000'/%3E%3Cpath d='M17.5 6h2M17.5 9.5h2'/%3E%3C/svg%3E");
+}
+
+/* Icon buttons of the bars (theme toggle, preferences, logout) */
+.tb-icon-btn {
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+    flex: none;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: var(--tb-shape-md);
+    background: transparent;
+    color: var(--md-on-surface-variant);
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color var(--tb-fast) linear, transform .3s var(--tb-spring);
+    -webkit-tap-highlight-color: transparent;
+}
+.tb-icon-btn .pi { font-size: 1.2rem; }
+.tb-icon-btn:hover { background: var(--md-secondary-container); border-color: var(--tb-glass-line); color: var(--md-on-surface); }
+.tb-icon-btn:active { transform: scale(.94); }
+.tb-prefs-btn.tb-prefs-on { background: var(--md-secondary-container); color: var(--md-on-surface); }
+.tb-theme-btn i { transition: transform .5s var(--tb-spring); }
+.tb-theme-btn:hover i { transform: rotate(-20deg); }
+:root[data-theme="dark"] .tb-if-light, :root:not([data-theme="dark"]) .tb-if-dark { display: none; }
+.tb-theme-corner {
+    position: fixed;
+    top: calc(16px + env(safe-area-inset-top));
+    right: calc(16px + env(safe-area-inset-right));
+    z-index: 60;
+    border-color: var(--tb-glass-line);
+    background: var(--tb-glass);
+    box-shadow: var(--tb-glass-shadow);
+}
+
+.tb-avatar {
+    display: inline-grid;
+    place-items: center;
+    flex: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--tb-brand);
+    color: #fff;
+    font-weight: 700;
+    font-size: 1rem;
+    text-decoration: none;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .4);
+}
+.tb-avatar-on { box-shadow: 0 0 0 2px var(--md-surface-container-lowest), 0 0 0 4px var(--md-primary); }
+.tb-avatar-xl { width: 72px; height: 72px; font-size: 1.9rem; }
+
+/* ============================== Top bar (phones) ============================== */
+
+.tb-topbar { display: none; }
+.tb-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    color: var(--md-on-surface);
+    text-decoration: none;
+    font-size: 1.3rem;
+    font-weight: 800;
+    letter-spacing: -.02em;
+}
+.tb-brand .tb-logo { width: 36px; height: 36px; }
+/* Title of the page, shown in the bar once the page title has scrolled away (iOS, Android) */
+.tb-topbar-titre { display: none; }
+
+/* ============================== Main area ============================== */
+
+.tb-main {
+    max-width: 1480px;
+    margin: 0 auto;
+    padding: 28px 40px 64px;
+}
+.tb-app .tb-main {
+    margin-left: calc(var(--tb-rail) + env(safe-area-inset-left) + max(0px, (100vw - var(--tb-rail) - 1480px) / 2));
+    padding-right: calc(40px + env(safe-area-inset-right));
+}
+.tb-public .tb-main { max-width: 1100px; min-height: 100vh; min-height: 100dvh; display: flex; align-items: center; }
+
+/* Main action of a page (Nouveau…): in its header on wide screens */
+.tb-page-head > .tb-btn:not(.tb-back), .tb-page-head > a.tb-btn:not(.tb-back) { margin-left: auto; }
+
+/* A thin bar sweeping along the top while the server works */
+.tb-busy-bar {
+    position: fixed;
+    top: env(safe-area-inset-top);
+    left: 0;
+    right: 0;
+    height: 3px;
+    z-index: 2000;
+    pointer-events: none;
+    opacity: 0;
+    background: linear-gradient(90deg, transparent, var(--md-primary), color-mix(in srgb, var(--md-primary) 40%, #2bb3d1), transparent);
+    background-size: 40% 100%;
+    background-repeat: no-repeat;
+    transition: opacity .25s ease;
+}
+.tb-busy-bar.tb-busy-on { opacity: 1; animation: tb-balayage 1.1s ease-in-out infinite; }
+@keyframes tb-balayage { from { background-position: -40% 0; } to { background-position: 140% 0; } }
+
+/* ============================== Phones: top bar + navigation at the bottom ============================== */
+
+@media (max-width: 840px) {
+    :root { --tb-topbar-h: calc(58px + env(safe-area-inset-top)); --tb-nav-bas: calc(76px + env(safe-area-inset-bottom)); }
+    .tb-topbar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 40;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        height: var(--tb-topbar-h);
+        padding: env(safe-area-inset-top) calc(8px + env(safe-area-inset-right)) 0 calc(16px + env(safe-area-inset-left));
+        border-bottom: 1px solid var(--tb-glass-line);
+        background: color-mix(in srgb, var(--md-surface-container-low) 86%, transparent);
+        -webkit-backdrop-filter: var(--tb-blur);
+        backdrop-filter: var(--tb-blur);
+        view-transition-name: tb-topbar;
+    }
+    .tb-topbar .tb-avatar { width: 34px; height: 34px; margin: 0 4px; font-size: .9rem; }
+    .tb-spacer { flex: 1 1 auto; }
+
+    .tb-rail {
+        inset: auto 0 0 0;
+        left: 0;
+        width: auto;
+        height: var(--tb-nav-bas);
+        padding: 8px calc(8px + env(safe-area-inset-right)) env(safe-area-inset-bottom) calc(8px + env(safe-area-inset-left));
+        flex-direction: row;
+        justify-content: center;
+        border-width: 1px 0 0;
+        border-radius: 0;
+        background: color-mix(in srgb, var(--md-surface-container-low) 88%, transparent);
+        box-shadow: 0 -8px 24px rgba(30, 50, 80, .08);
+        -webkit-backdrop-filter: var(--tb-blur);
+        backdrop-filter: var(--tb-blur);
+    }
+    .tb-rail-brand, .tb-rail-end { display: none; }
+    .tb-dests { flex-direction: row; justify-content: space-around; width: 100%; max-width: 560px; gap: 0; }
+    .tb-dest { width: auto; flex: 1 1 0; min-width: 0; }
+    .tb-dest-icon { width: 48px; }
+    .tb-dest-label { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+
+    .tb-app .tb-main {
+        margin-left: 0;
+        padding: calc(var(--tb-topbar-h) + 16px) calc(16px + env(safe-area-inset-right)) calc(var(--tb-nav-bas) + 32px) calc(16px + env(safe-area-inset-left));
+    }
+    .tb-main { padding: 20px 16px 48px; }
+    html { scroll-padding-top: calc(var(--tb-topbar-h) + 8px); }
+    .tb-toasts { top: calc(var(--tb-topbar-h) + 8px); left: calc(8px + env(safe-area-inset-left)); right: calc(8px + env(safe-area-inset-right)); width: auto; }
+    .tb-busy-bar { top: var(--tb-topbar-h); }
+}
+@media (max-width: 480px) {
+    .tb-app .tb-main {
+        padding-left: calc(12px + env(safe-area-inset-left));
+        padding-right: calc(12px + env(safe-area-inset-right));
+    }
+}
+
+/* Main action as a floating button above the navigation bar */
+@media (max-width: 640px) {
+    .tb-page-head > .tb-btn.tb-fab, .tb-page-head > a.tb-btn.tb-fab {
+        position: fixed;
+        right: calc(16px + env(safe-area-inset-right));
+        bottom: calc(var(--tb-nav-bas) + 16px);
+        z-index: 45;
+        margin: 0;
+        box-shadow: var(--tb-elev-3);
+    }
+    body:has(.tb-barre-on) .tb-fab { opacity: 0; pointer-events: none; }
+}
+
+/*
+ * Phones held sideways (any width, ~320-430 px high): no top bar, no bottom bar, but a slim rail
+ * on the left with the destinations only; theme, preferences, profile and logout open from "…".
+ */
+@media (orientation: landscape) and (max-height: 520px) {
+    :root { --tb-rail: 76px; --tb-topbar-h: 0px; --tb-nav-bas: 0px; }
+    .tb-topbar { display: none !important; }
+    .tb-rail {
+        inset: 8px auto 8px calc(8px + env(safe-area-inset-left));
+        width: 60px;
+        height: auto;
+        padding: 8px 0;
+        gap: 4px;
+        flex-direction: column;
+        justify-content: flex-start;
+        border-width: 1px;
+        border-radius: var(--tb-shape-xl);
+        overflow: visible;
+        background: var(--tb-glass-solid);
+        box-shadow: var(--tb-glass-shadow);
+    }
+    .tb-rail-brand { display: none; }
+    .tb-dests { flex-direction: column; width: auto; max-width: none; gap: 2px; justify-content: flex-start; }
+    .tb-dest { flex: none; width: 48px; min-height: 0; padding: 3px 0; }
+    .tb-dest-label { display: none; }
+    .tb-dest-icon { width: 42px; height: 36px; }
+    .tb-rail-end { display: flex; flex-direction: column; margin-top: auto; }
+    .tb-icon-btn.tb-rail-more { display: inline-grid; width: 42px; height: 42px; }
+    .tb-rail-extras {
+        position: fixed;
+        left: calc(76px + env(safe-area-inset-left));
+        bottom: 8px;
+        z-index: 60;
+        display: none;
+        flex-direction: row;
+        align-items: center;
+        gap: 6px;
+        padding: 8px;
+        border: 1px solid var(--tb-glass-line);
+        border-radius: var(--tb-shape-xl);
+        background: var(--tb-glass-solid);
+        box-shadow: var(--tb-elev-2);
+        -webkit-backdrop-filter: var(--tb-blur);
+        backdrop-filter: var(--tb-blur);
+    }
+    .tb-rail-open .tb-rail-extras { display: flex; animation: tb-rise .25s var(--tb-ease); }
+    .tb-rail-open .tb-rail-more { background: var(--md-secondary-container); color: var(--md-on-surface); }
+    .tb-dest-plus { display: none !important; }
+    .tb-dest-cache { display: flex !important; }
+
+    .tb-app .tb-main {
+        margin-left: calc(var(--tb-rail) + env(safe-area-inset-left));
+        padding: 16px calc(20px + env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) 16px;
+    }
+    .tb-toasts { top: 8px; left: auto; right: calc(8px + env(safe-area-inset-right)); width: 360px; }
+    html { scroll-padding-top: 8px; }
+    .tb-page-head > .tb-btn.tb-fab { bottom: calc(16px + env(safe-area-inset-bottom)); }
+}
+
+/* "Plus" sheet: the destinations that don't fit in the bar, and the account actions */
+.tb-plus-liste { display: flex; flex-direction: column; padding: 4px 0; }
+.tb-plus-liste a, .tb-plus-liste button {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-height: 52px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: var(--tb-shape-md);
+    background: none;
+    color: var(--md-on-surface);
+    font: inherit;
+    font-size: 1rem;
+    font-weight: 600;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+}
+.tb-plus-liste .pi { width: 24px; color: var(--md-on-surface-variant); font-size: 1.1rem; text-align: center; }
+.tb-plus-liste a:active, .tb-plus-liste button:active, .tb-plus-liste a.tb-dest-on { background: var(--md-secondary-container); }
+.tb-plus-liste a.tb-dest-on .pi { color: var(--md-primary); }
+.tb-plus-liste hr { width: 100%; margin: 6px 0; border: 0; border-top: 1px solid var(--md-outline-variant); }
+.tb-plus-liste .tb-plus-danger, .tb-plus-liste .tb-plus-danger .pi { color: var(--md-error); }
+
+/* Touch screens: nothing stays "hovered" after a tap */
+@media (hover: none) {
+    .tb-dest:hover { background: transparent; color: var(--md-on-surface-variant); }
+    .tb-dest.tb-dest-on:hover { color: var(--md-primary); }
+    .tb-icon-btn:hover { background: transparent; border-color: transparent; }
+    .tb-theme-btn:hover i { transform: none; }
+}

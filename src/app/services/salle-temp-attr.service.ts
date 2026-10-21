@@ -2,14 +2,21 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
-import { API_BASE_URL, toInstant } from '../core/api.config';
+import { ServeurService, toInstant } from '../core/api.config';
 import { Consigne, SalleTempAttr, Temperature } from '../models/models';
 
-/** Client Angular de SalleTempAttrResource — /api/salletemps */
+/**
+ * Client Angular de SalleTempAttrResource — /api/salletemps.
+ * Données d'une salle seule (sans ses boîtiers ni les consignes héritées) : les pages passent par
+ * ClimatService, qui agrège la hiérarchie comme l'interface JSF.
+ */
 @Injectable({ providedIn: 'root' })
 export class SalleTempAttrService {
   private readonly http = inject(HttpClient);
-  private readonly url = `${inject(API_BASE_URL)}/salletemps`;
+  private readonly serveur = inject(ServeurService);
+  private get url(): string {
+    return this.serveur.url('/salletemps');
+  }
 
   // ---------- CRUD ----------
 

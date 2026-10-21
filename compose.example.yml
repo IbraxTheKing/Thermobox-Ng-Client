@@ -1,0 +1,20 @@
+services:
+  thermobox-angular:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: thermobox-angular:latest
+    container_name: thermobox-angular
+    restart: unless-stopped
+    ports:
+      - "8081:80"
+    environment:
+      # Replace with the REST server's service name and internal port.
+      API_UPSTREAM: "http://thermobox-server:8080"
+    # Attach this service to the same Docker network as thermobox-server.
+    # networks:
+    #   - thermobox
+
+# networks:
+#   thermobox:
+#     external: true

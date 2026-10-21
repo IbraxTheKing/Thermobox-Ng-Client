@@ -1,3 +1,26 @@
-/* You can add global styles to this file, and also import other style files */
+/*
+ * ThermoBox – global styles.
+ *
+ * tokens.css     colours, shapes, motion (identical to the JSF interface)
+ * controls.css   buttons, fields, switches, tables, sheets, toasts
+ * jsf.css        page components ported from the JSF interface (cards, detail, tree, gestion…)
+ * pages.css      what only exists here (salles tree, photo picker, server field…)
+ * shell.css      navigation, ThermoBox look (web)
+ * shell-ios.css      Liquid Glass on iOS
+ * shell-android.css  Material 3 on Android
+ */
 
-@import 'tailwindcss';
+/* Tailwind utilities stay available; its reset (preflight) is left out: the pages rely on the
+   same defaults as the JSF interface. */
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+@import 'primeicons/primeicons.css';
+
+@import './styles/tokens.css';
+@import './styles/controls.css';
+@import './styles/jsf.css';
+@import './styles/pages.css';
+@import './styles/shell.css';
+@import './styles/shell-ios.css';
+@import './styles/shell-android.css';

@@ -1,0 +1,141 @@
+<header class="tb-page-head">
+  <div class="tb-page-title">
+    <span class="tb-eyebrow">Bonjour {{ auth.user()?.username }}</span>
+    <h1>Aperçu</h1>
+  </div>
+  <button type="button" class="tb-btn tb-icon tb-tonal" data-action="actualiser" title="Actualiser" aria-label="Actualiser"
+          [class.tb-busy]="store.chargement()" (click)="actualiser()">
+    <i class="pi pi-refresh"></i>
+  </button>
+</header>
+
+@if (avis.disponible()) {
+  <div class="tb-banner tb-banner-info tb-maj-avis">
+    <span class="tb-banner-icon"><i class="pi pi-cloud-download"></i></span>
+    <div class="tb-banner-text">
+      <strong>Nouvelle version de ThermoBox disponible</strong>
+      <span>{{ avis.resume() }}</span>
+    </div>
+    <a routerLink="/app/mises-a-jour" class="tb-btn tb-flat">Voir <i class="pi pi-arrow-right"></i></a>
+  </div>
+}
+
+<!-- Filter chips: one tap shows only the salles in that state, a second tap shows them all -->
+<div class="tb-summary">
+  @for (c of compteurs(); track c.etat.cle) {
+    <button
+      type="button"
+      class="tb-summary-chip tb-ton-{{ c.etat.ton }}"
+      [class.tb-chip-on]="etatFiltre() === c.etat"
+      [attr.aria-pressed]="etatFiltre() === c.etat"
+      [title]="etatFiltre() === c.etat ? 'Afficher toutes les salles' : 'Afficher seulement ces salles'"
+      (click)="basculerEtat(c.etat)"
+    >
+      <i class="pi pi-check tb-chip-check"></i>{{ c.texte }}
+    </button>
+  }
+</div>
+
+<div class="tb-toolbar">
+  <span class="tb-search">
+    <i class="pi pi-search"></i>
+    <input class="tb-input" type="search" placeholder="Rechercher une salle, un étage, un bâtiment…" autocomplete="off" enterkeyhint="search"
+           aria-label="Rechercher" [value]="recherche()" (input)="recherche.set($any($event.target).value)" />
+  </span>
+  <select class="tb-select tb-filter" aria-label="Bâtiment" [value]="batimentId() ?? ''" (change)="choisirBatiment($any($event.target).value)">
+    <option value="">Tous les bâtiments</option>
+    @for (b of batiments(); track b.id) {
+      <option [value]="b.id" [selected]="batimentId() === b.id">{{ b.name }}</option>
+    }
+    <option [value]="SANS_BATIMENT" [selected]="batimentId() === SANS_BATIMENT">Sans bâtiment</option>
+  </select>
+</div>
+
+@if (auth.voitBoitiers() && store.boitiersNonRattaches() > 0) {
+  <div class="tb-banner">
+    <span class="tb-banner-icon"><i class="pi pi-exclamation-triangle"></i></span>
+    <div class="tb-banner-text">
+      <strong>{{ store.boitiersNonRattaches() }} boîtier(s) non rattaché(s)</strong>
+      <span>Leurs mesures ne comptent dans aucune salle tant qu'ils ne sont pas rattachés.</span>
+    </div>
+    @if (auth.admin()) {
+      <a routerLink="/app/salles" class="tb-btn tb-flat">Les ranger <i class="pi pi-arrow-right"></i></a>
+    }
+  </div>
+}
+
+@if (enAttente()) {
+  <div class="tb-cards" aria-busy="true">
+    @for (i of [1, 2, 3]; track i) {
+      <article class="tb-room tb-ton-inconnu tb-room-attente">
+        <div class="tb-room-head"><div class="tb-attente-ligne" style="width: 60%"></div><div class="tb-attente-ligne" style="width: 40%"></div></div>
+        <div class="tb-spark-loading"><span class="tb-spark-caption">24 h</span></div>
+      </article>
+    }
+  </div>
+}
+
+@if (vide()) {
+  <div class="tb-empty">
+    <span class="tb-empty-icon"><i class="pi pi-building"></i></span>
+    <strong>{{ store.tout() ? 'Aucune salle pour le moment' : 'Aucune salle ne vous est accessible pour le moment' }}</strong>
+    @if (!store.tout()) {
+      <span>Un administrateur vous donne accès aux bâtiments, étages ou salles à suivre.</span>
+    }
+    @if (auth.admin()) {
+      <a routerLink="/app/salles" class="tb-btn tb-tonal">Gérer les bâtiments et salles</a>
+    }
+  </div>
+}
+
+@if (aucunResultat()) {
+  <div class="tb-empty">
+    <span class="tb-empty-icon"><i class="pi pi-search"></i></span>
+    <strong>Aucune salle ne correspond à ta recherche</strong>
+    <button type="button" class="tb-btn tb-tonal" (click)="effacerFiltres()"><i class="pi pi-times"></i>Effacer les filtres</button>
+  </div>
+}
+
+<!-- Each section folds and unfolds from its title; remembered on this device -->
+@if (favoris().length) {
+  <section class="tb-section" [class.tb-collapsed]="replie('favoris')" data-section="favoris">
+    <h2 class="tb-section-title">
+      <button type="button" class="tb-section-toggle" [attr.aria-expanded]="!replie('favoris')" (click)="basculerSection('favoris')">
+        <span class="tb-section-icon tb-section-icon-fav"><i class="pi pi-star-fill"></i></span>
+        Favoris
+        <span class="tb-section-meta">{{ pluriel(favoris().length, 'salle') }}</span>
+        <i class="pi pi-chevron-down tb-section-chevron"></i>
+      </button>
+    </h2>
+    <div class="tb-section-body">
+      <div class="tb-cards">
+        @for (r of favoris(); track r.salle.id) {
+          <tb-salle-card [r]="r" [nouvelles]="courbesNouvelles()" (favori)="basculerFavori($event)" />
+        }
+      </div>
+    </div>
+  </section>
+}
+
+@for (g of groupes(); track g.cle) {
+  <section class="tb-section" [class.tb-collapsed]="replie(g.cle)" [attr.data-section]="g.cle">
+    <h2 class="tb-section-title">
+      <button type="button" class="tb-section-toggle" [attr.aria-expanded]="!replie(g.cle)" (click)="basculerSection(g.cle)">
+        <span class="tb-section-icon"><i class="pi" [class.pi-building]="g.batiment" [class.pi-inbox]="!g.batiment"></i></span>
+        {{ g.nom }}
+        <span class="tb-section-meta">
+          {{ pluriel(g.salles.length, 'salle') }}
+          @if (g.moyenne != null) { · {{ unite.t(g.moyenne) }} {{ unite.symbole() }} en moyenne }
+        </span>
+        <i class="pi pi-chevron-down tb-section-chevron"></i>
+      </button>
+    </h2>
+    <div class="tb-section-body">
+      <div class="tb-cards">
+        @for (r of g.salles; track r.salle.id) {
+          <tb-salle-card [r]="r" [nouvelles]="courbesNouvelles()" (favori)="basculerFavori($event)" />
+        }
+      </div>
+    </div>
+  </section>
+}

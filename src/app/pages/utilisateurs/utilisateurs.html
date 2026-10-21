@@ -1,0 +1,116 @@
+<header class="tb-page-head">
+  <div class="tb-page-title">
+    <span class="tb-eyebrow">Administration</span>
+    <h1>Utilisateurs</h1>
+  </div>
+  <button type="button" class="tb-btn tb-btn-lg tb-fab" (click)="creer()"><i class="pi pi-user-plus"></i>Nouvel utilisateur</button>
+</header>
+
+@if (avis.disponible()) {
+  <div class="tb-banner tb-banner-info tb-maj-avis">
+    <span class="tb-banner-icon"><i class="pi pi-cloud-download"></i></span>
+    <div class="tb-banner-text">
+      <strong>Nouvelle version de ThermoBox disponible</strong>
+      <span>{{ avis.resume() }}</span>
+    </div>
+    <a routerLink="/app/mises-a-jour" class="tb-btn tb-flat">Voir <i class="pi pi-arrow-right"></i></a>
+  </div>
+}
+
+<!-- Search and role chips, then one row per user: same on a phone and on a desktop -->
+<div class="tb-toolbar">
+  <span class="tb-search">
+    <i class="pi pi-search"></i>
+    <input class="tb-input" type="search" placeholder="Rechercher un utilisateur…" autocomplete="off" enterkeyhint="search" aria-label="Rechercher"
+           [value]="recherche()" (input)="recherche.set($any($event.target).value)" />
+  </span>
+</div>
+<div class="tb-summary">
+  @for (r of roles; track r) {
+    <button type="button" class="tb-summary-chip tb-role-chip tb-role-{{ r }}" [class.tb-chip-on]="roleFiltre() === r" [attr.aria-pressed]="roleFiltre() === r" (click)="basculerRole(r)">
+      <i class="pi pi-check tb-chip-check"></i>{{ r }}<span class="tb-chip-n">{{ nombre(r) }}</span>
+    </button>
+  }
+</div>
+
+<div class="tb-users">
+  @for (l of visibles(); track l.user.id) {
+    <div class="tb-user">
+      <span class="tb-avatar tb-user-avatar tb-role-{{ l.user.type }}">{{ initiale(l.user.username) }}</span>
+      <div class="tb-user-text">
+        <strong>{{ l.user.username }} @if (auth.estMoi(l.user)) { <span class="tb-tag tb-tag-info tb-ml">vous</span> }</strong>
+        <span class="tb-role-tag tb-role-{{ l.user.type }}">{{ l.user.type }}</span>
+        <span class="tb-user-acces"><i class="pi pi-key"></i>{{ resume(l) }}</span>
+      </div>
+      <div class="tb-user-actions">
+        @if (l.user.type !== 'ADMIN') {
+          <button type="button" class="tb-btn tb-icon tb-flat" [title]="'Accès de ' + l.user.username" (click)="ouvrirAcces(l)"><i class="pi pi-key"></i></button>
+        }
+        <button type="button" class="tb-btn tb-icon tb-flat" [title]="'Modifier ' + l.user.username" (click)="modifier(l.user)"><i class="pi pi-pencil"></i></button>
+        <button type="button" class="tb-btn tb-icon tb-flat tb-btn-danger" [title]="'Supprimer ' + l.user.username" [disabled]="auth.estMoi(l.user)" (click)="supprimer(l.user)"><i class="pi pi-trash"></i></button>
+      </div>
+    </div>
+  } @empty {
+    <div class="tb-empty tb-empty-sm">{{ droits.charge() ? 'Aucun utilisateur ne correspond.' : 'Chargement…' }}</div>
+  }
+</div>
+
+<tb-sheet [(ouvert)]="dlgUser" titre="Utilisateur" [largeur]="420">
+  <form (submit)="enregistrer($event)" novalidate>
+    <div class="tb-field">
+      <label class="tb-label" for="tb-u-nom">Nom d'utilisateur</label>
+      <input id="tb-u-nom" class="tb-input" autocomplete="off" autocapitalize="off" spellcheck="false" [value]="formNom()" (input)="formNom.set($any($event.target).value)"
+             [class.tb-invalid]="formEnvoye() && erreurNom()" />
+      @if (formEnvoye() && erreurNom(); as e) {
+        <span class="tb-field-error">{{ e }}</span>
+      }
+    </div>
+    <div class="tb-field">
+      <label class="tb-label" for="tb-u-role">Rôle</label>
+      <select id="tb-u-role" class="tb-select" [class.tb-invalid]="formEnvoye() && !formRole()" (change)="formRole.set($any($event.target).value)">
+        <option value="" [selected]="!formRole()">Choisir…</option>
+        @for (r of roles; track r) {
+          <option [value]="r" [selected]="formRole() === r">{{ r }}</option>
+        }
+      </select>
+      @if (formEnvoye() && !formRole()) {
+        <span class="tb-field-error">Rôle obligatoire</span>
+      }
+    </div>
+    <div class="tb-field">
+      <label class="tb-label" for="tb-u-mdp">{{ creation() ? 'Mot de passe' : 'Nouveau mot de passe (optionnel)' }}</label>
+      <tb-password inputId="tb-u-mdp" [(valeur)]="formMdp" autocomplete="new-password" [invalide]="!!(formEnvoye() && erreurMdp())" />
+      @if (formEnvoye() && erreurMdp(); as e) {
+        <span class="tb-field-error">{{ e }}</span>
+      }
+    </div>
+    <div class="tb-actions">
+      <button type="button" class="tb-btn tb-flat" (click)="dlgUser.set(false)">Annuler</button>
+      <button type="submit" class="tb-btn"><i class="pi pi-check"></i>Enregistrer</button>
+    </div>
+  </form>
+</tb-sheet>
+
+<!-- Accesses of a user: everything, or only the ticked bâtiments / étages / salles -->
+<tb-sheet [(ouvert)]="dlgAcces" titre="Accès" [largeur]="520">
+  @if (accesUser(); as l) {
+    <p class="tb-muted tb-acces-intro">
+      Ce que <strong>{{ l.user.username }}</strong> ({{ l.user.type }}) peut consulter{{ l.user.type === 'GESTIONNAIRE' ? ' et piloter' : '' }}.
+    </p>
+    <div class="tb-acces-mode" role="radiogroup">
+      <label class="tb-choix"><input type="radio" name="tb-acces-mode" [checked]="!accesRestreint()" (change)="accesRestreint.set(false)" />Tout ThermoBox</label>
+      <label class="tb-choix"><input type="radio" name="tb-acces-mode" [checked]="accesRestreint()" (change)="accesRestreint.set(true)" />Seulement les éléments cochés</label>
+    </div>
+    @if (accesRestreint()) {
+      <p class="tb-muted tb-acces-regle">
+        Cocher un bâtiment ou un étage donne accès à tout ce qu'il contient, y compris ce qui y sera ajouté plus tard. Décocher une salle
+        limite l'accès aux autres.
+      </p>
+      <tb-arbre-acces [noeuds]="arbre.noeuds()" [(coches)]="accesCoches" />
+    }
+    <div class="tb-actions">
+      <button type="button" class="tb-btn tb-flat" (click)="dlgAcces.set(false)">Annuler</button>
+      <button type="button" class="tb-btn" (click)="enregistrerAcces()"><i class="pi pi-check"></i>Enregistrer</button>
+    </div>
+  }
+</tb-sheet>

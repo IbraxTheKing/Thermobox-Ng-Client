@@ -1,12 +1,33 @@
-import { Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DOCUMENT, effect, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
+import { AuthService } from './core/auth';
+import { ClavierService } from './core/clavier';
+import { PlateformeService } from './core/plateforme';
+import { PreferencesService } from './core/preferences';
+import { TbConfirm, TbToasts } from './ui/hotes';
+
 @Component({
-  imports: [RouterOutlet],
   selector: 'app-root',
-  styleUrl: './app.css',
-  templateUrl: './app.html',
+  imports: [RouterOutlet, TbToasts, TbConfirm],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <router-outlet />
+    <tb-toasts />
+    <tb-confirm />
+  `,
 })
 export class App {
-  protected readonly title = signal('Thermobox-Ng-Client');
+  constructor() {
+    // Theme, platform and shortcuts apply from the first page on
+    inject(PreferencesService);
+    inject(PlateformeService);
+    inject(ClavierService);
+    const auth = inject(AuthService);
+    const body = inject(DOCUMENT).body;
+    effect(() => {
+      body.classList.toggle('tb-app', auth.connecte());
+      body.classList.toggle('tb-public', !auth.connecte());
+    });
+  }
 }

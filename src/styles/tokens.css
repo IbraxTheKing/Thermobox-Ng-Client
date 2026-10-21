@@ -1,0 +1,409 @@
+/*
+ * ThermoBox – design tokens, shared by every platform.
+ *
+ * Ported as-is from the JSF interface (JSF/src/main/webapp/resources/css/thermobox.css): colours
+ * are roles (--md-*, --tb-*), redefined for the dark theme ([data-theme="dark"]), for the
+ * "panneau" look an ADMIN can choose for everyone ([data-style="panneau"]), and tinted by the
+ * state of what is shown ("Couleurs selon l'état", [data-teinte]).
+ *
+ * The platform layers (shell-ios.css, shell-android.css) only change materials and shapes of
+ * the navigation; these colours stay ThermoBox everywhere.
+ */
+
+@font-face {
+    font-family: "Manrope";
+    font-style: normal;
+    font-weight: 200 800;
+    font-display: swap;
+    src: url("/fonts/manrope-latin.woff2") format("woff2-variations"),
+    url("/fonts/manrope-latin.woff2") format("woff2");
+}
+
+/* ============================== Tokens ============================== */
+
+:root {
+    color-scheme: light;
+
+    --md-primary: #2160cc;
+    --md-on-primary: #ffffff;
+    --md-primary-container: #cfe0f8;
+    --md-on-primary-container: #0b2a57;
+    --md-secondary-container: rgba(255, 255, 255, .5);
+    --md-on-secondary-container: #1d3049;
+    --md-tertiary: #6553c4;
+    --md-tertiary-container: #ded8fa;
+    --md-on-tertiary-container: #241a5a;
+    --md-error: #d93a32;
+    --md-on-error: #ffffff;
+    --md-error-container: #fde1dd;
+    --md-on-error-container: #b3261e;
+
+    --md-surface: #bccde2;
+    --md-surface-container-lowest: #f4f8fd;
+    --md-surface-container-low: #e7eef8;
+    --md-surface-container: #dde7f3;
+    --md-surface-container-high: #d3dfef;
+    --md-surface-container-highest: #c8d6ea;
+    --md-on-surface: #1d3049;
+    --md-on-surface-variant: #4c6480;
+    --md-outline: #6f849c;
+    --md-outline-variant: rgba(29, 48, 73, .14);
+    --md-inverse-surface: #1d2a3c;
+    --md-inverse-on-surface: #eef3fa;
+    --md-inverse-primary: #9cc0ff;
+    --md-scrim: rgba(18, 30, 48, .35);
+
+    /* Glass */
+    --tb-bg:
+            radial-gradient(58vmax 48vmax at 8% 4%, rgba(111, 177, 224, .30), transparent 66%),
+            radial-gradient(48vmax 42vmax at 92% 12%, rgba(155, 155, 220, .22), transparent 64%),
+            radial-gradient(64vmax 50vmax at 76% 105%, rgba(95, 163, 204, .26), transparent 66%),
+            linear-gradient(145deg, #c6d6e8 0%, #b1c2d7 48%, #a0b2c8 100%);
+    --tb-glass: linear-gradient(135deg, rgba(234, 242, 251, .60), rgba(206, 223, 243, .40) 58%, rgba(226, 234, 247, .50));
+    --tb-glass-hover: linear-gradient(135deg, rgba(240, 246, 253, .72), rgba(214, 229, 247, .52) 58%, rgba(232, 239, 250, .62));
+    --tb-glass-solid: rgba(232, 240, 250, .9);
+    --tb-glass-line: rgba(255, 255, 255, .55);
+    --tb-glass-hi: inset 0 1px 0 rgba(255, 255, 255, .6);
+    --tb-glass-shadow: 0 10px 30px rgba(44, 67, 99, .10), inset 0 1px 0 rgba(255, 255, 255, .6);
+    --tb-glass-shadow-hover: 0 16px 38px rgba(44, 67, 99, .15), inset 0 1px 0 rgba(255, 255, 255, .7);
+    --tb-field: rgba(255, 255, 255, .42);
+    --tb-field-hover: rgba(255, 255, 255, .58);
+    --tb-tile: linear-gradient(145deg, rgba(255, 255, 255, .7), rgba(255, 255, 255, .28));
+    --tb-blur: blur(22px) saturate(150%);
+    --tb-brand: linear-gradient(140deg, #3d7cf0, #2bb3d1);
+
+    /* Where a salle stands against its consigne */
+    /* Light theme: lively tones, the text in the same hue rather than near-black */
+    --tb-stable: #1f9d55;
+    --tb-stable-container: #dbf5e4;
+    --tb-on-stable-container: #17773f;
+    --tb-chauffe: #e07b0b;
+    --tb-chauffe-container: #feeacf;
+    --tb-on-chauffe-container: #a85500;
+    --tb-star: #b07a00;
+    --tb-star-container: #ffe7a8;
+    --tb-on-star-container: #3d2a00;
+
+    /* History chart: one colour per box or salle, the average, the consigne (see tbChartExtender) */
+    --tb-serie-1: #2160cc;
+    --tb-serie-2: #e0700f;
+    --tb-serie-3: #1f8a45;
+    --tb-serie-4: #8a43d6;
+    --tb-serie-5: #c9257a;
+    --tb-serie-6: #0b8a9f;
+    --tb-serie-7: #a86b00;
+    --tb-serie-8: #5d6b7c;
+    --tb-serie-moyenne: #1d3049;
+    --tb-serie-consigne: #6553c4;
+
+    --tb-font: "Manrope", "Segoe UI", system-ui, -apple-system, sans-serif;
+
+    --tb-shape-xs: 6px;
+    --tb-shape-sm: 10px;
+    --tb-shape-md: 12px;
+    --tb-shape-lg: 16px;
+    --tb-shape-xl: 24px;
+    --tb-shape-xxl: 32px;
+    --tb-shape-full: 999px;
+
+    --tb-elev-1: 0 2px 8px rgba(30, 50, 80, .12);
+    --tb-elev-2: 0 8px 24px rgba(30, 50, 80, .16);
+    --tb-elev-3: 0 18px 48px rgba(20, 35, 60, .22);
+
+    --tb-ease: cubic-bezier(.2, .8, .2, 1);
+    --tb-spring: cubic-bezier(.3, 1.3, .5, 1);
+    --tb-fast: .18s;
+    --tb-medium: .35s;
+    /* Folding a section or a "details": slow enough to follow what moves */
+    --tb-fold: .6s;
+
+    --tb-rail: 92px;
+}
+
+:root[data-theme="dark"] {
+    color-scheme: dark;
+
+    --md-primary: #8fb4ff;
+    --md-on-primary: #0b2a5c;
+    --md-primary-container: #1e3b70;
+    --md-on-primary-container: #dbe7ff;
+    --md-secondary-container: rgba(255, 255, 255, .08);
+    --md-on-secondary-container: #dbe5f5;
+    --md-tertiary: #c4b5ff;
+    --md-tertiary-container: #3b3270;
+    --md-on-tertiary-container: #e6e0ff;
+    --md-error: #ffb4ab;
+    --md-on-error: #690005;
+    --md-error-container: #7d1a14;
+    --md-on-error-container: #ffdad6;
+
+    --md-surface: #0f141c;
+    --md-surface-container-lowest: #0d121a;
+    --md-surface-container-low: #151c27;
+    --md-surface-container: #1a2230;
+    --md-surface-container-high: #222b3a;
+    --md-surface-container-highest: #2b3546;
+    --md-on-surface: #e4eaf4;
+    --md-on-surface-variant: #a9b7cb;
+    --md-outline: #7a889c;
+    --md-outline-variant: rgba(255, 255, 255, .10);
+    --md-inverse-surface: #e4eaf4;
+    --md-inverse-on-surface: #1a2230;
+    --md-inverse-primary: #2160cc;
+    --md-scrim: rgba(0, 0, 0, .55);
+
+    --tb-bg:
+            radial-gradient(58vmax 48vmax at 8% 4%, rgba(60, 110, 200, .26), transparent 66%),
+            radial-gradient(48vmax 42vmax at 92% 12%, rgba(120, 100, 220, .16), transparent 64%),
+            radial-gradient(64vmax 50vmax at 76% 105%, rgba(40, 140, 190, .18), transparent 66%),
+            linear-gradient(145deg, #121a27 0%, #0d131c 50%, #0a0e15 100%);
+    --tb-glass: linear-gradient(135deg, rgba(48, 60, 82, .58), rgba(28, 36, 50, .48));
+    --tb-glass-hover: linear-gradient(135deg, rgba(56, 70, 96, .66), rgba(32, 42, 58, .56));
+    --tb-glass-solid: rgba(26, 34, 48, .92);
+    --tb-glass-line: rgba(255, 255, 255, .08);
+    --tb-glass-hi: inset 0 1px 0 rgba(255, 255, 255, .06);
+    --tb-glass-shadow: 0 12px 32px rgba(0, 0, 0, .25), inset 0 1px 0 rgba(255, 255, 255, .06);
+    --tb-glass-shadow-hover: 0 16px 40px rgba(0, 0, 0, .32), inset 0 1px 0 rgba(255, 255, 255, .09);
+    --tb-field: rgba(255, 255, 255, .06);
+    --tb-field-hover: rgba(255, 255, 255, .10);
+    --tb-tile: linear-gradient(145deg, rgba(255, 255, 255, .14), rgba(255, 255, 255, .04));
+    --tb-brand: linear-gradient(140deg, #4f86f0, #2aa7c4);
+
+    --tb-stable: #7fd895;
+    --tb-stable-container: rgba(30, 110, 60, .45);
+    --tb-on-stable-container: #c9f2d3;
+    --tb-chauffe: #ffb86f;
+    --tb-chauffe-container: rgba(140, 80, 0, .45);
+    --tb-on-chauffe-container: #ffe0c0;
+    --tb-star: #f5c24f;
+    --tb-star-container: rgba(140, 100, 0, .45);
+    --tb-on-star-container: #ffe7a8;
+
+    --tb-serie-1: #8fb4ff;
+    --tb-serie-2: #fcad70;
+    --tb-serie-3: #81c995;
+    --tb-serie-4: #d7aefb;
+    --tb-serie-5: #ff8bcb;
+    --tb-serie-6: #78d9ec;
+    --tb-serie-7: #fdd663;
+    --tb-serie-8: #bdc5d0;
+    --tb-serie-moyenne: #e4eaf4;
+    --tb-serie-consigne: #c4b5ff;
+
+    --tb-elev-1: 0 2px 8px rgba(0, 0, 0, .35);
+    --tb-elev-2: 0 8px 24px rgba(0, 0, 0, .4);
+    --tb-elev-3: 0 18px 48px rgba(0, 0, 0, .5);
+}
+
+/* State of a salle: every component inside reads --tone-* */
+.tb-ton-stable   { --tone: var(--tb-stable);    --tone-container: var(--tb-stable-container);    --tone-on-container: var(--tb-on-stable-container); }
+.tb-ton-chauffe  { --tone: var(--tb-chauffe);   --tone-container: var(--tb-chauffe-container);   --tone-on-container: var(--tb-on-chauffe-container); }
+.tb-ton-chaud    { --tone: var(--md-error);     --tone-container: var(--md-error-container);     --tone-on-container: var(--md-on-error-container); }
+.tb-ton-inconnu  { --tone: var(--md-outline);   --tone-container: var(--md-secondary-container); --tone-on-container: var(--md-on-surface-variant); }
+
+
+/* Release channels: stable green, beta / rc orange, nightly violet */
+:root {
+    --tb-nightly: #7a4fd6;
+    --tb-nightly-container: #ece3ff;
+    --tb-on-nightly-container: #4b2a9c;
+}
+:root[data-theme="dark"] {
+    --tb-nightly: #c3a8ff;
+    --tb-nightly-container: rgba(110, 70, 200, .42);
+    --tb-on-nightly-container: #e8dcff;
+}
+.tb-canal-stable  { --canal: var(--tb-stable);  --canal-container: var(--tb-stable-container);  --canal-on: var(--tb-on-stable-container); }
+.tb-canal-test    { --canal: var(--tb-chauffe); --canal-container: var(--tb-chauffe-container); --canal-on: var(--tb-on-chauffe-container); }
+.tb-canal-nightly { --canal: var(--tb-nightly); --canal-container: var(--tb-nightly-container); --canal-on: var(--tb-on-nightly-container); }
+
+/*
+ * The palette follows the page tone (dashboard filter, state of the salle shown), discreetly:
+ * every blue of the theme (surfaces, glass, primary, background) is blended towards a muted
+ * version of the tone, at the same lightness. The blend (--tb-mix) is what animates, in oklab:
+ * a soft cross-fade, without going through the colours in between.
+ */
+@property --tb-mix { syntax: "<number>"; inherits: true; initial-value: 0; }
+@property --tb-hue { syntax: "<number>"; inherits: true; initial-value: 262; }
+@property --tb-sat { syntax: "<number>"; inherits: true; initial-value: 1; }
+:root { transition: --tb-mix 1.1s ease-in-out, --tb-hue 1.1s ease-in-out, --tb-sat 1.1s ease-in-out; }
+:root:has(.tb-summary-chip.tb-chip-on.tb-ton-stable), :root:has(.tb-hero-reading.tb-ton-stable) { --tb-mix: .6; --tb-hue: 160; --tb-sat: .55; }
+:root:has(.tb-summary-chip.tb-chip-on.tb-ton-chauffe), :root:has(.tb-hero-reading.tb-ton-chauffe) { --tb-mix: .6; --tb-hue: 70; --tb-sat: .75; }
+:root:has(.tb-summary-chip.tb-chip-on.tb-ton-chaud), :root:has(.tb-hero-reading.tb-ton-chaud) { --tb-mix: .55; --tb-hue: 25; --tb-sat: .65; }
+:root:has(.tb-summary-chip.tb-chip-on.tb-ton-inconnu), :root:has(.tb-hero-reading.tb-ton-inconnu) { --tb-mix: .6; --tb-sat: .1; }
+
+/* Préférences: "Couleurs selon l'état" off (data-teinte), or the control-panel style: the palette
+   stays the same on every page */
+:root:is([data-teinte="off"], [data-style="panneau"]) { --tb-mix: 0 !important; }
+:root:is([data-teinte="off"], [data-style="panneau"]) body { --tb-page-tone: transparent !important; }
+
+/*
+ * Control-panel style, chosen by an ADMIN for everyone (data-style="panneau", ReglagesSite):
+ * flat solid surfaces, thin borders, no blur, no coloured background, straighter corners.
+ * Light or dark still follows each user's toggle.
+ */
+:root[data-style="panneau"] {
+    --md-primary-container: #dbe6f7;
+    --md-secondary-container: #e6ebf1;
+    --md-surface: #eef1f5;
+    --md-surface-container-lowest: #ffffff;
+    --md-surface-container-low: #f7f9fb;
+    --md-surface-container: #f0f3f7;
+    --md-surface-container-high: #e8ecf1;
+    --md-surface-container-highest: #dfe4ea;
+    --md-on-surface: #1f2933;
+    --md-on-surface-variant: #52606d;
+    --md-outline: #7b8794;
+    --md-outline-variant: #d9dee5;
+    --tb-bg: linear-gradient(#eef1f5, #eef1f5);
+    --tb-glass: #ffffff;
+    --tb-glass-hover: #f9fbfd;
+    --tb-glass-solid: #ffffff;
+    --tb-glass-line: #d9dee5;
+    --tb-glass-hi: 0 0 0 transparent;
+    --tb-glass-shadow: 0 1px 2px rgba(16, 24, 40, .05);
+    --tb-glass-shadow-hover: 0 2px 8px rgba(16, 24, 40, .09);
+    --tb-field: #ffffff;
+    --tb-field-hover: #f7f9fb;
+    --tb-tile: #f2f5f9;
+    --tb-blur: none;
+    --tb-brand: linear-gradient(#2160cc, #2160cc);
+    --tb-shape-xs: 4px;
+    --tb-shape-sm: 6px;
+    --tb-shape-md: 6px;
+    --tb-shape-lg: 8px;
+    --tb-shape-xl: 10px;
+    --tb-shape-xxl: 12px;
+}
+:root[data-style="panneau"][data-theme="dark"] {
+    --md-primary-container: #1d3561;
+    --md-secondary-container: #2a3038;
+    --md-surface: #16191e;
+    --md-surface-container-lowest: #111317;
+    --md-surface-container-low: #1b1f25;
+    --md-surface-container: #1f2329;
+    --md-surface-container-high: #262b32;
+    --md-surface-container-highest: #2e343c;
+    --md-on-surface: #e3e7ec;
+    --md-on-surface-variant: #a3adb8;
+    --md-outline: #6b7581;
+    --md-outline-variant: #2f353d;
+    --tb-bg: linear-gradient(#16191e, #16191e);
+    --tb-glass: #1f2329;
+    --tb-glass-hover: #252a31;
+    --tb-glass-solid: #1f2329;
+    --tb-glass-line: #2f353d;
+    --tb-glass-shadow: 0 1px 2px rgba(0, 0, 0, .3);
+    --tb-glass-shadow-hover: 0 2px 8px rgba(0, 0, 0, .4);
+    --tb-field: #16191e;
+    --tb-field-hover: #1b1f25;
+    --tb-tile: #262b32;
+    --tb-brand: linear-gradient(#4f86f0, #4f86f0);
+    --tb-glass-hi: 0 0 0 transparent;
+    --tb-blur: none;
+}
+:root[data-style="panneau"] body * { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+:root[data-style="panneau"] body { background-attachment: scroll; }
+:root[data-style="panneau"] .tb-hero-reading { background: var(--tb-glass); border-left: 4px solid var(--tone, var(--md-primary)); }
+
+/* Older browsers without relative colours keep the blue theme */
+@supports (color: oklch(from red l c h)) {
+    :root {
+        --md-primary: color-mix(in oklab, #2160cc, oklch(from #2160cc l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%));
+        --md-primary-container: color-mix(in oklab, #cfe0f8, oklch(from #cfe0f8 l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%));
+        --md-on-primary-container: color-mix(in oklab, #0b2a57, oklch(from #0b2a57 l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%));
+        --md-on-secondary-container: color-mix(in oklab, #1d3049, oklch(from #1d3049 l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%));
+        --md-surface: color-mix(in oklab, #bccde2, oklch(from #bccde2 l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%));
+        --md-surface-container-lowest: color-mix(in oklab, #f4f8fd, oklch(from #f4f8fd l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%));
+        --md-surface-container-low: color-mix(in oklab, #e7eef8, oklch(from #e7eef8 l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%));
+        --md-surface-container: color-mix(in oklab, #dde7f3, oklch(from #dde7f3 l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%));
+        --md-surface-container-high: color-mix(in oklab, #d3dfef, oklch(from #d3dfef l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%));
+        --md-surface-container-highest: color-mix(in oklab, #c8d6ea, oklch(from #c8d6ea l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%));
+        --md-on-surface: color-mix(in oklab, #1d3049, oklch(from #1d3049 l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%));
+        --md-on-surface-variant: color-mix(in oklab, #4c6480, oklch(from #4c6480 l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%));
+        --md-outline: color-mix(in oklab, #6f849c, oklch(from #6f849c l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%));
+        --md-outline-variant: color-mix(in oklab, rgba(29, 48, 73, .14), oklch(from rgba(29, 48, 73, .14) l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%));
+        --md-inverse-surface: color-mix(in oklab, #1d2a3c, oklch(from #1d2a3c l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%));
+        --md-inverse-on-surface: color-mix(in oklab, #eef3fa, oklch(from #eef3fa l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%));
+        --md-inverse-primary: color-mix(in oklab, #9cc0ff, oklch(from #9cc0ff l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%));
+        --md-scrim: color-mix(in oklab, rgba(18, 30, 48, .35), oklch(from rgba(18, 30, 48, .35) l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%));
+        --tb-bg: radial-gradient(58vmax 48vmax at 8% 4%, color-mix(in oklab, rgba(111, 177, 224, .30), oklch(from rgba(111, 177, 224, .30) l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%)), transparent 66%),
+            radial-gradient(48vmax 42vmax at 92% 12%, color-mix(in oklab, rgba(155, 155, 220, .22), oklch(from rgba(155, 155, 220, .22) l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%)), transparent 64%),
+            radial-gradient(64vmax 50vmax at 76% 105%, color-mix(in oklab, rgba(95, 163, 204, .26), oklch(from rgba(95, 163, 204, .26) l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%)), transparent 66%),
+            linear-gradient(145deg, color-mix(in oklab, #c6d6e8, oklch(from #c6d6e8 l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%)) 0%, color-mix(in oklab, #b1c2d7, oklch(from #b1c2d7 l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%)) 48%, color-mix(in oklab, #a0b2c8, oklch(from #a0b2c8 l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%)) 100%);
+        --tb-glass: linear-gradient(135deg, color-mix(in oklab, rgba(234, 242, 251, .60), oklch(from rgba(234, 242, 251, .60) l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%)), color-mix(in oklab, rgba(206, 223, 243, .40), oklch(from rgba(206, 223, 243, .40) l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%)) 58%, color-mix(in oklab, rgba(226, 234, 247, .50), oklch(from rgba(226, 234, 247, .50) l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%)));
+        --tb-glass-hover: linear-gradient(135deg, color-mix(in oklab, rgba(240, 246, 253, .72), oklch(from rgba(240, 246, 253, .72) l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%)), color-mix(in oklab, rgba(214, 229, 247, .52), oklch(from rgba(214, 229, 247, .52) l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%)) 58%, color-mix(in oklab, rgba(232, 239, 250, .62), oklch(from rgba(232, 239, 250, .62) l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%)));
+        --tb-glass-solid: color-mix(in oklab, rgba(232, 240, 250, .9), oklch(from rgba(232, 240, 250, .9) l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%));
+        --tb-glass-shadow: 0 10px 30px color-mix(in oklab, rgba(44, 67, 99, .10), oklch(from rgba(44, 67, 99, .10) l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%)), inset 0 1px 0 rgba(255, 255, 255, .6);
+        --tb-glass-shadow-hover: 0 16px 38px color-mix(in oklab, rgba(44, 67, 99, .15), oklch(from rgba(44, 67, 99, .15) l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%)), inset 0 1px 0 rgba(255, 255, 255, .7);
+        --tb-brand: linear-gradient(140deg, color-mix(in oklab, #3d7cf0, oklch(from #3d7cf0 l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%)), color-mix(in oklab, #2bb3d1, oklch(from #2bb3d1 l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%)));
+        --tb-serie-moyenne: color-mix(in oklab, #1d3049, oklch(from #1d3049 l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%));
+    }
+    :root[data-theme="dark"] {
+        --md-primary: color-mix(in oklab, #8fb4ff, oklch(from #8fb4ff l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%));
+        --md-on-primary: color-mix(in oklab, #0b2a5c, oklch(from #0b2a5c l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%));
+        --md-primary-container: color-mix(in oklab, #1e3b70, oklch(from #1e3b70 l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%));
+        --md-on-primary-container: color-mix(in oklab, #dbe7ff, oklch(from #dbe7ff l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%));
+        --md-on-secondary-container: color-mix(in oklab, #dbe5f5, oklch(from #dbe5f5 l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%));
+        --md-surface: color-mix(in oklab, #0f141c, oklch(from #0f141c l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%));
+        --md-surface-container-lowest: color-mix(in oklab, #0d121a, oklch(from #0d121a l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%));
+        --md-surface-container-low: color-mix(in oklab, #151c27, oklch(from #151c27 l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%));
+        --md-surface-container: color-mix(in oklab, #1a2230, oklch(from #1a2230 l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%));
+        --md-surface-container-high: color-mix(in oklab, #222b3a, oklch(from #222b3a l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%));
+        --md-surface-container-highest: color-mix(in oklab, #2b3546, oklch(from #2b3546 l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%));
+        --md-on-surface: color-mix(in oklab, #e4eaf4, oklch(from #e4eaf4 l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%));
+        --md-on-surface-variant: color-mix(in oklab, #a9b7cb, oklch(from #a9b7cb l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%));
+        --md-outline: color-mix(in oklab, #7a889c, oklch(from #7a889c l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%));
+        --md-inverse-surface: color-mix(in oklab, #e4eaf4, oklch(from #e4eaf4 l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%));
+        --md-inverse-on-surface: color-mix(in oklab, #1a2230, oklch(from #1a2230 l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%));
+        --md-inverse-primary: color-mix(in oklab, #2160cc, oklch(from #2160cc l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%));
+        --tb-bg: radial-gradient(58vmax 48vmax at 8% 4%, color-mix(in oklab, rgba(60, 110, 200, .26), oklch(from rgba(60, 110, 200, .26) l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%)), transparent 66%),
+            radial-gradient(48vmax 42vmax at 92% 12%, color-mix(in oklab, rgba(120, 100, 220, .16), oklch(from rgba(120, 100, 220, .16) l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%)), transparent 64%),
+            radial-gradient(64vmax 50vmax at 76% 105%, color-mix(in oklab, rgba(40, 140, 190, .18), oklch(from rgba(40, 140, 190, .18) l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%)), transparent 66%),
+            linear-gradient(145deg, color-mix(in oklab, #121a27, oklch(from #121a27 l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%)) 0%, color-mix(in oklab, #0d131c, oklch(from #0d131c l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%)) 50%, color-mix(in oklab, #0a0e15, oklch(from #0a0e15 l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%)) 100%);
+        --tb-glass: linear-gradient(135deg, color-mix(in oklab, rgba(48, 60, 82, .58), oklch(from rgba(48, 60, 82, .58) l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%)), color-mix(in oklab, rgba(28, 36, 50, .48), oklch(from rgba(28, 36, 50, .48) l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%)));
+        --tb-glass-hover: linear-gradient(135deg, color-mix(in oklab, rgba(56, 70, 96, .66), oklch(from rgba(56, 70, 96, .66) l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%)), color-mix(in oklab, rgba(32, 42, 58, .56), oklch(from rgba(32, 42, 58, .56) l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%)));
+        --tb-glass-solid: color-mix(in oklab, rgba(26, 34, 48, .92), oklch(from rgba(26, 34, 48, .92) l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%));
+        --tb-brand: linear-gradient(140deg, color-mix(in oklab, #4f86f0, oklch(from #4f86f0 l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%)), color-mix(in oklab, #2aa7c4, oklch(from #2aa7c4 l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%)));
+        --tb-serie-moyenne: color-mix(in oklab, #e4eaf4, oklch(from #e4eaf4 l calc(c * var(--tb-sat)) var(--tb-hue)) calc(var(--tb-mix) * 100%));
+    }
+}
+
+/* Light theme: fields stood out too little from the light glass (dashboard search, filters) */
+:root { --tb-field: rgba(255, 255, 255, .68); --tb-field-hover: rgba(255, 255, 255, .82); --tb-field-line: rgba(29, 48, 73, .2); }
+:root[data-theme="dark"] { --tb-field-line: rgba(255, 255, 255, .12); }
+
+/*
+ * Page tint: the state picked on the dashboard (filter chips) or the state of the salle shown
+ * tints the background. --tb-page-tone is registered so the tint fades from one colour to the
+ * next instead of jumping.
+ */
+@property --tb-page-tone {
+    syntax: "<color>";
+    inherits: true;
+    initial-value: transparent;
+}
+:root body {
+    background:
+        radial-gradient(75vmax 62vmax at 6% 0%, color-mix(in srgb, var(--tb-page-tone) 14%, transparent), transparent 68%),
+        radial-gradient(62vmax 56vmax at 96% 100%, color-mix(in srgb, var(--tb-page-tone) 8%, transparent), transparent 70%),
+        var(--tb-bg);
+    background-color: var(--md-surface);
+    background-attachment: fixed;
+    transition: --tb-page-tone 1.1s ease-in-out;
+}
+:root:has(.tb-summary-chip.tb-chip-on.tb-ton-stable) body,
+:root:has(.tb-hero-reading.tb-ton-stable) body { --tb-page-tone: var(--tb-stable); }
+:root:has(.tb-summary-chip.tb-chip-on.tb-ton-chauffe) body,
+:root:has(.tb-hero-reading.tb-ton-chauffe) body { --tb-page-tone: var(--tb-chauffe); }
+:root:has(.tb-summary-chip.tb-chip-on.tb-ton-chaud) body,
+:root:has(.tb-hero-reading.tb-ton-chaud) body { --tb-page-tone: var(--md-error); }
+:root:has(.tb-summary-chip.tb-chip-on.tb-ton-inconnu) body,
+:root:has(.tb-hero-reading.tb-ton-inconnu) body { --tb-page-tone: var(--md-outline); }
+
+/*
+ * White flash between pages: while the next page is not painted yet, the browser shows the
+ * canvas, white by default. The canvas now has the page colour (also set inline in layout.xhtml,
+ * before this file loads).
+ */
+html { background-color: var(--md-surface); }

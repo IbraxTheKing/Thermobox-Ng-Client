@@ -1,0 +1,228 @@
+/* Styles of what only exists in this client, or is built differently from the JSF interface
+   (see styles.css). Same tokens, same look. */
+
+/* ============================== Login ============================== */
+
+.tb-auth-card { border-radius: var(--tb-shape-xxl); padding: 28px 28px 24px; }
+.tb-auth-card .tb-panel-title { font-size: 1.8rem; font-weight: 800; letter-spacing: -.035em; }
+.tb-auth-pied { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 16px; }
+.tb-auth-pied .tb-serveur-btn { margin-right: -14px; padding: 6px 12px; font-size: .9rem; }
+.tb-auth > .tb-message { margin: 0; }
+@media (max-width: 640px) {
+    .tb-public .tb-main { padding: calc(20px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(32px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left)); }
+    .tb-auth-card { padding: 22px 18px 18px; border-radius: var(--tb-shape-xl); }
+}
+
+/* ============================== Loading placeholders ============================== */
+
+.tb-room-attente { min-height: 260px; }
+.tb-attente-ligne {
+    height: 14px;
+    margin: 8px 0;
+    border-radius: 7px;
+    background: color-mix(in srgb, var(--md-on-surface) 10%, transparent);
+    animation: tb-attente-pulse 1.4s ease-in-out infinite;
+}
+.tb-attente-titre { min-height: 1.1em; width: 50%; border-radius: 12px; background: color-mix(in srgb, var(--md-on-surface) 8%, transparent); animation: tb-attente-pulse 1.4s ease-in-out infinite; }
+@keyframes tb-attente-pulse { 50% { opacity: .45; } }
+.tb-chart-attente, .tb-chart-vide { height: 100%; display: grid; place-items: center; margin: 0; }
+
+/* ============================== Salles: tree (wide screens) ============================== */
+
+.tb-arbre-salles {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--tb-glass-line);
+    border-radius: var(--tb-shape-xl);
+    background: var(--tb-glass);
+    box-shadow: var(--tb-glass-shadow);
+    color: var(--md-on-surface);
+}
+.tb-arbre-salles ul { margin: 0; padding: 0; list-style: none; }
+.tb-arbre-salles ul ul { padding-left: 24px; }
+@media (max-width: 840px) { .tb-arbre-salles { display: none; } }
+
+.tb-node-ligne {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    width: 100%;
+    min-height: 56px;
+    padding: 0 8px 0 2px;
+    border-radius: var(--tb-shape-lg);
+    transition: background-color var(--tb-fast) linear;
+}
+.tb-node-ligne:has(.tb-tree-toggler:not(.tb-tree-feuille)) { cursor: pointer; }
+.tb-node-ligne:hover { background: var(--md-secondary-container); }
+.tb-node-ligne[draggable="true"] { cursor: grab; }
+.tb-node-ligne.tb-glisse { opacity: .45; }
+.tb-node-ligne.tb-survol {
+    background: color-mix(in srgb, var(--md-primary) 16%, transparent);
+    outline: 2px dashed var(--md-primary);
+    outline-offset: -2px;
+}
+.tb-tree-toggler {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--tb-shape-sm);
+    background: transparent;
+    color: var(--md-on-surface-variant);
+    cursor: pointer;
+}
+.tb-tree-toggler:hover { background: var(--md-secondary-container); color: var(--md-on-surface); }
+.tb-tree-toggler .pi { font-size: .8rem; transition: transform .45s var(--tb-ease); }
+.tb-tree-toggler.tb-ouvert .pi { transform: rotate(90deg); }
+.tb-tree-feuille { cursor: default; }
+.tb-tree-feuille:hover { background: none; }
+/* Children slide open and closed (0fr → 1fr) */
+.tb-tree-enfants { display: grid; grid-template-rows: 1fr; transition: grid-template-rows .45s var(--tb-ease); }
+.tb-tree-enfants > div { min-height: 0; overflow: hidden; }
+.tb-tree-enfants.tb-replie { grid-template-rows: 0fr; }
+.tb-tree-enfants.tb-replie > div { visibility: hidden; transition: visibility 0s .45s; }
+
+.tb-node { display: flex; align-items: center; gap: 12px; width: 100%; min-width: 0; }
+.tb-node-main { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 10px; flex: 1 1 auto; min-width: 0; }
+.tb-node-name { font-weight: 700; }
+.tb-node-main .tb-muted { font-size: .82rem; }
+.tb-tree-icon { width: 36px; height: 36px; border-radius: var(--tb-shape-sm); font-size: .95rem; }
+.tb-node-temp {
+    width: 9.5rem;
+    flex: none;
+    text-align: right;
+    white-space: nowrap;
+    font-size: 1.2rem;
+    font-weight: 600;
+    letter-spacing: -.03em;
+    font-variant-numeric: tabular-nums;
+}
+.tb-node-temp .tb-muted { display: block; font-size: .72rem; font-weight: 500; letter-spacing: 0; line-height: 1.1; }
+.tb-node-actions {
+    width: 13rem;
+    flex: none;
+    display: inline-flex;
+    justify-content: flex-end;
+    gap: 2px;
+    opacity: .5;
+    transition: opacity var(--tb-fast) linear;
+}
+.tb-node-ligne:hover .tb-node-actions, .tb-node-actions:focus-within { opacity: 1; }
+.tb-node-actions .tb-btn.tb-icon { width: 38px; min-width: 38px; height: 38px; }
+@media (hover: none) { .tb-node-actions { opacity: 1; } }
+
+/* Top-level drop zone: dropping there detaches the element */
+.tb-arbre-racine {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    padding: 12px;
+    border: 2px dashed var(--md-outline-variant);
+    border-radius: var(--tb-shape-lg);
+    color: var(--md-on-surface-variant);
+    font-size: .9rem;
+    font-weight: 600;
+}
+.tb-arbre-racine.tb-visible { display: flex; }
+.tb-arbre-racine.tb-survol { border-color: var(--md-primary); background: color-mix(in srgb, var(--md-primary) 12%, transparent); color: var(--md-primary); }
+
+/* Phone list: the folder head and the items are buttons here */
+button.tb-drill-crumb, button.tb-drill-main { border: 0; background: none; font: inherit; text-align: left; cursor: pointer; }
+.tb-drill-main { width: 100%; }
+.tb-drill-more { align-self: center; width: 44px; min-width: 44px; height: 44px; margin-right: 4px; }
+.tb-drill-add { width: 100%; margin-top: 12px; min-height: 48px; }
+
+/* Actions of an element (sheet, phones) */
+.tb-sheet-head { display: flex; align-items: center; gap: 14px; padding: 6px 0 16px; border-bottom: 1px solid var(--md-outline-variant); }
+.tb-sheet-head > div { display: flex; flex-direction: column; min-width: 0; }
+.tb-sheet-head strong { font-size: 1.1rem; font-weight: 750; }
+.tb-sheet-list { display: flex; flex-direction: column; padding: 6px 0 0; }
+.tb-sheet-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-height: 52px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: var(--tb-shape-md);
+    background: none;
+    color: var(--md-on-surface);
+    font: inherit;
+    font-size: 1rem;
+    font-weight: 600;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+}
+.tb-sheet-item .pi { width: 24px; color: var(--md-on-surface-variant); font-size: 1.1rem; text-align: center; }
+.tb-sheet-item:hover, .tb-sheet-item:active { background: var(--md-secondary-container); }
+.tb-sheet-danger, .tb-sheet-danger .pi { color: var(--md-error); }
+
+/* ============================== Detail page ============================== */
+
+/* The photo picker: a button over a hidden file field */
+.tb-upload { position: relative; overflow: hidden; }
+.tb-upload input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; font-size: 0; }
+.tb-photo > img { animation: tb-fade-in .6s ease; }
+.tb-photo .tb-btn.tb-photo-remove {
+    border: 1px solid var(--tb-glass-line);
+    background: var(--tb-glass-solid);
+    color: var(--md-error);
+    box-shadow: var(--tb-elev-1);
+}
+.tb-crumb.tb-crumb-off { cursor: default; }
+.tb-hero-reading .tb-temp-hero { margin-top: auto; }
+.tb-switch-row .tb-switch-text { font-weight: 650; }
+.tb-consigne-options .tb-switch-row { flex: none; }
+
+/* ============================== Gestion ============================== */
+
+.tb-gest-onglets > button { gap: 8px; }
+.tb-select.tb-gest-role { width: auto; min-width: 170px; min-height: 40px; padding-top: 6px; padding-bottom: 6px; }
+.tb-gest-table .tb-col-actions { white-space: nowrap; text-align: right; }
+.tb-gest-table tr.tb-row-on td { background: color-mix(in srgb, var(--md-primary) 8%, transparent); }
+.tb-dialog .tb-switch-row { margin: 6px 0 4px; }
+
+/* Several choices with a search (users of a group…) */
+.tb-choix-multiple {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px;
+    border: 1px solid var(--tb-glass-line);
+    border-radius: var(--tb-shape-lg);
+    background: var(--tb-field);
+}
+.tb-choix-recherche { flex: none; }
+.tb-choix-recherche > .tb-input { height: 42px; min-height: 42px; border-radius: var(--tb-shape-md); padding-left: 42px; box-shadow: none; }
+.tb-choix-recherche > .pi { left: 14px; }
+.tb-choix-liste { max-height: 200px; margin: 0; padding: 0 4px; overflow-y: auto; list-style: none; overscroll-behavior: contain; }
+.tb-choix-liste .tb-choix { min-height: 40px; padding: 4px 6px; border-radius: var(--tb-shape-sm); font-weight: 600; }
+.tb-choix-liste .tb-choix:hover { background: var(--md-secondary-container); }
+.tb-choix-vide { padding: 8px 6px; }
+.tb-choix-compte { padding: 0 6px; font-size: .8rem; }
+
+/* ============================== Updates ============================== */
+
+.tb-maj-options .tb-choix { align-items: flex-start; font-weight: 600; }
+.tb-maj-options .tb-check { margin-top: 2px; }
+.tb-maj-etat { margin-left: auto; }
+
+/* ============================== Préférences ============================== */
+
+.tb-pref .tb-pref-text .pi { font-size: .85rem; }
+.tb-panel .tb-pref-portee { margin: 14px 0 0; font-size: .88rem; }
+.tb-pref-clavier .tb-raccourcis { margin-top: 12px; }
+
+/* ============================== Shell bits ============================== */
+
+/* The page-level theme toggle of the public pages sits over the safe area */
+.tb-public .tb-theme-corner { z-index: 70; }
+
+/* Installed app (PWA / native): no text selection on the chrome, as in native apps */
+.tb-natif .tb-rail, .tb-natif .tb-topbar, :root[data-plateforme="ios"] .tb-rail, :root[data-plateforme="android"] .tb-rail { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }

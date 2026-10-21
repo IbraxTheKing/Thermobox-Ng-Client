@@ -1,0 +1,67 @@
+<button type="button" class="tb-icon-btn tb-theme-btn tb-theme-corner" (click)="basculerTheme($event)" title="Changer de thème" aria-label="Changer de thème">
+  <i class="pi pi-moon tb-if-light"></i><i class="pi pi-sun tb-if-dark"></i>
+</button>
+
+<main class="tb-main">
+  <div class="tb-auth">
+    <div class="tb-auth-brand">
+      <span class="tb-logo tb-logo-xl" aria-hidden="true"></span>
+      <span class="tb-auth-name">Thermobox</span>
+      <span class="tb-auth-tagline">La température de chaque salle, en un coup d'œil.</span>
+    </div>
+
+    @if (compteSupprime() === 'true') {
+      <div class="tb-message"><i class="pi pi-info-circle"></i><div><strong>Compte supprimé</strong>Ton compte a bien été supprimé.</div></div>
+    }
+    @if (session() === 'expiree') {
+      <div class="tb-message tb-message-warn"><i class="pi pi-clock"></i><div><strong>Session terminée</strong>Reconnecte-toi pour continuer.</div></div>
+    }
+    @if (inscrit() === 'true') {
+      <div class="tb-message"><i class="pi pi-check-circle"></i><div><strong>Compte créé</strong>Tu peux maintenant te connecter.</div></div>
+    }
+
+    <section class="tb-panel tb-auth-card">
+      <h1 class="tb-panel-title">Connexion</h1>
+      <form (submit)="connecter($event)" novalidate>
+        @if (champServeur()) {
+          <div class="tb-field">
+            <label class="tb-label" for="serveur">Serveur ThermoBox</label>
+            <input id="serveur" class="tb-input" type="url" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false"
+                   placeholder="thermobox.mon-organisation.fr" [value]="adresse()" (input)="adresse.set($any($event.target).value)" />
+            <span class="tb-field-hint">L'adresse donnée par ton administrateur, avec le port s'il y en a un.</span>
+          </div>
+        }
+        <div class="tb-field">
+          <label class="tb-label" for="username">Nom d'utilisateur</label>
+          <input id="username" class="tb-input" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false"
+                 [value]="username()" (input)="username.set($any($event.target).value)"
+                 [class.tb-invalid]="envoye() && !username().trim()" required />
+          @if (envoye() && !username().trim()) {
+            <span class="tb-field-error">Nom d'utilisateur obligatoire</span>
+          }
+        </div>
+        <div class="tb-field">
+          <label class="tb-label" for="password">Mot de passe</label>
+          <tb-password inputId="password" [(valeur)]="password" autocomplete="current-password" [invalide]="envoye() && !password()" requis />
+          @if (envoye() && !password()) {
+            <span class="tb-field-error">Mot de passe obligatoire</span>
+          }
+        </div>
+        @if (erreur(); as e) {
+          <div class="tb-message tb-message-error" role="alert"><i class="pi pi-times-circle"></i><div>{{ e }}</div></div>
+        }
+        <button type="submit" class="tb-btn tb-full" [class.tb-busy]="enCours()" [disabled]="enCours()">
+          <i class="pi" [class.pi-sign-in]="!enCours()" [class.pi-spinner]="enCours()"></i>Se connecter
+        </button>
+      </form>
+      <div class="tb-panel-footer tb-auth-pied">
+        <span>Pas encore de compte ? <a routerLink="/register">Créer un compte</a></span>
+        @if (!serveur.inconnu() && !changerServeur()) {
+          <button type="button" class="tb-text-btn tb-serveur-btn" (click)="changerServeur.set(true)">
+            <i class="pi pi-server"></i>{{ plateforme.natif ? 'Changer de serveur' : 'Autre serveur' }}
+          </button>
+        }
+      </div>
+    </section>
+  </div>
+</main>

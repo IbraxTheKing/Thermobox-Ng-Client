@@ -1,0 +1,218 @@
+<header class="tb-page-head">
+  <div class="tb-page-title">
+    <span class="tb-eyebrow">{{ auth.admin() ? 'Administration' : 'Gestionnaire' }}</span>
+    <h1>Gestion des salles</h1>
+  </div>
+  @if (auth.admin() && onglet() === 'droits') {
+    <button type="button" class="tb-btn tb-btn-lg tb-fab" (click)="nouveauGroupe()"><i class="pi pi-users"></i>Nouveau groupe</button>
+  }
+  @if (auth.admin() && onglet() === 'salles') {
+    <button type="button" class="tb-btn tb-btn-lg tb-fab" (click)="nouveau()"><i class="pi pi-plus"></i>Nouvel élément</button>
+  }
+</header>
+
+<!-- ADMIN: the elements, or the users and their groups -->
+@if (auth.admin()) {
+  <div class="tb-segmented tb-gest-onglets" role="tablist">
+    <button type="button" role="tab" [attr.aria-selected]="onglet() === 'salles'" [class.tb-seg-on]="onglet() === 'salles'" (click)="ouvrirOnglet('salles')">
+      <i class="pi pi-building"></i>Salles et bâtiments
+    </button>
+    <button type="button" role="tab" [attr.aria-selected]="onglet() === 'droits'" [class.tb-seg-on]="onglet() === 'droits'" (click)="ouvrirOnglet('droits')">
+      <i class="pi pi-users"></i>Utilisateurs et groupes
+    </button>
+  </div>
+}
+
+@if (onglet() === 'salles') {
+  <p class="tb-lead">
+    {{
+      auth.admin()
+        ? 'Tous les bâtiments, étages, salles et boîtiers sur une page : consignes, noms, emplacements. Coche plusieurs lignes pour agir sur toutes à la fois.'
+        : 'Les consignes de toutes vos salles sur une page. Coche plusieurs lignes pour leur envoyer la même consigne.'
+    }}
+  </p>
+
+  <div class="tb-toolbar">
+    <span class="tb-search">
+      <i class="pi pi-search"></i>
+      <input class="tb-input" type="search" placeholder="Rechercher un élément ou un emplacement…" autocomplete="off" aria-label="Rechercher"
+             [value]="recherche()" (input)="recherche.set($any($event.target).value); page.set(0)" />
+    </span>
+  </div>
+
+  <div class="tb-summary">
+    <button type="button" class="tb-summary-chip" [class.tb-chip-on]="type() == null && !seulementATraiter()" (click)="filtrerType(null)">
+      <i class="pi pi-check tb-chip-check"></i>Tout<span class="tb-chip-n">{{ nombre(null) }}</span>
+    </button>
+    @for (k of types(); track k) {
+      <button type="button" class="tb-summary-chip" [class.tb-chip-on]="type() === k" (click)="filtrerType(k)">
+        <i class="pi pi-check tb-chip-check"></i>{{ libelles[k] }}<span class="tb-chip-n">{{ nombre(k) }}</span>
+      </button>
+    }
+    <button type="button" class="tb-summary-chip tb-ton-chauffe" [class.tb-chip-on]="seulementATraiter()" (click)="basculerATraiter()">
+      <i class="pi pi-check tb-chip-check"></i>À traiter<span class="tb-chip-n">{{ nombreATraiter() }}</span>
+    </button>
+  </div>
+
+  <p class="tb-muted tb-gest-astuce">
+    <i class="pi pi-check-square"></i> Coche des lignes pour agir sur plusieurs éléments à la fois : les actions apparaissent en bas de l'écran.
+  </p>
+
+  <!-- Actions on the ticked rows: a bar fixed at the bottom of the screen, each action opens its own small window -->
+  <div class="tb-barre" [class.tb-barre-on]="selection().size > 0" [attr.aria-hidden]="selection().size === 0">
+    <span class="tb-barre-compte">{{ selection().size }} sélectionné(s)</span>
+    <div class="tb-barre-actions">
+      <button type="button" class="tb-btn tb-tonal" (click)="dlgConsigne.set(true)"><i class="pi pi-sliders-h"></i>Consigne</button>
+      @if (auth.admin()) {
+        <button type="button" class="tb-btn tb-flat" (click)="cibleId.set(null); dlgDeplacer.set(true)"><i class="pi pi-arrow-right"></i>Déplacer</button>
+        <button type="button" class="tb-btn tb-flat" (click)="ouvrirAcces()"><i class="pi pi-key"></i>Accès</button>
+        <button type="button" class="tb-btn tb-flat tb-btn-danger" (click)="supprimerSelection()"><i class="pi pi-trash"></i>Supprimer</button>
+      }
+    </div>
+    <button type="button" class="tb-btn tb-icon tb-flat tb-barre-fermer" title="Tout décocher" aria-label="Tout décocher" (click)="toutDecocher()"><i class="pi pi-times"></i></button>
+  </div>
+
+  <div class="tb-table tb-gest-table">
+    <table>
+      <thead>
+        <tr>
+          <th class="tb-col-check"><input type="checkbox" class="tb-check" [checked]="toutCoche()" (change)="toutCocher($any($event.target).checked)" aria-label="Tout cocher" /></th>
+          <th class="tb-col-salle">Élément</th>
+          <th class="tb-col-num">Température</th>
+          <th class="tb-col-consigne">Consigne</th>
+          @if (auth.admin()) {
+            <th class="tb-col-actions">Actions</th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (l of lignesPage(); track l.n.id) {
+          <tr class="tb-ton-{{ l.etat.ton }}" [class.tb-row-on]="selection().has(l.n.id)">
+            <td class="tb-col-check">
+              <input type="checkbox" class="tb-check" [checked]="selection().has(l.n.id)" (change)="cocher(l.n.id, $any($event.target).checked)" [attr.aria-label]="'Sélectionner ' + l.n.name" />
+            </td>
+            <td class="tb-col-salle">
+              <div class="tb-gest-nom">
+                <span class="tb-section-icon"><i class="pi" [class]="icones[l.n.kind]"></i></span>
+                <span class="tb-gest-nom-texte">
+                  <a [routerLink]="['/app/salle', l.n.id]" title="Voir la page"><strong>{{ l.n.name }}</strong></a>
+                  <span class="tb-muted">{{ libelles[l.n.kind] }}@if (l.chemin) { · {{ l.chemin }} }</span>
+                  @if (!l.n.rattache) {
+                    <span class="tb-tag tb-tag-warning">Non rattaché</span>
+                  }
+                </span>
+              </div>
+            </td>
+            <td class="tb-col-num">
+              <strong>{{ unite.t(l.n.temperature) }}</strong>
+              @if (!l.boitier) {
+                <span class="tb-state tb-state-sm">{{ l.etat.label }}</span>
+                @if (l.n.boitiers > 0) {
+                  <span class="tb-muted tb-gest-boitiers"><i class="pi pi-wifi"></i>{{ l.n.boitiers }}</span>
+                }
+              }
+            </td>
+            <td class="tb-col-consigne">
+              @if (!l.boitier) {
+                <span class="tb-gest-consigne-actuelle">
+                  {{ unite.t(l.n.consigne?.value) }} {{ unite.symbole() }}
+                  @if (l.n.consigne?.heritee) {
+                    <span class="tb-muted">héritée de {{ l.n.consigne?.sourceName }}</span>
+                  }
+                </span>
+                <span class="tb-saisie" [title]="'Nouvelle consigne pour ' + l.n.name">
+                  <input inputmode="decimal" placeholder="Nouvelle" autocomplete="off" [attr.aria-label]="'Nouvelle consigne pour ' + l.n.name"
+                         [value]="saisies().get(l.n.id) ?? ''" (input)="saisir(l.n.id, $any($event.target).value)" (keydown.enter)="appliquer(l)" />
+                  <span class="tb-saisie-unite">{{ unite.symbole() }}</span>
+                  <button type="button" [title]="'Envoyer cette consigne à ' + l.n.name" [attr.aria-label]="'Envoyer cette consigne à ' + l.n.name" (click)="appliquer(l)">
+                    <i class="pi" [class.pi-send]="envoiEnCours() !== l.n.id" [class.pi-spinner]="envoiEnCours() === l.n.id" [class.pi-spin]="envoiEnCours() === l.n.id"></i>
+                  </button>
+                </span>
+              } @else {
+                <span class="tb-muted">Suit sa salle</span>
+              }
+            </td>
+            @if (auth.admin()) {
+              <td class="tb-col-actions">
+                <button type="button" class="tb-btn tb-icon tb-flat" [title]="'Renommer ou déplacer ' + l.n.name" (click)="modifier(l)"><i class="pi pi-pencil"></i></button>
+                <button type="button" class="tb-btn tb-icon tb-flat tb-btn-danger" [title]="'Supprimer ' + l.n.name" (click)="supprimer(l)"><i class="pi pi-trash"></i></button>
+              </td>
+            }
+          </tr>
+        } @empty {
+          <tr class="tb-vide"><td [attr.colspan]="auth.admin() ? 5 : 4">{{ store.arbre() ? 'Aucun élément ne correspond' : 'Chargement…' }}</td></tr>
+        }
+      </tbody>
+    </table>
+    @if (pages() > 1) {
+      <div class="tb-pagination">
+        <button type="button" [disabled]="page() === 0" (click)="page.set(page() - 1)" aria-label="Page précédente"><i class="pi pi-angle-left"></i></button>
+        @for (p of numerosPages(); track p) {
+          <button type="button" [class.tb-page-on]="p === page()" (click)="page.set(p)">{{ p + 1 }}</button>
+        }
+        <button type="button" [disabled]="page() + 1 >= pages()" (click)="page.set(page() + 1)" aria-label="Page suivante"><i class="pi pi-angle-right"></i></button>
+      </div>
+    }
+  </div>
+}
+
+@if (auth.admin() && onglet() === 'droits') {
+  <tb-droits />
+}
+
+<!-- Actions of the bottom bar, each in a small window -->
+<tb-sheet [(ouvert)]="dlgConsigne" titre="Consigne pour la sélection" [largeur]="400">
+  <form (submit)="appliquerSelection($event)" novalidate>
+    <p class="tb-muted">Les bâtiments, étages et salles sélectionnés la reçoivent ; les boîtiers suivent leur salle.</p>
+    <div class="tb-field">
+      <label class="tb-label" for="tb-g-consigne">Consigne</label>
+      <span class="tb-saisie tb-saisie-grande">
+        <input id="tb-g-consigne" inputmode="decimal" autocomplete="off" [value]="consigneGroupe()" (input)="consigneGroupe.set($any($event.target).value)" />
+        <span class="tb-saisie-unite">{{ unite.symbole() }}</span>
+      </span>
+    </div>
+    <div class="tb-switch-row">
+      <tb-switch [(checked)]="forcer" label="Remplacer aussi les consignes propres des éléments contenus" />
+      <span class="tb-switch-text" (click)="forcer.set(!forcer())">Remplacer aussi les consignes propres des éléments contenus</span>
+    </div>
+    <div class="tb-actions">
+      <button type="button" class="tb-btn tb-flat" (click)="dlgConsigne.set(false)">Annuler</button>
+      <button type="submit" class="tb-btn"><i class="pi pi-send"></i>Envoyer</button>
+    </div>
+  </form>
+</tb-sheet>
+
+<tb-sheet [(ouvert)]="dlgDeplacer" titre="Déplacer la sélection" [largeur]="440">
+  <p class="tb-muted">Seules les destinations possibles pour tous les éléments sélectionnés sont proposées.</p>
+  <div class="tb-field">
+    <label class="tb-label" for="tb-g-cible">Dans</label>
+    <select id="tb-g-cible" class="tb-select" (change)="cibleId.set($any($event.target).value === '' ? null : +$any($event.target).value)">
+      <option value="" [selected]="cibleId() == null">Rien (non rattachés)</option>
+      @for (c of ciblesPossibles(); track c.n.id) {
+        <option [value]="c.n.id" [selected]="cibleId() === c.n.id">{{ libelle(c) }}</option>
+      }
+    </select>
+  </div>
+  <div class="tb-actions">
+    <button type="button" class="tb-btn tb-flat" (click)="dlgDeplacer.set(false)">Annuler</button>
+    <button type="button" class="tb-btn" (click)="deplacerSelection()"><i class="pi pi-arrow-right"></i>Déplacer</button>
+  </div>
+</tb-sheet>
+
+<tb-sheet [(ouvert)]="dlgAcces" titre="Accès à la sélection" [largeur]="460">
+  <p class="tb-muted">Les éléments sélectionnés, avec tout ce qu'ils contiennent, pour ces utilisateurs et ces groupes.</p>
+  <div class="tb-field">
+    <span class="tb-label">Utilisateurs</span>
+    <tb-choix-multiple [options]="optionsUsers()" [(valeur)]="accesUsers" placeholder="Rechercher un utilisateur…" />
+  </div>
+  <div class="tb-field">
+    <span class="tb-label">Groupes</span>
+    <tb-choix-multiple [options]="optionsGroupes()" [(valeur)]="accesGroupes" placeholder="Rechercher un groupe…" />
+  </div>
+  <div class="tb-actions">
+    <button type="button" class="tb-btn tb-flat" (click)="changerAcces(false)"><i class="pi pi-lock"></i>Retirer l'accès</button>
+    <button type="button" class="tb-btn" (click)="changerAcces(true)"><i class="pi pi-lock-open"></i>Donner l'accès</button>
+  </div>
+</tb-sheet>
+
+<tb-element-dialog [avecBoitiers]="auth.voitBoitiers()" (enregistre)="apresEnregistrement()" />

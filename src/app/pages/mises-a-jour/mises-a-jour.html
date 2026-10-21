@@ -1,0 +1,234 @@
+<header class="tb-page-head">
+  <div class="tb-page-title">
+    <span class="tb-eyebrow">Administration</span>
+    <h1>Mises à jour</h1>
+  </div>
+  <button type="button" class="tb-btn tb-tonal" data-action="actualiser" [class.tb-busy]="verification()" [disabled]="suivi() || verification()" (click)="verifier()">
+    <i class="pi pi-refresh"></i>Rechercher maintenant
+  </button>
+</header>
+
+@if (etat(); as e) {
+  <!-- Installed version and how this server installs -->
+  <div class="tb-card tb-maj-installee">
+    <span class="tb-section-icon"><i class="pi pi-server"></i></span>
+    <div class="tb-maj-installee-text">
+      <span class="tb-eyebrow">{{ libelleComposant(e.component) }} · version installée</span>
+      <strong class="tb-maj-version">{{ e.installedVersion ?? 'Développement' }}</strong>
+      <span class="tb-muted">
+        Dernière vérification : {{ date(e.lastCheck) }} ·
+        {{ e.dailyCheck ? 'vérification quotidienne' : 'vérification automatique désactivée' }} ·
+        {{ e.channel === 'PRERELEASE' ? 'versions stables et de test' : 'versions stables' }}
+      </span>
+    </div>
+  </div>
+
+  @if (e.error) {
+    <div class="tb-banner tb-banner-error">
+      <span class="tb-banner-icon"><i class="pi pi-times-circle"></i></span>
+      <div class="tb-banner-text"><strong>La dernière vérification a échoué</strong><span>{{ e.error }}</span></div>
+    </div>
+  }
+  @if (e.automaticInstall === false) {
+    <div class="tb-banner">
+      <span class="tb-banner-icon"><i class="pi pi-exclamation-triangle"></i></span>
+      <div class="tb-banner-text"><strong>Installation automatique impossible sur ce serveur</strong><span>{{ e.installMode }}</span></div>
+    </div>
+  }
+  @if (redemarrage()) {
+    <div class="tb-banner tb-banner-info">
+      <span class="tb-banner-icon"><i class="pi pi-spin pi-spinner"></i></span>
+      <div class="tb-banner-text"><strong>Le serveur redémarre sur la nouvelle version</strong><span>Cette page reprend d'elle-même dès qu'il répond.</span></div>
+    </div>
+  }
+
+  <!-- Progress of the last installation; followed while it runs -->
+  @if (e.installation; as i) {
+    <div class="tb-card tb-maj-installation">
+      <div class="tb-card-head">
+        <span class="tb-section-icon"><i class="pi pi-cloud-download"></i></span>
+        <div>
+          <h2>Installation de {{ i.target }}</h2>
+          <span class="tb-muted">
+            Lancée par {{ i.user }} le {{ date(i.startedAt) }} depuis {{ libelleComposant(i.component) }}{{ i.from ? ', depuis la version ' + i.from : '' }}
+          </span>
+        </div>
+        <span class="tb-tag tb-maj-etat" [class]="severiteInstallation(i.state)">{{ libelleInstallation(i.state) }}</span>
+      </div>
+      <ol class="tb-maj-etapes">
+        @for (s of i.steps; track $index) {
+          <li class="tb-maj-etape tb-maj-etape-{{ s.state }}">
+            <span class="tb-maj-etape-icon"><i class="pi" [class]="iconeEtape(s.state)"></i></span>
+            <div>
+              <strong>{{ s.title }}</strong>
+              @if (s.detail) {
+                <span class="tb-muted">{{ s.detail }}</span>
+              }
+            </div>
+          </li>
+        }
+      </ol>
+      @if (i.message) {
+        <div class="tb-maj-message tb-maj-message-{{ i.state }}">{{ i.message }}</div>
+      }
+      @if (i.backupFile) {
+        <div class="tb-muted tb-maj-sauvegarde"><i class="pi pi-database"></i> Sauvegarde de la base : <code>{{ i.backupFile }}</code></div>
+      }
+    </div>
+  }
+
+  <!-- Available versions -->
+  <section class="tb-section">
+    <h2 class="tb-section-title">
+      <span class="tb-section-icon"><i class="pi pi-box"></i></span>
+      Versions disponibles
+      <span class="tb-section-meta">{{ e.available.length }}</span>
+    </h2>
+
+    <!-- Filter by channel: RC, Beta, Nightly, Stable (a second tap shows them all) -->
+    @if (chipsCanaux().length > 1) {
+      <div class="tb-summary tb-maj-canaux">
+        @for (c of chipsCanaux(); track c.cle) {
+          <button type="button" class="tb-summary-chip tb-canal-chip tb-canal-{{ c.couleur }}" [class.tb-chip-on]="canalFiltre() === c.cle" [attr.aria-pressed]="canalFiltre() === c.cle" (click)="filtrerCanal(c.cle)">
+            <i class="pi pi-check tb-chip-check"></i>{{ c.libelle }}<span class="tb-chip-n">{{ c.nombre }}</span>
+          </button>
+        }
+      </div>
+    }
+
+    @if (!e.available.length) {
+      <div class="tb-empty">
+        <span class="tb-empty-icon"><i class="pi pi-check"></i></span>
+        <strong>{{ e.lastCheck ? 'ThermoBox est à jour' : 'Pas encore vérifié' }}</strong>
+        <span>{{ e.lastCheck ? 'Aucune version plus récente sur GitHub.' : 'La première vérification a lieu une minute après le démarrage. Lancez-la maintenant avec « Rechercher maintenant ».' }}</span>
+      </div>
+    }
+
+    @for (v of disponibles(); track v.version) {
+      <ng-container *ngTemplateOutlet="carte; context: { $implicit: v }" />
+    }
+
+    <!-- Prerelease channel: older versions can be installed again (rollback) -->
+    @if (anterieures().length) {
+      <details class="tb-maj-anterieures">
+        <summary>
+          <span class="tb-section-icon"><i class="pi pi-history"></i></span>
+          Versions antérieures
+          <span class="tb-section-meta">{{ anterieures().length }}</span>
+        </summary>
+        <p class="tb-muted">
+          Plus anciennes que la version installée. Revenir dessus est un retour arrière : la base de données a pu être modifiée depuis,
+          une sauvegarde est faite avant.
+        </p>
+        @for (v of anterieures(); track v.version) {
+          <ng-container *ngTemplateOutlet="carte; context: { $implicit: v }" />
+        }
+      </details>
+    }
+  </section>
+} @else {
+  <div class="tb-card tb-maj-installee"><span class="tb-muted">Chargement…</span></div>
+}
+
+<!-- A version. The colour follows the channel: stable green, beta / rc orange, nightly violet -->
+<ng-template #carte let-v>
+  <article class="tb-card tb-maj-version-card tb-canal-{{ canal(v) }}">
+    <div class="tb-card-head">
+      <div class="tb-maj-titre">
+        <strong class="tb-maj-version">{{ v.version }}</strong>
+        <span class="tb-canal tb-canal-{{ canal(v) }}">{{ canalLabel(v) }}</span>
+        <span class="tb-maj-type-tag">{{ v.older ? 'Version antérieure' : v.typeLabel }}</span>
+        @if (v.recommended) {
+          <span class="tb-tag tb-tag-success"><i class="pi pi-thumbs-up"></i>Recommandée</span>
+        }
+        @if (v.incompatible) {
+          <span class="tb-tag tb-tag-danger">Incompatibilité annoncée</span>
+        }
+      </div>
+      <span class="tb-spacer"></span>
+      <a [href]="v.url" target="_blank" rel="noopener noreferrer" class="tb-btn tb-flat"><i class="pi pi-external-link"></i>Sur GitHub</a>
+      <button type="button" class="tb-btn" [class.tb-tonal]="v.type !== 'CORRECTIVE' || v.older" [disabled]="suivi()" (click)="preparer(v)">
+        <i class="pi pi-download"></i>{{ v.older ? 'Réinstaller…' : 'Installer…' }}
+      </button>
+    </div>
+    <p class="tb-maj-type">
+      @if (v.title !== v.version) { {{ v.title }} · }
+      publiée le {{ date(v.publishedAt) }}.
+      {{ v.older ? 'Plus ancienne que la version installée.' : v.type === 'CORRECTIVE' ? 'Corrections de bugs et de sécurité seulement : la base de données n’est pas modifiée.' : 'Nouvelle série : peut modifier la base de données.' }}
+    </p>
+    @if (v.migration) {
+      <div class="tb-maj-migration">
+        <strong><i class="pi pi-exclamation-triangle"></i> Opérations à prévoir</strong>
+        <div [innerHTML]="notes(v.migration)"></div>
+      </div>
+    }
+    <details class="tb-maj-notes">
+      <summary>Notes de version</summary>
+      <div [innerHTML]="notes(v.notes)"></div>
+    </details>
+  </article>
+</ng-template>
+
+<!-- Before installing: checks, risks, backup -->
+<tb-sheet [(ouvert)]="dialogue" titre="Installer une version" [largeur]="640">
+  @if (preparation(); as p) {
+    <div class="tb-maj-dlg-titre">
+      <span class="tb-maj-de">{{ p.installedVersion ?? 'Développement' }}</span>
+      <i class="pi pi-arrow-right"></i>
+      <strong class="tb-maj-version">{{ p.version.version }}</strong>
+      <span class="tb-canal tb-canal-{{ canal(p.version) }}">{{ canalLabel(p.version) }}</span>
+      <span class="tb-maj-type-tag">{{ p.version.older ? 'Version antérieure' : p.version.typeLabel }}</span>
+    </div>
+
+    <!-- Feature update: rollback is not guaranteed -->
+    @if (!p.simpleRollback) {
+      <div class="tb-banner tb-banner-error">
+        <span class="tb-banner-icon"><i class="pi pi-exclamation-triangle"></i></span>
+        <div class="tb-banner-text">
+          <strong>Retour arrière non garanti</strong>
+          <span>
+            Cette version peut modifier la base de données. Revenir à la version actuelle pourra demander de restaurer la sauvegarde faite
+            avant l'installation, et perdre les données enregistrées depuis. Une sauvegarde de la base est faite d'office.
+          </span>
+        </div>
+      </div>
+    }
+
+    <ul class="tb-maj-controles">
+      @for (c of p.checks; track $index) {
+        <li class="tb-maj-controle tb-maj-controle-{{ c.level }}">
+          <i class="pi" [class]="iconeControle(c.level)"></i>
+          <div>
+            <strong>{{ c.title }}</strong>
+            @if (c.detail) {
+              <div [innerHTML]="notes(c.detail)"></div>
+            }
+          </div>
+        </li>
+      }
+    </ul>
+
+    @if (p.installable) {
+      <div class="tb-maj-options">
+        <label class="tb-maj-option tb-choix">
+          <input type="checkbox" class="tb-check" [checked]="sauvegarder() || p.backupRequired" [disabled]="p.backupRequired" (change)="sauvegarder.set($any($event.target).checked)" />
+          {{ p.backupRequired ? 'Sauvegarde de la base (obligatoire pour cette version)' : 'Sauvegarder aussi la base de données (facultatif : une corrective ne la modifie pas)' }}
+        </label>
+        @if (p.confirmationRequired) {
+          <label class="tb-maj-option tb-choix">
+            <input type="checkbox" class="tb-check" [checked]="risquesAcceptes()" (change)="risquesAcceptes.set($any($event.target).checked)" />
+            J'ai lu les avertissements et les notes de version, et je lance l'installation en connaissance de cause
+          </label>
+        }
+      </div>
+    }
+
+    <div class="tb-actions">
+      <button type="button" class="tb-btn tb-flat" (click)="dialogue.set(false)">Annuler</button>
+      <button type="button" class="tb-btn" [class.tb-btn-danger]="!p.simpleRollback" [class.tb-busy]="lancement()"
+              [disabled]="!p.installable || (p.confirmationRequired && !risquesAcceptes()) || lancement()" (click)="installer()">
+        <i class="pi pi-download"></i>Installer {{ p.version.version }}
+      </button>
+    </div>
+  }
+</tb-sheet>
