@@ -1,0 +1,263 @@
+/*
+ * Phones: what this client lays out for a phone rather than shrinking the JSF page (lists instead
+ * of tables, sheets, inset grouped lists, the chart with its reading strip). Same tokens, same
+ * look; shell-ios.css / shell-android.css restyle it per platform.
+ */
+
+/* ============================== Sheets and notifications: no × on a phone ============================== */
+
+@media (max-width: 640px) {
+    /* A sheet closes by swiping it down (grabber), a tap above it or its « Annuler » */
+    .tb-dialog-fermer { display: none; }
+    .tb-dialog-head { justify-content: center; padding: 10px 20px 4px; }
+    .tb-dialog-head h2 { text-align: center; font-size: 1.15rem; }
+    /* A notification closes with a tap anywhere on it */
+    .tb-toast-fermer { display: none; }
+}
+.tb-toast { cursor: pointer; }
+
+/* ============================== Inset grouped lists (Plus, Gestion…) ============================== */
+
+.tb-liste-groupe, .tb-liste-gest {
+    display: flex;
+    flex-direction: column;
+    margin: 0 0 18px;
+    padding: 4px;
+    border: 1px solid var(--tb-glass-line);
+    border-radius: var(--tb-shape-xl);
+    background: var(--tb-glass);
+    box-shadow: var(--tb-glass-shadow);
+    -webkit-backdrop-filter: var(--tb-blur);
+    backdrop-filter: var(--tb-blur);
+    color: var(--md-on-surface);
+}
+.tb-liste-gest { margin: 0; list-style: none; }
+.tb-liste-ligne, .tb-gest-ligne {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    min-height: 56px;
+    padding: 8px 12px;
+    border: 0;
+    border-radius: calc(var(--tb-shape-xl) - 5px);
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    transition: background-color .2s ease;
+}
+/* Thin separators between rows, from the text on (as in iOS / Android lists) */
+.tb-liste-ligne + .tb-liste-ligne::before, .tb-liste-gest > li + li > .tb-gest-ligne::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 60px;
+    right: 12px;
+    border-top: 1px solid var(--md-outline-variant);
+}
+.tb-liste-ligne:hover, .tb-gest-ligne:hover { background: color-mix(in srgb, var(--md-on-surface) 5%, transparent); }
+.tb-liste-ligne:active, .tb-gest-ligne:active { background: var(--md-secondary-container); }
+@media (hover: none) { .tb-liste-ligne:hover, .tb-gest-ligne:hover { background: none; } }
+.tb-liste-icone {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: var(--md-primary-container);
+    color: var(--md-on-primary-container);
+}
+.tb-liste-texte { display: flex; flex-direction: column; flex: 1 1 auto; min-width: 0; }
+.tb-liste-texte strong { font-weight: 700; }
+.tb-liste-texte .tb-muted { font-size: .85rem; }
+.tb-liste-suite { flex: none; color: var(--md-on-surface-variant); opacity: .55; }
+.tb-liste-danger { color: var(--md-error); }
+.tb-liste-danger .tb-liste-icone { background: var(--md-error-container); color: var(--md-error); }
+
+/* Plus: the account first */
+.tb-plus-moi { flex-direction: row; align-items: center; gap: 14px; padding: 14px 16px; text-decoration: none; }
+.tb-plus-moi:active { background: var(--md-secondary-container); }
+.tb-avatar.tb-avatar-lg { width: 54px; height: 54px; font-size: 1.35rem; }
+.tb-plus-moi .tb-liste-texte strong { font-size: 1.15rem; }
+
+/* ============================== Gestion on a phone ============================== */
+
+.tb-gest-ligne { gap: 12px; min-height: 66px; padding: 10px 12px; user-select: none; -webkit-user-select: none; }
+.tb-gest-ligne.tb-row-on { background: color-mix(in srgb, var(--md-primary) 12%, transparent); }
+.tb-gest-icone {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: var(--tone-container, var(--md-secondary-container));
+    color: var(--tone-on-container, var(--md-on-surface-variant));
+}
+.tb-gest-ligne .tb-avatar.tb-user-avatar { width: 40px; height: 40px; }
+.tb-gest-texte { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; flex: 1 1 auto; min-width: 0; }
+.tb-gest-texte > strong, .tb-gest-texte > .tb-muted { max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.tb-gest-texte > strong { font-weight: 700; }
+.tb-gest-texte > .tb-muted { font-size: .82rem; }
+.tb-gest-texte .tb-tag { margin-top: 3px; }
+.tb-gest-valeurs { display: flex; flex-direction: column; align-items: flex-end; flex: none; font-variant-numeric: tabular-nums; }
+.tb-gest-valeurs > strong { font-size: 1.3rem; font-weight: 650; letter-spacing: -.03em; line-height: 1.1; }
+.tb-gest-valeurs small { font-size: .7em; font-weight: 600; vertical-align: top; }
+.tb-gest-cible { display: inline-flex; align-items: center; gap: 5px; color: var(--md-on-surface-variant); font-size: .78rem; font-weight: 600; }
+.tb-gest-point { width: 8px; height: 8px; border-radius: 50%; background: var(--tone); }
+.tb-gest-coche {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 24px;
+    height: 24px;
+    border: 2px solid var(--md-outline);
+    border-radius: 50%;
+    color: transparent;
+    font-size: .7rem;
+    transition: background-color .2s ease, border-color .2s ease, transform .3s var(--tb-spring);
+}
+.tb-row-on > .tb-gest-coche { border-color: var(--md-primary); background: var(--md-primary); color: var(--md-on-primary); transform: scale(1.06); }
+.tb-gest-selection { display: flex; align-items: center; gap: 4px; margin: 0 0 6px 6px; color: var(--md-on-surface-variant); font-size: .9rem; font-weight: 650; }
+.tb-gest-selection > span { flex: 1 1 auto; }
+.tb-gest-selection .tb-btn { min-height: 36px; padding-inline: 12px; }
+.tb-gest-vide { padding: 22px 12px; text-align: center; }
+.tb-gest-plus { width: 100%; margin-top: 12px; }
+.tb-btn.tb-gest-mode { font-weight: 750; }
+
+/* Sheet of one element */
+.tb-gest-feuille-tete { display: flex; align-items: center; gap: 12px; padding: 4px 0 14px; }
+.tb-gest-feuille-tete > div { display: flex; flex-direction: column; flex: 1 1 auto; min-width: 0; }
+.tb-gest-feuille-tete .tb-muted { font-size: .85rem; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.tb-gest-feuille-tete strong { font-size: 1.6rem; font-weight: 650; letter-spacing: -.03em; line-height: 1.15; }
+.tb-gest-feuille-consigne { display: flex; flex-direction: column; gap: 12px; padding: 14px 0 16px; border-top: 1px solid var(--md-outline-variant); border-bottom: 1px solid var(--md-outline-variant); }
+.tb-gest-feuille-consigne .tb-label { margin: 0; }
+.tb-gest-feuille-consigne .tb-btn { width: 100%; }
+.tb-gest-feuille-consigne .tb-switch-row { margin: 0; }
+
+/* A user */
+.tb-segmented.tb-role-choix { display: flex; width: 100%; }
+.tb-segmented.tb-role-choix > button { flex: 1 1 0; }
+.tb-chips-groupes { display: flex; flex-wrap: wrap; gap: 6px; }
+.tb-field-note { display: block; margin-top: 6px; font-size: .85rem; }
+
+@media (max-width: 640px) {
+    /* The long explanations of the wide page: the rows say enough on a phone */
+    :is(tb-gestion, tb-droits) .tb-lead, .tb-gest-astuce { display: none; }
+    .tb-segmented.tb-gest-onglets { display: flex; width: 100%; margin-bottom: 14px; }
+    .tb-segmented.tb-gest-onglets > button { flex: 1 1 0; }
+    /* Filters on one line that scrolls sideways */
+    .tb-summary.tb-summary-defile {
+        flex-wrap: nowrap;
+        margin-inline: calc(-12px - env(safe-area-inset-left)) calc(-12px - env(safe-area-inset-right));
+        padding: 2px calc(12px + env(safe-area-inset-right)) 8px calc(12px + env(safe-area-inset-left));
+        overflow-x: auto;
+        scrollbar-width: none;
+        overscroll-behavior-x: contain;
+    }
+    .tb-summary.tb-summary-defile::-webkit-scrollbar { display: none; }
+    .tb-summary.tb-summary-defile > * { flex: none; }
+    tb-gestion .tb-toolbar { margin-bottom: 10px; }
+    tb-droits .tb-groupe { cursor: pointer; }
+
+    /* Selection mode: the actions as a toolbar above the navigation, icons over their names */
+    tb-gestion .tb-barre { padding: 6px; }
+    tb-gestion .tb-barre .tb-barre-compte { display: none; }
+    tb-gestion .tb-barre-actions { order: 0; flex-wrap: nowrap; justify-content: space-around; gap: 0; }
+    tb-gestion .tb-barre-actions > .tb-btn {
+        flex: 1 1 0;
+        flex-direction: column;
+        gap: 3px;
+        min-height: 54px;
+        padding: 6px 4px;
+        border: 0;
+        background: none;
+        box-shadow: none;
+        font-size: .72rem;
+    }
+    tb-gestion .tb-barre-actions > .tb-btn .pi { font-size: 1.15rem; }
+    .tb-main:has(tb-gestion .tb-barre-on) { padding-bottom: calc(var(--tb-nav-bas) + 110px); }
+}
+
+/* ============================== Préférences ============================== */
+
+@media (max-width: 640px) {
+    .tb-pref.tb-pref-theme { flex-wrap: wrap; }
+    .tb-pref.tb-pref-theme .tb-pref-text { flex-basis: calc(100% - 64px); }
+    .tb-segmented.tb-theme-choix { display: flex; width: 100%; }
+}
+.tb-segmented.tb-theme-choix > button .pi { font-size: .9rem; }
+
+/* ============================== Temperature chart ============================== */
+
+.tb-graphique { position: relative; display: flex; flex-direction: column; height: 100%; }
+.tb-graphique-zone { position: relative; flex: 1 1 auto; min-height: 0; }
+.tb-graphique-zone canvas { touch-action: pan-y; }
+
+/* Reading strip (phones): the instant touched, the value of each curve, which also hide / show it */
+.tb-lecture { display: flex; flex-direction: column; gap: 8px; margin-bottom: 6px; }
+.tb-lecture-tete { display: flex; align-items: center; gap: 8px; min-height: 36px; }
+.tb-lecture-titre { flex: 1 1 auto; color: var(--md-on-surface-variant); font-size: .85rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.tb-btn.tb-lecture-plein { width: 36px; min-width: 36px; height: 36px; min-height: 36px; }
+.tb-lecture-valeurs {
+    display: flex;
+    gap: 6px;
+    margin-inline: -2px;
+    padding: 2px;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+.tb-lecture-valeurs::-webkit-scrollbar { display: none; }
+.tb-lecture-valeur {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    flex: none;
+    min-height: 36px;
+    padding: 4px 12px 4px 10px;
+    border: 1px solid var(--md-outline-variant);
+    border-radius: 999px;
+    background: var(--tb-field);
+    color: var(--md-on-surface);
+    font: inherit;
+    font-size: .82rem;
+    cursor: pointer;
+    transition: opacity .2s ease, background-color .2s ease;
+}
+.tb-lecture-valeur strong { font-size: .95rem; font-weight: 750; font-variant-numeric: tabular-nums; }
+.tb-lecture-nom { max-width: 9em; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--md-on-surface-variant); font-weight: 600; }
+.tb-lecture-pastille { width: 10px; height: 10px; flex: none; border-radius: 50%; }
+.tb-lecture-consigne .tb-lecture-pastille { height: 3px; border-radius: 2px; }
+.tb-lecture-off { opacity: .45; }
+.tb-lecture-off strong { text-decoration: line-through; }
+
+@media (max-width: 640px) {
+    /* The curves get the height of the screen they deserve, across the whole card */
+    .tb-chart, .tb-chart.tb-chart-tall { height: auto; margin: 0 -6px; }
+    .tb-graphique-zone { height: clamp(300px, 52vh, 480px); }
+    .tb-chart .tb-chart-attente, .tb-chart .tb-chart-vide { height: 300px; }
+    .tb-history .tb-card-head { flex-wrap: wrap; }
+    .tb-history .tb-card-head .tb-segmented { width: 100%; }
+    .tb-history .tb-range[hidden] { display: none; }
+}
+
+/* Full screen: over everything, wide once the phone is turned */
+.tb-graphique.tb-graphique-plein {
+    position: fixed;
+    inset: 0;
+    z-index: 300;
+    height: auto;
+    padding: calc(12px + env(safe-area-inset-top)) calc(14px + env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) calc(14px + env(safe-area-inset-left));
+    background: var(--md-surface);
+    animation: tb-fade-in .25s ease;
+}
+.tb-graphique-plein .tb-graphique-zone { height: auto; flex: 1 1 auto; }
+body.tb-graphique-ouvert { overflow: hidden; }
+body.tb-graphique-ouvert .tb-rail, body.tb-graphique-ouvert .tb-topbar { visibility: hidden; }

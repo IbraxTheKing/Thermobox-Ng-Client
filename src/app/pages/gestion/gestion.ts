@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
@@ -6,7 +6,9 @@ import { messageErreur } from '../../core/api.config';
 import { AuthService } from '../../core/auth';
 import { EtatSalle, etatDe, horsConsigne } from '../../core/etat';
 import { ConfirmService, ToastService } from '../../core/messages';
+import { PlateformeService } from '../../core/plateforme';
 import { normaliser } from '../../core/texte';
+import { TransitionsService } from '../../core/transitions';
 import { UniteService, lireNombre } from '../../core/unite';
 import { Noeud, SalleKind } from '../../models/models';
 import { ArbreStore, ICONES, LIBELLES, ORDRE_KINDS, PARENTS } from '../../services/arbre.store';
@@ -17,7 +19,7 @@ import { HierarchieService } from '../../services/hierarchie.service';
 import { SalleService } from '../../services/salle.service';
 import { UserService } from '../../services/user.service';
 import { Option, TbChoixMultiple } from '../../ui/choix-multiple';
-import { TbSwitch } from '../../ui/controles';
+import { TbStepper, TbSwitch } from '../../ui/controles';
 import { TbSheet } from '../../ui/sheet';
 import { ElementDialog } from '../salles/element-dialog';
 import { DroitsTab } from './droits';
@@ -37,10 +39,13 @@ const PAR_PAGE = 50;
  * the user may see in one table. A GESTIONNAIRE sets consignes, one by one or for a selection; an
  * ADMIN also creates, renames, moves, deletes and gives accesses, and has the « Utilisateurs et
  * groupes » tab.
+ *
+ * On a phone, a list instead of the table: a row opens what can be done with its element (its
+ * consigne first), « Sélectionner » (or holding a row) acts on several at once, as in native apps.
  */
 @Component({
   selector: 'tb-gestion',
-  imports: [RouterLink, TbSheet, TbSwitch, TbChoixMultiple, ElementDialog, DroitsTab],
+  imports: [RouterLink, TbSheet, TbSwitch, TbStepper, TbChoixMultiple, ElementDialog, DroitsTab],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './gestion.html',
 })
@@ -56,6 +61,11 @@ export class GestionPage implements OnInit {
   private readonly groupesApi = inject(GroupeService);
   private readonly toasts = inject(ToastService);
   private readonly confirm = inject(ConfirmService);
+  private readonly plateforme = inject(PlateformeService);
+  private readonly transitions = inject(TransitionsService);
+
+  /** Phone-sized screen: list, sheets, selection mode. */
+  protected readonly tel = this.plateforme.telephone;
 
   private readonly dialogue = viewChild(ElementDialog);
   private readonly ongletDroits = viewChild(DroitsTab);
@@ -115,6 +125,16 @@ export class GestionPage implements OnInit {
   }
   protected readonly nombreATraiter = computed(() => this.lignes().filter((l) => this.aTraiter(l)).length);
 
+  constructor() {
+    // « À traiter »: the page turns to the colour of what is to be done, as the JSF one
+    effect(() => this.transitions.definirTon(this.seulementATraiter() && this.onglet() === 'salles' ? 'chauffe' : null));
+    inject(DestroyRef).onDestroy(() => this.transitions.definirTon(null));
+    // Leaving the phone layout (rotation, wider window): no selection mode left behind
+    effect(() => {
+      if (!this.tel()) this.modeSelection.set(false);
+    });
+  }
+
   async ngOnInit(): Promise<void> {
     try {
       await this.store.charger(this.store.arbre() != null);
@@ -125,6 +145,99 @@ export class GestionPage implements OnInit {
 
   protected ouvrirOnglet(o: 'salles' | 'droits'): void {
     this.onglet.set(o === 'droits' && this.auth.admin() ? 'droits' : 'salles');
+  }
+
+  // ---------------------------------------------------------------- phones
+
+  protected readonly modeSelection = signal(false);
+  /** Rows shown on a phone: 50 more at a time. */
+  protected readonly limiteTel = signal(50);
+  protected readonly lignesTel = computed(() => this.visibles().slice(0, this.limiteTel()));
+  /** Actions of the ticked rows: on a phone, only in selection mode. */
+  protected readonly barreVisible = computed(() => this.selection().size > 0 && (!this.tel() || this.modeSelection()));
+
+  protected basculerModeSelection(): void {
+    this.modeSelection.update((m) => !m);
+    if (!this.modeSelection()) this.selection.set(new Set());
+    this.plateforme.vibrer();
+  }
+
+  /** A row: ticked or not in selection mode, else the sheet of its element. */
+  protected toucherLigne(l: Ligne): void {
+    if (this.appuiLong) {
+      this.appuiLong = false;
+      return;
+    }
+    if (this.modeSelection()) {
+      this.cocher(l.n.id, !this.selection().has(l.n.id));
+      this.plateforme.vibrer();
+      return;
+    }
+    this.ouvrirFeuille(l);
+  }
+
+  private minuterieAppui?: ReturnType<typeof setTimeout>;
+  private appuiLong = false;
+
+  /** Holding a row: selection mode, starting with it. */
+  protected debutAppuiLong(l: Ligne, e: PointerEvent): void {
+    if (this.modeSelection() || e.pointerType === 'mouse') return;
+    clearTimeout(this.minuterieAppui);
+    const x = e.clientX;
+    const y = e.clientY;
+    const cible = e.currentTarget as HTMLElement;
+    const annuler = (ev: Event) => {
+      if (ev instanceof PointerEvent && ev.type === 'pointermove' && Math.hypot(ev.clientX - x, ev.clientY - y) < 10) return;
+      clearTimeout(this.minuterieAppui);
+      for (const t of ['pointerup', 'pointercancel', 'pointermove']) cible.removeEventListener(t, annuler);
+    };
+    for (const t of ['pointerup', 'pointercancel', 'pointermove']) cible.addEventListener(t, annuler);
+    this.minuterieAppui = setTimeout(() => {
+      annuler(new Event('fin'));
+      this.appuiLong = true;
+      setTimeout(() => (this.appuiLong = false), 600);
+      this.modeSelection.set(true);
+      this.selection.set(new Set([l.n.id]));
+      this.plateforme.vibrer(true);
+    }, 480);
+  }
+
+  // Sheet of one element
+  protected readonly feuilleOuverte = signal(false);
+  protected readonly enFeuille = signal<Ligne | null>(null);
+  /** In the unit of the Préférences page. */
+  protected readonly consigneFeuille = signal<number | null>(null);
+
+  private ouvrirFeuille(l: Ligne): void {
+    this.enFeuille.set(l);
+    const c = l.n.consigne?.value;
+    this.consigneFeuille.set(c == null ? null : Math.round(this.unite.depuisCelsius(c) * 10) / 10);
+    this.forcer.set(false);
+    this.feuilleOuverte.set(true);
+  }
+
+  protected async envoyerFeuille(e: Event, l: Ligne): Promise<void> {
+    e.preventDefault();
+    const v = this.consigneFeuille();
+    if (v == null) {
+      this.toasts.warn('Indique la consigne à envoyer');
+      return;
+    }
+    this.envoiEnCours.set(l.n.id);
+    const ok = await this.envoyer([l], v, this.forcer());
+    this.envoiEnCours.set(null);
+    if (ok) this.feuilleOuverte.set(false);
+  }
+
+  /** An action of the sheet, done as for a selection of this element alone. */
+  protected depuisFeuille(l: Ligne, action: 'modifier' | 'acces' | 'supprimer'): void {
+    this.feuilleOuverte.set(false);
+    if (action === 'modifier') this.modifier(l);
+    else if (action === 'supprimer') void this.supprimer(l);
+    else {
+      this.selection.set(new Set([l.n.id]));
+      void this.ouvrirAcces();
+    }
   }
 
   protected filtrerType(k: SalleKind | null): void {
@@ -378,6 +491,7 @@ export class GestionPage implements OnInit {
     if (faits.length) this.toasts.info((donner ? 'Accès donné à ' : 'Accès retiré à ') + faits.join(', '), `${elements.length} élément(s) et leur contenu`);
     if (ignores.length) this.toasts.warn('Non modifié', ignores.join(', '));
     this.dlgAcces.set(false);
+    if (this.tel() && !this.modeSelection()) this.selection.set(new Set());
     await this.droits.charger().catch(() => undefined);
   }
 

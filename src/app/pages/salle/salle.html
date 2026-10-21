@@ -216,10 +216,14 @@
         <button type="button" [class.tb-seg-on]="periodeHeures() === 24" (click)="periode(24)">24 h</button>
         <button type="button" [class.tb-seg-on]="periodeHeures() === 168" (click)="periode(168)">7 j</button>
         <button type="button" [class.tb-seg-on]="periodeHeures() === 720" (click)="periode(720)">30 j</button>
+        @if (tel()) {
+          <!-- Phones: the dates only when asked for -->
+          <button type="button" [class.tb-seg-on]="plagePerso()" (click)="plagePerso.set(!plagePerso())" aria-label="Autre période"><i class="pi pi-calendar"></i></button>
+        }
       </div>
     </div>
 
-    <div class="tb-range">
+    <div class="tb-range" [hidden]="tel() && !plagePerso()">
       <div class="tb-field">
         <label class="tb-label" for="debut">Du</label>
         <input id="debut" class="tb-input" type="datetime-local" [value]="debut()" (change)="debut.set($any($event.target).value)" />

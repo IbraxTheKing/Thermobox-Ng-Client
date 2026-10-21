@@ -69,7 +69,4 @@ export class LoginPage {
     }
   }
 
-  protected basculerTheme(e: Event): void {
-    this.prefs.basculerTheme(e.currentTarget as HTMLElement);
-  }
 }

@@ -1,6 +1,6 @@
-import { ChangeDetectionStrategy, Component, OnDestroy, computed, effect, inject, input, signal, untracked } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnDestroy, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { Location } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
 import { messageErreur } from '../../core/api.config';
@@ -11,6 +11,7 @@ import { etatDe } from '../../core/etat';
 import { ConfirmService, ToastService } from '../../core/messages';
 import { PlateformeService } from '../../core/plateforme';
 import { TitreService } from '../../core/titre';
+import { TransitionsService } from '../../core/transitions';
 import { UniteService } from '../../core/unite';
 import { DetailElement, Historique, Noeud, Point } from '../../models/models';
 import { ArbreStore, LIBELLES } from '../../services/arbre.store';
@@ -47,6 +48,10 @@ export class SallePage implements OnDestroy {
   private readonly favoris = inject(FavoriService);
   private readonly images = inject(ImagesService);
   private readonly store = inject(ArbreStore);
+  private readonly transitions = inject(TransitionsService);
+  protected readonly tel = inject(PlateformeService).telephone;
+  /** Phones: the « Du / Au » fields are shown. */
+  protected readonly plagePerso = signal(false);
   private readonly toasts = inject(ToastService);
   private readonly confirm = inject(ConfirmService);
   private readonly titre = inject(TitreService);
@@ -127,6 +132,15 @@ export class SallePage implements OnDestroy {
   protected readonly pagesConsignes = computed(() => Math.max(1, Math.ceil(this.consignesPeriode().length / 10)));
 
   constructor() {
+    // The page takes the colour of the state of the salle, at once from what the dashboard
+    // already knows (it then comes with the card that morphs into this page)
+    const connu = this.store.parId().get(Number(inject(ActivatedRoute).snapshot.paramMap.get('id')));
+    if (connu) this.transitions.definirTon(etatDe(connu.temperature, connu.consigne?.value).ton);
+    effect(() => {
+      const e = this.element();
+      if (e) this.transitions.definirTon(this.etat().ton);
+    });
+    inject(DestroyRef).onDestroy(() => this.transitions.definirTon(null));
     effect(() => {
       const id = Number(this.id());
       untracked(() => void this.ouvrir(id));
@@ -257,6 +271,7 @@ export class SallePage implements OnDestroy {
   /** Shortcuts 24 h / 7 j / 30 j */
   protected periode(heures: number, charger = true): void {
     this.periodeHeures.set(heures);
+    this.plagePerso.set(false);
     const fin = new Date();
     fin.setSeconds(0, 0);
     this.fin.set(versChamp(fin));

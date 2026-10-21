@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnDestroy, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
@@ -10,6 +10,7 @@ import { temps } from '../../core/dates';
 import { ETATS, EtatSalle, ORDRE_ETATS, compte, etatDe } from '../../core/etat';
 import { ToastService } from '../../core/messages';
 import { PlateformeService } from '../../core/plateforme';
+import { TransitionsService } from '../../core/transitions';
 import { correspond, normaliser, parNom, pluriel } from '../../core/texte';
 import { UniteService } from '../../core/unite';
 import { Noeud, Point } from '../../models/models';
@@ -55,10 +56,17 @@ export class DashboardPage implements OnInit, OnDestroy {
   private readonly favorisApi = inject(FavoriService);
   private readonly toasts = inject(ToastService);
   private readonly plateforme = inject(PlateformeService);
+  private readonly transitions = inject(TransitionsService);
 
   // Filters
   protected readonly recherche = signal('');
   protected readonly etatFiltre = signal<EtatSalle | null>(null);
+
+  constructor() {
+    // The page takes the colour of the state picked (« Couleurs selon l'état »)
+    effect(() => this.transitions.definirTon(this.etatFiltre()?.ton ?? null));
+    inject(DestroyRef).onDestroy(() => this.transitions.definirTon(null));
+  }
   protected readonly batimentId = signal<number | null>(null);
 
   /** Curves of the last 24 h by salle: undefined while they load, null without enough measures. */
