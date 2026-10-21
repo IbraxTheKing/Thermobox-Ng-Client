@@ -272,3 +272,4 @@
 :root[data-plateforme="ios"] .tb-btn { border-radius: 999px; }
 :root[data-plateforme="ios"] .tb-btn.tb-icon { border-radius: 50%; }
 :root[data-plateforme="ios"] .tb-btn:active { transform: scale(.95); opacity: .85; }
+:root[data-plateforme="ios"] .tb-switch[aria-checked="true"] { background: var(--md-primary); }

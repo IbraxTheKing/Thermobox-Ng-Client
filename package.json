@@ -6,7 +6,10 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "demo": "node mock/demo.mjs",
+    "mock": "node mock/serveur-demo.mjs",
+    "cap:sync": "ng build && npx cap sync"
   },
   "private": true,
   "packageManager": "npm@11.19.0",
