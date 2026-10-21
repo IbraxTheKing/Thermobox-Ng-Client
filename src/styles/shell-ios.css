@@ -128,7 +128,10 @@
         -webkit-backdrop-filter: var(--tb-lg-flou);
         backdrop-filter: var(--tb-lg-flou);
         transform-origin: 50% 100%;
-        transition: height .45s var(--tb-ios-ressort), inset .45s var(--tb-ios-ressort), transform .45s var(--tb-ios-ressort);
+        /* Only transform moves (shrinking while scrolling): the compositor does it, the glass is
+           not laid out and blurred again on every frame */
+        transition: transform .5s var(--tb-ios-ressort);
+        will-change: transform;
     }
     :root[data-plateforme="ios"] .tb-dests { max-width: none; height: 100%; align-items: stretch; }
     :root[data-plateforme="ios"] .tb-dest {
@@ -150,9 +153,10 @@
     :root[data-plateforme="ios"] .tb-lentille { border-radius: 999px; }
 
     /* Scrolling down: the bar shrinks to its icons and lets more of the content show */
-    :root[data-plateforme="ios"] .tb-compact .tb-rail { height: 50px; inset-inline: calc(40px + env(safe-area-inset-left)) calc(40px + env(safe-area-inset-right)); }
-    :root[data-plateforme="ios"] .tb-compact .tb-dest-label { opacity: 0; height: 0; }
-    :root[data-plateforme="ios"] .tb-dest-label { transition: opacity .2s ease, height .3s ease; }
+    :root[data-plateforme="ios"] .tb-compact .tb-rail { transform: translateY(6px) scale(.84); }
+    :root[data-plateforme="ios"] .tb-compact .tb-dest-label { opacity: 0; }
+    :root[data-plateforme="ios"] .tb-compact .tb-dest-icon { transform: translateY(7px) scale(1.12); }
+    :root[data-plateforme="ios"] .tb-dest-label { transition: opacity .2s ease; }
 
     /* Main action: a round glass button above the bar, in the brand colour */
     :root[data-plateforme="ios"] .tb-page-head > .tb-btn.tb-fab {

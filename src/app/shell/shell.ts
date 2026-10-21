@@ -175,13 +175,27 @@ export class Shell implements OnInit, OnDestroy {
     this.dernierY = y;
   }
 
+  /** Tabs shown in the bar, in order. */
+  private onglets(dests: HTMLElement): HTMLElement[] {
+    return [...dests.querySelectorAll<HTMLElement>('.tb-dest')].filter((t) => t.offsetParent !== null && getComputedStyle(t).display !== 'none');
+  }
+
   protected placerLentille(): void {
     const dests = this.dests()?.nativeElement;
     if (!dests || this.saisie()) return;
     const actif = dests.querySelector<HTMLElement>('.tb-dest.tb-dest-on');
     const visible = !!actif && actif.offsetParent !== null && getComputedStyle(actif).display !== 'none';
     dests.classList.toggle('tb-a-actif', visible);
+    // Bar of phones: the lens is placed in tabs (index, count), not in pixels, so it stays on its
+    // tab whatever the bar does (shrinking while scrolling, rotation…)
+    dests.classList.toggle('tb-lentille-rel', this.barreBas());
     if (!actif || !visible) return;
+    if (this.barreBas()) {
+      const tabs = this.onglets(dests);
+      dests.style.setProperty('--tb-l-n', `${tabs.length}`);
+      dests.style.setProperty('--tb-l-i', `${tabs.indexOf(actif)}`);
+      return;
+    }
     this.poserLentille(dests, actif.offsetLeft, actif.offsetTop, actif.offsetWidth, actif.offsetHeight);
   }
 
@@ -255,18 +269,17 @@ export class Shell implements OnInit, OnDestroy {
   private suivre(x: number, vitesse: number): void {
     const dests = this.dests()?.nativeElement;
     if (!dests) return;
-    const tabs = [...dests.querySelectorAll<HTMLElement>('.tb-dest')].filter((t) => t.offsetParent !== null && getComputedStyle(t).display !== 'none');
+    const tabs = this.onglets(dests);
     if (!tabs.length) return;
     const boite = dests.getBoundingClientRect();
-    const w = tabs[0].offsetWidth;
-    const h = tabs[0].offsetHeight;
-    const gauche = Math.min(Math.max(x - boite.left - w / 2, tabs[0].offsetLeft), tabs.at(-1)!.offsetLeft);
-    this.poserLentille(dests, gauche, tabs[0].offsetTop, w, h);
+    const n = tabs.length;
+    // Position in tabs, between two while it slides
+    const i = Math.min(Math.max((x - boite.left) / (boite.width / n) - 0.5, 0), n - 1);
+    dests.style.setProperty('--tb-l-n', `${n}`);
+    dests.style.setProperty('--tb-l-i', `${i}`);
     // Stretched in the direction it moves, like a drop
     dests.style.setProperty('--tb-l-etire', `${Math.min(0.18, Math.abs(vitesse) * 0.12)}`);
-    const centre = gauche + w / 2;
-    const sous = tabs.reduce((p, t) => (Math.abs(t.offsetLeft + t.offsetWidth / 2 - centre) < Math.abs(p.offsetLeft + p.offsetWidth / 2 - centre) ? t : p));
-    const lien = sous.dataset['lien'] ?? null;
+    const lien = tabs[Math.round(i)].dataset['lien'] ?? null;
     if (lien !== this.survolee()) {
       if (this.survolee() != null) this.plateforme.vibrer();
       this.survolee.set(lien);

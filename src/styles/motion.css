@@ -25,10 +25,8 @@
     backdrop-filter: var(--tb-blur);
     animation-duration: .5s;
 }
-::view-transition-old(*.tb-card) { animation: tb-verre-sort .26s ease-in both; }
-::view-transition-new(*.tb-card) { animation: tb-verre-entre .36s .1s ease-out both; }
-@keyframes tb-verre-sort { to { opacity: 0; filter: blur(6px); } }
-@keyframes tb-verre-entre { from { opacity: 0; filter: blur(6px); } }
+::view-transition-old(*.tb-card) { animation: tb-fade-out .24s ease-in both; }
+::view-transition-new(*.tb-card) { animation: tb-fade-in .32s .08s ease-out both; }
 :root[data-style="panneau"]::view-transition-group(*.tb-card) { -webkit-backdrop-filter: none; backdrop-filter: none; background: var(--tb-glass-solid); }
 
 /* ============================== Colour of the page ============================== */
@@ -96,6 +94,9 @@
 :root[data-plateforme="ios"]::view-transition-image-pair(*.tb-card) { border-radius: 28px; }
 :root[data-plateforme="ios"]::view-transition-group(*) { animation-timing-function: var(--tb-ressort-verre); animation-duration: .55s; }
 
+/* iOS tabs: no snapshots (TransitionsService); the page fades in, live, while its parts rise */
+.tb-arrivee .tb-main { animation: tb-fade-in .28s ease-out both; }
+
 /* The lens follows the selected tab with the same spring */
 :root[data-plateforme="ios"] .tb-lentille {
     /* One transform (a separate `scale` would also scale the translation) */
@@ -110,6 +111,17 @@
  * magnifies a little what it passes over, follows the finger and stretches with its speed;
  * letting go opens the tab under it and it settles back.
  */
+/* Bar of phones: placed in tabs (--tb-l-i of --tb-l-n), so it always sits on its tab */
+:root[data-plateforme="ios"] .tb-dests.tb-lentille-rel .tb-lentille {
+    top: 0;
+    bottom: 0;
+    left: 0;
+    height: auto;
+    width: calc(100% / var(--tb-l-n, 5));
+    transform: translateX(calc(var(--tb-l-i, 0) * 100%))
+               scale(calc(var(--tb-l-sx, 1) + var(--tb-l-etire, 0)), calc(var(--tb-l-sy, 1) - var(--tb-l-etire, 0) / 2));
+}
+
 @media (max-width: 840px) {
     :root[data-plateforme="ios"] .tb-dests { touch-action: none; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
     :root[data-plateforme="ios"] .tb-saisie-lentille { transform: scale(1.025); }
