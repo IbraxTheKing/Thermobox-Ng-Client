@@ -36,7 +36,7 @@
     <span class="tb-search">
       <i class="pi pi-search"></i>
       <input class="tb-input" type="search" placeholder="Rechercher un élément ou un emplacement…" autocomplete="off" aria-label="Rechercher"
-             [value]="recherche()" (input)="recherche.set($any($event.target).value); page.set(0)" />
+             [value]="recherche()" (input)="chercher($any($event.target).value)" />
     </span>
   </div>
 
@@ -91,7 +91,7 @@
     </div>
     <ul class="tb-liste-gest" [class.tb-en-selection]="modeSelection()">
       @for (l of lignesTel(); track l.n.id) {
-        <li>
+        <li [attr.data-flip]="'g' + l.n.id">
           <button
             type="button"
             class="tb-gest-ligne tb-ton-{{ l.etat.ton }}"
@@ -147,7 +147,7 @@
       </thead>
       <tbody>
         @for (l of lignesPage(); track l.n.id) {
-          <tr class="tb-ton-{{ l.etat.ton }}" [class.tb-row-on]="selection().has(l.n.id)">
+          <tr class="tb-ton-{{ l.etat.ton }}" [class.tb-row-on]="selection().has(l.n.id)" [attr.data-flip]="'g' + l.n.id">
             <td class="tb-col-check">
               <input type="checkbox" class="tb-check" [checked]="selection().has(l.n.id)" (change)="cocher(l.n.id, $any($event.target).checked)" [attr.aria-label]="'Sélectionner ' + l.n.name" />
             </td>

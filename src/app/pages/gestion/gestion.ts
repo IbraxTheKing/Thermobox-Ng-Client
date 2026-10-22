@@ -6,6 +6,7 @@ import { messageErreur } from '../../core/api.config';
 import { AuthService } from '../../core/auth';
 import { EtatSalle, etatDe, horsConsigne } from '../../core/etat';
 import { ConfirmService, ToastService } from '../../core/messages';
+import { FlipService } from '../../core/flip';
 import { PlateformeService } from '../../core/plateforme';
 import { normaliser } from '../../core/texte';
 import { TransitionsService } from '../../core/transitions';
@@ -62,6 +63,7 @@ export class GestionPage implements OnInit {
   private readonly toasts = inject(ToastService);
   private readonly confirm = inject(ConfirmService);
   private readonly plateforme = inject(PlateformeService);
+  private readonly flip = inject(FlipService);
   private readonly transitions = inject(TransitionsService);
 
   /** Phone-sized screen: list, sheets, selection mode. */
@@ -241,15 +243,26 @@ export class GestionPage implements OnInit {
   }
 
   protected filtrerType(k: SalleKind | null): void {
-    this.type.update((t) => (t === k ? null : k));
-    // "Tout": every element again
-    if (k == null) this.seulementATraiter.set(false);
-    this.page.set(0);
+    this.flip.animer(() => {
+      this.type.update((t) => (t === k ? null : k));
+      // "Tout": every element again
+      if (k == null) this.seulementATraiter.set(false);
+      this.page.set(0);
+    });
   }
 
   protected basculerATraiter(): void {
-    this.seulementATraiter.update((v) => !v);
-    this.page.set(0);
+    this.flip.animer(() => {
+      this.seulementATraiter.update((v) => !v);
+      this.page.set(0);
+    });
+  }
+
+  protected chercher(v: string): void {
+    this.flip.animer(() => {
+      this.recherche.set(v);
+      this.page.set(0);
+    });
   }
 
   // ---------------------------------------------------------------- selection

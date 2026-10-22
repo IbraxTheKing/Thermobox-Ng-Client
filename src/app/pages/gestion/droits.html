@@ -14,7 +14,7 @@
     <span class="tb-search">
       <i class="pi pi-search"></i>
       <input class="tb-input" type="search" placeholder="Rechercher un utilisateur ou un groupe…" autocomplete="off" aria-label="Rechercher"
-             [value]="recherche()" (input)="recherche.set($any($event.target).value)" />
+             [value]="recherche()" (input)="chercher($any($event.target).value)" />
     </span>
   </div>
 
@@ -40,7 +40,7 @@
     <!-- Phones: one row per user, their settings in a sheet -->
     <ul class="tb-liste-gest">
       @for (l of visibles(); track l.user.id) {
-        <li>
+        <li [attr.data-flip]="'u' + l.user.id">
           <button type="button" class="tb-gest-ligne" (click)="ouvrirUser(l)">
             <span class="tb-avatar tb-user-avatar tb-role-{{ l.user.type }}">{{ initiale(l.user.username) }}</span>
             <span class="tb-gest-texte">
@@ -71,7 +71,7 @@
       </thead>
       <tbody>
         @for (l of visibles(); track l.user.id) {
-          <tr [class.tb-row-on]="selection().has(l.user.id!)">
+          <tr [class.tb-row-on]="selection().has(l.user.id!)" [attr.data-flip]="'u' + l.user.id">
             <td class="tb-col-check">
               <input type="checkbox" class="tb-check" [checked]="selection().has(l.user.id!)" (change)="cocher(l.user.id!, $any($event.target).checked)" [attr.aria-label]="'Sélectionner ' + l.user.username" />
             </td>

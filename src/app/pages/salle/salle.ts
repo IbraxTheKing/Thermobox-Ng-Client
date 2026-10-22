@@ -12,6 +12,7 @@ import { ConfirmService, ToastService } from '../../core/messages';
 import { PlateformeService } from '../../core/plateforme';
 import { TitreService } from '../../core/titre';
 import { TransitionsService } from '../../core/transitions';
+import { FlipService } from '../../core/flip';
 import { RetourGesteService } from '../../core/retour-geste';
 import { UniteService } from '../../core/unite';
 import { DetailElement, Historique, Noeud, Point } from '../../models/models';
@@ -50,6 +51,7 @@ export class SallePage implements OnDestroy {
   private readonly images = inject(ImagesService);
   private readonly store = inject(ArbreStore);
   private readonly transitions = inject(TransitionsService);
+  private readonly flip = inject(FlipService);
   protected readonly tel = inject(PlateformeService).telephone;
   /** Phones: the « Du / Au » fields are shown. */
   protected readonly plagePerso = signal(false);
@@ -239,7 +241,8 @@ export class SallePage implements OnDestroy {
     const d = this.detail();
     if (!d) return;
     const favori = !d.element.favori;
-    this.majElement({ ...d.element, favori });
+    // Its star spins (FlipService)
+    this.flip.animer(() => this.majElement({ ...d.element, favori }));
     this.plateforme.vibrer();
     try {
       await firstValueFrom(favori ? this.favoris.ajouter(d.element.id) : this.favoris.retirer(d.element.id));

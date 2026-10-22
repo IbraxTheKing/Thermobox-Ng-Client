@@ -189,3 +189,26 @@
 
 /* Swipe back (RetourGesteService): the page follows the finger, shrinking; the bars stay */
 .tb-geste-retour .tb-main { will-change: transform; }
+
+/* ============================== Small things that move ============================== */
+
+/* Segmented controls: the selected pill slides (AnimationsService); the option it lands on shows
+   no background of its own meanwhile */
+.tb-seg-pilule { position: absolute; z-index: 0; pointer-events: none; transform-origin: 50% 50%; }
+.tb-segmented > button { position: relative; z-index: 1; }
+.tb-segmented > button.tb-seg-on.tb-seg-glisse { background: transparent; box-shadow: none; }
+
+@media (prefers-reduced-motion: no-preference) {
+    /* A filter chip turned on: it pops, its tick draws in */
+    .tb-summary-chip.tb-chip-on { animation: tb-chip-on .42s var(--tb-spring); }
+    .tb-summary-chip.tb-chip-on .tb-chip-check { animation: tb-coche .35s .05s var(--tb-spring) both; }
+    @keyframes tb-chip-on { 40% { transform: scale(1.07); } }
+    @keyframes tb-coche { from { transform: scale(0) rotate(-45deg); opacity: 0; } }
+
+    /* Sections fold a little more slowly, their chevron with a spring */
+    .tb-section-chevron { transition: transform .5s var(--tb-spring), background-color .2s; }
+
+    /* Selection mode of Gestion: the round ticks pop in */
+    .tb-en-selection .tb-gest-coche { animation: tb-coche .35s var(--tb-spring) both; }
+    .tb-en-selection .tb-liste-gest > li:nth-child(-n + 12) .tb-gest-coche { animation-delay: calc(var(--i, 0) * 20ms); }
+}

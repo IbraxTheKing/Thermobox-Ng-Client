@@ -15,6 +15,7 @@ import { Option, TbChoixMultiple } from '../../ui/choix-multiple';
 import { TbSheet } from '../../ui/sheet';
 import { TbSwitch } from '../../ui/controles';
 import { PlateformeService } from '../../core/plateforme';
+import { FlipService } from '../../core/flip';
 
 /**
  * « Utilisateurs et groupes » tab of the Gestion page (ADMIN only, gestion-droits.xhtml): roles
@@ -36,6 +37,11 @@ export class DroitsTab implements OnInit {
   private readonly toasts = inject(ToastService);
   private readonly confirm = inject(ConfirmService);
   protected readonly tel = inject(PlateformeService).telephone;
+  private readonly flip = inject(FlipService);
+
+  protected chercher(v: string): void {
+    this.flip.animer(() => this.recherche.set(v));
+  }
 
   private readonly arbreGroupe = viewChild(TbArbreAcces);
 
