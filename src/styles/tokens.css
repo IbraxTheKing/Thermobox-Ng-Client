@@ -237,7 +237,7 @@
 /* Préférences: "Couleurs selon l'état" off (data-teinte), or the control-panel style: the palette
    stays the same on every page */
 :root:is([data-teinte="off"], [data-style="panneau"]) { --tb-mix: 0 !important; }
-:root:is([data-teinte="off"], [data-style="panneau"]) body { --tb-page-tone: transparent !important; }
+:root:is([data-teinte="off"], [data-style="panneau"]) body::before { --tb-page-tone: transparent !important; }
 
 /*
  * Control-panel style, chosen by an ADMIN for everyone (data-style="panneau", ReglagesSite):
@@ -380,12 +380,16 @@
  * tints the background (data-ton). Drawn on a fixed layer behind the page rather than as a fixed
  * background of <body> (iOS repaints those on every scroll).
  */
-:root body { --tb-page-tone: transparent; background: var(--md-surface); }
-:root[data-ton="stable"] body { --tb-page-tone: var(--tb-stable); }
-:root[data-ton="chauffe"] body { --tb-page-tone: var(--tb-chauffe); }
-:root[data-ton="chaud"] body { --tb-page-tone: var(--md-error); }
-:root[data-ton="inconnu"] body { --tb-page-tone: var(--md-outline); }
+@property --tb-page-tone { syntax: "<color>"; inherits: false; initial-value: transparent; }
+:root body { background: var(--md-surface); }
+:root[data-ton="stable"] body::before { --tb-page-tone: var(--tb-stable); }
+:root[data-ton="chauffe"] body::before { --tb-page-tone: var(--tb-chauffe); }
+:root[data-ton="chaud"] body::before { --tb-page-tone: var(--md-error); }
+:root[data-ton="inconnu"] body::before { --tb-page-tone: var(--md-outline); }
+/* Only this layer animates its colour (one element, no descendants to restyle) */
 :root body::before {
+    --tb-page-tone: transparent;
+    transition: --tb-page-tone .9s ease-in-out;
     content: "";
     position: fixed;
     inset: 0;

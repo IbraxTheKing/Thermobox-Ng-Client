@@ -38,10 +38,18 @@
 
 /* ============================== Entrance of a page ============================== */
 
+/*
+ * The parts of a page glide into place, they don't fade or grow: a glass surface (backdrop-filter)
+ * that fades or scales is drawn without its blur, or blurred as a whole, until the animation ends,
+ * then pops back sharp. These replace the keyframes of jsf.css (same names, later in the cascade).
+ */
+@keyframes tb-rise { from { transform: translateY(18px); } }
+@keyframes tb-rise-scale { from { transform: translateY(26px); } }
+
 /* What this client shows differently from the JSF interface rises in too */
 .tb-entering :is(.tb-table, .tb-arbre-salles, .tb-segmented.tb-gest-onglets, .tb-groupes, .tb-plus-moi) { animation: tb-rise .55s var(--tb-ease) .12s both; }
 .tb-entering .tb-panel { animation: tb-rise .55s var(--tb-ease) .1s both; }
-.tb-entering .tb-liste-groupe { animation: tb-rise .55s var(--tb-ease) both; animation-delay: calc(.1s + var(--i, 0) * 50ms); }
+.tb-entering .tb-liste-groupe { animation: tb-rise .55s var(--tb-ease) both; animation-delay: calc(.05s + var(--i, 0) * 40ms); }
 
 /* Lists: one item after the other (tbVie.cascade of the JSF interface set --i in JavaScript) */
 :is(.tb-users, .tb-drill-list, .tb-maj-versions, .tb-histo, .tb-compare-table tbody, .tb-table tbody, .tb-liste-gest, .tb-groupes, .tb-narrow) > :nth-child(n + 13) { --i: 12; }
@@ -93,9 +101,6 @@
 }
 :root[data-plateforme="ios"]::view-transition-image-pair(*.tb-card) { border-radius: 28px; }
 :root[data-plateforme="ios"]::view-transition-group(*) { animation-timing-function: var(--tb-ressort-verre); animation-duration: .55s; }
-
-/* iOS tabs: no snapshots (TransitionsService); the page fades in, live, while its parts rise */
-.tb-arrivee .tb-main { animation: tb-fade-in .28s ease-out both; }
 
 /* The lens follows the selected tab with the same spring */
 :root[data-plateforme="ios"] .tb-lentille {

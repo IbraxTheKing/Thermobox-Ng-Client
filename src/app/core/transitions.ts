@@ -19,8 +19,8 @@ type Doc = Document & { startViewTransition?: (f: () => void | Promise<void>) =>
  *   and its salle page carry view-transition names (data-vt), and only during the transition: a
  *   name on every card made each of them a group of its own, every page change blurred and faded
  *   the whole dashboard piece by piece;
- * - iOS, between tabs: no picture of the pages at all (as native tabs, the new page is there at
- *   once and makes its entrance, live, so nothing has to be redrawn from snapshots);
+ * - other page changes: no picture of the pages at all (the new page is there at once and makes
+ *   its entrance, live; pictures of glass came out blurred);
  * - the colour of the page (state of the salle shown, dashboard filter) changes through a
  *   cross-fade of two pictures of the page, done by the compositor, instead of animating the
  *   colours of every element on every frame (which made phones stutter and went through other
@@ -35,6 +35,12 @@ export class TransitionsService {
   private readonly root = this.doc.documentElement;
 
   private courante: ViewTransition | null = null;
+  /**
+   * Safari and every browser of iOS: pictures of the glass (backdrop-filter) come out blurred.
+   * The colour of the page then changes without pictures: the background glides to the new
+   * colour (tokens.css, body::before), the rest of the palette follows at once.
+   */
+  private readonly webkit = /AppleWebKit/.test(navigator.userAgent) && !/Chrome\/|Chromium|Edg\//.test(navigator.userAgent);
   /** The new page is not in place yet: a colour asked now goes with it. */
   private avantMaj = false;
   private minuterie?: ReturnType<typeof setTimeout>;
@@ -69,13 +75,16 @@ export class TransitionsService {
     const vers = chemin(to);
     const carte = estCarte(depuis, vers);
     const id = carte ? String(feuille(vers === 'salle/:id' ? to : from).params['id'] ?? '') : '';
-    const ios = this.root.dataset['plateforme'] === 'ios';
-    if (!carte && ios) transition.skipTransition();
+    // Between pages: no pictures of the pages. A picture of the glass (backdrop-filter) is drawn
+    // without its blur or blurred as a whole depending on the browser, and every card of the
+    // dashboard showed blurred, then popped back. The new page is there at once, live, and makes
+    // its entrance. Only the dashboard card morphing into its salle page needs pictures.
+    if (!carte) transition.skipTransition();
     this.courante = transition;
     this.avantMaj = true;
     this.root.classList.toggle('tb-carte', carte);
     // A real transition: what morphs must not also slide in (jsf.css, .tb-vt-in)
-    this.root.classList.toggle('tb-vt-in', carte || !ios);
+    this.root.classList.toggle('tb-vt-in', carte);
     // The card (or the salle page) we leave: its picture is taken on the next frame
     if (carte) this.nommer(id, depuis === 'apercu');
     transition.updateCallbackDone
@@ -90,7 +99,7 @@ export class TransitionsService {
         }
         // Part of the new picture: no second cross-fade
         this.appliquerTon(this.tonVoulu);
-        if (!carte) this.entree(ios);
+        if (!carte) this.entree();
       });
     transition.finished
       .catch(() => undefined)
@@ -120,16 +129,15 @@ export class TransitionsService {
     this.fondu();
   }
 
-  /** Entrance of the page (CSS under html.tb-entering; iOS tabs: html.tb-arrivee too). */
-  private entree(arrivee = false): void {
+  /** Entrance of the page (CSS under html.tb-entering). */
+  private entree(): void {
     if (this.prefs.mouvementReduit()) return;
     clearTimeout(this.minuterie);
-    this.root.classList.remove('tb-entering', 'tb-arrivee');
+    this.root.classList.remove('tb-entering');
     // Restart the animations of a page entered again quickly
     void this.root.offsetWidth;
     this.root.classList.add('tb-entering');
-    this.root.classList.toggle('tb-arrivee', arrivee);
-    this.minuterie = setTimeout(() => this.root.classList.remove('tb-entering', 'tb-arrivee'), 1600);
+    this.minuterie = setTimeout(() => this.root.classList.remove('tb-entering'), 1600);
   }
 
   /**
@@ -175,7 +183,7 @@ export class TransitionsService {
     this.tonPrevu = false;
     const ton = this.tonVoulu;
     if (ton === this.tonAffiche) return;
-    if (!this.doc.startViewTransition || this.prefs.mouvementReduit() || this.root.dataset['teinte'] === 'off' || this.doc.hidden) {
+    if (!this.doc.startViewTransition || this.webkit || this.prefs.mouvementReduit() || this.root.dataset['teinte'] === 'off' || this.doc.hidden) {
       this.appliquerTon(ton);
       return;
     }
