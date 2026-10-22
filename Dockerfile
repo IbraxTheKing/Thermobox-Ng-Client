@@ -7,6 +7,8 @@ WORKDIR /app
 
 # Install dependencies first to benefit from Docker layer caching.
 COPY package.json package-lock.json ./
+# Plugin natif local (dépendance « file: » de package.json)
+COPY plugins/ ./plugins/
 RUN npm ci
 
 COPY . .

@@ -7,6 +7,7 @@ import {
   OnInit,
   afterRenderEffect,
   computed,
+  effect,
   inject,
   signal,
   viewChild,
@@ -15,6 +16,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { filter, map } from 'rxjs';
 
+import { AndroidNatifService, OngletNatif, iconeNative } from '../core/android-natif';
 import { AuthService } from '../core/auth';
 import { AvisMajService } from '../core/avis-maj';
 import { ClavierService } from '../core/clavier';
@@ -114,7 +116,34 @@ export class Shell implements OnInit, OnDestroy {
   /** The click that ends a slide of the lens must not open the tab it started on. */
   private ignorerClic = false;
 
+  /** Android app: the bar at the bottom is the native Material 3 one (core/android-natif.ts). */
+  private readonly natif = inject(AndroidNatifService);
+
   constructor() {
+    if (this.natif.actif) {
+      effect(() => {
+        const dests = this.destinations();
+        const onglets: OngletNatif[] = dests.slice(0, DESTINATIONS_BARRE).map((d) => ({
+          id: d.lien,
+          label: d.label,
+          icone: iconeNative(d.icone),
+          badge: !!d.badge && this.avis.disponible(),
+        }));
+        onglets.push({
+          id: '/app/plus',
+          label: this.avecPlus() ? 'Plus' : 'Compte',
+          icone: this.avecPlus() ? 'plus' : 'compte',
+          badge: this.avecPlus() && this.avis.disponible(),
+        });
+        const actif = dests.slice(0, DESTINATIONS_BARRE).find((d) => this.estActive(d))?.lien ?? (this.plusActif() ? '/app/plus' : null);
+        this.prefs.theme();
+        // Phone held sideways: the rail of the page, not the bar
+        this.natif.configurerBarre(onglets, actif, this.barreBas(), (id, retouche) => {
+          if (retouche) scrollTo({ top: 0, behavior: this.prefs.animer() ? 'smooth' : 'auto' });
+          else void this.router.navigateByUrl(id);
+        });
+      });
+    }
     // The lens of the iOS tab bar follows the selected destination
     afterRenderEffect(() => {
       this.url();
@@ -142,6 +171,7 @@ export class Shell implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.natif.quitter();
     removeEventListener('scroll', this.surDefilement);
     removeEventListener('resize', this.surRedimension);
     clearInterval(this.minuterie);
