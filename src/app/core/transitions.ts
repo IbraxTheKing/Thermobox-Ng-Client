@@ -2,6 +2,7 @@ import { DOCUMENT } from '@angular/common';
 import { Injectable, inject } from '@angular/core';
 import { ActivatedRouteSnapshot, ViewTransitionInfo } from '@angular/router';
 
+import { PlateformeService } from './plateforme';
 import { PreferencesService } from './preferences';
 
 /** State whose colour the page takes (« Couleurs selon l'état »). */
@@ -15,7 +16,10 @@ type Doc = Document & { startViewTransition?: (f: () => void | Promise<void>) =>
  * - every page change goes through a view transition (cross-fade, the dashboard card morphing into
  *   the salle page), and the new page makes its entrance (html.tb-entering, 1.6 s: the head rises,
  *   the cards follow one after the other, their curves draw themselves);
- * - dashboard ↔ salle: only the card moves (html.tb-carte), nothing else pops in. Only that card
+ * - dashboard ↔ salle: only the card moves (html.tb-carte), nothing else pops in. On phones
+ *   (html.tb-carte-plein) the card opens into the whole salle page and the page closes back into
+ *   it (Material container transform): card and page are the same width there, a card morphing
+ *   into the card of the page did not show. Only that card
  *   and its salle page carry view-transition names (data-vt), and only during the transition: a
  *   name on every card made each of them a group of its own, every page change blurred and faded
  *   the whole dashboard piece by piece;
@@ -32,6 +36,7 @@ type Doc = Document & { startViewTransition?: (f: () => void | Promise<void>) =>
 export class TransitionsService {
   private readonly doc = inject(DOCUMENT) as Doc;
   private readonly prefs = inject(PreferencesService);
+  private readonly plateforme = inject(PlateformeService);
   private readonly root = this.doc.documentElement;
 
   private courante: ViewTransition | null = null;
@@ -58,8 +63,25 @@ export class TransitionsService {
    * gesture of Android): no second animation on top of it.
    */
   private parLeNavigateur = false;
+  /** What to do on the new page before its picture is taken (names, colour, scroll…). */
+  private surNouvellePage: (() => void) | null = null;
+  private enAttente: (() => void)[] = [];
 
   constructor() {
+    // The picture of the new page is taken as soon as the update callback is done: what must be
+    // in it (names of what morphs, colour, page put straight) is done at the end of that
+    // callback, not after updateCallbackDone (too late: the picture is already taken)
+    const demarrer = this.doc.startViewTransition?.bind(this.doc);
+    if (demarrer) {
+      this.doc.startViewTransition = (maj?: () => void | Promise<void>) =>
+        demarrer(async () => {
+          try {
+            await maj?.();
+          } finally {
+            this.nouvellePage();
+          }
+        });
+    }
     addEventListener(
       'popstate',
       (e) => (this.parLeNavigateur = (e as PopStateEvent & { hasUAVisualTransition?: boolean }).hasUAVisualTransition === true),
@@ -96,37 +118,37 @@ export class TransitionsService {
     this.courante = transition;
     this.avantMaj = true;
     this.root.classList.toggle('tb-carte', carte);
+    this.root.classList.toggle('tb-carte-plein', carte && this.plateforme.barreBas());
     // A real transition: what morphs must not also slide in (jsf.css, .tb-vt-in)
     this.root.classList.toggle('tb-vt-in', carte);
     // The card (or the salle page) we leave: its picture is taken on the next frame
     if (carte) this.nommer(id, depuis === 'apercu');
-    transition.updateCallbackDone
-      .catch(() => undefined)
-      .then(() => {
-        this.avantMaj = false;
-        // The page we arrive on, before its picture is taken
-        if (carte) {
+    this.surNouvellePage = () => {
+      // The page we arrive on, before its picture is taken
+      if (carte) {
+        this.denommer();
+        if (vers === 'apercu') this.revenirALaCarte(id);
+        this.nommer(id, false);
+        // Nothing to morph into (salle page not ready, card in a folded section): the card
+        // would stay on its own in the middle of the new page, so no transition at all
+        if (!this.nommes.some((e) => e.style.getPropertyValue('view-transition-name') === `salle-card-${id}`)) {
           this.denommer();
-          if (vers === 'apercu') this.revenirALaCarte(id);
-          this.nommer(id, false);
-          // Nothing to morph into (salle page not ready, card in a folded section): the card
-          // would stay on its own in the middle of the new page, so no transition at all
-          if (!this.nommes.some((e) => e.dataset['vt'] === 'salle-card')) {
-            this.denommer();
-            transition.skipTransition();
-          }
+          transition.skipTransition();
         }
-        // Part of the new picture: no second cross-fade
-        this.appliquerTon(this.tonVoulu);
-        if (!carte) this.entree();
-      });
+      }
+      // Part of the new picture: no second cross-fade
+      this.appliquerTon(this.tonVoulu);
+      if (!carte) this.entree();
+    };
+    // Not through the wrapped startViewTransition (created before this service): late, but done
+    transition.updateCallbackDone.catch(() => undefined).then(() => this.nouvellePage());
     transition.finished
       .catch(() => undefined)
       .then(() => {
         this.denommer();
         if (this.courante !== transition) return;
         this.courante = null;
-        this.root.classList.remove('tb-vt-in', 'tb-carte');
+        this.root.classList.remove('tb-vt-in', 'tb-carte', 'tb-carte-plein');
         if (this.tonPrevu) this.fondu();
       });
   }
@@ -136,8 +158,18 @@ export class TransitionsService {
    * picture of the page left and the picture of the new one.
    */
   apresMaj(fn: () => void): void {
-    if (this.courante && this.avantMaj) this.courante.updateCallbackDone.catch(() => undefined).then(fn);
+    if (this.courante && this.avantMaj) this.enAttente.push(fn);
     else fn();
+  }
+
+  /** End of the update of a page transition: the new page is there, its picture not taken yet. */
+  private nouvellePage(): void {
+    if (!this.avantMaj) return;
+    this.avantMaj = false;
+    const f = this.surNouvellePage;
+    this.surNouvellePage = null;
+    f?.();
+    for (const fn of this.enAttente.splice(0)) fn();
   }
 
   /** A page shown without a view transition (first load, browser without them). */
@@ -184,6 +216,16 @@ export class TransitionsService {
       return r.bottom > 0 && r.top < innerHeight;
     });
     carte ??= cartes[0];
+    if (this.root.classList.contains('tb-carte-plein')) {
+      // Phones: the card alone, or the whole page of the salle
+      const page = carte ?? (tous.length ? this.doc.querySelector<HTMLElement>('.tb-main') : null);
+      if (!page) return;
+      page.style.setProperty('view-transition-name', `salle-card-${id}`);
+      page.style.setProperty('view-transition-class', 'tb-card');
+      page.dataset['vtPlein'] = '';
+      this.nommes.push(page);
+      return;
+    }
     const pris = new Set<string>();
     for (const e of tous) {
       const nom = e.dataset['vt']!;
@@ -196,7 +238,12 @@ export class TransitionsService {
   }
 
   private denommer(): void {
-    for (const e of this.nommes.splice(0)) e.style.removeProperty('view-transition-name');
+    for (const e of this.nommes.splice(0)) {
+      e.style.removeProperty('view-transition-name');
+      // Set here only on the page; the cards carry their own (salle-card.ts)
+      if (e.dataset['vtPlein'] != null && !e.classList.contains('tb-room')) e.style.removeProperty('view-transition-class');
+      delete e.dataset['vtPlein'];
+    }
   }
 
   /** Back on the dashboard: the card reopens where it was on the screen when it was clicked. */

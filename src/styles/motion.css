@@ -28,6 +28,26 @@
 ::view-transition-old(*.tb-card) { animation: tb-fade-out .5s ease-in-out both; }
 ::view-transition-new(*.tb-card) { animation: tb-fade-in .5s ease-in-out both; }
 
+/*
+ * Phones (html.tb-carte-plein): the card opens into the whole page of the salle and the page
+ * closes back into it (Material container transform). The group is the container: it clips and
+ * keeps its rounded corners; the two pictures keep their proportions, from the top (the page is
+ * taller than the screen), and fade through each other in the first half of the move. The page
+ * around fades at the same pace.
+ */
+.tb-carte-plein::view-transition-group(*.tb-card) {
+  overflow: clip;
+  animation-duration: .45s;
+  animation-timing-function: cubic-bezier(.2, 0, 0, 1);
+}
+.tb-carte-plein::view-transition-image-pair(*.tb-card) { isolation: auto; }
+.tb-carte-plein::view-transition-old(*.tb-card),
+.tb-carte-plein::view-transition-new(*.tb-card) { mix-blend-mode: normal; height: auto; object-fit: none; object-position: top; }
+.tb-carte-plein::view-transition-old(*.tb-card) { animation: tb-fade-out .2s ease both; }
+.tb-carte-plein::view-transition-new(*.tb-card) { animation: tb-fade-in .26s .08s ease both; }
+.tb-carte-plein::view-transition-old(root) { animation: tb-garde .45s both; }
+.tb-carte-plein::view-transition-new(root) { animation: tb-fade-in .3s ease both; }
+
 /* ============================== Colour of the page ============================== */
 
 /* One cross-fade of the whole page, nothing else moves (TransitionsService.definirTon) */
