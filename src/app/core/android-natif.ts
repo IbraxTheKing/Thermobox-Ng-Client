@@ -35,7 +35,16 @@ interface ThermoboxNatifPlugin {
 }
 
 /** Composants natifs Material 3 (plugins/thermobox-natif), dans l'application Android seulement. */
-export const ANDROID_NATIF = Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android';
+export const ANDROID_NATIF =
+  Capacitor.isNativePlatform() &&
+  Capacitor.getPlatform() === 'android' &&
+  // Built into the app only when « npx cap sync » found it (npm install done): otherwise the page
+  // keeps its own navigation bar, buttons and sheets rather than showing none.
+  Capacitor.isPluginAvailable('ThermoboxNatif');
+
+if (Capacitor.getPlatform() === 'android' && Capacitor.isNativePlatform() && !ANDROID_NATIF) {
+  console.warn('Plugin ThermoboxNatif absent de l\'application : npm install, puis npx cap sync android.');
+}
 
 const plugin = ANDROID_NATIF ? registerPlugin<ThermoboxNatifPlugin>('ThermoboxNatif') : null;
 
