@@ -186,3 +186,6 @@
         backdrop-filter: blur(2px) saturate(180%);
     }
 }
+
+/* Swipe back (RetourGesteService): the page follows the finger, shrinking; the bars stay */
+.tb-geste-retour .tb-main { will-change: transform; }

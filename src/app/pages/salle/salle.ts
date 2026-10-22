@@ -12,6 +12,7 @@ import { ConfirmService, ToastService } from '../../core/messages';
 import { PlateformeService } from '../../core/plateforme';
 import { TitreService } from '../../core/titre';
 import { TransitionsService } from '../../core/transitions';
+import { RetourGesteService } from '../../core/retour-geste';
 import { UniteService } from '../../core/unite';
 import { DetailElement, Historique, Noeud, Point } from '../../models/models';
 import { ArbreStore, LIBELLES } from '../../services/arbre.store';
@@ -134,8 +135,14 @@ export class SallePage implements OnDestroy {
   constructor() {
     // The page takes the colour of the state of the salle, at once from what the dashboard
     // already knows (it then comes with the card that morphs into this page)
-    const connu = this.store.parId().get(Number(inject(ActivatedRoute).snapshot.paramMap.get('id')));
+    const idDepart = Number(inject(ActivatedRoute).snapshot.paramMap.get('id'));
+    const connu = this.store.parId().get(idDepart);
     if (connu) this.transitions.definirTon(etatDe(connu.temperature, connu.consigne?.value).ton);
+    // Before the first render: the card of the dashboard morphs into this page, its picture is
+    // taken right after that render (an effect could come one render too late)
+    this.amorcer(idDepart);
+    // Phones: swipe the page to the right to go back (TbRetourGeste)
+    inject(RetourGesteService).activer(() => this.retour());
     effect(() => {
       const e = this.element();
       if (e) this.transitions.definirTon(this.etat().ton);
@@ -153,7 +160,8 @@ export class SallePage implements OnDestroy {
 
   private async ouvrir(id: number): Promise<void> {
     clearInterval(this.minuterie);
-    this.detail.set(null);
+    // Already shown from the dashboard's data (constructor): kept until the server answers
+    if (this.detail()?.element.id !== id) this.amorcer(id);
     this.introuvable.set(false);
     this.historique.set(null);
     this.nouvelleConsigne.set(null);
@@ -163,24 +171,31 @@ export class SallePage implements OnDestroy {
       this.introuvable.set(true);
       return;
     }
-    // What the dashboard already knows (name, temperature, consigne, place): the page is there at
-    // once, so the card has a page to morph into, the rest comes with the server's answer
-    const connu = this.store.parId().get(id);
-    if (connu) {
-      this.detail.set({
-        element: connu,
-        ancetres: this.store.chemin(id).map((a) => ({ id: a.id, name: a.name, kind: a.kind, accessible: a.accessible })),
-        enfants: [],
-        mesures: [],
-        consignesPropres: [],
-        salles: [],
-      });
-      this.titre.definir(connu.name ?? 'Salle');
-    }
     await this.rafraichir(id, false);
     if (!this.detail()) return;
     void this.chargerHistorique();
     this.minuterie = setInterval(() => void this.rafraichir(id, true), 30_000);
+  }
+
+  /**
+   * What the dashboard already knows (name, temperature, consigne, place): the page is there at
+   * once, so the card has a page to morph into; the rest comes with the server's answer.
+   */
+  private amorcer(id: number): void {
+    const connu = isNaN(id) ? undefined : this.store.parId().get(id);
+    if (!connu) {
+      this.detail.set(null);
+      return;
+    }
+    this.detail.set({
+      element: connu,
+      ancetres: this.store.chemin(id).map((a) => ({ id: a.id, name: a.name, kind: a.kind, accessible: a.accessible })),
+      enfants: [],
+      mesures: [],
+      consignesPropres: [],
+      salles: [],
+    });
+    this.titre.definir(connu.name ?? 'Salle');
   }
 
   private async rafraichir(id: number, discret: boolean): Promise<void> {
@@ -211,8 +226,8 @@ export class SallePage implements OnDestroy {
   }
 
   /** Back to where we came from (the dashboard card returns to its place), else to the dashboard. */
-  protected retour(e: Event): void {
-    e.preventDefault();
+  protected retour(e?: Event): void {
+    e?.preventDefault();
     const etat = this.location.getState() as { navigationId?: number } | null;
     if (etat?.navigationId && etat.navigationId > 1) this.location.back();
     else void this.router.navigateByUrl('/app/apercu');

@@ -261,3 +261,10 @@
 .tb-graphique-plein .tb-graphique-zone { height: auto; flex: 1 1 auto; }
 body.tb-graphique-ouvert { overflow: hidden; }
 body.tb-graphique-ouvert .tb-rail, body.tb-graphique-ouvert .tb-topbar { visibility: hidden; }
+
+/* ============================== Photos ============================== */
+
+/* The photo is inside <tb-photo-img> (display: contents): « .tb-photo > img » of the JSF interface
+   never matched, a small photo kept its own size in a corner instead of covering the frame */
+.tb-photo tb-photo-img > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; animation: tb-fade-in .6s ease; }
+.tb-vt-in .tb-photo tb-photo-img > img { animation: none; }

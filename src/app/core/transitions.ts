@@ -53,7 +53,18 @@ export class TransitionsService {
   private carteCliquee: { id: string; el: HTMLElement; haut: number } | null = null;
   private nommes: HTMLElement[] = [];
 
+  /**
+   * The browser has already shown the way back itself (swipe from the edge in Safari, back
+   * gesture of Android): no second animation on top of it.
+   */
+  private parLeNavigateur = false;
+
   constructor() {
+    addEventListener(
+      'popstate',
+      (e) => (this.parLeNavigateur = (e as PopStateEvent & { hasUAVisualTransition?: boolean }).hasUAVisualTransition === true),
+      true,
+    );
     this.doc.addEventListener(
       'click',
       (e) => {
@@ -67,7 +78,9 @@ export class TransitionsService {
 
   /** Called by the router for each page change (app.config.ts). */
   surTransition({ transition, from, to }: ViewTransitionInfo): void {
-    if (this.prefs.mouvementReduit()) {
+    const parLeNavigateur = this.parLeNavigateur;
+    this.parLeNavigateur = false;
+    if (this.prefs.mouvementReduit() || parLeNavigateur) {
       transition.skipTransition();
       return;
     }
@@ -116,6 +129,15 @@ export class TransitionsService {
         this.root.classList.remove('tb-vt-in', 'tb-carte');
         if (this.tonPrevu) this.fondu();
       });
+  }
+
+  /**
+   * [fn] once the new page is in place: right away, or, during a page transition, between the
+   * picture of the page left and the picture of the new one.
+   */
+  apresMaj(fn: () => void): void {
+    if (this.courante && this.avantMaj) this.courante.updateCallbackDone.catch(() => undefined).then(fn);
+    else fn();
   }
 
   /** A page shown without a view transition (first load, browser without them). */
