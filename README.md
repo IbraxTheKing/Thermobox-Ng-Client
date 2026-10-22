@@ -109,6 +109,40 @@ L'image sert le client avec Nginx et relaie `/api` vers `API_UPSTREAM`
 (`http://host.docker.internal:8080` dans `compose.yaml`). `THERMOBOX_VERSION` (argument de construction) fixe la version
 inscrite ; sans lui, c'est `dev` (le dossier `.git` n'est pas dans l'image).
 
+### Depuis une release (`.zip`), sans rien construire
+
+Chaque release GitHub contient `thermobox-ng-client-<version>.zip` : le client déjà construit, avec sa
+version inscrite (`index.html` à la racine). Il suffit de le faire servir par Nginx avec
+`nginx/default.conf.template`, qui renvoie `/api` vers le serveur ThermoBox :
+
+```bash
+mkdir thermobox-client && cd thermobox-client
+gh release download 26.11.0-beta.1 -R IbraxTheKing/Thermobox-Ng-Client -p '*.zip'   # ou depuis la page de la release
+unzip thermobox-ng-client-26.11.0-beta.1.zip -d html
+curl -LO https://raw.githubusercontent.com/IbraxTheKing/Thermobox-Ng-Client/dev/nginx/default.conf.template
+```
+
+```yaml
+# compose.yaml, dans ce dossier : docker compose up -d   →   http://localhost:2767
+services:
+  thermobox-ng-client:
+    image: nginx:1.28-alpine
+    ports: ["2767:80"]
+    environment:
+      API_UPSTREAM: http://host.docker.internal:8080
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    volumes:
+      - ./html:/usr/share/nginx/html:ro
+      - ./default.conf.template:/etc/nginx/templates/default.conf.template:ro
+    restart: unless-stopped
+```
+
+- `API_UPSTREAM` : adresse du serveur REST, **sans** `/api` ni `/` final (Nginx garde `/api` dans l'adresse
+  transmise). Serveur sur la même machine : `http://host.docker.internal:8080` ; serveur dans un conteneur
+  du même réseau Docker : son nom de service (`http://thermobox-rest:8080`), sans `extra_hosts`.
+- Nouvelle version : vider `html/`, y décompresser le nouveau zip, `docker compose restart`. Les
+  navigateurs et la PWA installée la prennent au chargement suivant (service worker).
+
 ## Applications iOS / Android (Capacitor)
 
 ```bash
