@@ -10,7 +10,11 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 COPY . .
-RUN npm run build -- --configuration production
+# Version inscrite dans le client (même numérotation que le serveur : 26.11.0, 26.11.0-beta.2…).
+# Sans elle : le tag Git du commit construit s'il est dans le contexte, sinon « dev ».
+ARG THERMOBOX_VERSION=""
+ARG THERMOBOX_COMMIT=""
+RUN THERMOBOX_VERSION="$THERMOBOX_VERSION" THERMOBOX_COMMIT="$THERMOBOX_COMMIT" npm run build -- --configuration production
 
 # Serve the compiled SPA with Nginx
 FROM nginx:1.28-alpine AS runtime

@@ -21,10 +21,32 @@
       <span class="tb-liste-icone"><i class="pi pi-mobile"></i></span>
       <span class="tb-liste-texte">
         <strong>Client Thermobox</strong>
-        <span class="tb-muted">{{ nomPlateforme }} · Angular {{ versionAngular }}@if (versionNative()) { · application {{ versionNative() }} }</span>
+        <span class="tb-muted">{{ nomPlateforme }} · Angular {{ versionAngular }}@if (commitClient) { · {{ commitClient }} }@if (versionNative()) { · application {{ versionNative() }} }</span>
       </span>
-      <span class="tb-apropos-version">{{ versionClient }}</span>
+      <span class="tb-apropos-version" [class.tb-apropos-dev]="!majClient.installee">{{ versionClient }}</span>
     </div>
+    <!-- Versions of this client published on GitHub (same numbering as the server) -->
+    @if (majClient.derniereDisponible(); as d) {
+      <a class="tb-liste-ligne tb-apropos-maj" [href]="d.page" target="_blank" rel="noopener">
+        <span class="tb-liste-icone"><i class="pi pi-cloud-download"></i></span>
+        <span class="tb-liste-texte">
+          <strong>{{ majClient.installee ? 'Nouvelle version du client' : 'Dernière version publiée du client' }}</strong>
+          <span class="tb-muted">{{ d.titre }}@if (majClient.installee) { · {{ typeMaj(d.type) }} }</span>
+        </span>
+        <span class="tb-apropos-version">{{ d.version.tag }}</span>
+        <i class="pi pi-external-link tb-liste-suite"></i>
+      </a>
+    } @else if (majClient.disponibles() && majClient.installee) {
+      <div class="tb-liste-ligne tb-liste-info">
+        <span class="tb-liste-icone"><i class="pi pi-check"></i></span>
+        <span class="tb-liste-texte"><strong>Client à jour</strong><span class="tb-muted">Aucune version plus récente sur GitHub</span></span>
+      </div>
+    } @else if (majClient.erreur(); as err) {
+      <div class="tb-liste-ligne tb-liste-info">
+        <span class="tb-liste-icone"><i class="pi pi-exclamation-circle"></i></span>
+        <span class="tb-liste-texte"><strong>Versions du client</strong><span class="tb-muted">{{ err }}</span></span>
+      </div>
+    }
     <div class="tb-liste-ligne tb-liste-info">
       <span class="tb-liste-icone"><i class="pi pi-server"></i></span>
       <span class="tb-liste-texte">

@@ -284,3 +284,5 @@ body.tb-graphique-ouvert .tb-rail, body.tb-graphique-ouvert .tb-topbar { visibil
 .tb-apropos-version { flex: none; padding: 4px 10px; border-radius: 999px; background: var(--md-secondary-container); color: var(--md-on-surface); font-size: .85rem; font-weight: 750; font-variant-numeric: tabular-nums; }
 .tb-apropos-licence { margin: 18px 6px 0; font-size: .85rem; text-align: center; }
 a.tb-pref-apropos { margin-top: 16px; text-decoration: none; }
+.tb-apropos-version.tb-apropos-dev { background: var(--tb-chauffe-container); color: var(--tb-on-chauffe-container); }
+.tb-liste-ligne.tb-apropos-maj .tb-apropos-version { background: var(--md-primary); color: var(--md-on-primary); }

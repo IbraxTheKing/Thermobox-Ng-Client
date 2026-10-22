@@ -1,0 +1,63 @@
+name: Release assets
+
+# Même logique que le serveur ThermoBox : une version publiée à la main (stable 26.11.0, beta,
+# rc) reçoit le client construit depuis son tag, avec ce numéro de version inscrit dedans
+# (scripts/construire.mjs). Les notes de version restent celles écrites à la main.
+# Les nightly ont leur propre workflow.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Tag de la version à compléter (ex. 26.11.0)
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  assets:
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ github.event.release.tag_name || inputs.tag }}
+    steps:
+      - name: Version
+        id: check
+        run: |
+          case "$TAG" in
+            *nightly*) echo "Nightly : fichiers déjà publiés par nightly.yml"; echo "build=false" >> "$GITHUB_OUTPUT" ;;
+            *) echo "build=true" >> "$GITHUB_OUTPUT" ;;
+          esac
+
+      - uses: actions/checkout@v4
+        if: steps.check.outputs.build == 'true'
+        with:
+          ref: ${{ env.TAG }}
+
+      - uses: actions/setup-node@v4
+        if: steps.check.outputs.build == 'true'
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Construire (version inscrite dans le client)
+        if: steps.check.outputs.build == 'true'
+        run: |
+          npm ci
+          THERMOBOX_VERSION="$TAG" npm run build
+
+      - name: Archive du client
+        if: steps.check.outputs.build == 'true'
+        run: |
+          mkdir -p livrables
+          (cd dist/Thermobox-Ng-Client/browser && zip -qr "$GITHUB_WORKSPACE/livrables/thermobox-ng-client-$TAG.zip" .)
+          ls -l livrables
+
+      # --clobber : relancer le workflow remplace le fichier au lieu d'échouer
+      - name: Joindre l'archive à la version
+        if: steps.check.outputs.build == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$TAG" "livrables/thermobox-ng-client-$TAG.zip" --clobber
