@@ -8,33 +8,16 @@
  * Le commit (THERMOBOX_COMMIT, GITHUB_SHA ou git) est inscrit aussi. Les arguments sont passés à
  * ng build : npm run build -- --configuration development
  */
-import { execFileSync, spawnSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const FORMAT = /^v?\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/;
+import { commitClient, versionClient } from './version.mjs';
 
-function git(...args) {
-  try {
-    return execFileSync('git', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
-  } catch {
-    return '';
-  }
-}
-
-function version() {
-  const env = process.env.THERMOBOX_VERSION?.trim();
-  if (env) return env.replace(/^v/, '');
-  const tags = git('tag', '--points-at', 'HEAD').split('\n').filter((t) => FORMAT.test(t));
-  // Plusieurs tags sur le même commit (26.10.2 et 26.10.2-nightly-1) : la stable d'abord
-  const stable = tags.find((t) => !t.includes('-'));
-  return (stable ?? tags[0] ?? 'dev').replace(/^v/, '');
-}
-
-const v = version();
-const commit = (process.env.THERMOBOX_COMMIT || process.env.GITHUB_SHA || git('rev-parse', 'HEAD')).slice(0, 7);
+const v = versionClient();
+const commit = commitClient();
 console.log(`Thermobox client ${v}${commit ? ` (${commit})` : ''}`);
 
 /** ng.js d'@angular/cli : node_modules du projet (ou d'un dossier parent). */

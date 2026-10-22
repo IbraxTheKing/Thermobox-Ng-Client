@@ -198,7 +198,7 @@
 </ng-template>
 
 <!-- Phones: actions on the element picked with ⋮ -->
-<tb-sheet [ouvert]="selection() != null" (ouvertChange)="!$event && selection.set(null)" titre="" sansEntete [largeur]="560">
+<tb-sheet [ouvert]="selection() != null" (ouvertChange)="!$event && selection.set(null)" titre="" sansEntete menuNatif [largeur]="560">
   @if (selection(); as s) {
     <div class="tb-sheet-head">
       <i class="pi tb-tree-icon" [class]="icone(s)"></i>

@@ -260,3 +260,13 @@
 :root[data-plateforme="android"] .tb-input, :root[data-plateforme="android"] .tb-select { border-radius: 4px; box-shadow: none; }
 :root[data-plateforme="android"] .tb-search > .tb-input { border-radius: 28px; }
 :root[data-plateforme="android"] .tb-select.tb-filter { border-radius: 28px; }
+
+/*
+ * Application Android : la barre de navigation et le bouton d'action principal sont des composants
+ * Material 3 natifs (plugins/thermobox-natif) ; la page cache les siens. --tb-nav-bas = hauteur de
+ * la barre native, posée par AndroidNatifService. Téléphone tenu de côté : le rail de la page.
+ */
+@media (max-width: 840px) and (not ((orientation: landscape) and (max-height: 520px))) {
+    :root.tb-android-natif .tb-rail { display: none; }
+    :root.tb-android-natif .tb-page-head > .tb-fab { display: none !important; }
+}

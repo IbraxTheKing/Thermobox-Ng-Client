@@ -222,8 +222,10 @@
 }
 
 <!-- Phones: what can be done with one element, from its row -->
-<tb-sheet [(ouvert)]="feuilleOuverte" [titre]="enFeuille()?.n?.name ?? ''" [largeur]="420">
+<tb-sheet [(ouvert)]="feuilleOuverte" [titre]="enFeuille()?.n?.name ?? ''" menuNatif [largeur]="420">
   @if (enFeuille(); as l) {
+    <!-- Android app: this sheet opens as a native menu (TbSheet menuNatif), with this line under the title -->
+    <span hidden data-menu-sous-titre>{{ libelles[l.n.kind] }}@if (l.chemin) { · {{ l.chemin }} } · {{ unite.t(l.n.temperature) }} {{ unite.symbole() }}@if (!l.boitier) { · {{ l.etat.label }} }</span>
     <div class="tb-gest-feuille-tete tb-ton-{{ l.etat.ton }}">
       <span class="tb-gest-icone"><i class="pi" [class]="icones[l.n.kind]"></i></span>
       <div>
@@ -253,6 +255,10 @@
       </form>
     }
     <nav class="tb-sheet-list">
+      @if (!l.boitier) {
+        <!-- Native menu only: opens this sheet itself, with its consigne form -->
+        <button type="button" class="tb-sheet-item tb-natif-seul" data-natif-web><i class="pi pi-sliders-h"></i>Régler la consigne</button>
+      }
       <a class="tb-sheet-item" [routerLink]="['/app/salle', l.n.id]" (click)="feuilleOuverte.set(false)"><i class="pi pi-external-link"></i>Voir la page</a>
       @if (auth.admin()) {
         <button type="button" class="tb-sheet-item" (click)="depuisFeuille(l, 'modifier')"><i class="pi pi-pencil"></i>Renommer ou déplacer</button>
