@@ -203,7 +203,11 @@ public class ThermoboxNatifPlugin extends Plugin {
             }
             return true;
         });
-        b.setOnItemReselectedListener(item -> envoyerOnglet(item, true));
+        // setSelectedItemId() on the tab already selected (the page sets its tab again on every
+        // change of theme or colour) reports a « reselection »: only a real tap scrolls to the top
+        b.setOnItemReselectedListener(item -> {
+            if (!selectionParLaPage) envoyerOnglet(item, true);
+        });
         b.addOnLayoutChangeListener((v, l, t, r, bas, ol, ot, or, ob) -> {
             signalerHauteur();
             placerFab();
@@ -277,7 +281,7 @@ public class ThermoboxNatifPlugin extends Plugin {
             Menu menu = b.getMenu();
             if (i >= 0) {
                 menu.setGroupCheckable(0, true, true);
-                b.setSelectedItemId(i);
+                if (b.getSelectedItemId() != i || !menu.getItem(i).isChecked()) b.setSelectedItemId(i);
             } else {
                 // A page that is not in the bar: no tab selected
                 menu.setGroupCheckable(0, true, false);

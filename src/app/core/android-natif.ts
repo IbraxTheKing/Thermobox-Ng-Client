@@ -156,6 +156,8 @@ export class AndroidNatifService {
   private dernierY = 0;
   private surOnglet: ((id: string, retouche: boolean) => void) | null = null;
   private dernier: Parameters<AndroidNatifService['configurerBarre']> | null = null;
+  /** Ce qui a été envoyé à la barre : rien n'est renvoyé s'il n'a pas changé. */
+  private barreEnvoyee = '';
 
   constructor() {
     if (!plugin) return;
@@ -188,8 +190,12 @@ export class AndroidNatifService {
     this.dernier = [onglets, actifId, visible, surOnglet];
     this.surOnglet = surOnglet;
     this.barreVoulue = visible;
+    const o = { onglets, actif: actifId, visible: visible && !this.clavier, sombre: this.root.dataset['theme'] === 'dark', couleurs: this.couleursBarre() };
+    const cle = JSON.stringify(o);
+    if (cle === this.barreEnvoyee) return;
+    this.barreEnvoyee = cle;
     void plugin
-      .configurerBarre({ onglets, actif: actifId, visible: visible && !this.clavier, sombre: this.root.dataset['theme'] === 'dark', couleurs: this.couleursBarre() })
+      .configurerBarre(o)
       .then(({ hauteur }) => this.poserHauteur(hauteur))
       .catch((e) => console.error('Barre native', e));
   }
@@ -200,6 +206,7 @@ export class AndroidNatifService {
     this.barreVoulue = false;
     this.surOnglet = null;
     this.dernier = null;
+    this.barreEnvoyee = '';
     void plugin.afficherBarre({ visible: false });
     void plugin.configurerFab({ visible: false });
     this.fabConfig = '';
@@ -223,6 +230,7 @@ export class AndroidNatifService {
     if (!plugin || ouvert === this.clavier) return;
     this.clavier = ouvert;
     if (this.barreVoulue) void plugin.afficherBarre({ visible: !ouvert });
+    this.barreEnvoyee = '';
     this.fabConfig = '';
     this.planifierFab();
   }
