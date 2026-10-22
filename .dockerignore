@@ -1,9 +1,14 @@
-.git
-.github
+
 node_modules
- dist
-coverage
+dist
 .angular
+.git
+.gitignore
+
 .env
 .env.*
-*.log
+!.env.example
+
+coverage
+npm-debug.log*
+.DS_Store

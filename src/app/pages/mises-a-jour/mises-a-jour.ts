@@ -7,6 +7,7 @@ import { AvisMajService } from '../../core/avis-maj';
 import { longue } from '../../core/dates';
 import { markdownVersHtml } from '../../core/markdown';
 import { ToastService } from '../../core/messages';
+import { FlipService } from '../../core/flip';
 import { EtatMisesAJour, Preparation, VersionDisponible } from '../../models/models';
 import { UpdateService } from '../../services/update.service';
 import { TbSheet } from '../../ui/sheet';
@@ -33,6 +34,7 @@ export class MisesAJourPage implements OnInit, OnDestroy {
   private readonly api = inject(UpdateService);
   private readonly avis = inject(AvisMajService);
   private readonly toasts = inject(ToastService);
+  private readonly flip = inject(FlipService);
 
   protected readonly etat = signal<EtatMisesAJour | null>(null);
   protected readonly verification = signal(false);
@@ -97,7 +99,7 @@ export class MisesAJourPage implements OnInit, OnDestroy {
   }
 
   protected filtrerCanal(c: string): void {
-    this.canalFiltre.update((x) => (x === c ? null : c));
+    this.flip.animer(() => this.canalFiltre.update((x) => (x === c ? null : c)));
   }
 
   private filtrees(l: VersionDisponible[]): VersionDisponible[] {

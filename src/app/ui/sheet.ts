@@ -17,7 +17,8 @@ let suivant = 0;
 /**
  * A dialog (p:dialog): centred on wide screens, a sheet from the bottom of the screen on phones,
  * restyled per platform (iOS: floating glass sheet; Android: Material bottom sheet). Closes with
- * Échap, a tap outside, the × or by dragging the sheet down.
+ * Échap, a tap outside, the × (wide screens only) or by dragging the sheet down: on a phone, the
+ * grabber and the « Annuler » of the form say it, as in native apps.
  *
  *   <tb-sheet [(ouvert)]="dialogue" titre="Ajouter">…<div class="tb-actions">…</div></tb-sheet>
  */
@@ -43,7 +44,7 @@ let suivant = 0;
           @if (titre() || !sansEntete()) {
             <header class="tb-dialog-head">
               <h2 [id]="idTitre">{{ titre() }}</h2>
-              <button type="button" class="tb-btn tb-icon tb-flat" (click)="fermer()" title="Fermer" aria-label="Fermer">
+              <button type="button" class="tb-btn tb-icon tb-flat tb-dialog-fermer" (click)="fermer()" title="Fermer" aria-label="Fermer">
                 <i class="pi pi-times"></i>
               </button>
             </header>

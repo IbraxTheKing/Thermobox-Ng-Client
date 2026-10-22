@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { Injectable, effect, inject } from '@angular/core';
+import { Injectable, effect, inject, signal } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { StatusBar, Style } from '@capacitor/status-bar';
@@ -33,11 +33,21 @@ export class PlateformeService {
   readonly ios = this.plateforme === 'ios';
   readonly android = this.plateforme === 'android';
 
+  /** Phone held upright: navigation in a bar at the bottom, top bar above the page. */
+  private readonly requeteBarre = matchMedia('(max-width: 840px) and (not ((orientation: landscape) and (max-height: 520px)))');
+  readonly barreBas = signal(this.requeteBarre.matches);
+  /** Phone-sized screen (≤ 640 px wide): lists instead of tables, sheets from the bottom. */
+  private readonly requeteTelephone = matchMedia('(max-width: 640px)');
+  readonly telephone = signal(this.requeteTelephone.matches);
+
   constructor() {
     const root = this.doc.documentElement;
     root.dataset['plateforme'] = this.plateforme;
+    this.requeteBarre.addEventListener('change', (e) => this.barreBas.set(e.matches));
+    this.requeteTelephone.addEventListener('change', (e) => this.telephone.set(e.matches));
     if (this.natif) root.classList.add('tb-natif');
     if (this.android) this.activerOndes();
+    if (this.ios) this.activerAppuis();
     if (this.natif) {
       // Status bar over the page, its text in the colour of the theme
       effect(() => {
@@ -85,7 +95,7 @@ export class PlateformeService {
     this.doc.addEventListener(
       'pointerdown',
       (e) => {
-        if (!this.prefs.animations() || this.prefs.mouvementReduit) return;
+        if (!this.prefs.animer()) return;
         const cible = (e.target as Element | null)?.closest?.(
           '.tb-btn, .tb-dest, .tb-icon-btn, .tb-segmented > button, .tb-drill-main, .tb-plus-liste > *, .tb-summary-chip, .tb-chip',
         ) as HTMLElement | null;
@@ -107,5 +117,36 @@ export class PlateformeService {
       },
       { passive: true },
     );
+  }
+
+  /**
+   * Liquid Glass (iOS 26): a pressed button swells and lights up under the finger (CSS:
+   * .tb-appui and --tb-px / --tb-py, motion.css).
+   */
+  private activerAppuis(): void {
+    let courant: HTMLElement | null = null;
+    const lacher = () => {
+      courant?.classList.remove('tb-appui');
+      courant = null;
+    };
+    this.doc.addEventListener(
+      'pointerdown',
+      (e) => {
+        lacher();
+        if (!this.prefs.animer()) return;
+        const cible = (e.target as Element | null)?.closest?.(
+          '.tb-btn, .tb-segmented > button, .tb-summary-chip, .tb-chip, .tb-liste-ligne, .tb-gest-ligne',
+        ) as HTMLElement | null;
+        if (!cible || (cible as HTMLButtonElement).disabled) return;
+        const r = cible.getBoundingClientRect();
+        cible.style.setProperty('--tb-px', `${e.clientX - r.left}px`);
+        cible.style.setProperty('--tb-py', `${e.clientY - r.top}px`);
+        if (getComputedStyle(cible).position === 'static') cible.style.position = 'relative';
+        cible.classList.add('tb-appui');
+        courant = cible;
+      },
+      { passive: true },
+    );
+    for (const t of ['pointerup', 'pointercancel', 'dragstart', 'scroll']) this.doc.addEventListener(t, lacher, { passive: true, capture: true });
   }
 }

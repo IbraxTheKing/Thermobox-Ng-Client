@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
 import { messageErreur } from '../../core/api.config';
@@ -6,17 +7,17 @@ import { AuthService } from '../../core/auth';
 import { ClavierService } from '../../core/clavier';
 import { ToastService } from '../../core/messages';
 import { PlateformeService } from '../../core/plateforme';
-import { PreferencesService } from '../../core/preferences';
+import { ChoixTheme, PreferencesService } from '../../core/preferences';
 import { ReglagesService } from '../../services/reglages.service';
 import { TbSwitch } from '../../ui/controles';
 
 /**
- * Préférences (preferences.xhtml): animations, colours following the state, unit, keyboard
- * shortcuts (kept on this device) and, for an ADMIN, the look of every client.
+ * Préférences (preferences.xhtml): theme, colours following the state, unit, keyboard shortcuts
+ * (kept on this device) and, for an ADMIN, the look of every client. Animations follow the system.
  */
 @Component({
   selector: 'tb-preferences',
-  imports: [TbSwitch],
+  imports: [TbSwitch, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './preferences.html',
 })
@@ -28,6 +29,11 @@ export class PreferencesPage {
   private readonly reglages = inject(ReglagesService);
   private readonly toasts = inject(ToastService);
 
+  protected readonly themes: { id: ChoixTheme; label: string; icone: string }[] = [
+    { id: 'light', label: 'Clair', icone: 'pi-sun' },
+    { id: 'dark', label: 'Sombre', icone: 'pi-moon' },
+    { id: 'auto', label: 'Système', icone: 'pi-mobile' },
+  ];
   protected readonly panneau = computed(() => this.prefs.style() === 'panneau');
   protected readonly enregistrementStyle = signal(false);
   /** Phones and tablets: no keyboard, no list. */

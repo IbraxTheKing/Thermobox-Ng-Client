@@ -4,6 +4,7 @@ import { firstValueFrom } from 'rxjs';
 
 import { messageErreur } from '../../core/api.config';
 import { AuthService } from '../../core/auth';
+import { FlipService } from '../../core/flip';
 import { AvisMajService } from '../../core/avis-maj';
 import { ConfirmService, ToastService } from '../../core/messages';
 import { initiale } from '../../core/texte';
@@ -27,6 +28,11 @@ export class UtilisateursPage implements OnInit {
   protected readonly auth = inject(AuthService);
   protected readonly avis = inject(AvisMajService);
   protected readonly droits = inject(DroitsStore);
+  private readonly flip = inject(FlipService);
+
+  protected chercher(v: string): void {
+    this.flip.animer(() => this.recherche.set(v));
+  }
   protected readonly arbre = inject(ArbreStore);
   private readonly users = inject(UserService);
   private readonly toasts = inject(ToastService);

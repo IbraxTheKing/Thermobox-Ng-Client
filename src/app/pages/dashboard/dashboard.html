@@ -40,7 +40,7 @@
   <span class="tb-search">
     <i class="pi pi-search"></i>
     <input class="tb-input" type="search" placeholder="Rechercher une salle, un étage, un bâtiment…" autocomplete="off" enterkeyhint="search"
-           aria-label="Rechercher" [value]="recherche()" (input)="recherche.set($any($event.target).value)" />
+           aria-label="Rechercher" [value]="recherche()" (input)="chercher($any($event.target).value)" />
   </span>
   <select class="tb-select tb-filter" aria-label="Bâtiment" [value]="batimentId() ?? ''" (change)="choisirBatiment($any($event.target).value)">
     <option value="">Tous les bâtiments</option>
@@ -89,7 +89,7 @@
 }
 
 @if (aucunResultat()) {
-  <div class="tb-empty">
+  <div class="tb-empty" data-flip="aucun-resultat">
     <span class="tb-empty-icon"><i class="pi pi-search"></i></span>
     <strong>Aucune salle ne correspond à ta recherche</strong>
     <button type="button" class="tb-btn tb-tonal" (click)="effacerFiltres()"><i class="pi pi-times"></i>Effacer les filtres</button>
@@ -99,7 +99,7 @@
 <!-- Each section folds and unfolds from its title; remembered on this device -->
 @if (favoris().length) {
   <section class="tb-section" [class.tb-collapsed]="replie('favoris')" data-section="favoris">
-    <h2 class="tb-section-title">
+    <h2 class="tb-section-title" data-flip="section-favoris">
       <button type="button" class="tb-section-toggle" [attr.aria-expanded]="!replie('favoris')" (click)="basculerSection('favoris')">
         <span class="tb-section-icon tb-section-icon-fav"><i class="pi pi-star-fill"></i></span>
         Favoris
@@ -119,7 +119,7 @@
 
 @for (g of groupes(); track g.cle) {
   <section class="tb-section" [class.tb-collapsed]="replie(g.cle)" [attr.data-section]="g.cle">
-    <h2 class="tb-section-title">
+    <h2 class="tb-section-title" [attr.data-flip]="'section-' + g.cle">
       <button type="button" class="tb-section-toggle" [attr.aria-expanded]="!replie(g.cle)" (click)="basculerSection(g.cle)">
         <span class="tb-section-icon"><i class="pi" [class.pi-building]="g.batiment" [class.pi-inbox]="!g.batiment"></i></span>
         {{ g.nom }}

@@ -226,16 +226,18 @@
 @property --tb-mix { syntax: "<number>"; inherits: true; initial-value: 0; }
 @property --tb-hue { syntax: "<number>"; inherits: true; initial-value: 262; }
 @property --tb-sat { syntax: "<number>"; inherits: true; initial-value: 1; }
-:root { transition: --tb-mix 1.1s ease-in-out, --tb-hue 1.1s ease-in-out, --tb-sat 1.1s ease-in-out; }
-:root:has(.tb-summary-chip.tb-chip-on.tb-ton-stable), :root:has(.tb-hero-reading.tb-ton-stable) { --tb-mix: .6; --tb-hue: 160; --tb-sat: .55; }
-:root:has(.tb-summary-chip.tb-chip-on.tb-ton-chauffe), :root:has(.tb-hero-reading.tb-ton-chauffe) { --tb-mix: .6; --tb-hue: 70; --tb-sat: .75; }
-:root:has(.tb-summary-chip.tb-chip-on.tb-ton-chaud), :root:has(.tb-hero-reading.tb-ton-chaud) { --tb-mix: .55; --tb-hue: 25; --tb-sat: .65; }
-:root:has(.tb-summary-chip.tb-chip-on.tb-ton-inconnu), :root:has(.tb-hero-reading.tb-ton-inconnu) { --tb-mix: .6; --tb-sat: .1; }
+/* Set by TransitionsService (data-ton), which cross-fades the whole page from one colour to the
+   next: the colours themselves never animate (that restyled and repainted every glass surface on
+   every frame, and went through other hues on the way). */
+:root[data-ton="stable"] { --tb-mix: .6; --tb-hue: 160; --tb-sat: .55; }
+:root[data-ton="chauffe"] { --tb-mix: .6; --tb-hue: 70; --tb-sat: .75; }
+:root[data-ton="chaud"] { --tb-mix: .55; --tb-hue: 25; --tb-sat: .65; }
+:root[data-ton="inconnu"] { --tb-mix: .6; --tb-sat: .1; }
 
 /* Préférences: "Couleurs selon l'état" off (data-teinte), or the control-panel style: the palette
    stays the same on every page */
 :root:is([data-teinte="off"], [data-style="panneau"]) { --tb-mix: 0 !important; }
-:root:is([data-teinte="off"], [data-style="panneau"]) body { --tb-page-tone: transparent !important; }
+:root:is([data-teinte="off"], [data-style="panneau"]) body::before { --tb-page-tone: transparent !important; }
 
 /*
  * Control-panel style, chosen by an ADMIN for everyone (data-style="panneau", ReglagesSite):
@@ -375,31 +377,29 @@
 
 /*
  * Page tint: the state picked on the dashboard (filter chips) or the state of the salle shown
- * tints the background. --tb-page-tone is registered so the tint fades from one colour to the
- * next instead of jumping.
+ * tints the background (data-ton). Drawn on a fixed layer behind the page rather than as a fixed
+ * background of <body> (iOS repaints those on every scroll).
  */
-@property --tb-page-tone {
-    syntax: "<color>";
-    inherits: true;
-    initial-value: transparent;
-}
-:root body {
+@property --tb-page-tone { syntax: "<color>"; inherits: false; initial-value: transparent; }
+:root body { background: var(--md-surface); }
+:root[data-ton="stable"] body::before { --tb-page-tone: var(--tb-stable); }
+:root[data-ton="chauffe"] body::before { --tb-page-tone: var(--tb-chauffe); }
+:root[data-ton="chaud"] body::before { --tb-page-tone: var(--md-error); }
+:root[data-ton="inconnu"] body::before { --tb-page-tone: var(--md-outline); }
+/* Only this layer animates its colour (one element, no descendants to restyle) */
+:root body::before {
+    --tb-page-tone: transparent;
+    transition: --tb-page-tone .9s ease-in-out;
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
     background:
         radial-gradient(75vmax 62vmax at 6% 0%, color-mix(in srgb, var(--tb-page-tone) 14%, transparent), transparent 68%),
         radial-gradient(62vmax 56vmax at 96% 100%, color-mix(in srgb, var(--tb-page-tone) 8%, transparent), transparent 70%),
         var(--tb-bg);
-    background-color: var(--md-surface);
-    background-attachment: fixed;
-    transition: --tb-page-tone 1.1s ease-in-out;
 }
-:root:has(.tb-summary-chip.tb-chip-on.tb-ton-stable) body,
-:root:has(.tb-hero-reading.tb-ton-stable) body { --tb-page-tone: var(--tb-stable); }
-:root:has(.tb-summary-chip.tb-chip-on.tb-ton-chauffe) body,
-:root:has(.tb-hero-reading.tb-ton-chauffe) body { --tb-page-tone: var(--tb-chauffe); }
-:root:has(.tb-summary-chip.tb-chip-on.tb-ton-chaud) body,
-:root:has(.tb-hero-reading.tb-ton-chaud) body { --tb-page-tone: var(--md-error); }
-:root:has(.tb-summary-chip.tb-chip-on.tb-ton-inconnu) body,
-:root:has(.tb-hero-reading.tb-ton-inconnu) body { --tb-page-tone: var(--md-outline); }
 
 /*
  * White flash between pages: while the next page is not painted yet, the browser shows the

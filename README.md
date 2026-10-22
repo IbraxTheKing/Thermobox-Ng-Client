@@ -1,69 +1,68 @@
-# Thermobox NG Client
+# Thermobox — client Angular
 
-Client web Angular pour **[Thermobox](https://github.com/IbraxTheKing/ThermoBox)** : supervision des salles, visualisation des relevés de température en temps réel et envoi de consignes vers les box connectées.
+Client mobile-first de **ThermoBox** (surveillance des températures par bâtiment / étage / salle),
+clone du client JSF du serveur, branché sur l'API REST de la branche `dev` du serveur
+(+ les routes ajoutées sur `feature/api-client-mobile`, voir plus bas).
 
-> Ce dépôt fait suite à un premier client HTML/JS statique (proof of concept). L'objectif ici est une version Angular structurée, maintenable et prête à évoluer avec le reste du projet.
-
-## Fonctionnalités prévues
-
-- Liste des salles avec température mesurée et consigne courante
-- Historique des relevés sous forme de graphique (mesures vs. consignes) sur plusieurs plages de temps (1h / 24h / 7j)
-- Envoi d'une nouvelle consigne pour une salle donnée
-- Authentification (selon le mécanisme exposé par l'API Thermobox)
-
-## Stack technique
-
-- [Angular](https://angular.dev/)
-- TypeScript
-- API REST Thermobox (Jersey / Jakarta EE) comme backend
+- Angular 22 (standalone, zoneless, signals, OnPush, routes lazy)
+- PWA (service worker, manifeste, icônes) **et** applications natives via Capacitor 8
+- Une seule interface ThermoBox, dont la « coque » (barre d'onglets, barre du haut, feuilles, toasts)
+  s'adapte automatiquement à la plateforme :
+  - **iOS** : Liquid Glass (barre d'onglets flottante en capsule, lentille qui glisse, compactage au défilement)
+  - **Android** : Material 3 (navigation bar / rail avec indicateur pilule, top app bar, snackbars, ripple)
+  - **Web / bureau** : le rail et la barre basse du client JSF
+  Détection automatique (`src/app/core/plateforme.ts`) ; pour tester, `?plateforme=ios|android|web|auto`.
 
 ## Prérequis
 
-- Node.js (LTS recommandé)
-- Angular CLI (`npm install -g @angular/cli`)
-- Une instance de l'API Thermobox accessible (locale ou distante)
+- Node ≥ 22.22.3 (ou 24), npm
+- Le serveur ThermoBox, branche `feature/api-client-mobile` (basée sur `dev`)
 
-## Installation
+## Démarrer
 
 ```bash
-git clone <url-du-repo>
-cd thermobox-ng-client
 npm install
+npm run demo        # API de démonstration en mémoire sur :8080 + ng serve (proxy /api)
 ```
 
-## Configuration
+Comptes de démo : `admin / admin1234`, `gestion / gestion1234`, `lecteur / lecteur1234`.
 
-L'URL de l'API Thermobox doit être renseignée dans les fichiers d'environnement Angular :
+Contre un vrai serveur : lancer ThermoBox sur `:8080` puis `npm start` (`proxy.conf.json` envoie `/api`).
 
-```
-src/environments/environment.ts
-src/environments/environment.development.ts
-```
-
-```ts
-export const environment = {
-  production: false,
-  apiBaseUrl: 'http://localhost:8080/api'
-};
-```
-
-## Lancer le projet en développement
+## Production
 
 ```bash
-ng serve
+npm run build       # dist/Thermobox-Ng-Client/browser (avec service worker)
 ```
 
-L'application est alors disponible sur `http://localhost:4200/`.
+Servir ce dossier derrière le même hôte que l'API (`/api`), ou modifier `src/environments/environment.ts`.
+Le service worker ne met jamais `/api` en cache.
 
-## Build de production
+## Applications iOS / Android (Capacitor)
 
 ```bash
-ng build
+npm run build
+npx cap add ios && npx cap add android   # une seule fois
+npm run cap:sync
+npx cap open ios                         # ou android
 ```
 
-Les fichiers compilés sont générés dans `dist/`.
+Dans l'application native, l'adresse du serveur est demandée sur l'écran de connexion.
 
-## Notes
+## Routes serveur ajoutées (branche `feature/api-client-mobile`)
 
-- Le champ `date` des entités `Temperature`/`Consigne` côté API est un `java.time.LocalDateTime` (sans fuseau) sérialisé en JSON — en tenir compte lors du parsing côté client.
-- Le backend doit autoriser les requêtes cross-origin (CORS) si l'API et ce client ne sont pas servis depuis la même origine.
+`api/hierarchie` (arbre, détail, création/modification/déplacement), `api/climat`
+(historique, moyennes, consigne), `api/favoris`, `api/reglages`, image des salles
+(`api/salles/{id}/image`), `POST api/temperatures/type/{type}`. Détail dans `RestServer/README.md` du serveur.
+
+## Structure
+
+```
+src/app/core      session, HTTP, préférences, plateforme, unités, dates, courbes
+src/app/services  accès REST
+src/app/ui        feuilles, toasts, interrupteurs, graphiques, arbre d'accès…
+src/app/shell     coque (navigation adaptative)
+src/app/pages     login, aperçu, salles, salle, mesures, gestion, utilisateurs, mises à jour, profil, préférences
+src/styles        jetons et styles portés du JSF + couches iOS / Android
+mock/             serveur REST de démonstration
+```
