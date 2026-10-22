@@ -5,6 +5,7 @@ import android.content.DialogInterface;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.os.Build;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.HapticFeedbackConstants;
 import android.view.Menu;
@@ -12,6 +13,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
@@ -25,6 +29,8 @@ import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import com.google.android.material.badge.BadgeDrawable;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.google.android.material.bottomsheet.BottomSheetDragHandleView;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
 import com.google.android.material.navigation.NavigationBarView;
@@ -45,7 +51,8 @@ import java.util.Map;
  *   pilule, ondes, badges et retour haptique du système ;</li>
  *   <li>le bouton d'action principal de la page (ExtendedFloatingActionButton), qui se réduit à son
  *   icône quand on fait défiler la page vers le bas ;</li>
- *   <li>les notifications (Snackbar) et les confirmations (MaterialAlertDialog).</li>
+ *   <li>les menus des feuilles (BottomSheetDialog : poignée, glisser pour fermer, retour), les
+ *   notifications (Snackbar) et les confirmations (MaterialAlertDialog).</li>
  * </ul>
  * La page web garde tout le reste. Les couleurs viennent de la page (thème ThermoBox, clair ou
  * sombre, teinte de l'état) : l'application reste ThermoBox, les composants sont ceux d'Android.
@@ -69,6 +76,14 @@ public class ThermoboxNatifPlugin extends Plugin {
         ICONES.put("compte", R.drawable.tb_compte);
         ICONES.put("ajouter", R.drawable.tb_ajouter);
         ICONES.put("ajouter_personne", R.drawable.tb_ajouter_personne);
+        ICONES.put("voir", R.drawable.tb_voir);
+        ICONES.put("ouvrir", R.drawable.tb_ouvrir);
+        ICONES.put("modifier", R.drawable.tb_modifier);
+        ICONES.put("detacher", R.drawable.tb_detacher);
+        ICONES.put("supprimer", R.drawable.tb_supprimer);
+        ICONES.put("cle", R.drawable.tb_cle);
+        ICONES.put("deplacer", R.drawable.tb_deplacer);
+        ICONES.put("etoile", R.drawable.tb_etoile);
     }
 
     @Nullable private BottomNavigationView barre;
@@ -441,6 +456,109 @@ public class ThermoboxNatifPlugin extends Plugin {
                 })
                 .show();
             if (danger) d.getButton(DialogInterface.BUTTON_POSITIVE).setTextColor(sombre ? 0xFFFFB4AB : 0xFFBA1A1A);
+        });
+    }
+
+    /**
+     * titre, sousTitre, options : [{ id, label, icone, danger }], couleurs : { fond, texte,
+     * texteSecondaire, danger } : { id } de la ligne choisie, null si le menu est fermé.
+     */
+    @PluginMethod
+    public void menu(PluginCall call) {
+        String titre = call.getString("titre", "");
+        String sousTitre = call.getString("sousTitre", "");
+        JSArray options = call.getArray("options", new JSArray());
+        JSObject couleurs = call.getObject("couleurs");
+        ui(() -> {
+            try {
+                Context ctx = contexte();
+                int texte = couleur(couleurs, "texte", sombre ? 0xFFE3EAF6 : 0xFF1D3049);
+                int secondaire = couleur(couleurs, "texteSecondaire", sombre ? 0xFFC3CBD8 : 0xFF4C6480);
+                int rouge = couleur(couleurs, "danger", sombre ? 0xFFFFB4AB : 0xFFBA1A1A);
+                BottomSheetDialog dialogue = new BottomSheetDialog(ctx);
+                final boolean[] repondu = { false };
+
+                LinearLayout contenu = new LinearLayout(ctx);
+                contenu.setOrientation(LinearLayout.VERTICAL);
+                contenu.setPadding(0, 0, 0, px(16));
+                contenu.addView(new BottomSheetDragHandleView(ctx));
+                if (!titre.isEmpty()) {
+                    TextView t = new TextView(ctx);
+                    t.setText(titre);
+                    t.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_TitleLarge);
+                    t.setTextColor(texte);
+                    t.setPadding(px(24), 0, px(24), sousTitre.isEmpty() ? px(12) : px(2));
+                    contenu.addView(t);
+                }
+                if (!sousTitre.isEmpty()) {
+                    TextView st = new TextView(ctx);
+                    st.setText(sousTitre);
+                    st.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyMedium);
+                    st.setTextColor(secondaire);
+                    st.setPadding(px(24), 0, px(24), px(12));
+                    contenu.addView(st);
+                }
+                TypedValue fondLigne = new TypedValue();
+                ctx.getTheme().resolveAttribute(android.R.attr.selectableItemBackground, fondLigne, true);
+                for (int i = 0; i < options.length(); i++) {
+                    JSONObject o = options.getJSONObject(i);
+                    String id = o.getString("id");
+                    boolean danger = o.optBoolean("danger", false);
+                    int couleurLigne = danger ? rouge : texte;
+
+                    LinearLayout ligne = new LinearLayout(ctx);
+                    ligne.setOrientation(LinearLayout.HORIZONTAL);
+                    ligne.setGravity(Gravity.CENTER_VERTICAL);
+                    ligne.setMinimumHeight(px(56));
+                    ligne.setPadding(px(24), 0, px(24), 0);
+                    ligne.setBackgroundResource(fondLigne.resourceId);
+                    ligne.setClickable(true);
+
+                    ImageView icone = new ImageView(ctx);
+                    Integer res = ICONES.get(o.optString("icone"));
+                    icone.setImageResource(res != null ? res : R.drawable.tb_ouvrir);
+                    icone.setImageTintList(ColorStateList.valueOf(danger ? rouge : secondaire));
+                    ligne.addView(icone, new LinearLayout.LayoutParams(px(24), px(24)));
+
+                    TextView label = new TextView(ctx);
+                    label.setText(o.optString("label"));
+                    label.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyLarge);
+                    label.setTextColor(couleurLigne);
+                    LinearLayout.LayoutParams lpLabel = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+                    lpLabel.setMarginStart(px(16));
+                    ligne.addView(label, lpLabel);
+
+                    ligne.setOnClickListener(v -> {
+                        if (repondu[0]) return;
+                        repondu[0] = true;
+                        v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
+                        JSObject r = new JSObject();
+                        r.put("id", id);
+                        call.resolve(r);
+                        dialogue.dismiss();
+                    });
+                    contenu.addView(ligne, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                }
+                dialogue.setContentView(contenu);
+                dialogue.setOnDismissListener(d -> {
+                    if (repondu[0]) return;
+                    repondu[0] = true;
+                    JSObject r = new JSObject();
+                    r.put("id", (String) null);
+                    call.resolve(r);
+                });
+                dialogue.setOnShowListener(d -> {
+                    // ThermoBox colour of the sheet (the theme's would be Material's own)
+                    View feuille = dialogue.findViewById(com.google.android.material.R.id.design_bottom_sheet);
+                    if (feuille != null) {
+                        feuille.setBackgroundTintList(ColorStateList.valueOf(
+                            couleur(couleurs, "fond", sombre ? 0xFF1F2737 : 0xFFE3EAF5)));
+                    }
+                });
+                dialogue.show();
+            } catch (JSONException | RuntimeException e) {
+                call.reject("Menu : " + e.getMessage(), e);
+            }
         });
     }
 

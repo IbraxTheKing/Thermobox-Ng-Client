@@ -28,6 +28,7 @@ interface ThermoboxNatifPlugin {
   etendreFab(o: { etendu: boolean }): Promise<void>;
   snackbar(o: { texte: string; longue?: boolean }): Promise<void>;
   confirmer(o: { titre: string; message: string; confirmer?: string; annuler?: string; danger?: boolean }): Promise<{ valeur: boolean }>;
+  menu(o: { titre: string; sousTitre: string; options: { id: string; label: string; icone: string; danger: boolean }[]; couleurs: { fond: string; texte: string; texteSecondaire: string; danger: string } }): Promise<{ id: string | null }>;
   addListener(e: 'onglet', f: (d: { id: string; retouche: boolean }) => void): Promise<PluginListenerHandle>;
   addListener(e: 'fab', f: () => void): Promise<PluginListenerHandle>;
   addListener(e: 'hauteur', f: (d: { hauteur: number; visible: boolean }) => void): Promise<PluginListenerHandle>;
@@ -50,12 +51,64 @@ const ICONES: Record<string, string> = {
   'pi-user': 'compte',
   'pi-plus': 'ajouter',
   'pi-user-plus': 'ajouter_personne',
+  'pi-eye': 'voir',
+  'pi-external-link': 'ouvrir',
+  'pi-pencil': 'modifier',
+  'pi-link': 'detacher',
+  'pi-trash': 'supprimer',
+  'pi-key': 'cle',
+  'pi-arrow-right': 'deplacer',
+  'pi-star': 'etoile',
+  'pi-star-fill': 'etoile',
 };
 
-export function iconeNative(classes: string): string {
+export function iconeNative(classes: string, defaut = 'ajouter'): string {
   const pi = classes.split(/\s+/).find((c) => c in ICONES);
-  return pi ? ICONES[pi] : 'ajouter';
+  return pi ? ICONES[pi] : defaut;
 }
+
+/** A theme colour (custom property, may be a color-mix) as #AARRGGBB, read by the browser. */
+let sonde: { el: HTMLElement; ctx: CanvasRenderingContext2D } | undefined;
+function hex(...vars: string[]): string {
+  sonde ??= (() => {
+    const el = document.createElement('span');
+    el.style.display = 'none';
+    document.body.appendChild(el);
+    const toile = document.createElement('canvas');
+    toile.width = toile.height = 1;
+    return { el, ctx: toile.getContext('2d', { willReadFrequently: true })! };
+  })();
+  sonde.el.style.color = vars.map((v) => `var(${v}`).join(', ') + ')'.repeat(vars.length);
+  const calculee = getComputedStyle(sonde.el).color;
+  sonde.ctx.clearRect(0, 0, 1, 1);
+  sonde.ctx.fillStyle = '#000';
+  sonde.ctx.fillStyle = calculee;
+  sonde.ctx.fillRect(0, 0, 1, 1);
+  const [r, g, b, a] = sonde.ctx.getImageData(0, 0, 1, 1).data;
+  const h = (n: number) => n.toString(16).padStart(2, '0');
+  return `#${h(a)}${h(r)}${h(g)}${h(b)}`;
+}
+
+/**
+ * Sheets that are menus (TbSheet menuNatif): a native Material bottom sheet, in the colours of
+ * the page; the id of the row picked, null when it is dismissed.
+ */
+export const natifMenu = plugin
+  ? async (titre: string, sousTitre: string, options: { id: string; label: string; icone: string; danger: boolean }[]) =>
+      (
+        await plugin.menu({
+          titre,
+          sousTitre,
+          options: options.map((o) => ({ ...o, icone: iconeNative(o.icone, 'ouvrir') })),
+          couleurs: {
+            fond: hex('--tb-m3-container-high', '--md-surface-container-high'),
+            texte: hex('--md-on-surface'),
+            texteSecondaire: hex('--md-on-surface-variant'),
+            danger: hex('--md-error'),
+          },
+        })
+      ).id
+  : null;
 
 /**
  * Notifications et confirmations natives (snackbar, dialogue Material) : utilisées par
@@ -234,26 +287,7 @@ export class AndroidNatifService {
     return { fond: this.hex('--md-primary-container'), texte: this.hex('--md-on-primary-container') };
   }
 
-  private sonde?: { el: HTMLElement; ctx: CanvasRenderingContext2D };
-
-  /** A theme colour (custom property, may be a color-mix) as #AARRGGBB, read by the browser. */
   private hex(...vars: string[]): string {
-    const sonde = (this.sonde ??= (() => {
-      const el = this.doc.createElement('span');
-      el.style.display = 'none';
-      this.doc.body.appendChild(el);
-      const toile = this.doc.createElement('canvas');
-      toile.width = toile.height = 1;
-      return { el, ctx: toile.getContext('2d', { willReadFrequently: true })! };
-    })());
-    sonde.el.style.color = vars.map((v) => `var(${v}`).join(', ') + ')'.repeat(vars.length);
-    const calculee = getComputedStyle(sonde.el).color;
-    sonde.ctx.clearRect(0, 0, 1, 1);
-    sonde.ctx.fillStyle = '#000';
-    sonde.ctx.fillStyle = calculee;
-    sonde.ctx.fillRect(0, 0, 1, 1);
-    const [r, g, b, a] = sonde.ctx.getImageData(0, 0, 1, 1).data;
-    const h = (n: number) => n.toString(16).padStart(2, '0');
-    return `#${h(a)}${h(r)}${h(g)}${h(b)}`;
+    return hex(...vars);
   }
 }

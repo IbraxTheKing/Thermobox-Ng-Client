@@ -145,21 +145,65 @@ services:
 
 ## Applications iOS / Android (Capacitor)
 
+`android/` (et plus tard `ios/`) est commité avec le reste, sur les mêmes branches : ce sont des projets
+source. Ce qui est régénéré (client copié, `build/`, `local.properties`…) est ignoré par leurs `.gitignore`.
+
+### Android
+
+Dans l'application Android, la barre de navigation du bas, le bouton d'action principal des pages, les
+notifications et les confirmations sont des **composants Material 3 natifs** (plugin local
+`plugins/thermobox-natif` : NavigationBar, ExtendedFloatingActionButton, Snackbar, MaterialAlertDialog)
+posés par-dessus la page, aux couleurs du thème ThermoBox (clair / sombre, teinte de l'état). Le bouton
+retour d'Android ferme ce qui est ouvert, puis revient en arrière, puis met l'application en arrière-plan.
+Ailleurs (web, PWA, iOS), la page dessine tout elle-même.
+
+Première fois (Android Studio et un JDK 21) :
+
 ```bash
+npm install                      # installe aussi le plugin local (dépendance « file: »)
 npm run build
-npx cap add ios && npx cap add android   # une seule fois (Xcode / Android Studio)
-npm run cap:sync
-npx cap open ios                         # ou android
+npx cap add android              # crée android/
+node scripts/android.mjs preparer   # version et signature lues dans les propriétés Gradle
+npx cap sync android             # copie le client, inscrit les plugins (dont thermobox-natif)
+git add android && git commit -m "Projet Android"
+```
+
+Ensuite, à chaque changement : `npm run cap:sync`, puis `npx cap open android` (ou `./gradlew` dans
+`android/`). `scripts/android.mjs preparer` ne modifie rien deux fois : les workflows le relancent.
+
+Version de l'application : `versionName` = la version du client (`26.11.0-beta.1`), `versionCode` calculé
+depuis elle, toujours croissant (une stable passe après ses prépublications) :
+
+```bash
+node scripts/android.mjs version        # nom=26.11.0-beta.1  code=261100401
+cd android && ./gradlew assembleDebug -PthermoboxVersionName=26.11.0-beta.1 -PthermoboxVersionCode=261100401
+```
+
+Les workflows **Release assets**, **Beta / RC** et **Nightly** joignent l'application à la release
+(`.github/actions/android`) :
+
+- avec une clé de signature dans les secrets du dépôt : `thermobox-<version>.apk` et `.aab` (Play Store)
+  signés. Secrets : `ANDROID_KEYSTORE_BASE64` (le `.jks` en base64 : `base64 -w0 thermobox.jks`),
+  `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD` ;
+- sans clé : `thermobox-<version>-debug.apk`, installable pour essayer.
+
+La clé (`*.jks`, `*.keystore`) n'est jamais dans le dépôt. Le workflow **Vérification** construit le
+client et l'APK de debug à chaque push sur `main` et `dev` (APK gardé une semaine dans les artefacts).
+
+### iOS
+
+```bash
+npx cap add ios && npx cap open ios      # Xcode, sur un Mac
 ```
 
 Dans l'application native, l'adresse du serveur est demandée sur l'écran de connexion. La version de
-l'application installée (celle des stores) est indiquée à part dans **À propos** ; elle se règle dans les
-projets Xcode et Android Studio.
+l'application installée est indiquée à part dans **À propos**.
 
 ## Structure
 
 ```
-scripts/          construire.mjs : build avec la version inscrite
+scripts/          construire.mjs (build avec la version), version.mjs, android.mjs (projet Android)
+plugins/          thermobox-natif : composants Material 3 natifs de l'application Android
 src/app/core      session, HTTP, préférences, plateforme, transitions et animations, versions, unités…
 src/app/services  accès à l'API REST
 src/app/ui        feuilles, notifications, interrupteurs, graphique, arbre d'accès…
@@ -169,7 +213,7 @@ src/app/pages     connexion, aperçu, salles, salle, mesures, gestion, utilisate
 src/styles        jetons et styles repris du JSF, couches iOS / Android, téléphone, mouvement
 mock/             serveur REST de démonstration
 nginx/, Dockerfile, compose.yaml   image de production
-.github/workflows release, beta / rc, nightly
+.github/          workflows (vérification, release, beta / rc, nightly, Docker), action android
 ```
 
 ## Crédits

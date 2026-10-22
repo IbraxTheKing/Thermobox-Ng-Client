@@ -2,7 +2,9 @@ name: Release assets
 
 # Même logique que le serveur ThermoBox : une version publiée à la main (stable 26.11.0, beta,
 # rc) reçoit le client construit depuis son tag, avec ce numéro de version inscrit dedans
-# (scripts/construire.mjs). Les notes de version restent celles écrites à la main.
+# (scripts/construire.mjs) : l'archive du site, et l'application Android (APK / AAB signés si la
+# clé est dans les secrets ANDROID_*, sinon APK de debug ; .github/actions/android).
+# Les notes de version restent celles écrites à la main.
 # Les nightly ont leur propre workflow.
 
 on:
@@ -55,9 +57,19 @@ jobs:
           (cd dist/Thermobox-Ng-Client/browser && zip -qr "$GITHUB_WORKSPACE/livrables/thermobox-ng-client-$TAG.zip" .)
           ls -l livrables
 
-      # --clobber : relancer le workflow remplace le fichier au lieu d'échouer
-      - name: Joindre l'archive à la version
+      - name: Application Android
+        if: steps.check.outputs.build == 'true'
+        uses: ./.github/actions/android
+        with:
+          tag: ${{ env.TAG }}
+          keystore-base64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          keystore-password: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          key-alias: ${{ secrets.ANDROID_KEY_ALIAS }}
+          key-password: ${{ secrets.ANDROID_KEY_PASSWORD }}
+
+      # --clobber : relancer le workflow remplace les fichiers au lieu d'échouer
+      - name: Joindre les fichiers à la version
         if: steps.check.outputs.build == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "$TAG" "livrables/thermobox-ng-client-$TAG.zip" --clobber
+        run: gh release upload "$TAG" livrables/* --clobber

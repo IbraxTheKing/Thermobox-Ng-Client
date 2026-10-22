@@ -118,6 +118,15 @@ jobs:
           (cd dist/Thermobox-Ng-Client/browser && zip -qr "$GITHUB_WORKSPACE/livrables/thermobox-ng-client-${{ steps.version.outputs.tag }}.zip" .)
           ls -l livrables
 
+      - name: Application Android
+        uses: ./.github/actions/android
+        with:
+          tag: ${{ steps.version.outputs.tag }}
+          keystore-base64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          keystore-password: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          key-alias: ${{ secrets.ANDROID_KEY_ALIAS }}
+          key-password: ${{ secrets.ANDROID_KEY_PASSWORD }}
+
       - name: Créer la pre-release
         env:
           GH_TOKEN: ${{ github.token }}
