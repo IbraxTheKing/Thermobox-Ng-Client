@@ -53,6 +53,14 @@ import { DESTINATIONS_BARRE, destinationsDe } from '../../shell/destinations';
         </a>
       </nav>
 
+      <nav class="tb-liste-groupe" aria-label="Thermobox">
+        <a class="tb-liste-ligne" routerLink="/app/a-propos">
+          <span class="tb-liste-icone"><i class="pi pi-info-circle"></i></span>
+          <span class="tb-liste-texte"><strong>À propos</strong><span class="tb-muted">Versions, code source, crédits</span></span>
+          <i class="pi pi-angle-right tb-liste-suite"></i>
+        </a>
+      </nav>
+
       <div class="tb-liste-groupe">
         <button type="button" class="tb-liste-ligne tb-liste-danger" (click)="auth.logout()">
           <span class="tb-liste-icone"><i class="pi pi-sign-out"></i></span>

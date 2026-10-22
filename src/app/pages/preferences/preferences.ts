@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
 import { messageErreur } from '../../core/api.config';
@@ -16,7 +17,7 @@ import { TbSwitch } from '../../ui/controles';
  */
 @Component({
   selector: 'tb-preferences',
-  imports: [TbSwitch],
+  imports: [TbSwitch, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './preferences.html',
 })

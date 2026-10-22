@@ -89,7 +89,7 @@ export class Shell implements OnInit, OnDestroy {
   /** « Plus » / « Compte » is the current tab. */
   protected readonly plusActif = computed(() => {
     const url = this.url().split('?')[0];
-    if (['/app/plus', '/app/profil', '/app/preferences'].some((u) => url.startsWith(u))) return true;
+    if (['/app/plus', '/app/profil', '/app/preferences', '/app/a-propos'].some((u) => url.startsWith(u))) return true;
     return this.barreBas() && this.destinations().slice(DESTINATIONS_BARRE).some((d) => this.estActive(d));
   });
 
