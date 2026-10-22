@@ -26,7 +26,11 @@
             ],
             "styles": [
               "src/styles.css"
-            ]
+            ],
+            "define": {
+              "THERMOBOX_VERSION": "\"dev\"",
+              "THERMOBOX_COMMIT": "\"\""
+            }
           },
           "configurations": {
             "production": {

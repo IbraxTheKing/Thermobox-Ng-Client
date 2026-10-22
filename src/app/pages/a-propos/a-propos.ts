@@ -6,7 +6,8 @@ import { PlateformeService } from '../../core/plateforme';
 import { ServeurService } from '../../core/api.config';
 import { EtatMisesAJour } from '../../models/models';
 import { UpdateService } from '../../services/update.service';
-import paquet from '../../../../package.json';
+import { ClientMajService } from '../../core/client-maj';
+import { COMMIT_CLIENT, VERSION_CLIENT } from '../../core/version';
 
 interface Lien {
   nom: string;
@@ -29,7 +30,10 @@ export class AProposPage {
   private readonly plateforme = inject(PlateformeService);
   protected readonly serveurUrl = inject(ServeurService);
 
-  protected readonly versionClient = paquet.version;
+  /** Tag GitHub construit (scripts/construire.mjs), « dev » en développement. */
+  protected readonly versionClient = VERSION_CLIENT;
+  protected readonly commitClient = COMMIT_CLIENT;
+  protected readonly majClient = inject(ClientMajService);
   protected readonly versionAngular = VERSION.full;
   protected readonly nomPlateforme = { ios: 'iOS · Liquid Glass', android: 'Android · Material 3', web: 'Web' }[this.plateforme.plateforme];
   protected readonly natif = this.plateforme.natif;
@@ -70,6 +74,7 @@ export class AProposPage {
   }
 
   private async charger(): Promise<void> {
+    void this.majClient.verifier();
     try {
       this.serveur.set(await firstValueFrom(this.updates.etat(true)));
     } catch {
@@ -83,6 +88,10 @@ export class AProposPage {
         /* web */
       }
     }
+  }
+
+  protected typeMaj(t: string): string {
+    return t === 'CORRECTIVE' ? 'corrective' : 'fonctionnelle';
   }
 
   protected canal(c: string | undefined): string {
