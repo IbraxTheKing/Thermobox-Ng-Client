@@ -19,15 +19,15 @@
 /* The dashboard card morphs into the salle page as a piece of glass: the group is glass itself
    (the pictures of the card and of the page have no blur of their own), the content dissolves
    into it and takes shape again on the other side */
-::view-transition-group(*.tb-card) {
+:root.tb-carte::view-transition-group(*.tb-card) {
     border-radius: var(--tb-shape-xl);
     -webkit-backdrop-filter: var(--tb-blur);
     backdrop-filter: var(--tb-blur);
     animation-duration: .5s;
 }
-::view-transition-old(*.tb-card) { animation: tb-fade-out .24s ease-in both; }
-::view-transition-new(*.tb-card) { animation: tb-fade-in .32s .08s ease-out both; }
-:root[data-style="panneau"]::view-transition-group(*.tb-card) { -webkit-backdrop-filter: none; backdrop-filter: none; background: var(--tb-glass-solid); }
+:root.tb-carte::view-transition-old(*.tb-card) { animation: tb-fade-out .24s ease-in both; }
+:root.tb-carte::view-transition-new(*.tb-card) { animation: tb-fade-in .32s .08s ease-out both; }
+:root.tb-carte[data-style="panneau"]::view-transition-group(*.tb-card) { -webkit-backdrop-filter: none; backdrop-filter: none; background: var(--tb-glass-solid); }
 
 /* ============================== Colour of the page ============================== */
 
@@ -84,14 +84,14 @@
 :root[data-plateforme="ios"] .tb-topbar { view-transition-name: none; }
 
 /* Dashboard ↔ salle: the card is a drop of glass that flows into its new shape */
-:root[data-plateforme="ios"]::view-transition-group(*.tb-card) {
+:root[data-plateforme="ios"].tb-carte::view-transition-group(*.tb-card) {
     animation-duration: .62s;
     animation-timing-function: var(--tb-ressort-verre);
     -webkit-backdrop-filter: var(--tb-lg-flou);
     backdrop-filter: var(--tb-lg-flou);
     box-shadow: var(--tb-lg-reflet), var(--tb-lg-ombre);
 }
-:root[data-plateforme="ios"]::view-transition-image-pair(*.tb-card) { border-radius: 28px; }
+:root[data-plateforme="ios"].tb-carte::view-transition-image-pair(*.tb-card) { border-radius: 28px; }
 :root[data-plateforme="ios"]::view-transition-group(*) { animation-timing-function: var(--tb-ressort-verre); animation-duration: .55s; }
 
 /* iOS tabs: no snapshots (TransitionsService); the page fades in, live, while its parts rise */
