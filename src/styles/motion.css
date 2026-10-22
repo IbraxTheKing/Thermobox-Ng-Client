@@ -16,18 +16,16 @@
 ::view-transition-new(root) { animation: tb-fade-in .32s ease both; }
 @keyframes tb-garde { from, to { opacity: 1; } }
 
-/* The dashboard card morphs into the salle page as a piece of glass: the group is glass itself
-   (the pictures of the card and of the page have no blur of their own), the content dissolves
-   into it and takes shape again on the other side */
+/* The dashboard card morphs into the salle page. Keep the transition snapshots sharp:
+   backdrop-filter on a view-transition pseudo-element can blur the captured card title and leave
+   a glass-shaped layer visible over the destination page. Apply glass only to the live UI. */
 :root.tb-carte::view-transition-group(*.tb-card) {
     border-radius: var(--tb-shape-xl);
-    -webkit-backdrop-filter: var(--tb-blur);
-    backdrop-filter: var(--tb-blur);
     animation-duration: .5s;
 }
 :root.tb-carte::view-transition-old(*.tb-card) { animation: tb-fade-out .24s ease-in both; }
 :root.tb-carte::view-transition-new(*.tb-card) { animation: tb-fade-in .32s .08s ease-out both; }
-:root.tb-carte[data-style="panneau"]::view-transition-group(*.tb-card) { -webkit-backdrop-filter: none; backdrop-filter: none; background: var(--tb-glass-solid); }
+:root.tb-carte[data-style="panneau"]::view-transition-group(*.tb-card) { background: var(--tb-glass-solid); }
 
 /* ============================== Colour of the page ============================== */
 
@@ -87,8 +85,6 @@
 :root[data-plateforme="ios"].tb-carte::view-transition-group(*.tb-card) {
     animation-duration: .62s;
     animation-timing-function: var(--tb-ressort-verre);
-    -webkit-backdrop-filter: var(--tb-lg-flou);
-    backdrop-filter: var(--tb-lg-flou);
     box-shadow: var(--tb-lg-reflet), var(--tb-lg-ombre);
 }
 :root[data-plateforme="ios"].tb-carte::view-transition-image-pair(*.tb-card) { border-radius: 28px; }
