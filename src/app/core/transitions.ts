@@ -96,6 +96,12 @@ export class TransitionsService {
           this.denommer();
           if (vers === 'apercu') this.revenirALaCarte(id);
           this.nommer(id, false);
+          // Nothing to morph into (salle page not ready, card in a folded section): the card
+          // would stay on its own in the middle of the new page, so no transition at all
+          if (!this.nommes.some((e) => e.dataset['vt'] === 'salle-card')) {
+            this.denommer();
+            transition.skipTransition();
+          }
         }
         // Part of the new picture: no second cross-fade
         this.appliquerTon(this.tonVoulu);

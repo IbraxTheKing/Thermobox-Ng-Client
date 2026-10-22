@@ -163,6 +163,20 @@ export class SallePage implements OnDestroy {
       this.introuvable.set(true);
       return;
     }
+    // What the dashboard already knows (name, temperature, consigne, place): the page is there at
+    // once, so the card has a page to morph into, the rest comes with the server's answer
+    const connu = this.store.parId().get(id);
+    if (connu) {
+      this.detail.set({
+        element: connu,
+        ancetres: this.store.chemin(id).map((a) => ({ id: a.id, name: a.name, kind: a.kind, accessible: a.accessible })),
+        enfants: [],
+        mesures: [],
+        consignesPropres: [],
+        salles: [],
+      });
+      this.titre.definir(connu.name ?? 'Salle');
+    }
     await this.rafraichir(id, false);
     if (!this.detail()) return;
     void this.chargerHistorique();
@@ -186,6 +200,7 @@ export class SallePage implements OnDestroy {
         }
         return;
       }
+      this.detail.set(null);
       this.introuvable.set(true);
       this.titre.definir('Élément introuvable');
     }
