@@ -1019,7 +1019,7 @@ a.tb-crumb:hover { background: var(--md-secondary-container); color: var(--md-on
 
 /* Room under the table for the bar */
 
-.tb-main:has(.tb-barre-on) { padding-bottom: 110px; }
+:root.tb-barre-ouverte .tb-main { padding-bottom: 110px; }
 
 /* Its windows */
 
@@ -1094,7 +1094,7 @@ a.tb-crumb:hover { background: var(--md-secondary-container); color: var(--md-on
     .tb-barre { left: 8px; right: 8px; bottom: calc(86px + env(safe-area-inset-bottom)); padding: 8px 8px 8px 14px; flex-wrap: wrap; }
     .tb-barre-actions { order: 3; flex-basis: 100%; }
     .tb-barre-compte { flex: 1 1 auto; }
-    .tb-main:has(.tb-barre-on) { padding-bottom: 210px; }
+    :root.tb-barre-ouverte .tb-main { padding-bottom: 210px; }
     .tb-segmented.tb-gest-onglets { display: flex; }
     :root body .tb-gest-table.tb-droits-table tbody tr { grid-template-areas: "c n n" "c r r" "c x x" "c g g"; }
     :root body .tb-gest-table.tb-droits-table td.tb-col-role { grid-area: r; width: auto; }
@@ -1283,7 +1283,9 @@ a.tb-crumb:hover { background: var(--md-secondary-container); color: var(--md-on
     inset: -5px;
     border-radius: 50%;
     border: 2px solid var(--tone);
-    animation: tb-ripple 3s var(--tb-ease) infinite;
+    /* A few times when the card shows, not forever: an endless animation on every card kept
+       the browser working on each frame, even still */
+    animation: tb-ripple 3s var(--tb-ease) 3;
 }
 
 @keyframes tb-ripple { from { transform: scale(.5); opacity: .8; } 70%, to { transform: scale(1.7); opacity: 0; } }
@@ -1798,7 +1800,7 @@ a.tb-crumb:hover { background: var(--md-secondary-container); color: var(--md-on
     @keyframes tb-balayage { from { background-position: -40% 0; } to { background-position: 140% 0; } }
     @keyframes tb-tourne { to { transform: rotate(360deg); } }
     /* A salle too hot calls for attention: its state dot breathes */
-    .tb-ton-chaud .tb-state::before { animation: tb-respire 1.8s ease-in-out infinite; }
+    .tb-ton-chaud .tb-state::before { animation: tb-respire 1.8s ease-in-out 3; }
     @keyframes tb-respire { 50% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--tone) 25%, transparent); } }
     /* Empty states: the icon floats */
     .tb-empty-icon { animation: tb-flotte 4s ease-in-out infinite; }

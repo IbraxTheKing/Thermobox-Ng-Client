@@ -322,7 +322,8 @@ export class TbGraphique implements OnDestroy {
       responsive: true,
       maintainAspectRatio: false,
       layout: { padding: { top: mobile ? 8 : 4, right: mobile ? 0 : 4, bottom: 0, left: 0 } },
-      animation: animer ? { duration: 900, easing: 'easeOutQuart' } : false,
+      // Phones: shorter (each frame of it redraws the whole chart, during the page transition)
+      animation: animer ? { duration: mobile ? 450 : 900, easing: 'easeOutQuart' } : false,
       interaction: { mode: 'index', intersect: false },
       // Phones: the values under the finger go to the reading strip; lifted, back to the last ones
       onHover: mobile

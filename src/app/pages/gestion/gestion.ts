@@ -7,6 +7,7 @@ import { AuthService } from '../../core/auth';
 import { EtatSalle, etatDe, horsConsigne } from '../../core/etat';
 import { ConfirmService, ToastService } from '../../core/messages';
 import { FlipService } from '../../core/flip';
+import { suivreBarreSelection } from '../../ui/barre-selection';
 import { PlateformeService } from '../../core/plateforme';
 import { normaliser } from '../../core/texte';
 import { TransitionsService } from '../../core/transitions';
@@ -131,6 +132,7 @@ export class GestionPage implements OnInit {
   protected readonly nombreATraiter = computed(() => this.lignes().filter((l) => this.aTraiter(l)).length);
 
   constructor() {
+    suivreBarreSelection(() => this.onglet() === 'salles' && this.barreVisible());
     // « À traiter »: the page turns to the colour of what is to be done, as the JSF one
     effect(() => this.transitions.definirTon(this.seulementATraiter() && this.onglet() === 'salles' ? 'chauffe' : null));
     inject(DestroyRef).onDestroy(() => this.transitions.definirTon(null));

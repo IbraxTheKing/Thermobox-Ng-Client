@@ -264,3 +264,17 @@
 /* The browser's own pull (Chrome reloads the whole app) stays out of it */
 html.tb-tirer-page { overscroll-behavior-y: contain; }
 :root[data-plateforme="ios"] .tb-tirer-rond { background: color-mix(in srgb, var(--md-surface) 80%, transparent); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+
+/* ============================== Phones: lighter motion ============================== */
+
+/*
+ * Touch screens (phones, tablets): the curves of the cards appear by fading in instead of being
+ * drawn from left to right. Drawing them animates a clip, which the browser redraws on every
+ * frame for each card (it can't hand it to the graphics chip as it does for fades and moves):
+ * on a phone, with the cards rising at the same time, it was the stutter of each page change.
+ */
+@media (hover: none) {
+    .tb-spark-new svg,
+    .tb-entering .tb-spark svg { animation-name: tb-fade-in; animation-duration: .6s; }
+    .tb-spark-new .tb-spark-fill { animation-name: tb-fade-in; animation-duration: .6s; }
+}

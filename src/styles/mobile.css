@@ -183,7 +183,7 @@
         font-size: .72rem;
     }
     tb-gestion .tb-barre-actions > .tb-btn .pi { font-size: 1.15rem; }
-    .tb-main:has(tb-gestion .tb-barre-on) { padding-bottom: calc(var(--tb-nav-bas) + 110px); }
+    :root.tb-barre-ouverte .tb-main { padding-bottom: calc(var(--tb-nav-bas) + 110px); }
 }
 
 /* ============================== Préférences ============================== */
