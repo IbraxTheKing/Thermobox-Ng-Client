@@ -16,6 +16,7 @@ import { correspond, normaliser, parNom, pluriel } from '../../core/texte';
 import { UniteService } from '../../core/unite';
 import { Noeud, Point } from '../../models/models';
 import { ArbreStore } from '../../services/arbre.store';
+import { TirerPourActualiser } from '../../ui/tirer';
 import { CacheCourbes } from '../../core/cache-courbes';
 import { ClimatService } from '../../services/climat.service';
 import { FavoriService } from '../../services/favori.service';
@@ -76,6 +77,8 @@ export class DashboardPage implements OnInit, OnDestroy {
 
   /** Curves of the last 24 h by salle: undefined while they load, null without enough measures. */
   private readonly cache = inject(CacheCourbes);
+  /** Phones: pull the page down to refresh it (the button is then hidden). */
+  protected readonly tirer = inject(TirerPourActualiser).activer(() => this.actualiser());
   /** Kept in memory (CacheCourbes): back on the dashboard, the curves are there at once. */
   private readonly tendancesGardees = this.cache.lire<Map<number, Sparkline | null>>(CLE_TENDANCES);
   private readonly tendances = signal<Map<number, Sparkline | null> | null>(this.tendancesGardees?.valeur ?? null);
