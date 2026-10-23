@@ -142,7 +142,10 @@ export class Shell implements OnInit, OnDestroy {
         this.prefs.theme();
         // Phone held sideways: the rail of the page, not the bar
         this.natif.configurerBarre(onglets, actif, this.barreBas(), (id, retouche) => {
-          if (retouche) scrollTo({ top: 0, behavior: this.prefs.animer() ? 'smooth' : 'auto' });
+          // The tab again: back to its first page (« Plus » from À propos, Salles from a
+          // salle…), as the web bar does; already there, back to the top
+          const ici = this.router.url.split(/[?#]/)[0];
+          if (retouche && ici === id) scrollTo({ top: 0, behavior: this.prefs.animer() ? 'smooth' : 'auto' });
           else void this.router.navigateByUrl(id);
         });
       });
