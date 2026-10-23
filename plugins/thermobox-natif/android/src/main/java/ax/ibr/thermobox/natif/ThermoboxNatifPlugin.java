@@ -24,6 +24,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.view.ContextThemeWrapper;
+import androidx.core.widget.NestedScrollView;
 
 import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
@@ -94,6 +95,7 @@ public class ThermoboxNatifPlugin extends Plugin {
         ICONES.put("cle", R.drawable.tb_cle);
         ICONES.put("deplacer", R.drawable.tb_deplacer);
         ICONES.put("etoile", R.drawable.tb_etoile);
+        ICONES.put("coche", R.drawable.tb_coche);
     }
 
     @Nullable private BottomNavigationView barre;
@@ -474,8 +476,9 @@ public class ThermoboxNatifPlugin extends Plugin {
     }
 
     /**
-     * titre, sousTitre, options : [{ id, label, icone, danger }], couleurs : { fond, texte,
-     * texteSecondaire, danger } : { id } de la ligne choisie, null si le menu est fermé.
+     * titre, sousTitre, options : [{ id, label, icone, danger, coche }], couleurs : { fond, texte,
+     * texteSecondaire, danger, accent } : { id } de la ligne choisie, null si le menu est fermé.
+     * Sans icône : une liste de choix (un <select> de la page), celui en cours coché.
      */
     @PluginMethod
     public void menu(PluginCall call) {
@@ -489,12 +492,12 @@ public class ThermoboxNatifPlugin extends Plugin {
                 int texte = couleur(couleurs, "texte", sombre ? 0xFFE3EAF6 : 0xFF1D3049);
                 int secondaire = couleur(couleurs, "texteSecondaire", sombre ? 0xFFC3CBD8 : 0xFF4C6480);
                 int rouge = couleur(couleurs, "danger", sombre ? 0xFFFFB4AB : 0xFFBA1A1A);
+                int accent = couleur(couleurs, "accent", sombre ? 0xFFADC6FF : 0xFF2160CC);
                 BottomSheetDialog dialogue = new BottomSheetDialog(ctx);
                 final boolean[] repondu = { false };
 
                 LinearLayout contenu = new LinearLayout(ctx);
                 contenu.setOrientation(LinearLayout.VERTICAL);
-                contenu.setPadding(0, 0, 0, px(16));
                 contenu.addView(new BottomSheetDragHandleView(ctx));
                 if (!titre.isEmpty()) {
                     TextView t = new TextView(ctx);
@@ -514,11 +517,20 @@ public class ThermoboxNatifPlugin extends Plugin {
                 }
                 TypedValue fondLigne = new TypedValue();
                 ctx.getTheme().resolveAttribute(android.R.attr.selectableItemBackground, fondLigne, true);
+                // The rows scroll under the title (a long list: the bâtiments of a filter…)
+                LinearLayout liste = new LinearLayout(ctx);
+                liste.setOrientation(LinearLayout.VERTICAL);
+                liste.setPadding(0, 0, 0, px(16));
+                NestedScrollView defilement = new NestedScrollView(ctx);
+                defilement.addView(liste, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                contenu.addView(defilement, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
                 for (int i = 0; i < options.length(); i++) {
                     JSONObject o = options.getJSONObject(i);
                     String id = o.getString("id");
                     boolean danger = o.optBoolean("danger", false);
-                    int couleurLigne = danger ? rouge : texte;
+                    // A list of choices (a <select> of the page): the current one is ticked
+                    boolean coche = o.optBoolean("coche", false);
+                    int couleurLigne = danger ? rouge : coche ? accent : texte;
 
                     LinearLayout ligne = new LinearLayout(ctx);
                     ligne.setOrientation(LinearLayout.HORIZONTAL);
@@ -528,19 +540,33 @@ public class ThermoboxNatifPlugin extends Plugin {
                     ligne.setBackgroundResource(fondLigne.resourceId);
                     ligne.setClickable(true);
 
-                    ImageView icone = new ImageView(ctx);
-                    Integer res = ICONES.get(o.optString("icone"));
-                    icone.setImageResource(res != null ? res : R.drawable.tb_ouvrir);
-                    icone.setImageTintList(ColorStateList.valueOf(danger ? rouge : secondaire));
-                    ligne.addView(icone, new LinearLayout.LayoutParams(px(24), px(24)));
+                    // No icon given: a plain list of choices
+                    String nomIcone = o.optString("icone", "");
+                    if (!nomIcone.isEmpty()) {
+                        ImageView icone = new ImageView(ctx);
+                        Integer res = ICONES.get(nomIcone);
+                        icone.setImageResource(res != null ? res : R.drawable.tb_ouvrir);
+                        icone.setImageTintList(ColorStateList.valueOf(danger ? rouge : secondaire));
+                        LinearLayout.LayoutParams lpIcone = new LinearLayout.LayoutParams(px(24), px(24));
+                        lpIcone.setMarginEnd(px(16));
+                        ligne.addView(icone, lpIcone);
+                    }
 
                     TextView label = new TextView(ctx);
                     label.setText(o.optString("label"));
                     label.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyLarge);
                     label.setTextColor(couleurLigne);
-                    LinearLayout.LayoutParams lpLabel = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
-                    lpLabel.setMarginStart(px(16));
-                    ligne.addView(label, lpLabel);
+                    ligne.addView(label, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+
+                    if (coche) {
+                        ImageView marque = new ImageView(ctx);
+                        marque.setImageResource(R.drawable.tb_coche);
+                        marque.setImageTintList(ColorStateList.valueOf(accent));
+                        LinearLayout.LayoutParams lpMarque = new LinearLayout.LayoutParams(px(24), px(24));
+                        lpMarque.setMarginStart(px(16));
+                        ligne.addView(marque, lpMarque);
+                        ligne.setSelected(true);
+                    }
 
                     ligne.setOnClickListener(v -> {
                         if (repondu[0]) return;
@@ -551,7 +577,7 @@ public class ThermoboxNatifPlugin extends Plugin {
                         call.resolve(r);
                         dialogue.dismiss();
                     });
-                    contenu.addView(ligne, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                    liste.addView(ligne, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
                 }
                 dialogue.setContentView(contenu);
                 dialogue.setOnDismissListener(d -> {

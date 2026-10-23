@@ -33,7 +33,12 @@ interface ThermoboxNatifPlugin {
   etendreFab(o: { etendu: boolean }): Promise<void>;
   snackbar(o: { texte: string; longue?: boolean }): Promise<void>;
   confirmer(o: { titre: string; message: string; confirmer?: string; annuler?: string; danger?: boolean }): Promise<{ valeur: boolean }>;
-  menu(o: { titre: string; sousTitre: string; options: { id: string; label: string; icone: string; danger: boolean }[]; couleurs: { fond: string; texte: string; texteSecondaire: string; danger: string } }): Promise<{ id: string | null }>;
+  menu(o: {
+    titre: string;
+    sousTitre: string;
+    options: { id: string; label: string; icone: string; danger: boolean; coche?: boolean }[];
+    couleurs: { fond: string; texte: string; texteSecondaire: string; danger: string; accent: string };
+  }): Promise<{ id: string | null }>;
   addListener(e: 'onglet', f: (d: { id: string; retouche: boolean }) => void): Promise<PluginListenerHandle>;
   addListener(e: 'fab', f: () => void): Promise<PluginListenerHandle>;
   addListener(e: 'hauteur', f: (d: { hauteur: number; visible: boolean }) => void): Promise<PluginListenerHandle>;
@@ -120,17 +125,19 @@ function hex(...vars: string[]): string {
  * the page; the id of the row picked, null when it is dismissed.
  */
 export const natifMenu = plugin
-  ? async (titre: string, sousTitre: string, options: { id: string; label: string; icone: string; danger: boolean }[]) =>
+  ? async (titre: string, sousTitre: string, options: { id: string; label: string; icone: string; danger: boolean; coche?: boolean }[]) =>
       (
         await plugin.menu({
           titre,
           sousTitre,
-          options: options.map((o) => ({ ...o, icone: iconeNative(o.icone, 'ouvrir') })),
+          // No icon (a list of choices): none drawn
+          options: options.map((o) => ({ ...o, icone: o.icone ? iconeNative(o.icone, 'ouvrir') : '' })),
           couleurs: {
             fond: hex('--tb-m3-container-high', '--md-surface-container-high'),
             texte: hex('--md-on-surface'),
             texteSecondaire: hex('--md-on-surface-variant'),
             danger: hex('--md-error'),
+            accent: hex('--md-primary'),
           },
         })
       ).id
@@ -169,6 +176,8 @@ export class AndroidNatifService {
   /** Hauteur de la barre native en px CSS (0 : cachée). */
   readonly hauteurBarre = signal(0);
   private clavier = false;
+  /** A sheet of the page is open: the native bar would cover its bottom (its buttons). */
+  private feuille = false;
   private barreVoulue = false;
   private fabCible: HTMLElement | null = null;
   private fabConfig = '';
@@ -200,7 +209,11 @@ export class AndroidNatifService {
     this.doc.addEventListener('focusout', () => setTimeout(() => this.clavierOuvert(this.estChamp(this.doc.activeElement)), 50));
 
     // The main action of each page: follows the page (and its tabs, its selection mode…)
-    new MutationObserver(() => this.planifierFab()).observe(this.doc.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+    new MutationObserver(() => {
+      this.suivreFeuilles();
+      this.planifierFab();
+    }).observe(this.doc.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+    this.installerSelects();
     addEventListener('scroll', () => this.surDefilement(), { passive: true });
     // Theme, colour of the state, look: the native parts take the new colours
     new MutationObserver(() => {
@@ -216,7 +229,7 @@ export class AndroidNatifService {
     this.dernier = [onglets, actifId, visible, surOnglet];
     this.surOnglet = surOnglet;
     this.barreVoulue = visible;
-    const o = { onglets, actif: actifId, visible: visible && !this.clavier, sombre: this.root.dataset['theme'] === 'dark', couleurs: this.couleursBarre() };
+    const o = { onglets, actif: actifId, visible: visible && !this.clavier && !this.feuille, sombre: this.root.dataset['theme'] === 'dark', couleurs: this.couleursBarre() };
     const cle = JSON.stringify(o);
     if (cle === this.barreEnvoyee) return;
     this.barreEnvoyee = cle;
@@ -248,17 +261,106 @@ export class AndroidNatifService {
   private estChamp(t: EventTarget | null): boolean {
     const el = t as HTMLElement | null;
     if (!el?.matches) return false;
-    if (el.matches('textarea, select, [contenteditable="true"]')) return true;
+    // Not a <select>: native list, no keyboard (installerSelects)
+    if (el.matches('textarea, [contenteditable="true"]')) return true;
     return el.matches('input') && !['checkbox', 'radio', 'button', 'submit', 'file', 'range'].includes((el as HTMLInputElement).type);
   }
 
   private clavierOuvert(ouvert: boolean): void {
     if (!plugin || ouvert === this.clavier) return;
     this.clavier = ouvert;
-    if (this.barreVoulue) void plugin.afficherBarre({ visible: !ouvert });
+    this.majVisibilite();
+  }
+
+  /** The bar and the button make room for the keyboard and for the sheets of the page. */
+  private majVisibilite(): void {
+    if (!plugin) return;
+    if (this.barreVoulue) void plugin.afficherBarre({ visible: !this.clavier && !this.feuille });
     this.barreEnvoyee = '';
     this.fabConfig = '';
     this.planifierFab();
+  }
+
+  /**
+   * A sheet of the page opens (a form: consigne, add, move…): it rises from the bottom of the
+   * screen, where the native bar is drawn over the page; the bar steps aside while it is open,
+   * as under a Material modal bottom sheet. Native menus (TbSheet menuNatif) are not concerned.
+   */
+  private suivreFeuilles(): void {
+    const ouverte = !!this.doc.querySelector('.tb-scrim:not(.tb-sheet-natif):not(.tb-scrim-ferme)');
+    if (ouverte === this.feuille) return;
+    this.feuille = ouverte;
+    this.majVisibilite();
+  }
+
+  // ---------------------------------------------------------------- <select>: native lists
+
+  /**
+   * The lists of the page (<select>) open as native Material lists (the same bottom sheet as the
+   * menus, the current choice ticked) instead of the WebView's own popup. The page's <select>
+   * no longer takes the touch (CSS: html.tb-selects-natifs); a tap on it opens the list.
+   */
+  private installerSelects(): void {
+    this.root.classList.add('tb-selects-natifs');
+    this.doc.addEventListener(
+      'click',
+      (e) => {
+        const select = this.selectSous(e.clientX, e.clientY);
+        if (!select) return;
+        e.preventDefault();
+        e.stopPropagation();
+        void this.choisir(select);
+      },
+      true,
+    );
+    // Keyboard (or accessibility): Enter or Space on the list
+    this.doc.addEventListener(
+      'keydown',
+      (e) => {
+        if (!(e.target instanceof HTMLSelectElement) || (e.key !== 'Enter' && e.key !== ' ')) return;
+        e.preventDefault();
+        void this.choisir(e.target);
+      },
+      true,
+    );
+  }
+
+  private selectSous(x: number, y: number): HTMLSelectElement | null {
+    for (const s of this.doc.querySelectorAll('select')) {
+      if (s.disabled || !s.offsetParent) continue;
+      const r = s.getBoundingClientRect();
+      if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) return s;
+    }
+    return null;
+  }
+
+  private ouvertes = 0;
+  private async choisir(select: HTMLSelectElement): Promise<void> {
+    if (!natifMenu || this.ouvertes) return;
+    const options = [...select.options].map((o, i) => ({ o, i })).filter(({ o }) => !o.disabled && !o.hidden);
+    if (!options.length) return;
+    this.ouvertes++;
+    try {
+      const id = await natifMenu(
+        this.libelleDe(select),
+        '',
+        options.map(({ o, i }) => ({ id: String(i), label: o.text.trim(), icone: '', danger: false, coche: o.selected })),
+      );
+      const i = id == null ? -1 : Number(id);
+      if (i < 0 || i === select.selectedIndex) return;
+      select.selectedIndex = i;
+      select.dispatchEvent(new Event('input', { bubbles: true }));
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    } finally {
+      this.ouvertes--;
+    }
+  }
+
+  /** Title of the list: its label, else its aria-label. */
+  private libelleDe(select: HTMLSelectElement): string {
+    const parId = select.id ? this.doc.querySelector(`label[for="${CSS.escape(select.id)}"]`) : null;
+    const texte = parId?.textContent ?? select.closest('label')?.textContent ?? select.getAttribute('aria-label') ?? select.closest('.tb-field')?.querySelector('.tb-label')?.textContent ?? '';
+    return texte.replace(/\s+/g, ' ').trim();
   }
 
   // ---------------------------------------------------------------- main action
@@ -274,7 +376,7 @@ export class AndroidNatifService {
     if (!plugin) return;
     const web = this.doc.querySelector<HTMLElement>('.tb-page-head > .tb-fab');
     // Hidden while rows are ticked (Gestion), while typing, without the bar (landscape)
-    const visible = !!web && !web.hasAttribute('disabled') && !this.clavier && this.barreVoulue && !this.doc.querySelector('.tb-barre-on');
+    const visible = !!web && !web.hasAttribute('disabled') && !this.clavier && !this.feuille && this.barreVoulue && !this.doc.querySelector('.tb-barre-on');
     const label = web?.textContent?.trim() ?? '';
     const icone = iconeNative(web?.querySelector('.pi')?.className ?? '');
     const config = `${visible}|${label}|${icone}|${this.root.dataset['theme']}|${this.root.dataset['ton'] ?? ''}`;
