@@ -1,5 +1,5 @@
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
-import { ApplicationConfig, inject, isDevMode, provideBrowserGlobalErrorListeners, LOCALE_ID } from '@angular/core';
+import { ApplicationConfig, isDevMode, provideBrowserGlobalErrorListeners, LOCALE_ID } from '@angular/core';
 import { TitleStrategy, provideRouter, withComponentInputBinding, withInMemoryScrolling, withViewTransitions } from '@angular/router';
 import { provideServiceWorker } from '@angular/service-worker';
 import { registerLocaleData } from '@angular/common';
@@ -8,7 +8,6 @@ import localeFr from '@angular/common/locales/fr';
 import { routes } from './app.routes';
 import { authInterceptor } from './core/http';
 import { TitreStrategie } from './core/titre';
-import { TransitionsService } from './core/transitions';
 
 registerLocaleData(localeFr);
 
@@ -19,11 +18,14 @@ export const appConfig: ApplicationConfig = {
       routes,
       withComponentInputBinding(),
       withInMemoryScrolling({ scrollPositionRestoration: 'enabled' }),
-      // Cross-fade between pages, the salle card morphs into its page (as in the JSF interface);
-      // entrance of the new page and colour of the state with it: TransitionsService
+      // Cross-fade between pages, the salle card glides into its page (as in the JSF interface)
       withViewTransitions({
         skipInitialTransition: true,
-        onViewTransitionCreated: (info) => inject(TransitionsService).surTransition(info),
+        // Préférences « Animations » off, or the system asks for less motion: no transition
+        onViewTransitionCreated: ({ transition }) => {
+          const reduit = document.documentElement.dataset['motion'] === 'off' || matchMedia('(prefers-reduced-motion: reduce)').matches;
+          if (reduit) transition.skipTransition();
+        },
       }),
     ),
     provideHttpClient(withFetch(), withInterceptors([authInterceptor])),

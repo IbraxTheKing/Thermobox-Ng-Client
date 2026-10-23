@@ -78,10 +78,14 @@
 }
 /* The lens of Liquid Glass (iOS): hidden elsewhere */
 .tb-lentille { display: none; }
-/* Last tab of phones (« Plus » / « Compte »): the account is at the bottom of the rail elsewhere */
+/* "Plus" (iOS / Android phones with more than five destinations) */
 .tb-dest-plus { display: none; }
 
 .tb-rail-end { margin-top: auto; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+
+/* "…" of the slim rail of phones held sideways only */
+.tb-icon-btn.tb-rail-more { display: none; }
+.tb-rail-extras { display: contents; }
 
 /* Logo: a thermometer on a blue-to-teal glass tile */
 .tb-logo {
@@ -109,7 +113,7 @@ a:hover > .tb-logo { transform: rotate(-6deg) scale(1.05); }
     --tb-mark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M10 4.5a2 2 0 0 1 4 0v8.6a4.2 4.2 0 1 1-4 0z'/%3E%3Cpath d='M12 9.5v6.3'/%3E%3Ccircle cx='12' cy='17' r='1.6' fill='%23000'/%3E%3Cpath d='M17.5 6h2M17.5 9.5h2'/%3E%3C/svg%3E");
 }
 
-/* Icon buttons of the rail (preferences, logout) */
+/* Icon buttons of the bars (theme toggle, preferences, logout) */
 .tb-icon-btn {
     position: relative;
     display: inline-grid;
@@ -131,6 +135,18 @@ a:hover > .tb-logo { transform: rotate(-6deg) scale(1.05); }
 .tb-icon-btn:hover { background: var(--md-secondary-container); border-color: var(--tb-glass-line); color: var(--md-on-surface); }
 .tb-icon-btn:active { transform: scale(.94); }
 .tb-prefs-btn.tb-prefs-on { background: var(--md-secondary-container); color: var(--md-on-surface); }
+.tb-theme-btn i { transition: transform .5s var(--tb-spring); }
+.tb-theme-btn:hover i { transform: rotate(-20deg); }
+:root[data-theme="dark"] .tb-if-light, :root:not([data-theme="dark"]) .tb-if-dark { display: none; }
+.tb-theme-corner {
+    position: fixed;
+    top: calc(16px + env(safe-area-inset-top));
+    right: calc(16px + env(safe-area-inset-right));
+    z-index: 60;
+    border-color: var(--tb-glass-line);
+    background: var(--tb-glass);
+    box-shadow: var(--tb-glass-shadow);
+}
 
 .tb-avatar {
     display: inline-grid;
@@ -222,28 +238,8 @@ a:hover > .tb-logo { transform: rotate(-6deg) scale(1.05); }
         backdrop-filter: var(--tb-blur);
         view-transition-name: tb-topbar;
     }
-    /* Title of the page in the bar once its own title has scrolled under it */
-    .tb-topbar-titre {
-        position: absolute;
-        left: 50%;
-        bottom: 0;
-        display: grid;
-        place-items: center;
-        max-width: 60%;
-        height: 58px;
-        overflow: hidden;
-        color: var(--md-on-surface);
-        font-weight: 750;
-        white-space: nowrap;
-        text-overflow: ellipsis;
-        opacity: 0;
-        transform: translate(-50%, 6px);
-        transition: opacity .25s ease, transform .3s var(--tb-ease);
-        pointer-events: none;
-    }
-    .tb-brand { transition: opacity .25s ease, transform .3s var(--tb-ease); }
-    .tb-defile-titre .tb-topbar-titre { opacity: 1; transform: translate(-50%, 0); }
-    .tb-defile-titre .tb-brand { opacity: 0; transform: translateY(-4px); pointer-events: none; }
+    .tb-topbar .tb-avatar { width: 34px; height: 34px; margin: 0 4px; font-size: .9rem; }
+    .tb-spacer { flex: 1 1 auto; }
 
     .tb-rail {
         inset: auto 0 0 0;
@@ -265,9 +261,6 @@ a:hover > .tb-logo { transform: rotate(-6deg) scale(1.05); }
     .tb-dest { width: auto; flex: 1 1 0; min-width: 0; }
     .tb-dest-icon { width: 48px; }
     .tb-dest-label { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
-    /* At most four pages, then « Plus » / « Compte » */
-    .tb-dest-cache { display: none; }
-    .tb-dest-plus { display: flex; }
 
     .tb-app .tb-main {
         margin-left: 0;
@@ -300,7 +293,7 @@ a:hover > .tb-logo { transform: rotate(-6deg) scale(1.05); }
 
 /*
  * Phones held sideways (any width, ~320-430 px high): no top bar, no bottom bar, but a slim rail
- * on the left with every page, the account behind its last tab.
+ * on the left with the destinations only; theme, preferences, profile and logout open from "…".
  */
 @media (orientation: landscape) and (max-height: 520px) {
     :root { --tb-rail: 76px; --tb-topbar-h: 0px; --tb-nav-bas: 0px; }
@@ -324,8 +317,28 @@ a:hover > .tb-logo { transform: rotate(-6deg) scale(1.05); }
     .tb-dest { flex: none; width: 48px; min-height: 0; padding: 3px 0; }
     .tb-dest-label { display: none; }
     .tb-dest-icon { width: 42px; height: 36px; }
-    .tb-rail-end { display: none; }
-    .tb-dest-plus { display: flex !important; }
+    .tb-rail-end { display: flex; flex-direction: column; margin-top: auto; }
+    .tb-icon-btn.tb-rail-more { display: inline-grid; width: 42px; height: 42px; }
+    .tb-rail-extras {
+        position: fixed;
+        left: calc(76px + env(safe-area-inset-left));
+        bottom: 8px;
+        z-index: 60;
+        display: none;
+        flex-direction: row;
+        align-items: center;
+        gap: 6px;
+        padding: 8px;
+        border: 1px solid var(--tb-glass-line);
+        border-radius: var(--tb-shape-xl);
+        background: var(--tb-glass-solid);
+        box-shadow: var(--tb-elev-2);
+        -webkit-backdrop-filter: var(--tb-blur);
+        backdrop-filter: var(--tb-blur);
+    }
+    .tb-rail-open .tb-rail-extras { display: flex; animation: tb-rise .25s var(--tb-ease); }
+    .tb-rail-open .tb-rail-more { background: var(--md-secondary-container); color: var(--md-on-surface); }
+    .tb-dest-plus { display: none !important; }
     .tb-dest-cache { display: flex !important; }
 
     .tb-app .tb-main {
@@ -337,9 +350,35 @@ a:hover > .tb-logo { transform: rotate(-6deg) scale(1.05); }
     .tb-page-head > .tb-btn.tb-fab { bottom: calc(16px + env(safe-area-inset-bottom)); }
 }
 
+/* "Plus" sheet: the destinations that don't fit in the bar, and the account actions */
+.tb-plus-liste { display: flex; flex-direction: column; padding: 4px 0; }
+.tb-plus-liste a, .tb-plus-liste button {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-height: 52px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: var(--tb-shape-md);
+    background: none;
+    color: var(--md-on-surface);
+    font: inherit;
+    font-size: 1rem;
+    font-weight: 600;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+}
+.tb-plus-liste .pi { width: 24px; color: var(--md-on-surface-variant); font-size: 1.1rem; text-align: center; }
+.tb-plus-liste a:active, .tb-plus-liste button:active, .tb-plus-liste a.tb-dest-on { background: var(--md-secondary-container); }
+.tb-plus-liste a.tb-dest-on .pi { color: var(--md-primary); }
+.tb-plus-liste hr { width: 100%; margin: 6px 0; border: 0; border-top: 1px solid var(--md-outline-variant); }
+.tb-plus-liste .tb-plus-danger, .tb-plus-liste .tb-plus-danger .pi { color: var(--md-error); }
+
 /* Touch screens: nothing stays "hovered" after a tap */
 @media (hover: none) {
     .tb-dest:hover { background: transparent; color: var(--md-on-surface-variant); }
     .tb-dest.tb-dest-on:hover { color: var(--md-primary); }
     .tb-icon-btn:hover { background: transparent; border-color: transparent; }
+    .tb-theme-btn:hover i { transform: none; }
 }

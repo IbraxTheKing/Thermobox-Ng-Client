@@ -13,9 +13,6 @@ import { UserService } from '../../services/user.service';
 import { TbArbreAcces } from '../../ui/arbre-acces';
 import { Option, TbChoixMultiple } from '../../ui/choix-multiple';
 import { TbSheet } from '../../ui/sheet';
-import { TbSwitch } from '../../ui/controles';
-import { PlateformeService } from '../../core/plateforme';
-import { FlipService } from '../../core/flip';
 
 /**
  * « Utilisateurs et groupes » tab of the Gestion page (ADMIN only, gestion-droits.xhtml): roles
@@ -24,7 +21,7 @@ import { FlipService } from '../../core/flip';
  */
 @Component({
   selector: 'tb-droits',
-  imports: [TbSheet, TbSwitch, TbChoixMultiple, TbArbreAcces],
+  imports: [TbSheet, TbChoixMultiple, TbArbreAcces],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './droits.html',
 })
@@ -36,12 +33,6 @@ export class DroitsTab implements OnInit {
   private readonly groupesApi = inject(GroupeService);
   private readonly toasts = inject(ToastService);
   private readonly confirm = inject(ConfirmService);
-  protected readonly tel = inject(PlateformeService).telephone;
-  private readonly flip = inject(FlipService);
-
-  protected chercher(v: string): void {
-    this.flip.animer(() => this.recherche.set(v));
-  }
 
   private readonly arbreGroupe = viewChild(TbArbreAcces);
 
@@ -73,36 +64,6 @@ export class DroitsTab implements OnInit {
     } catch (e) {
       this.toasts.error('Impossible de charger les utilisateurs', messageErreur(e));
     }
-  }
-
-  protected nomRole(r: UserRole | null | undefined): string {
-    return r ? ({ ADMIN: 'Admin', GESTIONNAIRE: 'Gestionnaire', VIEWER: 'Lecteur' }[r] ?? r) : '';
-  }
-
-  // ---------------------------------------------------------------- phones: one user in a sheet
-
-  protected readonly feuilleUser = signal(false);
-  private readonly idFeuille = signal<number | null>(null);
-  /** Follows the reloads: the sheet shows what was just changed. */
-  protected readonly enFeuille = computed(() => this.droits.users().find((l) => l.user.id === this.idFeuille()) ?? null);
-
-  protected ouvrirUser(l: LigneUser): void {
-    this.idFeuille.set(l.user.id!);
-    this.feuilleUser.set(true);
-  }
-
-  protected async voitTout(l: LigneUser, tout: boolean): Promise<void> {
-    this.selection.set(new Set([l.user.id!]));
-    await this.accesSelection(tout);
-    this.selection.set(new Set());
-  }
-
-  /** Group membership of this user (same window as for a selection). */
-  protected groupesDe(l: LigneUser): void {
-    this.selection.set(new Set([l.user.id!]));
-    this.groupeCibleId.set(null);
-    this.feuilleUser.set(false);
-    this.dlgMembres.set(true);
   }
 
   protected cocher(id: number, coche: boolean): void {
@@ -195,7 +156,6 @@ export class DroitsTab implements OnInit {
       await firstValueFrom(this.groupesApi.modifier(g.id, req));
       this.toasts.info(ajouter ? `${ids.length} utilisateur(s) ajouté(s) à « ${g.name} »` : `${ids.length} utilisateur(s) retiré(s) de « ${g.name} »`);
       this.dlgMembres.set(false);
-      if (this.tel()) this.selection.set(new Set());
     } catch (e) {
       this.toasts.error('Groupe non modifié', messageErreur(e));
     }

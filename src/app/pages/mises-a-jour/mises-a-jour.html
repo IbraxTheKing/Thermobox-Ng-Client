@@ -132,7 +132,7 @@
 
 <!-- A version. The colour follows the channel: stable green, beta / rc orange, nightly violet -->
 <ng-template #carte let-v>
-  <article class="tb-card tb-maj-version-card tb-canal-{{ canal(v) }}" [attr.data-flip]="'v' + v.version">
+  <article class="tb-card tb-maj-version-card tb-canal-{{ canal(v) }}">
     <div class="tb-card-head">
       <div class="tb-maj-titre">
         <strong class="tb-maj-version">{{ v.version }}</strong>

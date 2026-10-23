@@ -6,7 +6,7 @@
   @if (auth.admin() && onglet() === 'droits') {
     <button type="button" class="tb-btn tb-btn-lg tb-fab" (click)="nouveauGroupe()"><i class="pi pi-users"></i>Nouveau groupe</button>
   }
-  @if (auth.admin() && onglet() === 'salles' && !modeSelection()) {
+  @if (auth.admin() && onglet() === 'salles') {
     <button type="button" class="tb-btn tb-btn-lg tb-fab" (click)="nouveau()"><i class="pi pi-plus"></i>Nouvel élément</button>
   }
 </header>
@@ -15,10 +15,10 @@
 @if (auth.admin()) {
   <div class="tb-segmented tb-gest-onglets" role="tablist">
     <button type="button" role="tab" [attr.aria-selected]="onglet() === 'salles'" [class.tb-seg-on]="onglet() === 'salles'" (click)="ouvrirOnglet('salles')">
-      <i class="pi pi-building"></i>{{ tel() ? 'Éléments' : 'Salles et bâtiments' }}
+      <i class="pi pi-building"></i>Salles et bâtiments
     </button>
     <button type="button" role="tab" [attr.aria-selected]="onglet() === 'droits'" [class.tb-seg-on]="onglet() === 'droits'" (click)="ouvrirOnglet('droits')">
-      <i class="pi pi-users"></i>{{ tel() ? 'Accès' : 'Utilisateurs et groupes' }}
+      <i class="pi pi-users"></i>Utilisateurs et groupes
     </button>
   </div>
 }
@@ -36,11 +36,11 @@
     <span class="tb-search">
       <i class="pi pi-search"></i>
       <input class="tb-input" type="search" placeholder="Rechercher un élément ou un emplacement…" autocomplete="off" aria-label="Rechercher"
-             [value]="recherche()" (input)="chercher($any($event.target).value)" />
+             [value]="recherche()" (input)="recherche.set($any($event.target).value); page.set(0)" />
     </span>
   </div>
 
-  <div class="tb-summary tb-summary-defile">
+  <div class="tb-summary">
     <button type="button" class="tb-summary-chip" [class.tb-chip-on]="type() == null && !seulementATraiter()" (click)="filtrerType(null)">
       <i class="pi pi-check tb-chip-check"></i>Tout<span class="tb-chip-n">{{ nombre(null) }}</span>
     </button>
@@ -59,7 +59,7 @@
   </p>
 
   <!-- Actions on the ticked rows: a bar fixed at the bottom of the screen, each action opens its own small window -->
-  <div class="tb-barre" [class.tb-barre-on]="barreVisible()" [attr.aria-hidden]="!barreVisible()">
+  <div class="tb-barre" [class.tb-barre-on]="selection().size > 0" [attr.aria-hidden]="selection().size === 0">
     <span class="tb-barre-compte">{{ selection().size }} sélectionné(s)</span>
     <div class="tb-barre-actions">
       <button type="button" class="tb-btn tb-tonal" (click)="dlgConsigne.set(true)"><i class="pi pi-sliders-h"></i>Consigne</button>
@@ -69,69 +69,9 @@
         <button type="button" class="tb-btn tb-flat tb-btn-danger" (click)="supprimerSelection()"><i class="pi pi-trash"></i>Supprimer</button>
       }
     </div>
-    @if (!tel()) {
-      <button type="button" class="tb-btn tb-icon tb-flat tb-barre-fermer" title="Tout décocher" aria-label="Tout décocher" (click)="toutDecocher()"><i class="pi pi-times"></i></button>
-    }
+    <button type="button" class="tb-btn tb-icon tb-flat tb-barre-fermer" title="Tout décocher" aria-label="Tout décocher" (click)="toutDecocher()"><i class="pi pi-times"></i></button>
   </div>
 
-  @if (tel()) {
-    <!-- Several rows at once, as « Sélectionner » in native apps (or hold a row) -->
-    <div class="tb-gest-selection">
-      <span>
-        @if (modeSelection()) {
-          {{ selection().size ? selection().size + ' sélectionné(s)' : 'Touche les éléments' }}
-        } @else {
-          {{ visibles().length }} élément(s)
-        }
-      </span>
-      @if (modeSelection()) {
-        <button type="button" class="tb-btn tb-flat" (click)="toutCocher(!toutCoche())">{{ toutCoche() ? 'Aucun' : 'Tout' }}</button>
-      }
-      <button type="button" class="tb-btn tb-flat tb-gest-mode" (click)="basculerModeSelection()">{{ modeSelection() ? 'OK' : 'Sélectionner' }}</button>
-    </div>
-    <ul class="tb-liste-gest" [class.tb-en-selection]="modeSelection()">
-      @for (l of lignesTel(); track l.n.id) {
-        <li [attr.data-flip]="'g' + l.n.id">
-          <button
-            type="button"
-            class="tb-gest-ligne tb-ton-{{ l.etat.ton }}"
-            [class.tb-row-on]="selection().has(l.n.id)"
-            [attr.aria-pressed]="modeSelection() ? selection().has(l.n.id) : null"
-            (click)="toucherLigne(l)"
-            (pointerdown)="debutAppuiLong(l, $event)"
-          >
-            @if (modeSelection()) {
-              <span class="tb-gest-coche" aria-hidden="true"><i class="pi pi-check"></i></span>
-            }
-            <span class="tb-gest-icone"><i class="pi" [class]="icones[l.n.kind]"></i></span>
-            <span class="tb-gest-texte">
-              <strong>{{ l.n.name }}</strong>
-              <span class="tb-muted">{{ libelles[l.n.kind] }}@if (l.chemin) { · {{ l.chemin }} }</span>
-              @if (!l.n.rattache) {
-                <span class="tb-tag tb-tag-warning">Non rattaché</span>
-              }
-            </span>
-            <span class="tb-gest-valeurs">
-              <strong>{{ unite.t(l.n.temperature) }}<small>°</small></strong>
-              @if (!l.boitier) {
-                <span class="tb-gest-cible" [title]="l.etat.label"><span class="tb-gest-point"></span>{{ unite.t(l.n.consigne?.value) }}°</span>
-              }
-            </span>
-            @if (!modeSelection()) {
-              <i class="pi pi-angle-right tb-liste-suite" aria-hidden="true"></i>
-            }
-          </button>
-        </li>
-      } @empty {
-        <li class="tb-gest-vide tb-muted">{{ store.arbre() ? 'Aucun élément ne correspond' : 'Chargement…' }}</li>
-      }
-    </ul>
-    @if (visibles().length > limiteTel()) {
-      <button type="button" class="tb-btn tb-tonal tb-gest-plus" (click)="limiteTel.set(limiteTel() + 50)">
-        Afficher {{ visibles().length - limiteTel() > 50 ? 50 : visibles().length - limiteTel() }} de plus
-      </button>
-    }
-  } @else {
   <div class="tb-table tb-gest-table">
     <table>
       <thead>
@@ -147,7 +87,7 @@
       </thead>
       <tbody>
         @for (l of lignesPage(); track l.n.id) {
-          <tr class="tb-ton-{{ l.etat.ton }}" [class.tb-row-on]="selection().has(l.n.id)" [attr.data-flip]="'g' + l.n.id">
+          <tr class="tb-ton-{{ l.etat.ton }}" [class.tb-row-on]="selection().has(l.n.id)">
             <td class="tb-col-check">
               <input type="checkbox" class="tb-check" [checked]="selection().has(l.n.id)" (change)="cocher(l.n.id, $any($event.target).checked)" [attr.aria-label]="'Sélectionner ' + l.n.name" />
             </td>
@@ -214,62 +154,11 @@
       </div>
     }
   </div>
-  }
 }
 
 @if (auth.admin() && onglet() === 'droits') {
   <tb-droits />
 }
-
-<!-- Phones: what can be done with one element, from its row -->
-<tb-sheet [(ouvert)]="feuilleOuverte" [titre]="enFeuille()?.n?.name ?? ''" menuNatif [largeur]="420">
-  @if (enFeuille(); as l) {
-    <!-- Android app: this sheet opens as a native menu (TbSheet menuNatif), with this line under the title -->
-    <span hidden data-menu-sous-titre>{{ libelles[l.n.kind] }}@if (l.chemin) { · {{ l.chemin }} } · {{ unite.t(l.n.temperature) }} {{ unite.symbole() }}@if (!l.boitier) { · {{ l.etat.label }} }</span>
-    <div class="tb-gest-feuille-tete tb-ton-{{ l.etat.ton }}">
-      <span class="tb-gest-icone"><i class="pi" [class]="icones[l.n.kind]"></i></span>
-      <div>
-        <span class="tb-muted">{{ libelles[l.n.kind] }}@if (l.chemin) { · {{ l.chemin }} }</span>
-        <strong>{{ unite.t(l.n.temperature) }} {{ unite.symbole() }}</strong>
-      </div>
-      @if (!l.boitier) {
-        <span class="tb-state">{{ l.etat.label }}</span>
-      }
-    </div>
-    @if (!l.boitier) {
-      <form class="tb-gest-feuille-consigne" (submit)="envoyerFeuille($event, l)" novalidate>
-        <span class="tb-label">
-          Consigne : {{ unite.t(l.n.consigne?.value) }} {{ unite.symbole() }}
-          @if (l.n.consigne?.heritee) { <span class="tb-muted">· héritée de {{ l.n.consigne?.sourceName }}</span> }
-        </span>
-        <tb-stepper [(valeur)]="consigneFeuille" />
-        @if (l.n.kind !== 'SALLE') {
-          <div class="tb-switch-row">
-            <tb-switch [(checked)]="forcer" label="Remplacer aussi les consignes propres des éléments contenus" />
-            <span class="tb-switch-text" (click)="forcer.set(!forcer())">Remplacer aussi celles des éléments contenus</span>
-          </div>
-        }
-        <button type="submit" class="tb-btn tb-btn-lg" [disabled]="envoiEnCours() === l.n.id">
-          <i class="pi" [class.pi-send]="envoiEnCours() !== l.n.id" [class.pi-spinner]="envoiEnCours() === l.n.id" [class.pi-spin]="envoiEnCours() === l.n.id"></i>Envoyer la consigne
-        </button>
-      </form>
-    }
-    <nav class="tb-sheet-list">
-      @if (!l.boitier) {
-        <!-- Native menu only: opens this sheet itself, with its consigne form -->
-        <button type="button" class="tb-sheet-item tb-natif-seul" data-natif-web><i class="pi pi-sliders-h"></i>Régler la consigne</button>
-      }
-      <a class="tb-sheet-item" [routerLink]="['/app/salle', l.n.id]" (click)="feuilleOuverte.set(false)"><i class="pi pi-external-link"></i>Voir la page</a>
-      @if (auth.admin()) {
-        <button type="button" class="tb-sheet-item" (click)="depuisFeuille(l, 'modifier')"><i class="pi pi-pencil"></i>Renommer ou déplacer</button>
-        @if (!l.boitier) {
-          <button type="button" class="tb-sheet-item" (click)="depuisFeuille(l, 'acces')"><i class="pi pi-key"></i>Accès</button>
-        }
-        <button type="button" class="tb-sheet-item tb-sheet-danger" (click)="depuisFeuille(l, 'supprimer')"><i class="pi pi-trash"></i>Supprimer</button>
-      }
-    </nav>
-  }
-</tb-sheet>
 
 <!-- Actions of the bottom bar, each in a small window -->
 <tb-sheet [(ouvert)]="dlgConsigne" titre="Consigne pour la sélection" [largeur]="400">

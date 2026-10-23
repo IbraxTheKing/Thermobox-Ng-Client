@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, OnDestroy, OnInit, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
@@ -9,9 +9,7 @@ import { PointT, Sparkline, sparkline } from '../../core/courbes';
 import { temps } from '../../core/dates';
 import { ETATS, EtatSalle, ORDRE_ETATS, compte, etatDe } from '../../core/etat';
 import { ToastService } from '../../core/messages';
-import { FlipService } from '../../core/flip';
 import { PlateformeService } from '../../core/plateforme';
-import { TransitionsService } from '../../core/transitions';
 import { correspond, normaliser, parNom, pluriel } from '../../core/texte';
 import { UniteService } from '../../core/unite';
 import { Noeud, Point } from '../../models/models';
@@ -57,19 +55,10 @@ export class DashboardPage implements OnInit, OnDestroy {
   private readonly favorisApi = inject(FavoriService);
   private readonly toasts = inject(ToastService);
   private readonly plateforme = inject(PlateformeService);
-  private readonly transitions = inject(TransitionsService);
-  /** Cards glide to their new places when a filter or a favourite changes them. */
-  private readonly flip = inject(FlipService);
 
   // Filters
   protected readonly recherche = signal('');
   protected readonly etatFiltre = signal<EtatSalle | null>(null);
-
-  constructor() {
-    // The page takes the colour of the state picked (« Couleurs selon l'état »)
-    effect(() => this.transitions.definirTon(this.etatFiltre()?.ton ?? null));
-    inject(DestroyRef).onDestroy(() => this.transitions.definirTon(null));
-  }
   protected readonly batimentId = signal<number | null>(null);
 
   /** Curves of the last 24 h by salle: undefined while they load, null without enough measures. */
@@ -224,36 +213,29 @@ export class DashboardPage implements OnInit, OnDestroy {
     const n = this.store.parId().get(id);
     if (!n) return;
     const favori = !n.favori;
-    // The card flies to the favourites (or back to its building), its star spins
-    this.flip.animer(() => this.store.remplacer({ ...n, favori }));
+    this.store.remplacer({ ...n, favori });
     this.plateforme.vibrer();
     try {
       await firstValueFrom(favori ? this.favorisApi.ajouter(id) : this.favorisApi.retirer(id));
     } catch (e) {
-      this.flip.animer(() => this.store.remplacer({ ...n, favori: !favori }));
+      this.store.remplacer({ ...n, favori: !favori });
       this.toasts.error('Impossible de modifier les favoris', messageErreur(e));
     }
   }
 
   /** Summary chip: shows only the salles in [etat]; a second click shows them all again. */
   protected basculerEtat(etat: EtatSalle): void {
-    this.flip.animer(() => this.etatFiltre.update((e) => (e === etat ? null : etat)));
+    this.etatFiltre.update((e) => (e === etat ? null : etat));
   }
 
   protected choisirBatiment(v: string): void {
-    this.flip.animer(() => this.batimentId.set(v === '' ? null : Number(v)));
-  }
-
-  protected chercher(v: string): void {
-    this.flip.animer(() => this.recherche.set(v));
+    this.batimentId.set(v === '' ? null : Number(v));
   }
 
   protected effacerFiltres(): void {
-    this.flip.animer(() => {
-      this.recherche.set('');
-      this.batimentId.set(null);
-      this.etatFiltre.set(null);
-    });
+    this.recherche.set('');
+    this.batimentId.set(null);
+    this.etatFiltre.set(null);
   }
 
   protected replie(cle: string): boolean {

@@ -4,12 +4,9 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "node scripts/construire.mjs",
+    "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test",
-    "demo": "node mock/demo.mjs",
-    "mock": "node mock/serveur-demo.mjs",
-    "cap:sync": "npm run build && npx cap sync"
+    "test": "ng test"
   },
   "private": true,
   "packageManager": "npm@11.19.0",
@@ -28,7 +25,6 @@
     "chart.js": "^4.5.1",
     "primeicons": "^8.0.2",
     "rxjs": "~7.8.0",
-    "thermobox-natif": "file:plugins/thermobox-natif",
     "tslib": "^2.3.0"
   },
   "devDependencies": {

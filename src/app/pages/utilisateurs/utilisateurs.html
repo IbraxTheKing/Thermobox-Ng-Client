@@ -22,7 +22,7 @@
   <span class="tb-search">
     <i class="pi pi-search"></i>
     <input class="tb-input" type="search" placeholder="Rechercher un utilisateur…" autocomplete="off" enterkeyhint="search" aria-label="Rechercher"
-           [value]="recherche()" (input)="chercher($any($event.target).value)" />
+           [value]="recherche()" (input)="recherche.set($any($event.target).value)" />
   </span>
 </div>
 <div class="tb-summary">
@@ -35,7 +35,7 @@
 
 <div class="tb-users">
   @for (l of visibles(); track l.user.id) {
-    <div class="tb-user" [attr.data-flip]="'u' + l.user.id">
+    <div class="tb-user">
       <span class="tb-avatar tb-user-avatar tb-role-{{ l.user.type }}">{{ initiale(l.user.username) }}</span>
       <div class="tb-user-text">
         <strong>{{ l.user.username }} @if (auth.estMoi(l.user)) { <span class="tb-tag tb-tag-info tb-ml">vous</span> }</strong>

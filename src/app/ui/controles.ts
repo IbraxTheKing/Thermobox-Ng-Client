@@ -99,7 +99,7 @@ export class TbWatch {
   constructor() {
     effect(() => {
       const v = this.tbWatch();
-      if (!this.premiere && v !== this.avant && this.prefs.animer()) {
+      if (!this.premiere && v !== this.avant && this.prefs.animations() && !this.prefs.mouvementReduit) {
         this.el.nativeElement.animate(
           [
             { transform: 'translateY(6px)', opacity: 0.2, filter: 'blur(3px)' },

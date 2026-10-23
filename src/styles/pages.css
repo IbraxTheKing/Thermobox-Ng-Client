@@ -226,8 +226,3 @@ button.tb-drill-crumb, button.tb-drill-main { border: 0; background: none; font:
 
 /* Installed app (PWA / native): no text selection on the chrome, as in native apps */
 .tb-natif .tb-rail, .tb-natif .tb-topbar, :root[data-plateforme="ios"] .tb-rail, :root[data-plateforme="android"] .tb-rail { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
-
-/* Phones: the two tabs of the Gestion page share the width, on two lines if needed */
-@media (max-width: 640px) {
-    .tb-segmented.tb-gest-onglets > button { white-space: normal; line-height: 1.2; text-align: center; }
-}

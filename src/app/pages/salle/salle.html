@@ -9,7 +9,7 @@
 
 @if (detail(); as d) {
   @let e = d.element;
-  <header class="tb-page-head" data-flip="tete-salle">
+  <header class="tb-page-head">
     <a href="/app/apercu" class="tb-btn tb-icon tb-flat tb-back" title="Retour" aria-label="Retour" (click)="retour($event)"><i class="pi pi-arrow-left"></i></a>
     <div class="tb-page-title">
       <!-- Breadcrumb: each bâtiment / étage opens its own page -->
@@ -25,7 +25,7 @@
         }
       </nav>
       <!-- Transition: receives the name of the dashboard card -->
-      <h1 data-vt="salle-nom" [attr.data-vt-id]="e.id">{{ e.name }}</h1>
+      <h1 [style.view-transition-name]="'salle-nom-' + e.id">{{ e.name }}</h1>
     </div>
     <div class="tb-head-actions">
       @if (salleSimple()) {
@@ -54,9 +54,9 @@
 
   <div class="tb-hero">
     <!-- Current state (refreshed every 30 s) -->
-    <div class="tb-hero-reading tb-ton-{{ etat().ton }}" data-vt="salle-card" [attr.data-vt-id]="e.id" style="view-transition-class: tb-card">
+    <div class="tb-hero-reading tb-ton-{{ etat().ton }}" [style.view-transition-name]="'salle-card-' + e.id" style="view-transition-class: tb-card">
       <span class="tb-hero-label">{{ boitier() ? 'Température mesurée' : auth.voitBoitiers() ? 'Moyenne des boîtiers' : 'Température' }}</span>
-      <span class="tb-temp-hero" data-vt="salle-temp" [attr.data-vt-id]="e.id" [tbWatch]="e.temperature">
+      <span class="tb-temp-hero" [style.view-transition-name]="'salle-temp-' + e.id" [tbWatch]="e.temperature">
         {{ unite.t(e.temperature) }}<span class="tb-deg">{{ unite.symbole() }}</span>
       </span>
       <div class="tb-hero-row">
@@ -87,7 +87,7 @@
     </div>
 
     <!-- Photo: changed by the administrators -->
-    <div class="tb-photo" [class.tb-photo-empty]="e.image == null" data-vt="salle-photo" [attr.data-vt-id]="e.id">
+    <div class="tb-photo" [class.tb-photo-empty]="e.image == null" [style.view-transition-name]="'salle-photo-' + e.id">
       @if (e.image != null) {
         <tb-photo-img [salleId]="e.id" [version]="e.image" [alt]="'Photo de ' + e.name" />
       } @else {
@@ -216,14 +216,10 @@
         <button type="button" [class.tb-seg-on]="periodeHeures() === 24" (click)="periode(24)">24 h</button>
         <button type="button" [class.tb-seg-on]="periodeHeures() === 168" (click)="periode(168)">7 j</button>
         <button type="button" [class.tb-seg-on]="periodeHeures() === 720" (click)="periode(720)">30 j</button>
-        @if (tel()) {
-          <!-- Phones: the dates only when asked for -->
-          <button type="button" [class.tb-seg-on]="plagePerso()" (click)="plagePerso.set(!plagePerso())" aria-label="Autre période"><i class="pi pi-calendar"></i></button>
-        }
       </div>
     </div>
 
-    <div class="tb-range" [hidden]="tel() && !plagePerso()">
+    <div class="tb-range">
       <div class="tb-field">
         <label class="tb-label" for="debut">Du</label>
         <input id="debut" class="tb-input" type="datetime-local" [value]="debut()" (change)="debut.set($any($event.target).value)" />
