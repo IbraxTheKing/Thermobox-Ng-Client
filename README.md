@@ -157,9 +157,14 @@ source. Ce qui est régénéré (client copié, `build/`, `local.properties`…)
 Dans l'application Android, la barre de navigation du bas, le bouton d'action principal des pages, les
 notifications et les confirmations sont des **composants Material 3 natifs** (plugin local
 `plugins/thermobox-natif` : NavigationBar, ExtendedFloatingActionButton, Snackbar, MaterialAlertDialog)
-posés par-dessus la page, aux couleurs du thème ThermoBox (clair / sombre, teinte de l'état). Le bouton
-retour d'Android ferme ce qui est ouvert, puis revient en arrière, puis met l'application en arrière-plan.
-Ailleurs (web, PWA, iOS), la page dessine tout elle-même.
+posés par-dessus la page, aux couleurs du thème ThermoBox (clair / sombre, teinte de l'état). Les menus
+d'actions (Salles, Gestion) s'ouvrent en feuille Material native. Le retour d'Android ferme ce qui est
+ouvert, puis revient en arrière, puis met l'application en arrière-plan ; avec le geste depuis le bord
+(retour prédictif, Android 14+), la page rétrécit sous le doigt avant de revenir, et une salle se
+referme dans sa carte de l'aperçu. Ailleurs (web, PWA, iOS), la page dessine tout elle-même.
+
+Si `android/capacitor.settings.gradle` ne cite pas `thermobox-natif`, le plugin n'est pas dans
+l'application (`npm install` oublié avant `npx cap sync`) : elle garde alors la navigation de la page.
 
 Première fois (Android Studio et un JDK 21) :
 

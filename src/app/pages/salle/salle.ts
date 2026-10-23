@@ -17,6 +17,7 @@ import { RetourGesteService } from '../../core/retour-geste';
 import { UniteService } from '../../core/unite';
 import { DetailElement, Historique, Noeud, Point } from '../../models/models';
 import { ArbreStore, LIBELLES } from '../../services/arbre.store';
+import { CacheCourbes, fraicheur } from '../../core/cache-courbes';
 import { ClimatService } from '../../services/climat.service';
 import { FavoriService } from '../../services/favori.service';
 import { HierarchieService } from '../../services/hierarchie.service';
@@ -45,6 +46,7 @@ export class SallePage implements OnDestroy {
   protected readonly auth = inject(AuthService);
   protected readonly unite = inject(UniteService);
   private readonly climat = inject(ClimatService);
+  private readonly cache = inject(CacheCourbes);
   private readonly salles = inject(SalleService);
   private readonly hierarchie = inject(HierarchieService);
   private readonly favoris = inject(FavoriService);
@@ -165,7 +167,8 @@ export class SallePage implements OnDestroy {
     // Already shown from the dashboard's data (constructor): kept until the server answers
     if (this.detail()?.element.id !== id) this.amorcer(id);
     this.introuvable.set(false);
-    this.historique.set(null);
+    // The last 24 h of this salle, if already read: there at once
+    this.historique.set(isNaN(id) ? null : (this.cache.lire<Historique>(`salle|${id}|24`)?.valeur ?? null));
     this.nouvelleConsigne.set(null);
     this.forcer.set(false);
     this.periode(24, false);
@@ -291,6 +294,8 @@ export class SallePage implements OnDestroy {
       this.nouvelleConsigne.set(null);
       this.forcer.set(false);
       await this.rafraichir(e.id, true);
+      // The new consigne is in the history: read again, for every period
+      this.cache.oublier(`salle|${e.id}|`);
       void this.chargerHistorique();
     } catch (err) {
       this.toasts.error('Consigne refusée', messageErreur(err));
@@ -327,11 +332,25 @@ export class SallePage implements OnDestroy {
       this.toasts.error('La date de début doit précéder la date de fin');
       return;
     }
+    // A period of the shortcuts (24 h, 7 j, 30 j): kept in memory, shown at once when coming back;
+    // read again only when it is no longer recent
+    const heures = this.periodeHeures();
+    const cle = heures != null ? `salle|${e.id}|${heures}` : null;
+    const garde = cle ? this.cache.lire<Historique>(cle) : null;
+    if (garde) {
+      if (this.historique() !== garde.valeur) this.pageConsignes.set(0);
+      this.historique.set(garde.valeur);
+      if (garde.age < fraicheur(heures!)) return;
+    }
     try {
-      this.historique.set(await firstValueFrom(this.climat.historique(e.id, debut, fin)));
-      this.pageConsignes.set(0);
+      const h = await firstValueFrom(this.climat.historique(e.id, debut, fin));
+      // Still the page and the period asked for
+      if (this.element()?.id !== e.id || this.periodeHeures() !== heures) return;
+      this.historique.set(h);
+      if (!garde) this.pageConsignes.set(0);
+      if (cle) this.cache.ecrire(cle, h);
     } catch (err) {
-      this.toasts.error("Impossible de charger l'historique", messageErreur(err));
+      if (!garde) this.toasts.error("Impossible de charger l'historique", messageErreur(err));
     }
   }
 

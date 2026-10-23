@@ -12,6 +12,18 @@
     .tb-public .tb-main { padding: calc(20px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(32px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left)); }
     .tb-auth-card { padding: 22px 18px 18px; border-radius: var(--tb-shape-xl); }
 
+    /* Phones: one centred column, the brand smaller above the form, the whole in the middle of
+       the screen (it was aligned left, the logo and the name taking half of the screen) */
+    .tb-public .tb-main { justify-content: center; }
+    .tb-auth { max-width: 440px; margin: auto; gap: 16px; }
+    .tb-auth-brand { align-items: center; gap: 6px; margin: 0 0 6px; text-align: center; }
+    .tb-auth .tb-logo-xl { width: 64px; height: 64px; margin-bottom: 4px; }
+    .tb-auth-name { font-size: 2.6rem; }
+    .tb-auth-tagline { max-width: none; font-size: 1rem; }
+    .tb-auth-card > .tb-panel-title { text-align: center; }
+    .tb-auth-pied { flex-direction: column; justify-content: center; text-align: center; }
+    .tb-auth-pied .tb-serveur-btn { margin: 0; }
+    .tb-auth-comptes .tb-panel-title { text-align: left; }
 }
 
 /* ============================== Loading placeholders ============================== */
