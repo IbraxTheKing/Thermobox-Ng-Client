@@ -7,6 +7,7 @@ import {
   OnInit,
   afterRenderEffect,
   computed,
+  effect,
   inject,
   signal,
   viewChild,
@@ -15,6 +16,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { filter, map } from 'rxjs';
 
+import { AndroidNatifService, OngletNatif, iconeNative } from '../core/android-natif';
 import { AuthService } from '../core/auth';
 import { AvisMajService } from '../core/avis-maj';
 import { ClavierService } from '../core/clavier';
@@ -22,25 +24,26 @@ import { ActiviteService } from '../core/http';
 import { PlateformeService } from '../core/plateforme';
 import { PreferencesService } from '../core/preferences';
 import { TitreService } from '../core/titre';
+import { TransitionsService } from '../core/transitions';
 import { ReglagesService } from '../services/reglages.service';
 import { TbSheet } from '../ui/sheet';
+import { DESTINATIONS_BARRE, Destination, destinationsDe } from './destinations';
 
-interface Destination {
-  lien: string;
-  icone: string;
-  label: string;
-  /** Also active on these pages (a salle belongs to « Salles »). */
-  aussi?: string[];
-  badge?: boolean;
-}
+/** The lens follows the finger once held this long (ms), or as soon as the finger slides. */
+const APPUI_LONG = 220;
+const GLISSE = 8;
 
 /**
- * Frame of every page of a logged-in user (layout.xhtml of the JSF interface): top bar on
- * phones, navigation rail on wide screens or bar at the bottom of phones, the page in between.
+ * Frame of every page of a logged-in user (layout.xhtml of the JSF interface): navigation rail on
+ * wide screens, bar at the bottom of phones with the top bar above the page, the page in between.
+ * The top bar holds no action: the account and the other pages are behind the last tab (« Plus »,
+ * or « Compte » when every page fits in the bar), as in native apps.
  *
  * Same markup everywhere; the platform (PlateformeService) restyles it: Liquid Glass on iOS,
- * Material 3 on Android, the ThermoBox glass on the web. On an iOS or Android phone, more than five
- * destinations don't fit in the bar: the last ones go behind « Plus », as native apps do.
+ * Material 3 on Android, the ThermoBox glass on the web.
+ *
+ * iOS: the lens of the tab bar can be held and slid from tab to tab, as in iOS 26; letting go
+ * opens the tab under it.
  */
 @Component({
   selector: 'tb-shell',
@@ -65,6 +68,7 @@ export class Shell implements OnInit, OnDestroy {
   protected readonly titre = inject(TitreService);
   protected readonly clavier = inject(ClavierService);
   private readonly reglages = inject(ReglagesService);
+  private readonly transitions = inject(TransitionsService);
 
   private readonly dests = viewChild<ElementRef<HTMLElement>>('dests');
 
@@ -76,30 +80,20 @@ export class Shell implements OnInit, OnDestroy {
     { initialValue: this.router.url },
   );
 
-  protected readonly destinations = computed<Destination[]>(() => {
-    const d: Destination[] = [
-      { lien: '/app/apercu', icone: 'pi-th-large', label: 'Aperçu' },
-      { lien: '/app/salles', icone: 'pi-building', label: 'Salles', aussi: ['/app/salle/'] },
-      { lien: '/app/mesures', icone: 'pi-chart-line', label: 'Mesures' },
-    ];
-    if (this.auth.gestionnaire()) d.push({ lien: '/app/gestion', icone: 'pi-sliders-h', label: 'Gérer' });
-    if (this.auth.admin()) {
-      d.push({ lien: '/app/utilisateurs', icone: 'pi-users', label: 'Utilisateurs' });
-      d.push({ lien: '/app/mises-a-jour', icone: 'pi-cloud-download', label: 'Mises à jour', badge: true });
-    }
-    return d;
+  protected readonly destinations = computed(() => destinationsDe(this.auth));
+  /** Places of the bar of phones before « Plus ». */
+  protected readonly dansBarre = DESTINATIONS_BARRE;
+  /** Some pages only fit behind the last tab: it is « Plus » rather than « Compte ». */
+  protected readonly avecPlus = computed(() => this.destinations().length > DESTINATIONS_BARRE);
+  /** Phone held upright: the bar at the bottom, the last pages behind « Plus ». */
+  protected readonly barreBas = this.plateforme.barreBas;
+
+  /** « Plus » / « Compte » is the current tab. */
+  protected readonly plusActif = computed(() => {
+    const url = this.url().split('?')[0];
+    if (['/app/plus', '/app/profil', '/app/preferences', '/app/a-propos'].some((u) => url.startsWith(u))) return true;
+    return this.barreBas() && this.destinations().slice(DESTINATIONS_BARRE).some((d) => this.estActive(d));
   });
-
-  /** iOS and Android phones: at most five places in the bar, the fifth being « Plus ». */
-  protected readonly avecPlus = computed(() => (this.plateforme.ios || this.plateforme.android) && this.destinations().length > 5);
-  protected readonly nbDansBarre = computed(() => (this.avecPlus() ? 4 : this.destinations().length));
-  /** The current page is one of those behind « Plus ». */
-  protected readonly plusActif = computed(() =>
-    this.avecPlus() && this.destinations().slice(this.nbDansBarre()).some((d) => this.estActive(d)),
-  );
-
-  protected readonly plus = signal(false);
-  protected readonly railOuvert = signal(false);
 
   // Scrolling (iOS / Android bars)
   protected readonly defile = signal(false);
@@ -114,31 +108,70 @@ export class Shell implements OnInit, OnDestroy {
   private readonly surRedimension = () => this.placerLentille();
   private minuterie?: ReturnType<typeof setInterval>;
 
+  // Lens held (iOS)
+  protected readonly saisie = signal(false);
+  /** Tab under the held lens. */
+  protected readonly survolee = signal<string | null>(null);
+  private appui: { id: number; x: number; t: number; dx: number; vx: number; minuterie: ReturnType<typeof setTimeout> } | null = null;
+  /** The click that ends a slide of the lens must not open the tab it started on. */
+  private ignorerClic = false;
+
+  /** Android app: the bar at the bottom is the native Material 3 one (core/android-natif.ts). */
+  private readonly natif = inject(AndroidNatifService);
+
   constructor() {
+    if (this.natif.actif) {
+      effect(() => {
+        const dests = this.destinations();
+        const onglets: OngletNatif[] = dests.slice(0, DESTINATIONS_BARRE).map((d) => ({
+          id: d.lien,
+          label: d.label,
+          icone: iconeNative(d.icone),
+          badge: !!d.badge && this.avis.disponible(),
+        }));
+        onglets.push({
+          id: '/app/plus',
+          label: this.avecPlus() ? 'Plus' : 'Compte',
+          icone: this.avecPlus() ? 'plus' : 'compte',
+          badge: this.avecPlus() && this.avis.disponible(),
+        });
+        const actif = dests.slice(0, DESTINATIONS_BARRE).find((d) => this.estActive(d))?.lien ?? (this.plusActif() ? '/app/plus' : null);
+        this.prefs.theme();
+        // Phone held sideways: the rail of the page, not the bar
+        this.natif.configurerBarre(onglets, actif, this.barreBas(), (id, retouche) => {
+          if (retouche) scrollTo({ top: 0, behavior: this.prefs.animer() ? 'smooth' : 'auto' });
+          else void this.router.navigateByUrl(id);
+        });
+      });
+    }
     // The lens of the iOS tab bar follows the selected destination
     afterRenderEffect(() => {
       this.url();
       this.destinations();
+      this.barreBas();
       this.placerLentille();
     });
   }
 
   ngOnInit(): void {
+    // Capture phase: before the routerLink of the tab the slide started on
+    queueMicrotask(() => this.dests()?.nativeElement.addEventListener('click', (e) => this.surClicBarre(e), true));
     addEventListener('scroll', this.surDefilement, { passive: true });
     addEventListener('resize', this.surRedimension, { passive: true });
     this.reglages.charger().subscribe({ error: () => undefined });
     void this.avis.verifier();
     void this.auth.rafraichirUtilisateur().catch(() => undefined);
     this.minuterie = setInterval(() => void this.avis.verifier(), 3_600_000);
+    this.transitions.sansTransition();
     this.router.events.pipe(filter((e) => e instanceof NavigationEnd)).subscribe(() => {
-      this.plus.set(false);
-      this.railOuvert.set(false);
       this.compact.set(false);
+      this.transitions.sansTransition();
       setTimeout(() => this.mesurerDefilement(), 50);
     });
   }
 
   ngOnDestroy(): void {
+    this.natif.quitter();
     removeEventListener('scroll', this.surDefilement);
     removeEventListener('resize', this.surRedimension);
     clearInterval(this.minuterie);
@@ -153,12 +186,7 @@ export class Shell implements OnInit, OnDestroy {
     this.plateforme.vibrer();
   }
 
-  protected basculerTheme(e: Event): void {
-    this.prefs.basculerTheme(e.currentTarget as HTMLElement);
-  }
-
   protected deconnecter(): void {
-    this.plus.set(false);
     void this.auth.logout();
   }
 
@@ -177,16 +205,137 @@ export class Shell implements OnInit, OnDestroy {
     this.dernierY = y;
   }
 
+  /** Tabs shown in the bar, in order. */
+  private onglets(dests: HTMLElement): HTMLElement[] {
+    return [...dests.querySelectorAll<HTMLElement>('.tb-dest')].filter((t) => t.offsetParent !== null && getComputedStyle(t).display !== 'none');
+  }
+
   protected placerLentille(): void {
     const dests = this.dests()?.nativeElement;
-    if (!dests) return;
-    const actif = dests.querySelector<HTMLElement>('.tb-dest.tb-dest-on:not([hidden])');
-    const visible = actif && actif.offsetParent !== null && getComputedStyle(actif).display !== 'none';
-    dests.classList.toggle('tb-a-actif', !!visible);
+    if (!dests || this.saisie()) return;
+    const actif = dests.querySelector<HTMLElement>('.tb-dest.tb-dest-on');
+    const visible = !!actif && actif.offsetParent !== null && getComputedStyle(actif).display !== 'none';
+    dests.classList.toggle('tb-a-actif', visible);
+    // Bar of phones: the lens is placed in tabs (index, count), not in pixels, so it stays on its
+    // tab whatever the bar does (shrinking while scrolling, rotation…)
+    dests.classList.toggle('tb-lentille-rel', this.barreBas());
     if (!actif || !visible) return;
-    dests.style.setProperty('--tb-l-x', `${actif.offsetLeft}px`);
-    dests.style.setProperty('--tb-l-y', `${actif.offsetTop}px`);
-    dests.style.setProperty('--tb-l-w', `${actif.offsetWidth}px`);
-    dests.style.setProperty('--tb-l-h', `${actif.offsetHeight}px`);
+    if (this.barreBas()) {
+      const tabs = this.onglets(dests);
+      dests.style.setProperty('--tb-l-n', `${tabs.length}`);
+      dests.style.setProperty('--tb-l-i', `${tabs.indexOf(actif)}`);
+      return;
+    }
+    this.poserLentille(dests, actif.offsetLeft, actif.offsetTop, actif.offsetWidth, actif.offsetHeight);
+  }
+
+  private poserLentille(dests: HTMLElement, x: number, y: number, w: number, h: number): void {
+    dests.style.setProperty('--tb-l-x', `${x}px`);
+    dests.style.setProperty('--tb-l-y', `${y}px`);
+    dests.style.setProperty('--tb-l-w', `${w}px`);
+    dests.style.setProperty('--tb-l-h', `${h}px`);
+  }
+
+  // ---------------------------------------------------------------- lens held and slid (iOS)
+
+  protected debutAppui(e: PointerEvent): void {
+    const dests = this.dests()?.nativeElement;
+    if (!dests || !this.plateforme.ios || !this.barreBas() || e.button !== 0) return;
+    if (!(e.target as Element).closest('.tb-dest')) return;
+    this.finAppui();
+    this.appui = {
+      id: e.pointerId,
+      x: e.clientX,
+      t: e.timeStamp,
+      dx: 0,
+      vx: 0,
+      minuterie: setTimeout(() => this.saisir(e.clientX), APPUI_LONG),
+    };
+    dests.addEventListener('pointermove', this.surGlisse);
+    dests.addEventListener('pointerup', this.surLacher);
+    dests.addEventListener('pointercancel', this.surAnnuler);
+  }
+
+  private readonly surGlisse = (e: PointerEvent) => {
+    const a = this.appui;
+    if (!a || e.pointerId !== a.id) return;
+    const dt = Math.max(1, e.timeStamp - a.t);
+    a.vx = (e.clientX - a.x - a.dx) / dt;
+    a.dx = e.clientX - a.x;
+    a.t = e.timeStamp;
+    if (!this.saisie() && Math.abs(a.dx) > GLISSE) this.saisir(e.clientX);
+    if (this.saisie()) this.suivre(e.clientX, a.vx);
+  };
+
+  private readonly surLacher = (e: PointerEvent) => {
+    if (!this.appui || e.pointerId !== this.appui.id) return;
+    const lien = this.saisie() ? this.survolee() : null;
+    this.finAppui();
+    if (!lien) return;
+    this.ignorerClic = true;
+    setTimeout(() => (this.ignorerClic = false), 400);
+    this.plateforme.vibrer();
+    if (this.router.url.split('?')[0] !== lien) void this.router.navigateByUrl(lien);
+  };
+
+  private readonly surAnnuler = () => this.finAppui();
+
+  /** The lens lifts off the bar and follows the finger. */
+  private saisir(x: number): void {
+    const dests = this.dests()?.nativeElement;
+    if (!dests || !this.appui || this.saisie()) return;
+    clearTimeout(this.appui.minuterie);
+    try {
+      dests.setPointerCapture(this.appui.id);
+    } catch {
+      /* pointer already gone */
+    }
+    dests.classList.add('tb-a-actif');
+    this.saisie.set(true);
+    this.plateforme.vibrer();
+    this.suivre(x, 0);
+  }
+
+  private suivre(x: number, vitesse: number): void {
+    const dests = this.dests()?.nativeElement;
+    if (!dests) return;
+    const tabs = this.onglets(dests);
+    if (!tabs.length) return;
+    const boite = dests.getBoundingClientRect();
+    const n = tabs.length;
+    // Position in tabs, between two while it slides
+    const i = Math.min(Math.max((x - boite.left) / (boite.width / n) - 0.5, 0), n - 1);
+    dests.style.setProperty('--tb-l-n', `${n}`);
+    dests.style.setProperty('--tb-l-i', `${i}`);
+    // Stretched in the direction it moves, like a drop
+    dests.style.setProperty('--tb-l-etire', `${Math.min(0.18, Math.abs(vitesse) * 0.12)}`);
+    const lien = tabs[Math.round(i)].dataset['lien'] ?? null;
+    if (lien !== this.survolee()) {
+      if (this.survolee() != null) this.plateforme.vibrer();
+      this.survolee.set(lien);
+    }
+  }
+
+  private finAppui(): void {
+    const dests = this.dests()?.nativeElement;
+    if (this.appui) clearTimeout(this.appui.minuterie);
+    this.appui = null;
+    dests?.removeEventListener('pointermove', this.surGlisse);
+    dests?.removeEventListener('pointerup', this.surLacher);
+    dests?.removeEventListener('pointercancel', this.surAnnuler);
+    dests?.style.setProperty('--tb-l-etire', '0');
+    if (this.saisie()) {
+      this.saisie.set(false);
+      this.survolee.set(null);
+      // Back on the current tab (or the next one, once the page changes)
+      requestAnimationFrame(() => this.placerLentille());
+    }
+  }
+
+  private surClicBarre(e: MouseEvent): void {
+    if (!this.ignorerClic) return;
+    e.preventDefault();
+    e.stopPropagation();
+    this.ignorerClic = false;
   }
 }

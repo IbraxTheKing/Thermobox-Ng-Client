@@ -1,0 +1,234 @@
+/*
+ * Motion of this client on top of the JSF one (jsf.css, « Motion »), driven by TransitionsService:
+ * html.tb-entering (entrance of a page), html.tb-vt-in (a page change is running), html.tb-carte
+ * (dashboard ↔ salle: only the card moves), html.tb-ton-fondu (the page changes colour).
+ * Everything stops when the system asks for less motion (jsf.css, prefers-reduced-motion and
+ * data-motion="off", set from the same system setting).
+ */
+
+/* ============================== Between pages ============================== */
+
+/* Cross-fade without a dip: the old page stays until the new one has fully come over it (a fade
+   out and a fade in at once let the background show through halfway, a flash on tinted pages) */
+::view-transition-old(root),
+::view-transition-new(root) { mix-blend-mode: normal; }
+::view-transition-old(root) { animation: tb-garde .32s both; }
+::view-transition-new(root) { animation: tb-fade-in .32s ease both; }
+@keyframes tb-garde { from, to { opacity: 1; } }
+
+/*
+ * The dashboard card morphs into the salle page: its picture becomes the picture of the page's
+ * card while it moves and takes its size. The two cross-fade over the whole move, without a gap:
+ * the group itself has no background and no blur (a frosted group showed, between the two
+ * pictures, a blurred block of whatever was behind it).
+ */
+::view-transition-group(*.tb-card) { border-radius: var(--tb-shape-xl); animation-duration: .5s; }
+::view-transition-image-pair(*.tb-card) { isolation: isolate; }
+::view-transition-old(*.tb-card), ::view-transition-new(*.tb-card) { mix-blend-mode: plus-lighter; }
+::view-transition-old(*.tb-card) { animation: tb-fade-out .5s ease-in-out both; }
+::view-transition-new(*.tb-card) { animation: tb-fade-in .5s ease-in-out both; }
+
+/*
+ * Phones (html.tb-carte-plein): the card opens into the whole page of the salle and the page
+ * closes back into it (Material container transform). The group is the container: it clips and
+ * keeps its rounded corners; the two pictures keep their proportions, from the top (the page is
+ * taller than the screen), and fade through each other in the first half of the move. The page
+ * around fades at the same pace.
+ */
+.tb-carte-plein::view-transition-group(*.tb-card) {
+  overflow: clip;
+  animation-duration: .45s;
+  animation-timing-function: cubic-bezier(.2, 0, 0, 1);
+}
+.tb-carte-plein::view-transition-image-pair(*.tb-card) { isolation: auto; }
+.tb-carte-plein::view-transition-old(*.tb-card),
+.tb-carte-plein::view-transition-new(*.tb-card) { mix-blend-mode: normal; height: auto; object-fit: none; object-position: top; }
+.tb-carte-plein::view-transition-old(*.tb-card) { animation: tb-fade-out .2s ease both; }
+.tb-carte-plein::view-transition-new(*.tb-card) { animation: tb-fade-in .26s .08s ease both; }
+.tb-carte-plein::view-transition-old(root) { animation: tb-garde .45s both; }
+.tb-carte-plein::view-transition-new(root) { animation: tb-fade-in .3s ease both; }
+
+/* ============================== Colour of the page ============================== */
+
+/* One cross-fade of the whole page, nothing else moves (TransitionsService.definirTon) */
+.tb-ton-fondu *, .tb-ton-fondu *::before, .tb-ton-fondu *::after { view-transition-name: none !important; }
+.tb-ton-fondu::view-transition-old(root) { animation: tb-garde .7s both; }
+.tb-ton-fondu::view-transition-new(root) { animation: tb-fade-in .7s cubic-bezier(.4, 0, .2, 1) both; }
+
+/* ============================== Entrance of a page ============================== */
+
+/*
+ * The parts of a page glide into place, they don't fade or grow: a glass surface (backdrop-filter)
+ * that fades or scales is drawn without its blur, or blurred as a whole, until the animation ends,
+ * then pops back sharp. These replace the keyframes of jsf.css (same names, later in the cascade).
+ */
+@keyframes tb-rise { from { transform: translateY(18px); } }
+@keyframes tb-rise-scale { from { transform: translateY(26px); } }
+
+/* What this client shows differently from the JSF interface rises in too */
+.tb-entering :is(.tb-table, .tb-arbre-salles, .tb-segmented.tb-gest-onglets, .tb-groupes, .tb-plus-moi) { animation: tb-rise .55s var(--tb-ease) .12s both; }
+.tb-entering .tb-panel { animation: tb-rise .55s var(--tb-ease) .1s both; }
+.tb-entering .tb-liste-groupe { animation: tb-rise .55s var(--tb-ease) both; animation-delay: calc(.05s + var(--i, 0) * 40ms); }
+
+/* Lists: one item after the other (tbVie.cascade of the JSF interface set --i in JavaScript) */
+:is(.tb-users, .tb-drill-list, .tb-maj-versions, .tb-histo, .tb-compare-table tbody, .tb-table tbody, .tb-liste-gest, .tb-groupes, .tb-narrow) > :nth-child(n + 13) { --i: 12; }
+:is(.tb-users, .tb-drill-list, .tb-maj-versions, .tb-histo, .tb-compare-table tbody, .tb-table tbody, .tb-liste-gest, .tb-groupes, .tb-narrow) > :nth-child(2) { --i: 1; }
+:is(.tb-users, .tb-drill-list, .tb-maj-versions, .tb-histo, .tb-compare-table tbody, .tb-table tbody, .tb-liste-gest, .tb-groupes, .tb-narrow) > :nth-child(3) { --i: 2; }
+:is(.tb-users, .tb-drill-list, .tb-maj-versions, .tb-histo, .tb-compare-table tbody, .tb-table tbody, .tb-liste-gest, .tb-groupes, .tb-narrow) > :nth-child(4) { --i: 3; }
+:is(.tb-users, .tb-drill-list, .tb-maj-versions, .tb-histo, .tb-compare-table tbody, .tb-table tbody, .tb-liste-gest, .tb-groupes, .tb-narrow) > :nth-child(5) { --i: 4; }
+:is(.tb-users, .tb-drill-list, .tb-maj-versions, .tb-histo, .tb-compare-table tbody, .tb-table tbody, .tb-liste-gest, .tb-groupes, .tb-narrow) > :nth-child(6) { --i: 5; }
+:is(.tb-users, .tb-drill-list, .tb-maj-versions, .tb-histo, .tb-compare-table tbody, .tb-table tbody, .tb-liste-gest, .tb-groupes, .tb-narrow) > :nth-child(7) { --i: 6; }
+:is(.tb-users, .tb-drill-list, .tb-maj-versions, .tb-histo, .tb-compare-table tbody, .tb-table tbody, .tb-liste-gest, .tb-groupes, .tb-narrow) > :nth-child(8) { --i: 7; }
+:is(.tb-users, .tb-drill-list, .tb-maj-versions, .tb-histo, .tb-compare-table tbody, .tb-table tbody, .tb-liste-gest, .tb-groupes, .tb-narrow) > :nth-child(9) { --i: 8; }
+:is(.tb-users, .tb-drill-list, .tb-maj-versions, .tb-histo, .tb-compare-table tbody, .tb-table tbody, .tb-liste-gest, .tb-groupes, .tb-narrow) > :nth-child(10) { --i: 9; }
+:is(.tb-users, .tb-drill-list, .tb-maj-versions, .tb-histo, .tb-compare-table tbody, .tb-table tbody, .tb-liste-gest, .tb-groupes, .tb-narrow) > :nth-child(11) { --i: 10; }
+:is(.tb-users, .tb-drill-list, .tb-maj-versions, .tb-histo, .tb-compare-table tbody, .tb-table tbody, .tb-liste-gest, .tb-groupes, .tb-narrow) > :nth-child(12) { --i: 11; }
+@media (prefers-reduced-motion: no-preference) {
+    .tb-entering :is(.tb-table tbody, .tb-liste-gest) > * { animation: tb-rise .5s var(--tb-ease) both; animation-delay: calc(.12s + var(--i, 0) * 35ms); }
+}
+
+/* ============================== iOS: Liquid Glass in motion ============================== */
+
+:root[data-plateforme="ios"] {
+    --tb-rail-rayon: 28px;
+    /* A spring that barely overshoots, as the glass of iOS 26 */
+    --tb-ressort-verre: linear(0, .006, .025 2.8%, .101 6.1%, .539 18.9%, .721 25.3%, .849 31.5%, .937 38.1%, .968 41.8%, .991 45.7%, 1.006 50.1%, 1.015 55%, 1.017 63.9%, 1.001 85.9%, 1);
+}
+@media (max-width: 840px) {
+    :root[data-plateforme="ios"] { --tb-rail-rayon: 999px; }
+}
+@media (orientation: landscape) and (max-height: 520px) {
+    :root[data-plateforme="ios"] { --tb-rail-rayon: 28px; }
+}
+
+/* The tab bar keeps its glass during a page change: its picture has no blur, its group gets it */
+:root[data-plateforme="ios"]::view-transition-group(tb-rail) {
+    border-radius: var(--tb-rail-rayon);
+    -webkit-backdrop-filter: var(--tb-lg-flou);
+    backdrop-filter: var(--tb-lg-flou);
+}
+/* The top bar is part of the page: it has nothing that changes */
+:root[data-plateforme="ios"] .tb-topbar { view-transition-name: none; }
+
+/* Dashboard ↔ salle: the card is a drop of glass that flows into its new shape */
+:root[data-plateforme="ios"]::view-transition-group(*.tb-card) {
+    animation-duration: .6s;
+    animation-timing-function: var(--tb-ressort-verre);
+}
+:root[data-plateforme="ios"]::view-transition-old(*.tb-card),
+:root[data-plateforme="ios"]::view-transition-new(*.tb-card) { animation-duration: .6s; }
+:root[data-plateforme="ios"]::view-transition-image-pair(*.tb-card) { border-radius: 28px; }
+:root[data-plateforme="ios"]::view-transition-group(*) { animation-timing-function: var(--tb-ressort-verre); animation-duration: .55s; }
+
+/* The lens follows the selected tab with the same spring */
+:root[data-plateforme="ios"] .tb-lentille {
+    /* One transform (a separate `scale` would also scale the translation) */
+    transform: translate(var(--tb-l-x, 0px), var(--tb-l-y, 0px))
+               scale(calc(var(--tb-l-sx, 1) + var(--tb-l-etire, 0)), calc(var(--tb-l-sy, 1) - var(--tb-l-etire, 0) / 2));
+    transition: transform .55s var(--tb-ressort-verre), width .55s var(--tb-ressort-verre), height .55s var(--tb-ressort-verre), opacity .2s ease,
+                background-color .3s ease, box-shadow .3s ease;
+}
+
+/*
+ * Held (or slid): the lens lifts off the bar, grows past it and turns to clear glass that
+ * magnifies a little what it passes over, follows the finger and stretches with its speed;
+ * letting go opens the tab under it and it settles back.
+ */
+/* Bar of phones: placed in tabs (--tb-l-i of --tb-l-n), so it always sits on its tab */
+:root[data-plateforme="ios"] .tb-dests.tb-lentille-rel .tb-lentille {
+    top: 0;
+    bottom: 0;
+    left: 0;
+    height: auto;
+    width: calc(100% / var(--tb-l-n, 5));
+    transform: translateX(calc(var(--tb-l-i, 0) * 100%))
+               scale(calc(var(--tb-l-sx, 1) + var(--tb-l-etire, 0)), calc(var(--tb-l-sy, 1) - var(--tb-l-etire, 0) / 2));
+}
+
+@media (max-width: 840px) {
+    :root[data-plateforme="ios"] .tb-dests { touch-action: none; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+    :root[data-plateforme="ios"] .tb-saisie-lentille { transform: scale(1.025); }
+    :root[data-plateforme="ios"] .tb-saisie-lentille .tb-lentille {
+        z-index: 2;
+        --tb-l-sx: 1.16;
+        --tb-l-sy: 1.3;
+        background: rgba(255, 255, 255, .14);
+        box-shadow:
+            inset 0 0 0 .5px rgba(255, 255, 255, .95),
+            inset 0 2px 5px rgba(255, 255, 255, .75),
+            inset 0 -4px 10px rgba(25, 40, 65, .1),
+            0 10px 28px rgba(25, 40, 65, .22);
+        -webkit-backdrop-filter: saturate(180%) brightness(1.08) contrast(1.04);
+        backdrop-filter: saturate(180%) brightness(1.08) contrast(1.04);
+        transition: transform .12s cubic-bezier(.2, .8, .3, 1), width .3s var(--tb-ressort-verre), height .3s var(--tb-ressort-verre), background-color .25s ease,
+                    box-shadow .25s ease;
+    }
+    :root[data-plateforme="ios"][data-theme="dark"] .tb-saisie-lentille .tb-lentille {
+        background: rgba(255, 255, 255, .08);
+        box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .45), inset 0 2px 5px rgba(255, 255, 255, .25), 0 10px 28px rgba(0, 0, 0, .4);
+    }
+    /* The tab under the lens grows a little, as seen through it */
+    :root[data-plateforme="ios"] .tb-dest .tb-dest-icon, :root[data-plateforme="ios"] .tb-dest .tb-dest-label { transition: transform .3s var(--tb-ressort-verre), color .2s ease; }
+    :root[data-plateforme="ios"] .tb-saisie-lentille .tb-dest-survol { color: var(--md-primary); }
+    :root[data-plateforme="ios"] .tb-saisie-lentille .tb-dest-survol .tb-dest-icon { transform: scale(1.18); }
+    :root[data-plateforme="ios"] .tb-saisie-lentille .tb-dest-survol .tb-dest-label { transform: scale(1.08); }
+    /* While it is held, the selected tab looks like the others: only the lens says where it is */
+    :root[data-plateforme="ios"] .tb-saisie-lentille .tb-dest-on:not(.tb-dest-survol) { color: color-mix(in srgb, var(--md-on-surface) 78%, transparent); }
+}
+
+/*
+ * Buttons of glass (iOS 26): pressed, they swell instead of sinking, and light up under the
+ * finger (PlateformeService sets --tb-px / --tb-py and .tb-appui).
+ */
+@media (prefers-reduced-motion: no-preference) {
+    :root[data-plateforme="ios"] :is(.tb-btn, .tb-segmented > button, .tb-summary-chip, .tb-chip, .tb-liste-ligne, .tb-gest-ligne) {
+        transition: transform .4s var(--tb-ressort-verre), background-color .2s ease, box-shadow .25s ease, color .2s ease;
+    }
+    :root[data-plateforme="ios"] :is(.tb-btn, .tb-segmented > button, .tb-summary-chip, .tb-chip).tb-appui { transform: scale(1.06); }
+    :root[data-plateforme="ios"] .tb-btn:active { transform: scale(1.06); opacity: 1; }
+    :root[data-plateforme="ios"] :is(.tb-liste-ligne, .tb-gest-ligne).tb-appui { transform: scale(.985); }
+    :root[data-plateforme="ios"] .tb-appui::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        background: radial-gradient(circle at var(--tb-px, 50%) var(--tb-py, 50%), rgba(255, 255, 255, .55), transparent 70%);
+        mix-blend-mode: soft-light;
+        pointer-events: none;
+        animation: tb-fade-in .2s ease both;
+    }
+    /* Switch: the thumb turns to glass and stretches while held */
+    :root[data-plateforme="ios"] .tb-switch::before { transition: transform .4s var(--tb-ressort-verre), width .3s var(--tb-ressort-verre), background-color .2s, box-shadow .2s; }
+    :root[data-plateforme="ios"] .tb-switch:active::before {
+        background: rgba(255, 255, 255, .35);
+        box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .9), inset 0 2px 4px rgba(255, 255, 255, .6), 0 4px 12px rgba(0, 0, 0, .18);
+        -webkit-backdrop-filter: blur(2px) saturate(180%);
+        backdrop-filter: blur(2px) saturate(180%);
+    }
+}
+
+/* Swipe back (RetourGesteService): the page follows the finger, shrinking; the bars stay */
+.tb-geste-retour .tb-main { will-change: transform; }
+
+/* ============================== Small things that move ============================== */
+
+/* Segmented controls: the selected pill slides (AnimationsService); the option it lands on shows
+   no background of its own meanwhile */
+.tb-seg-pilule { position: absolute; z-index: 0; pointer-events: none; transform-origin: 50% 50%; }
+.tb-segmented > button { position: relative; z-index: 1; }
+.tb-segmented > button.tb-seg-on.tb-seg-glisse { background: transparent; box-shadow: none; }
+
+@media (prefers-reduced-motion: no-preference) {
+    /* A filter chip turned on: it pops, its tick draws in */
+    .tb-summary-chip.tb-chip-on { animation: tb-chip-on .42s var(--tb-spring); }
+    .tb-summary-chip.tb-chip-on .tb-chip-check { animation: tb-coche .35s .05s var(--tb-spring) both; }
+    @keyframes tb-chip-on { 40% { transform: scale(1.07); } }
+    @keyframes tb-coche { from { transform: scale(0) rotate(-45deg); opacity: 0; } }
+
+    /* Sections fold a little more slowly, their chevron with a spring */
+    .tb-section-chevron { transition: transform .5s var(--tb-spring), background-color .2s; }
+
+    /* Selection mode of Gestion: the round ticks pop in */
+    .tb-en-selection .tb-gest-coche { animation: tb-coche .35s var(--tb-spring) both; }
+    .tb-en-selection .tb-liste-gest > li:nth-child(-n + 12) .tb-gest-coche { animation-delay: calc(var(--i, 0) * 20ms); }
+}

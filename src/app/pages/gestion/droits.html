@@ -14,7 +14,7 @@
     <span class="tb-search">
       <i class="pi pi-search"></i>
       <input class="tb-input" type="search" placeholder="Rechercher un utilisateur ou un groupe…" autocomplete="off" aria-label="Rechercher"
-             [value]="recherche()" (input)="recherche.set($any($event.target).value)" />
+             [value]="recherche()" (input)="chercher($any($event.target).value)" />
     </span>
   </div>
 
@@ -24,7 +24,7 @@
   </p>
 
   <!-- Actions on the ticked users: fixed at the bottom of the screen, nothing moves -->
-  <div class="tb-barre" [class.tb-barre-on]="selection().size > 0" [attr.aria-hidden]="selection().size === 0">
+  <div class="tb-barre" [class.tb-barre-on]="selection().size > 0 && !tel()" [attr.aria-hidden]="selection().size === 0 || tel()">
     <span class="tb-barre-compte">{{ selection().size }} utilisateur(s)</span>
     <div class="tb-barre-actions">
       <button type="button" class="tb-btn tb-tonal" (click)="dlgRole.set(true)"><i class="pi pi-id-card"></i>Rôle</button>
@@ -36,6 +36,28 @@
     <button type="button" class="tb-btn tb-icon tb-flat tb-barre-fermer" title="Tout décocher" aria-label="Tout décocher" (click)="toutCocher(false)"><i class="pi pi-times"></i></button>
   </div>
 
+  @if (tel()) {
+    <!-- Phones: one row per user, their settings in a sheet -->
+    <ul class="tb-liste-gest">
+      @for (l of visibles(); track l.user.id) {
+        <li [attr.data-flip]="'u' + l.user.id">
+          <button type="button" class="tb-gest-ligne" (click)="ouvrirUser(l)">
+            <span class="tb-avatar tb-user-avatar tb-role-{{ l.user.type }}">{{ initiale(l.user.username) }}</span>
+            <span class="tb-gest-texte">
+              <strong>{{ l.user.username }} @if (auth.estMoi(l.user)) { <span class="tb-tag tb-tag-info tb-ml">vous</span> }</strong>
+              <span class="tb-muted" [class.tb-droits-sans]="sansAcces(l)">{{ nomRole(l.user.type) }} · {{ resume(l) }}</span>
+              @if (l.groupes.length) {
+                <span class="tb-muted"><i class="pi pi-users"></i> {{ l.groupes.join(', ') }}</span>
+              }
+            </span>
+            <i class="pi pi-angle-right tb-liste-suite" aria-hidden="true"></i>
+          </button>
+        </li>
+      } @empty {
+        <li class="tb-gest-vide tb-muted">{{ droits.charge() ? 'Aucun utilisateur ne correspond' : 'Chargement…' }}</li>
+      }
+    </ul>
+  } @else {
   <div class="tb-table tb-gest-table tb-droits-table">
     <table>
       <thead>
@@ -49,7 +71,7 @@
       </thead>
       <tbody>
         @for (l of visibles(); track l.user.id) {
-          <tr [class.tb-row-on]="selection().has(l.user.id!)">
+          <tr [class.tb-row-on]="selection().has(l.user.id!)" [attr.data-flip]="'u' + l.user.id">
             <td class="tb-col-check">
               <input type="checkbox" class="tb-check" [checked]="selection().has(l.user.id!)" (change)="cocher(l.user.id!, $any($event.target).checked)" [attr.aria-label]="'Sélectionner ' + l.user.username" />
             </td>
@@ -83,6 +105,7 @@
       </tbody>
     </table>
   </div>
+  }
 </section>
 
 <section class="tb-section">
@@ -93,7 +116,7 @@
   </h2>
   <div class="tb-groupes">
     @for (g of droits.groupes(); track g.id) {
-      <article class="tb-card tb-groupe">
+      <article class="tb-card tb-groupe" (click)="tel() && modifierGroupe(g)">
         <div class="tb-groupe-tete">
           <span class="tb-section-icon"><i class="pi pi-users"></i></span>
           <div class="tb-groupe-titre">
@@ -182,4 +205,45 @@
       <button type="submit" class="tb-btn"><i class="pi pi-check"></i>Enregistrer</button>
     </div>
   </form>
+</tb-sheet>
+
+<!-- Phones: one user -->
+<tb-sheet [(ouvert)]="feuilleUser" [titre]="enFeuille()?.user?.username ?? ''" [largeur]="440">
+  @if (enFeuille(); as l) {
+    <div class="tb-field">
+      <span class="tb-label">Rôle</span>
+      <div class="tb-segmented tb-role-choix" role="radiogroup" aria-label="Rôle">
+        @for (r of roles; track r) {
+          <button type="button" role="radio" [attr.aria-checked]="l.user.type === r" [class.tb-seg-on]="l.user.type === r" [disabled]="auth.estMoi(l.user)" (click)="changerRole(l, r)">
+            {{ nomRole(r) }}
+          </button>
+        }
+      </div>
+      @if (auth.estMoi(l.user)) {
+        <span class="tb-muted tb-field-note">Votre propre compte reste administrateur.</span>
+      }
+    </div>
+    @if (l.user.type !== 'ADMIN') {
+      <div class="tb-switch-row">
+        <tb-switch [checked]="l.illimite" (checkedChange)="voitTout(l, $event)" label="Voit tout ThermoBox" />
+        <span class="tb-switch-text" (click)="voitTout(l, !l.illimite)">Voit tout ThermoBox</span>
+      </div>
+      <p class="tb-muted"><i class="pi pi-key"></i> {{ resume(l) }}</p>
+    } @else {
+      <p class="tb-muted"><i class="pi pi-shield"></i> Un administrateur voit tout ThermoBox.</p>
+    }
+    <div class="tb-field">
+      <span class="tb-label">Groupes</span>
+      <div class="tb-chips-groupes">
+        @for (g of l.groupes; track g) {
+          <span class="tb-chip-groupe">{{ g }}</span>
+        } @empty {
+          <span class="tb-muted">Aucun groupe</span>
+        }
+      </div>
+    </div>
+    <div class="tb-actions">
+      <button type="button" class="tb-btn tb-tonal" (click)="groupesDe(l)"><i class="pi pi-users"></i>Ajouter ou retirer d'un groupe</button>
+    </div>
+  }
 </tb-sheet>

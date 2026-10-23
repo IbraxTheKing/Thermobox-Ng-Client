@@ -115,9 +115,9 @@
     :root[data-plateforme="android"] .tb-brand-name { transition: opacity .2s var(--tb-m3-standard); }
     :root[data-plateforme="android"] .tb-defile-titre .tb-brand-name { opacity: 0; }
     :root[data-plateforme="android"] .tb-defile-titre .tb-topbar-titre { opacity: 1; transform: none; }
-    :root[data-plateforme="android"] .tb-topbar .tb-icon-btn { width: 48px; height: 48px; border: 0; border-radius: 50%; color: var(--md-on-surface-variant); }
-    :root[data-plateforme="android"] .tb-topbar .tb-icon-btn:hover { background: color-mix(in srgb, var(--md-on-surface) 8%, transparent); }
-    :root[data-plateforme="android"] .tb-topbar .tb-avatar { width: 32px; height: 32px; margin: 0 8px; }
+    /* The logo stays, only the name gives way to the title */
+    :root[data-plateforme="android"] .tb-defile-titre .tb-brand { opacity: 1; transform: none; pointer-events: auto; }
+    :root[data-plateforme="android"] .tb-topbar-titre { max-width: calc(100% - 100px); }
 
     /* Navigation bar: flat tonal surface, pill indicator behind the icon */
     :root[data-plateforme="android"] .tb-rail {
@@ -134,8 +134,6 @@
     :root[data-plateforme="android"] .tb-dest .tb-dest-icon .pi { font-size: 1.25rem; }
 
     /* More than five destinations: the last ones go behind "Plus" (Material: 3 to 5 in the bar) */
-    :root[data-plateforme="android"] .tb-dest-cache { display: none; }
-    :root[data-plateforme="android"] .tb-dest-plus { display: flex; }
 
     /* Extended FAB: a rounded square in the primary container, above the bar */
     :root[data-plateforme="android"] .tb-page-head > .tb-btn.tb-fab {
@@ -262,3 +260,13 @@
 :root[data-plateforme="android"] .tb-input, :root[data-plateforme="android"] .tb-select { border-radius: 4px; box-shadow: none; }
 :root[data-plateforme="android"] .tb-search > .tb-input { border-radius: 28px; }
 :root[data-plateforme="android"] .tb-select.tb-filter { border-radius: 28px; }
+
+/*
+ * Application Android : la barre de navigation et le bouton d'action principal sont des composants
+ * Material 3 natifs (plugins/thermobox-natif) ; la page cache les siens. --tb-nav-bas = hauteur de
+ * la barre native, posée par AndroidNatifService. Téléphone tenu de côté : le rail de la page.
+ */
+@media (max-width: 840px) and (not ((orientation: landscape) and (max-height: 520px))) {
+    :root.tb-android-natif .tb-rail { display: none; }
+    :root.tb-android-natif .tb-page-head > .tb-fab { display: none !important; }
+}

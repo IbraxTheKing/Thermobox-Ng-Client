@@ -9,19 +9,20 @@
   <!-- Kept on this device, applied at once -->
   <section class="tb-panel">
     <div class="tb-prefs">
-      <div class="tb-pref">
-        <span class="tb-section-icon"><i class="pi pi-play"></i></span>
+      <div class="tb-pref tb-pref-theme">
+        <span class="tb-section-icon"><i class="pi" [class.pi-moon]="prefs.theme() === 'dark'" [class.pi-sun]="prefs.theme() === 'light'"></i></span>
         <div class="tb-pref-text">
-          <strong>Animations</strong>
-          <span class="tb-muted">
-            Transitions entre les pages, apparition des cartes, tracé des courbes, effets au toucher. Désactivées, tout s'affiche
-            directement.
-          </span>
-          @if (prefs.mouvementReduit) {
-            <span class="tb-pref-note">Votre appareil demande déjà de réduire les animations : elles restent réduites.</span>
+          <strong>Thème</strong>
+          <span class="tb-muted">« Système » suit le réglage clair ou sombre de l'appareil, aussi quand il change le soir.</span>
+        </div>
+        <div class="tb-segmented tb-theme-choix" role="radiogroup" aria-label="Thème">
+          @for (c of themes; track c.id) {
+            <button type="button" role="radio" [attr.aria-checked]="prefs.choixTheme() === c.id" [class.tb-seg-on]="prefs.choixTheme() === c.id"
+                    (click)="prefs.changerTheme(c.id, $any($event.currentTarget))">
+              <i class="pi" [class]="c.icone"></i>{{ c.label }}
+            </button>
           }
         </div>
-        <tb-switch [checked]="prefs.animations()" (checkedChange)="prefs.animations.set($event)" label="Animations" />
       </div>
       <div class="tb-pref">
         <span class="tb-section-icon"><i class="pi pi-palette"></i></span>
@@ -47,14 +48,6 @@
           <button type="button" role="radio" [attr.aria-checked]="!prefs.fahrenheit()" [class.tb-seg-on]="!prefs.fahrenheit()" (click)="prefs.unite.set('C')">°C</button>
           <button type="button" role="radio" [attr.aria-checked]="prefs.fahrenheit()" [class.tb-seg-on]="prefs.fahrenheit()" (click)="prefs.unite.set('F')">°F</button>
         </div>
-      </div>
-      <div class="tb-pref">
-        <span class="tb-section-icon"><i class="pi pi-moon"></i></span>
-        <div class="tb-pref-text">
-          <strong>Thème sombre</strong>
-          <span class="tb-muted">Aussi avec le bouton <i class="pi pi-moon"></i> en haut de l'écran.</span>
-        </div>
-        <tb-switch [checked]="prefs.theme() === 'dark'" (checkedChange)="prefs.theme.set($event ? 'dark' : 'light')" label="Thème sombre" />
       </div>
     </div>
     <p class="tb-muted tb-pref-portee">Enregistré sur cet appareil uniquement. Interface : {{ nomPlateforme }}.</p>
@@ -114,4 +107,12 @@
       <p class="tb-muted tb-pref-portee"><i class="pi pi-shield"></i> Réglage administrateur : s'applique à tout le monde, sur tous les appareils.</p>
     </section>
   }
+  <!-- Versions, repositories and credits (also behind « Plus » on phones) -->
+  <a routerLink="/app/a-propos" class="tb-liste-groupe tb-pref-apropos">
+    <span class="tb-liste-ligne">
+      <span class="tb-liste-icone"><i class="pi pi-info-circle"></i></span>
+      <span class="tb-liste-texte"><strong>À propos de Thermobox</strong><span class="tb-muted">Versions du client et du serveur, code source, crédits</span></span>
+      <i class="pi pi-angle-right tb-liste-suite"></i>
+    </span>
+  </a>
 </div>
