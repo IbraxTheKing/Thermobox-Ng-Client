@@ -170,6 +170,10 @@ public class ThermoboxNatifPlugin extends Plugin {
                     sombre = modeSombre;
                     retirer(barre);
                     barre = null;
+                    // The new bar has no tabs yet: filled again below (it stayed empty, then
+                    // hidden, when the same tabs were thought to be there already)
+                    onglets.clear();
+                    derniereHauteur = -1;
                 }
                 BottomNavigationView b = obtenirBarre();
                 remplir(b, liste);
