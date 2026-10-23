@@ -1,7 +1,12 @@
 import { DOCUMENT } from '@angular/common';
 import { Injectable, inject, signal } from '@angular/core';
+import { NavigationCancel, NavigationEnd, NavigationError, Router } from '@angular/router';
 import { App } from '@capacitor/app';
 import { Capacitor, PluginListenerHandle, registerPlugin } from '@capacitor/core';
+import { filter, take } from 'rxjs';
+
+import { PreferencesService } from './preferences';
+import { TransitionsService } from './transitions';
 
 /** Onglet de la barre native : id = adresse de la page, icone = nom d'un dessin du plugin. */
 export interface OngletNatif {
@@ -32,6 +37,18 @@ interface ThermoboxNatifPlugin {
   addListener(e: 'onglet', f: (d: { id: string; retouche: boolean }) => void): Promise<PluginListenerHandle>;
   addListener(e: 'fab', f: () => void): Promise<PluginListenerHandle>;
   addListener(e: 'hauteur', f: (d: { hauteur: number; visible: boolean }) => void): Promise<PluginListenerHandle>;
+  activerRetour(o: { actif: boolean }): Promise<void>;
+  addListener(e: 'retour', f: (d: EtapeRetour) => void): Promise<PluginListenerHandle>;
+}
+
+/** Retour d'Android, étape par étape (geste prédictif) ou d'un coup (bouton : « valide » seul). */
+interface EtapeRetour {
+  etape: 'debut' | 'progres' | 'annule' | 'valide';
+  /** 0 → 1 pendant que le doigt glisse depuis le bord. */
+  progres?: number;
+  bord?: 'gauche' | 'droite';
+  /** Hauteur du doigt, px CSS. */
+  y?: number;
 }
 
 /** Composants natifs Material 3 (plugins/thermobox-natif), dans l'application Android seulement. */
@@ -144,6 +161,9 @@ export const natifMessages = plugin
 export class AndroidNatifService {
   private readonly doc = inject(DOCUMENT);
   private readonly root = this.doc.documentElement;
+  private readonly router = inject(Router);
+  private readonly prefs = inject(PreferencesService);
+  private readonly transitions = inject(TransitionsService);
   readonly actif = ANDROID_NATIF;
 
   /** Hauteur de la barre native en px CSS (0 : cachée). */
@@ -158,6 +178,8 @@ export class AndroidNatifService {
   private dernier: Parameters<AndroidNatifService['configurerBarre']> | null = null;
   /** Ce qui a été envoyé à la barre : rien n'est renvoyé s'il n'a pas changé. */
   private barreEnvoyee = '';
+  /** Geste de retour en cours : ce qu'il fera, et la page qui suit le doigt. */
+  private geste: { mode: 'page' | 'autre'; main: HTMLElement | null; y0: number } | null = null;
 
   constructor() {
     if (!plugin) return;
@@ -165,7 +187,11 @@ export class AndroidNatifService {
     void plugin.addListener('onglet', ({ id, retouche }) => this.surOnglet?.(id, retouche));
     void plugin.addListener('fab', () => this.fabCible?.click());
     void plugin.addListener('hauteur', ({ hauteur }) => this.poserHauteur(hauteur));
+    // Back: the plugin's (predictive gesture, Android 14+); the App plugin's only with an older
+    // build of the plugin
     void App.addListener('backButton', () => this.retour());
+    void plugin.addListener('retour', (e) => this.surRetour(e));
+    plugin.activerRetour({ actif: true }).catch(() => undefined);
 
     // Keyboard open (a field has the focus): the bar and the button make room
     this.doc.addEventListener('focusin', (e) => {
@@ -271,6 +297,94 @@ export class AndroidNatifService {
 
   // ---------------------------------------------------------------- back button
 
+  /**
+   * Predictive back (Material 3): while the finger comes in from the edge, the page shrinks and
+   * moves away from it (the bars stay); let go and it goes back, the salle page flowing back into
+   * its dashboard card (TransitionsService) from where the finger left it; cancelled, it springs
+   * back. Something open (sheet, full-screen chart) or nothing to go back to: no shrinking.
+   */
+  private surRetour(e: EtapeRetour): void {
+    switch (e.etape) {
+      case 'debut': {
+        this.finirGeste(false);
+        const page = !this.aFermer() && this.peutRevenir() && this.prefs.animer();
+        const main = page ? this.doc.querySelector<HTMLElement>('.tb-main') : null;
+        this.geste = { mode: main ? 'page' : 'autre', main, y0: e.y ?? innerHeight / 2 };
+        if (main) {
+          main.style.transition = 'none';
+          main.style.transformOrigin = `50% ${scrollY + innerHeight * 0.5 - main.offsetTop}px`;
+          this.root.classList.add('tb-geste-retour');
+        }
+        break;
+      }
+      case 'progres': {
+        const main = this.geste?.main;
+        if (!main) break;
+        // Interpolated as Material's predictive back: up to 90 %, a little away from the edge,
+        // following the finger up and down
+        const p = recul(e.progres ?? 0);
+        const sens = e.bord === 'droite' ? -1 : 1;
+        const dy = Math.max(-1, Math.min(1, ((e.y ?? this.geste!.y0) - this.geste!.y0) / innerHeight));
+        main.style.transform = `translate(${sens * p * Math.max(0, innerWidth / 20 - 8)}px, ${dy * p * innerHeight * 0.05}px) scale(${1 - p * 0.1})`;
+        break;
+      }
+      case 'annule':
+        this.finirGeste(true);
+        break;
+      case 'valide': {
+        const main = this.geste?.mode === 'page' ? this.geste.main : null;
+        this.geste = null;
+        if (main?.style.transform) {
+          // Goes back from where the page is: the transition takes its picture there, the page is
+          // put straight once the next one is in place (before its picture)
+          this.router.events
+            .pipe(
+              filter((ev) => ev instanceof NavigationEnd || ev instanceof NavigationCancel || ev instanceof NavigationError),
+              take(1),
+            )
+            .subscribe(() => this.transitions.apresMaj(() => this.remettre(main, false)));
+          setTimeout(() => this.remettre(main, false), 1500);
+        } else if (main) {
+          this.remettre(main, false);
+        }
+        this.retour();
+        break;
+      }
+    }
+  }
+
+  private finirGeste(ressort: boolean): void {
+    const main = this.geste?.main;
+    this.geste = null;
+    if (main) this.remettre(main, ressort);
+  }
+
+  private remettre(main: HTMLElement, ressort: boolean): void {
+    const finir = () => {
+      main.style.transition = '';
+      main.style.transformOrigin = '';
+      this.root.classList.remove('tb-geste-retour');
+    };
+    if (!main.style.transform) {
+      finir();
+      return;
+    }
+    main.style.transition = ressort ? 'transform .35s cubic-bezier(.2, 0, 0, 1)' : 'none';
+    main.style.transform = '';
+    if (ressort) setTimeout(finir, 360);
+    else finir();
+  }
+
+  /** Something the back closes before going back. */
+  private aFermer(): boolean {
+    return !!this.doc.querySelector('.tb-scrim:not(.tb-scrim-ferme), .tb-graphique-plein .tb-lecture-plein');
+  }
+
+  private peutRevenir(): boolean {
+    const etat = history.state as { navigationId?: number } | null;
+    return !!etat?.navigationId && etat.navigationId > 1;
+  }
+
   /** Android back: closes what is open, else goes back, else puts the app in the background. */
   private retour(): void {
     const scrim = this.doc.querySelector<HTMLElement>('.tb-scrim');
@@ -283,8 +397,7 @@ export class AndroidNatifService {
       plein.click();
       return;
     }
-    const etat = history.state as { navigationId?: number } | null;
-    if (etat?.navigationId && etat.navigationId > 1) history.back();
+    if (this.peutRevenir()) history.back();
     else void App.minimizeApp();
   }
 
@@ -307,4 +420,10 @@ export class AndroidNatifService {
   private hex(...vars: string[]): string {
     return hex(...vars);
   }
+}
+
+/** Progress of the gesture as Material eases it: quick at first, then slower. */
+function recul(p: number): number {
+  const x = Math.max(0, Math.min(1, p));
+  return 1 - Math.pow(1 - x, 2);
 }

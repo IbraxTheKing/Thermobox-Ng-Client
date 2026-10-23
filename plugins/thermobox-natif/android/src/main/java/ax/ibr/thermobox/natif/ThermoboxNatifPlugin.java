@@ -17,6 +17,10 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.activity.BackEventCompat;
+import androidx.activity.ComponentActivity;
+import androidx.activity.OnBackPressedCallback;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.view.ContextThemeWrapper;
@@ -58,7 +62,13 @@ import java.util.Map;
  * sombre, teinte de l'état) : l'application reste ThermoBox, les composants sont ceux d'Android.
  *
  * Événements : « onglet » ({ id, retouche }), « fab », « hauteur » ({ hauteur } en px CSS : place
- * prise en bas de l'écran par la barre, système compris).
+ * prise en bas de l'écran par la barre, système compris), « retour » ({ etape, progres, bord, y }).
+ *
+ * Retour (geste ou bouton) : une fois activé par la page (activerRetour), le plugin le prend
+ * avant l'activité et le décrit à la page étape par étape (« debut », « progres » de 0 à 1 pendant
+ * que le doigt glisse depuis le bord, « annule », « valide »), comme le retour prédictif
+ * d'Android 14+ : la page rétrécit sous le doigt, puis revient en arrière. Avant Android 14, ou
+ * avec le bouton retour, seule l'étape « valide » arrive.
  */
 @CapacitorPlugin(name = "ThermoboxNatif")
 public class ThermoboxNatifPlugin extends Plugin {
@@ -566,8 +576,60 @@ public class ThermoboxNatifPlugin extends Plugin {
         });
     }
 
+    // ------------------------------------------------------------------ back (predictive)
+
+    @Nullable private OnBackPressedCallback retour;
+
+    /** actif : la page prend le retour (sinon : l'activité, c'est-à-dire Capacitor). */
+    @PluginMethod
+    public void activerRetour(PluginCall call) {
+        boolean actif = Boolean.TRUE.equals(call.getBoolean("actif", true));
+        ui(() -> {
+            if (retour == null && actif && getActivity() instanceof ComponentActivity) {
+                // Added last: called before the callback of the App plugin (backButton)
+                retour = new OnBackPressedCallback(true) {
+                    @Override
+                    public void handleOnBackStarted(@NonNull BackEventCompat e) {
+                        envoyerRetour("debut", e);
+                    }
+
+                    @Override
+                    public void handleOnBackProgressed(@NonNull BackEventCompat e) {
+                        envoyerRetour("progres", e);
+                    }
+
+                    @Override
+                    public void handleOnBackCancelled() {
+                        envoyerRetour("annule", null);
+                    }
+
+                    @Override
+                    public void handleOnBackPressed() {
+                        envoyerRetour("valide", null);
+                    }
+                };
+                ((ComponentActivity) getActivity()).getOnBackPressedDispatcher().addCallback(retour);
+            }
+            if (retour != null) retour.setEnabled(actif);
+            call.resolve();
+        });
+    }
+
+    private void envoyerRetour(String etape, @Nullable BackEventCompat e) {
+        JSObject d = new JSObject();
+        d.put("etape", etape);
+        if (e != null) {
+            d.put("progres", e.getProgress());
+            d.put("bord", e.getSwipeEdge() == BackEventCompat.EDGE_RIGHT ? "droite" : "gauche");
+            d.put("y", versCss(Math.round(e.getTouchY())));
+        }
+        notifyListeners("retour", d);
+    }
+
     @Override
     protected void handleOnDestroy() {
+        if (retour != null) retour.remove();
+        retour = null;
         retirer(barre);
         retirer(fab);
         barre = null;
