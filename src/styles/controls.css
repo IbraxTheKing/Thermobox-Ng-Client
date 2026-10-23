@@ -572,11 +572,3 @@ button, input, select, textarea { font: inherit; color: inherit; }
 /* ============================== Charts ============================== */
 
 .tb-chart canvas { width: 100% !important; height: 100% !important; }
-
-/* Closing: taps already go to the page under it */
-.tb-scrim.tb-scrim-ferme { pointer-events: none; animation: tb-fade-out .25s ease forwards; }
-/* Android app: shown as a native menu (TbSheet menuNatif), the web sheet stays out of sight */
-.tb-scrim.tb-sheet-natif { visibility: hidden; pointer-events: none; animation: none; }
-.tb-sheet-natif .tb-dialog { animation: none; }
-/* Rows of the native menu only */
-.tb-natif-seul { display: none !important; }

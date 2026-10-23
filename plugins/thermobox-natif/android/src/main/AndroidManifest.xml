@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Retour prédictif d'Android 14+ (geste depuis le bord) : la page suit le doigt, puis revient
-         en arrière (ThermoboxNatifPlugin.activerRetour). Fusionné dans le manifeste de l'application. -->
-    <application android:enableOnBackInvokedCallback="true" />
-</manifest>

@@ -18,12 +18,12 @@ import { SalleResume } from './resume';
   host: { style: 'display: contents' },
   template: `
     @let s = r().salle;
-    <!-- data-vt: card, name, photo and temperature morph into the detail page (named only then: TransitionsService) -->
+    <!-- view-transition-name: card, name, photo and temperature morph into the detail page -->
     <article
       class="tb-room tb-ton-{{ r().etat.ton }}"
       [class.tb-room-photo]="s.image != null"
       [attr.data-flip]="s.id"
-      data-vt="salle-card" [attr.data-vt-id]="s.id"
+      [style.view-transition-name]="'salle-card-' + s.id"
       style="view-transition-class: tb-card"
     >
       <!-- Stretched over the whole card: click anywhere to open the detail -->
@@ -32,7 +32,7 @@ import { SalleResume } from './resume';
       </a>
 
       @if (s.image != null) {
-        <div class="tb-room-media" data-vt="salle-photo" [attr.data-vt-id]="s.id">
+        <div class="tb-room-media" [style.view-transition-name]="'salle-photo-' + s.id">
           <tb-photo-img [salleId]="s.id" [version]="s.image" />
         </div>
       }
@@ -49,12 +49,12 @@ import { SalleResume } from './resume';
       </button>
 
       <div class="tb-room-head">
-        <h3 class="tb-room-name" data-vt="salle-nom" [attr.data-vt-id]="s.id">{{ s.name }}</h3>
+        <h3 class="tb-room-name" [style.view-transition-name]="'salle-nom-' + s.id">{{ s.name }}</h3>
         <div class="tb-room-path">{{ r().chemin || 'Non rattachée' }}</div>
       </div>
 
       <div class="tb-room-reading">
-        <span class="tb-temp-xl" data-vt="salle-temp" [attr.data-vt-id]="s.id" [tbWatch]="s.temperature">
+        <span class="tb-temp-xl" [style.view-transition-name]="'salle-temp-' + s.id" [tbWatch]="s.temperature">
           {{ unite.t(s.temperature) }}<span class="tb-deg">°</span>
         </span>
         <div class="tb-room-badges">

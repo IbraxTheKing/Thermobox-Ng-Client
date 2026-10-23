@@ -31,7 +31,7 @@ export class ClavierService {
     { groupe: 'Partout', touches: ['/'], texte: 'Aller au champ de recherche de la page', cle: '/', agir: () => this.chercher() },
     { groupe: 'Partout', touches: ['R'], texte: 'Actualiser les données de la page', cle: 'r', agir: () => this.cliquer('.tb-page-head [data-action="actualiser"]') },
     { groupe: 'Partout', touches: ['N'], texte: 'Action principale de la page (nouvel élément, nouvel utilisateur…)', cle: 'n', agir: () => this.cliquer('.tb-page-head .tb-fab') },
-    { groupe: 'Partout', touches: ['T'], texte: 'Passer du thème clair au thème sombre', cle: 't', agir: () => (this.prefs.changerTheme(this.prefs.theme() === 'dark' ? 'light' : 'dark'), true) },
+    { groupe: 'Partout', touches: ['T'], texte: 'Passer du thème clair au thème sombre', cle: 't', agir: () => this.cliquer('.tb-theme-btn') },
     { groupe: 'Partout', touches: ['P'], texte: 'Ouvrir les Préférences', cle: 'p', agir: () => this.aller('/app/preferences') },
     { groupe: 'Partout', touches: ['?'], texte: 'Afficher ou cacher cette liste', cle: '?', agir: () => (this.aide.update((v) => !v), true) },
     { groupe: 'Partout', touches: ['Échap'], texte: 'Fermer cette liste', cle: null },

@@ -19,8 +19,9 @@ html { -webkit-text-size-adjust: 100%; }
     font-size: 1rem;
     line-height: 1.5;
     color: var(--md-on-surface);
-    /* The background itself is a fixed layer (body::before, tokens.css) */
-    background: var(--md-surface);
+    background: var(--tb-bg);
+    background-color: var(--md-surface);
+    background-attachment: fixed;
     -webkit-font-smoothing: antialiased;
     /* Nothing (hover effect, animation) may make the whole page scroll sideways */
     overflow-x: clip;

@@ -1,27 +1,35 @@
 <div class="tb-busy-bar" [class.tb-busy-on]="activite.occupe()" aria-hidden="true"></div>
 
-<!-- Top bar (phones): the brand, then the title of the page once it has scrolled away. No actions. -->
+<!-- Top app bar: phones only (the rail holds these actions on wider screens) -->
 <header class="tb-topbar">
   <a routerLink="/app/apercu" class="tb-brand"><span class="tb-logo" aria-hidden="true"></span><span class="tb-brand-name">Thermobox</span></a>
   <span class="tb-topbar-titre" aria-hidden="true">{{ titre.titre() }}</span>
+  <span class="tb-spacer"></span>
+  <a routerLink="/app/preferences" class="tb-icon-btn tb-prefs-btn" routerLinkActive="tb-prefs-on" title="Préférences" aria-label="Préférences">
+    <i class="pi pi-sliders-v"></i>
+  </a>
+  <button type="button" class="tb-icon-btn tb-theme-btn" (click)="basculerTheme($event)" title="Changer de thème" aria-label="Changer de thème">
+    <i class="pi pi-moon tb-if-light"></i><i class="pi pi-sun tb-if-dark"></i>
+  </button>
+  <a routerLink="/app/profil" class="tb-avatar" [title]="'Mon profil (' + auth.user()?.username + ')'">{{ auth.initiale() }}</a>
+  <button type="button" class="tb-icon-btn tb-logout" (click)="deconnecter()" title="Déconnexion" aria-label="Déconnexion">
+    <i class="pi pi-sign-out"></i>
+  </button>
 </header>
 
 <!-- Navigation rail (wide screens), bar at the bottom (phones) -->
-<nav class="tb-rail" [class.tb-saisie-lentille]="saisie()" aria-label="Navigation principale" (transitionend)="placerLentille()">
+<nav class="tb-rail" [class.tb-rail-open]="railOuvert()" aria-label="Navigation principale" (transitionend)="placerLentille()">
   <a routerLink="/app/apercu" class="tb-rail-brand" title="Thermobox"><span class="tb-logo" aria-hidden="true"></span></a>
 
-  <div class="tb-dests" #dests (pointerdown)="debutAppui($event)">
+  <div class="tb-dests" #dests>
     <span class="tb-lentille" aria-hidden="true"></span>
     @for (d of destinations(); track d.lien; let i = $index) {
       <a
         class="tb-dest"
-        draggable="false"
         [routerLink]="d.lien"
-        [class.tb-dest-on]="estActive(d) && !(barreBas() && i >= dansBarre)"
-        [class.tb-dest-cache]="i >= dansBarre"
-        [class.tb-dest-survol]="survolee() === d.lien"
+        [class.tb-dest-on]="estActive(d)"
+        [class.tb-dest-cache]="avecPlus() && i >= nbDansBarre()"
         [attr.aria-current]="estActive(d) ? 'page' : null"
-        [attr.data-lien]="d.lien"
         [title]="d.badge && avis.disponible() ? 'Nouvelle version disponible' : d.label"
         (click)="surDestination()"
       >
@@ -34,42 +42,60 @@
         <span class="tb-dest-label">{{ d.label }}</span>
       </a>
     }
-    <!-- Phones: the other pages and the account, as the last tab -->
-    <a
-      class="tb-dest tb-dest-plus"
-      draggable="false"
-      routerLink="/app/plus"
-      [class.tb-dest-on]="plusActif()"
-      [class.tb-dest-survol]="survolee() === '/app/plus'"
-      [attr.aria-current]="plusActif() ? 'page' : null"
-      data-lien="/app/plus"
-      (click)="surDestination()"
-    >
-      <span class="tb-dest-icon">
-        <i class="pi" [class.pi-ellipsis-h]="avecPlus()" [class.pi-user]="!avecPlus()"></i>
-        @if (avecPlus() && avis.disponible()) {
-          <span class="tb-dest-badge"></span>
-        }
-      </span>
-      <span class="tb-dest-label">{{ avecPlus() ? 'Plus' : 'Compte' }}</span>
-    </a>
+    @if (avecPlus()) {
+      <button type="button" class="tb-dest tb-dest-plus" [class.tb-dest-on]="plusActif()" (click)="plus.set(true); surDestination()" aria-haspopup="dialog">
+        <span class="tb-dest-icon">
+          <i class="pi pi-ellipsis-h"></i>
+          @if (avis.disponible()) {
+            <span class="tb-dest-badge"></span>
+          }
+        </span>
+        <span class="tb-dest-label">Plus</span>
+      </button>
+    }
   </div>
 
-  <!-- Wide screens: the account, at the bottom of the rail -->
   <div class="tb-rail-end">
-    <a routerLink="/app/preferences" class="tb-icon-btn tb-prefs-btn" routerLinkActive="tb-prefs-on" title="Préférences" aria-label="Préférences">
-      <i class="pi pi-sliders-v"></i>
-    </a>
-    <a routerLink="/app/profil" class="tb-avatar" routerLinkActive="tb-avatar-on" [title]="'Mon profil (' + auth.user()?.username + ')'">{{ auth.initiale() }}</a>
-    <button type="button" class="tb-icon-btn tb-logout" (click)="deconnecter()" title="Déconnexion" aria-label="Déconnexion">
-      <i class="pi pi-sign-out"></i>
+    <!-- Phones held sideways: little height, so these actions go behind one button -->
+    <button type="button" class="tb-icon-btn tb-rail-more" (click)="railOuvert.set(!railOuvert())" title="Plus d'options" aria-label="Plus d'options" [attr.aria-expanded]="railOuvert()">
+      <i class="pi pi-ellipsis-h"></i>
     </button>
+    <div class="tb-rail-extras">
+      <a routerLink="/app/preferences" class="tb-icon-btn tb-prefs-btn" routerLinkActive="tb-prefs-on" title="Préférences" aria-label="Préférences">
+        <i class="pi pi-sliders-v"></i>
+      </a>
+      <button type="button" class="tb-icon-btn tb-theme-btn" (click)="basculerTheme($event)" title="Changer de thème" aria-label="Changer de thème">
+        <i class="pi pi-moon tb-if-light"></i><i class="pi pi-sun tb-if-dark"></i>
+      </button>
+      <a routerLink="/app/profil" class="tb-avatar" routerLinkActive="tb-avatar-on" [title]="'Mon profil (' + auth.user()?.username + ')'">{{ auth.initiale() }}</a>
+      <button type="button" class="tb-icon-btn tb-logout" (click)="deconnecter()" title="Déconnexion" aria-label="Déconnexion">
+        <i class="pi pi-sign-out"></i>
+      </button>
+    </div>
   </div>
 </nav>
 
 <main class="tb-main">
   <router-outlet />
 </main>
+
+<!-- « Plus » (iOS / Android phones): the destinations that don't fit, and the account -->
+<tb-sheet [(ouvert)]="plus" titre="Plus" [largeur]="420">
+  <nav class="tb-plus-liste" aria-label="Autres pages">
+    @for (d of destinations().slice(nbDansBarre()); track d.lien) {
+      <a [routerLink]="d.lien" [class.tb-dest-on]="estActive(d)" (click)="plus.set(false)">
+        <i class="pi" [class]="d.icone"></i>{{ d.label }}
+        @if (d.badge && avis.disponible()) {
+          <span class="tb-tag tb-tag-danger" style="margin-left: auto">Nouvelle version</span>
+        }
+      </a>
+    }
+    <hr />
+    <a routerLink="/app/profil" (click)="plus.set(false)"><i class="pi pi-user"></i>Mon profil</a>
+    <a routerLink="/app/preferences" (click)="plus.set(false)"><i class="pi pi-sliders-v"></i>Préférences</a>
+    <button type="button" class="tb-plus-danger" (click)="deconnecter()"><i class="pi pi-sign-out"></i>Déconnexion</button>
+  </nav>
+</tb-sheet>
 
 <!-- "?" : keyboard shortcuts -->
 <tb-sheet [(ouvert)]="clavier.aide" titre="Raccourcis clavier" [largeur]="760">

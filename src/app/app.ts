@@ -1,7 +1,6 @@
 import { ChangeDetectionStrategy, Component, DOCUMENT, effect, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
-import { AnimationsService } from './core/animations';
 import { AuthService } from './core/auth';
 import { ClavierService } from './core/clavier';
 import { PlateformeService } from './core/plateforme';
@@ -24,7 +23,6 @@ export class App {
     inject(PreferencesService);
     inject(PlateformeService);
     inject(ClavierService);
-    inject(AnimationsService);
     const auth = inject(AuthService);
     const body = inject(DOCUMENT).body;
     effect(() => {

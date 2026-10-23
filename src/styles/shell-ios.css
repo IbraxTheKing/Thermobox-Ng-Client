@@ -82,38 +82,60 @@
         --tb-nav-bas: calc(64px + max(env(safe-area-inset-bottom), 14px) + 10px);
     }
 
-    /*
-     * Navigation bar, as in iOS 26: no bar at the top of the page, only the brand; once something
-     * scrolls under it, a soft edge of blurred glass that fades into the content (no hard line),
-     * with the title of the page in its centre when the large title has gone under it. No buttons.
-     */
+    /* Navigation bar: clear at the top of the page, glass once something scrolls under it */
     :root[data-plateforme="ios"] .tb-topbar {
-        padding: env(safe-area-inset-top) calc(16px + env(safe-area-inset-right)) 0 calc(18px + env(safe-area-inset-left));
-        border: 0;
-        background: none;
+        gap: 8px;
+        padding: env(safe-area-inset-top) calc(12px + env(safe-area-inset-right)) 0 calc(16px + env(safe-area-inset-left));
+        border-bottom: .5px solid transparent;
+        background: transparent;
         -webkit-backdrop-filter: none;
         backdrop-filter: none;
-        pointer-events: none;
+        transition: background-color .3s ease, border-color .3s ease, -webkit-backdrop-filter .3s ease, backdrop-filter .3s ease;
     }
-    :root[data-plateforme="ios"] .tb-topbar > * { pointer-events: auto; }
-    :root[data-plateforme="ios"] .tb-topbar::before {
-        content: "";
+    :root[data-plateforme="ios"] .tb-defile .tb-topbar {
+        border-bottom-color: color-mix(in srgb, var(--md-on-surface) 12%, transparent);
+        background: var(--tb-lg-fond);
+        -webkit-backdrop-filter: var(--tb-lg-flou);
+        backdrop-filter: var(--tb-lg-flou);
+    }
+    :root[data-plateforme="ios"] .tb-brand { font-size: 1.15rem; transition: opacity .25s ease, transform .3s var(--tb-ease); }
+    :root[data-plateforme="ios"] .tb-brand .tb-logo { width: 30px; height: 30px; }
+    :root[data-plateforme="ios"] .tb-topbar-titre {
         position: absolute;
-        inset: 0 0 -22px;
-        z-index: -1;
-        background: linear-gradient(to bottom, color-mix(in srgb, var(--md-surface) 78%, transparent) 0%, color-mix(in srgb, var(--md-surface) 52%, transparent) 62%, transparent 100%);
-        -webkit-backdrop-filter: blur(10px) saturate(170%);
-        backdrop-filter: blur(10px) saturate(170%);
-        -webkit-mask-image: linear-gradient(to bottom, #000 58%, transparent);
-        mask-image: linear-gradient(to bottom, #000 58%, transparent);
+        left: 50%;
+        bottom: 0;
+        display: grid;
+        place-items: center;
+        max-width: 52%;
+        height: 52px;
+        overflow: hidden;
+        color: var(--md-on-surface);
+        font-size: 1.02rem;
+        font-weight: 750;
+        letter-spacing: -.01em;
+        white-space: nowrap;
+        text-overflow: ellipsis;
         opacity: 0;
-        transition: opacity .3s ease;
+        transform: translate(-50%, 6px);
+        transition: opacity .25s ease, transform .3s var(--tb-ease);
         pointer-events: none;
     }
-    :root[data-plateforme="ios"] .tb-defile .tb-topbar::before { opacity: 1; }
-    :root[data-plateforme="ios"] .tb-brand { gap: 9px; font-size: 1.12rem; font-weight: 750; }
-    :root[data-plateforme="ios"] .tb-brand .tb-logo { width: 28px; height: 28px; border-radius: 28%; }
-    :root[data-plateforme="ios"] .tb-topbar-titre { height: 52px; max-width: 64%; font-size: 1.02rem; font-weight: 700; letter-spacing: -.01em; }
+    :root[data-plateforme="ios"] .tb-defile-titre .tb-topbar-titre { opacity: 1; transform: translate(-50%, 0); }
+    :root[data-plateforme="ios"] .tb-defile-titre .tb-brand { opacity: 0; transform: translateY(-4px); }
+    /* Bar buttons: round glass */
+    :root[data-plateforme="ios"] .tb-topbar .tb-icon-btn {
+        width: 38px;
+        height: 38px;
+        border: .5px solid var(--tb-lg-bord);
+        border-radius: 50%;
+        background: var(--tb-lg-fond);
+        box-shadow: var(--tb-lg-reflet), 0 2px 8px rgba(25, 40, 65, .08);
+        color: var(--md-on-surface);
+        -webkit-backdrop-filter: var(--tb-lg-flou);
+        backdrop-filter: var(--tb-lg-flou);
+    }
+    :root[data-plateforme="ios"] .tb-topbar .tb-icon-btn .pi { font-size: 1.02rem; }
+    :root[data-plateforme="ios"] .tb-topbar .tb-avatar { width: 38px; height: 38px; margin: 0; }
 
     /* Tab bar: a capsule of glass floating above the home indicator */
     :root[data-plateforme="ios"] .tb-rail {
@@ -128,10 +150,7 @@
         -webkit-backdrop-filter: var(--tb-lg-flou);
         backdrop-filter: var(--tb-lg-flou);
         transform-origin: 50% 100%;
-        /* Only transform moves (shrinking while scrolling): the compositor does it, the glass is
-           not laid out and blurred again on every frame */
-        transition: transform .5s var(--tb-ios-ressort);
-        will-change: transform;
+        transition: height .45s var(--tb-ios-ressort), inset .45s var(--tb-ios-ressort), transform .45s var(--tb-ios-ressort);
     }
     :root[data-plateforme="ios"] .tb-dests { max-width: none; height: 100%; align-items: stretch; }
     :root[data-plateforme="ios"] .tb-dest {
@@ -153,10 +172,13 @@
     :root[data-plateforme="ios"] .tb-lentille { border-radius: 999px; }
 
     /* Scrolling down: the bar shrinks to its icons and lets more of the content show */
-    :root[data-plateforme="ios"] .tb-compact .tb-rail { transform: translateY(6px) scale(.84); }
-    :root[data-plateforme="ios"] .tb-compact .tb-dest-label { opacity: 0; }
-    :root[data-plateforme="ios"] .tb-compact .tb-dest-icon { transform: translateY(7px) scale(1.12); }
-    :root[data-plateforme="ios"] .tb-dest-label { transition: opacity .2s ease; }
+    :root[data-plateforme="ios"] .tb-compact .tb-rail { height: 50px; inset-inline: calc(40px + env(safe-area-inset-left)) calc(40px + env(safe-area-inset-right)); }
+    :root[data-plateforme="ios"] .tb-compact .tb-dest-label { opacity: 0; height: 0; }
+    :root[data-plateforme="ios"] .tb-dest-label { transition: opacity .2s ease, height .3s ease; }
+
+    /* More than five destinations: the last ones go behind "Plus", as in an iOS tab bar */
+    :root[data-plateforme="ios"] .tb-dest-cache { display: none; }
+    :root[data-plateforme="ios"] .tb-dest-plus { display: flex; }
 
     /* Main action: a round glass button above the bar, in the brand colour */
     :root[data-plateforme="ios"] .tb-page-head > .tb-btn.tb-fab {
@@ -250,4 +272,3 @@
 :root[data-plateforme="ios"] .tb-btn { border-radius: 999px; }
 :root[data-plateforme="ios"] .tb-btn.tb-icon { border-radius: 50%; }
 :root[data-plateforme="ios"] .tb-btn:active { transform: scale(.95); opacity: .85; }
-:root[data-plateforme="ios"] .tb-switch[aria-checked="true"] { background: var(--md-primary); }
