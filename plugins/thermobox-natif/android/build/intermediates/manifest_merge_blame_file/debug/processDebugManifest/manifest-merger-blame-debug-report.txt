@@ -3,5 +3,12 @@
 3    package="ax.ibr.thermobox.natif" >
 4
 5    <uses-sdk android:minSdkVersion="24" />
-6
-7</manifest>
+6    <!--
+7     Retour prédictif d'Android 14+ (geste depuis le bord) : la page suit le doigt, puis revient
+8         en arrière (ThermoboxNatifPlugin.activerRetour). Fusionné dans le manifeste de l'application.
+9    -->
+10    <application android:enableOnBackInvokedCallback="true" />
+10-->D:\dev\Thermobox-Ng-Client\plugins\thermobox-natif\android\src\main\AndroidManifest.xml:5:5-63
+10-->D:\dev\Thermobox-Ng-Client\plugins\thermobox-natif\android\src\main\AndroidManifest.xml:5:18-60
+11
+12</manifest>
