@@ -29,9 +29,12 @@ export class UserService {
     return this.http.get<User | null>(this.url(`/username/${encodeURIComponent(username)}`));
   }
 
-  /** Inscription publique (toujours VIEWER) — 201 si créé, 409 si le nom est pris. */
-  add(user: { username: string; password: string }): Observable<void> {
-    return this.http.post<void>(this.url(), user);
+  /**
+   * Inscription publique (toujours VIEWER) — 201 si créé, 409 si le nom est pris. [base] : un autre
+   * serveur que celui de l'application (page d'inscription).
+   */
+  add(user: { username: string; password: string }, base?: string): Observable<void> {
+    return this.http.post<void>(base ? `${base}/users` : this.url(), user);
   }
 
   /** ADMIN ou propriétaire : seuls les champs renseignés changent ; le rôle, ADMIN seulement. */

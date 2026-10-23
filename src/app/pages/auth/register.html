@@ -8,6 +8,21 @@
     <section class="tb-panel tb-auth-card">
       <h1 class="tb-panel-title">Créer un compte</h1>
       <form (submit)="creer($event)" novalidate>
+        @if (champServeur()) {
+          <div class="tb-field">
+            <label class="tb-label" for="serveur">Serveur ThermoBox</label>
+            <input id="serveur" class="tb-input" type="url" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false"
+                   [placeholder]="serveur.defaut ? serveur.lisible() : 'thermobox.mon-organisation.fr'" [value]="adresse()" (input)="adresse.set($any($event.target).value)" />
+            <span class="tb-field-hint">
+              Le serveur où créer le compte, avec le port s'il y en a un.@if (serveur.defaut) { Vide : ce site.}
+            </span>
+          </div>
+        } @else {
+          <p class="tb-auth-serveur">
+            <span><i class="pi pi-server" aria-hidden="true"></i> Sur <strong>{{ serveur.lisible() }}</strong></span>
+            <button type="button" class="tb-text-btn tb-serveur-btn" (click)="changerServeur.set(true)">Autre serveur</button>
+          </p>
+        }
         <div class="tb-field">
           <label class="tb-label" for="username">Nom d'utilisateur</label>
           <input id="username" class="tb-input" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false"

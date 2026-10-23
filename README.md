@@ -26,6 +26,10 @@ son API REST. Une seule application pour le web, la PWA et les applications iOS 
 - **Mesures** : courbes de toutes les salles ou de tous les bâtiments, tableau, export CSV
 - **Gestion** (gestionnaires et administrateurs) : consignes en masse ; création, déplacement, accès ;
   utilisateurs et groupes. Sur téléphone : une liste, une feuille d'actions par élément, un mode sélection
+- **Comptes** : plusieurs comptes sur le même appareil, sur un ou plusieurs serveurs ThermoBox (chez soi,
+  au travail…), chacun avec l'adresse de son serveur ; on passe de l'un à l'autre depuis « Changer de compte »
+  (onglet Plus sur téléphone, rail sur ordinateur) ou depuis la page de connexion. L'inscription se fait
+  sur le serveur de son choix
 - **Utilisateurs**, **Mises à jour** du serveur (administrateurs), **Profil**, **Préférences**
   (thème clair / sombre / système, unité, couleurs selon l'état, raccourcis clavier)
 - **À propos** : versions du client, du serveur et de l'interface JSF ; versions du client publiées sur

@@ -5,6 +5,7 @@ import { Acces, Groupe, User } from '../models/models';
 import { parNom } from '../core/texte';
 import { GroupeService } from './groupe.service';
 import { UserService } from './user.service';
+import { surChangementDeCompte } from '../core/auth';
 
 /** A user with what decides what they see (LigneUser of the JSF interface). */
 export interface LigneUser {
@@ -31,6 +32,14 @@ export class DroitsStore {
   readonly charge = signal(false);
 
   readonly parId = computed(() => new Map(this.users().map((l) => [l.user.id!, l])));
+
+  constructor() {
+    surChangementDeCompte(() => {
+      this.users.set([]);
+      this.groupes.set([]);
+      this.charge.set(false);
+    });
+  }
 
   async charger(): Promise<void> {
     const [users, groupes] = await firstValueFrom(forkJoin([this.usersApi.getAll(), this.groupesApi.lister()]));
