@@ -34,7 +34,7 @@
           <i class="pi" [class.pi-star-fill]="e.favori" [class.pi-star]="!e.favori"></i>
         </button>
       }
-      <a routerLink="/app/salles" class="tb-btn tb-tonal tb-hide-sm"><i class="pi pi-sitemap"></i>Bâtiments et salles</a>
+      <a routerLink="/app/salles" class="tb-btn tb-tonal tb-hide-sm"><i class="pi pi-sitemap"></i>{{ panneau() ? 'Bâtiments et salles' : 'Toutes les pièces' }}</a>
     </div>
   </header>
 
@@ -52,16 +52,32 @@
     </div>
   }
 
-  <div class="tb-hero">
-    <!-- Current state (refreshed every 30 s) -->
-    <div class="tb-hero-reading tb-ton-{{ etat().ton }}" data-vt="salle-card" [attr.data-vt-id]="e.id" style="view-transition-class: tb-card">
-      <span class="tb-hero-label">{{ boitier() ? 'Température mesurée' : auth.voitBoitiers() ? 'Moyenne des boîtiers' : 'Température' }}</span>
-      <span class="tb-temp-hero" data-vt="salle-temp" [attr.data-vt-id]="e.id" [tbWatch]="e.temperature">
-        {{ unite.t(e.temperature) }}<span class="tb-deg">{{ unite.symbole() }}</span>
-      </span>
-      <div class="tb-hero-row">
-        <span class="tb-state">{{ etat().label }}</span>
-        <span class="tb-hero-meta">
+  @if (panneau()) {
+    <!-- Panneau: the reading of the desk, the panel taking the colour of the state as a lamp -->
+    <div class="tb-hero tb-pupitre">
+      <div class="tb-lecture tb-ton-{{ etat().ton }}" data-vt="salle-card" [attr.data-vt-id]="e.id" style="view-transition-class: tb-card">
+        <div class="tb-lecture-etat">
+          <span>{{ etat().label }}</span>
+          @if (ecart() != null && etat().ton !== 'stable') {
+            <span>{{ unite.ecart(ecart()) }} {{ ecart()! > 0 ? 'au-dessus' : 'en dessous' }} de la consigne</span>
+          }
+        </div>
+        <div class="tb-lecture-corps">
+          <div>
+            <small>{{ boitier() ? 'Mesurée' : auth.voitBoitiers() ? 'Moyenne des boîtiers' : 'Mesurée' }}</small>
+            <span class="tb-temp-hero tb-lecture-mesure" data-vt="salle-temp" [attr.data-vt-id]="e.id" [tbWatch]="e.temperature">{{ unite.t(e.temperature) }}<span class="tb-deg">{{ unite.symbole() }}</span></span>
+          </div>
+          @if (!boitier()) {
+            <div>
+              <small>Consigne</small>
+              <span class="tb-temp-hero" [tbWatch]="e.consigne?.value">{{ unite.t(e.consigne?.value) }}<span class="tb-deg">{{ unite.symbole() }}</span></span>
+              @if (e.consigne?.heritee) {
+                <a [routerLink]="['/app/salle', e.consigne!.sourceId]" class="tb-lecture-source">héritée de {{ e.consigne!.sourceName }}</a>
+              }
+            </div>
+          }
+        </div>
+        <div class="tb-lecture-pied">
           @if (derniereMesure()) {
             Mesuré le {{ jjmmAHHmm(derniereMesure()) }}
           } @else if (!boitier() && !e.boitiers && auth.voitBoitiers()) {
@@ -69,58 +85,93 @@
           } @else {
             Pas encore de mesure
           }
+          @if (!boitier() && e.consigne?.date) {
+            <span>Consigne depuis le {{ jjmmAHHmm(e.consigne!.date) }}</span>
+          }
+        </div>
+      </div>
+    <!-- Photo: changed by the administrators -->
+      <div class="tb-photo" [class.tb-photo-empty]="e.image == null" data-vt="salle-photo" [attr.data-vt-id]="e.id">
+        @if (e.image != null) {
+          <tb-photo-img [salleId]="e.id" [version]="e.image" [alt]="'Photo de ' + e.name" />
+        } @else {
+          <span class="tb-photo-shape"><i class="pi pi-image"></i></span>
+          <span class="tb-photo-hint">Pas encore de photo</span>
+        }
+        @if (auth.admin()) {
+          <div class="tb-photo-actions">
+            <label class="tb-btn tb-upload" [class.tb-busy]="photoEnCours()" [class.tb-tonal]="e.image == null">
+              <i class="pi" [class.pi-camera]="!photoEnCours()" [class.pi-spinner]="photoEnCours()"></i>{{ e.image == null ? 'Ajouter une photo' : 'Changer' }}
+              <input type="file" accept="image/jpeg,image/png,image/gif,image/bmp" (change)="televerser($event)" [disabled]="photoEnCours()" />
+            </label>
+            @if (e.image != null) {
+              <button type="button" class="tb-btn tb-icon tb-photo-remove" title="Retirer la photo" aria-label="Retirer la photo" (click)="retirerPhoto()"><i class="pi pi-trash"></i></button>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  } @else {
+    <!-- Maison: a thermostat; the dial turns the consigne, the page takes the colour of the temperature -->
+    <div class="tb-hero tb-thermostat">
+      <div class="tb-thermostat-zone" data-vt="salle-card" [attr.data-vt-id]="e.id" style="view-transition-class: tb-card">
+        @if (phraseMaison()) {
+          <p class="tb-thermostat-phrase">{{ phraseMaison() }}</p>
+        }
+        @if (boitier()) {
+          <span class="tb-temp-hero tb-thermostat-seul" data-vt="salle-temp" [attr.data-vt-id]="e.id" [tbWatch]="e.temperature">{{ unite.t(e.temperature) }}<span class="tb-deg">°</span></span>
+        } @else {
+          <tb-molette [temperature]="e.temperature" [consigne]="e.consigne?.value" [(valeur)]="nouvelleConsigne"
+                      [modifiable]="auth.peutReglerConsigne()" [couleur]="couleurMaison()" [vtId]="e.id" />
+          @if (auth.peutReglerConsigne() && consigneModifiee()) {
+            <button type="button" class="tb-btn tb-btn-lg tb-thermostat-appliquer" [class.tb-busy]="envoi()" [disabled]="envoi()" (click)="envoyerConsigne()">
+              <i class="pi" [class.pi-check]="!envoi()" [class.pi-spinner]="envoi()"></i>Régler sur {{ unite.t(unite.saisieVersCelsius(nouvelleConsigne()!)) }}°
+            </button>
+          }
+        }
+        <span class="tb-thermostat-meta">
+          @if (derniereMesure()) { Mesuré le {{ jjmmAHHmm(derniereMesure()) }} } @else { Pas encore de mesure }
+          @if (e.consigne?.heritee) {
+            · objectif de <a [routerLink]="['/app/salle', e.consigne!.sourceId]">{{ e.consigne!.sourceName }}</a>
+          }
         </span>
       </div>
-      @if (!boitier()) {
-        <div class="tb-hero-consigne">
-          <span>Consigne</span>
-          <strong [tbWatch]="e.consigne?.value">{{ unite.t(e.consigne?.value) }} {{ unite.symbole() }}</strong>
-          @if (e.consigne?.date) {
-            <span class="tb-hero-meta">depuis le {{ jjmmAHHmm(e.consigne!.date) }}</span>
-          }
-          <!-- No consigne of its own: it follows its étage or bâtiment -->
-          @if (e.consigne?.heritee) {
-            <a [routerLink]="['/app/salle', e.consigne!.sourceId]" class="tb-hero-source"><i class="pi pi-sitemap"></i> héritée de {{ e.consigne!.sourceName }}</a>
-          }
-        </div>
-      }
-    </div>
-
     <!-- Photo: changed by the administrators -->
-    <div class="tb-photo" [class.tb-photo-empty]="e.image == null" data-vt="salle-photo" [attr.data-vt-id]="e.id">
-      @if (e.image != null) {
-        <tb-photo-img [salleId]="e.id" [version]="e.image" [alt]="'Photo de ' + e.name" />
-      } @else {
-        <span class="tb-photo-shape"><i class="pi pi-image"></i></span>
-        <span class="tb-photo-hint">Pas encore de photo</span>
-      }
-      @if (auth.admin()) {
-        <div class="tb-photo-actions">
-          <label class="tb-btn tb-upload" [class.tb-busy]="photoEnCours()" [class.tb-tonal]="e.image == null">
-            <i class="pi" [class.pi-camera]="!photoEnCours()" [class.pi-spinner]="photoEnCours()"></i>{{ e.image == null ? 'Ajouter une photo' : 'Changer' }}
-            <input type="file" accept="image/jpeg,image/png,image/gif,image/bmp" (change)="televerser($event)" [disabled]="photoEnCours()" />
-          </label>
-          @if (e.image != null) {
-            <button type="button" class="tb-btn tb-icon tb-photo-remove" title="Retirer la photo" aria-label="Retirer la photo" (click)="retirerPhoto()"><i class="pi pi-trash"></i></button>
-          }
-        </div>
-      }
+      <div class="tb-photo" [class.tb-photo-empty]="e.image == null" data-vt="salle-photo" [attr.data-vt-id]="e.id">
+        @if (e.image != null) {
+          <tb-photo-img [salleId]="e.id" [version]="e.image" [alt]="'Photo de ' + e.name" />
+        } @else {
+          <span class="tb-photo-shape"><i class="pi pi-image"></i></span>
+          <span class="tb-photo-hint">Pas encore de photo</span>
+        }
+        @if (auth.admin()) {
+          <div class="tb-photo-actions">
+            <label class="tb-btn tb-upload" [class.tb-busy]="photoEnCours()" [class.tb-tonal]="e.image == null">
+              <i class="pi" [class.pi-camera]="!photoEnCours()" [class.pi-spinner]="photoEnCours()"></i>{{ e.image == null ? 'Ajouter une photo' : 'Changer' }}
+              <input type="file" accept="image/jpeg,image/png,image/gif,image/bmp" (change)="televerser($event)" [disabled]="photoEnCours()" />
+            </label>
+            @if (e.image != null) {
+              <button type="button" class="tb-btn tb-icon tb-photo-remove" title="Retirer la photo" aria-label="Retirer la photo" (click)="retirerPhoto()"><i class="pi pi-trash"></i></button>
+            }
+          </div>
+        }
+      </div>
     </div>
-  </div>
+  }
 
   <!-- New consigne (ADMIN / GESTIONNAIRE) -->
-  @if (auth.peutReglerConsigne() && !boitier()) {
-    <div class="tb-card tb-consigne-card">
+  @if (auth.peutReglerConsigne() && !boitier() && (panneau() || conteneur() || d.consignesPropres.length)) {
+    <div class="tb-card tb-consigne-card" [class.tb-consigne-options-seules]="!panneau()">
       <div class="tb-card-head">
         <span class="tb-section-icon"><i class="pi pi-sliders-h"></i></span>
         <div>
-          <h2>Nouvelle consigne</h2>
+          <h2>{{ panneau() ? 'Régler la consigne' : 'Ce qui est dedans' }}</h2>
           <span class="tb-muted">
             {{ conteneur() ? 'Les salles sans consigne propre la suivent, et leurs boîtiers la reçoivent.' : 'Enregistrée sur la salle et envoyée à chacun de ses boîtiers.' }}
           </span>
         </div>
       </div>
-      <div class="tb-consigne-form">
+      <div class="tb-consigne-form" [hidden]="!panneau()">
         <tb-stepper [(valeur)]="nouvelleConsigne" />
         <button type="button" class="tb-btn tb-btn-lg" [class.tb-busy]="envoi()" [disabled]="envoi()" (click)="envoyerConsigne()">
           <i class="pi" [class.pi-send]="!envoi()" [class.pi-spinner]="envoi()"></i>Envoyer

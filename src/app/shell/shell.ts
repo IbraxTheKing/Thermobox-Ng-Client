@@ -28,7 +28,7 @@ import { TransitionsService } from '../core/transitions';
 import { ReglagesService } from '../services/reglages.service';
 import { TbComptes } from '../ui/comptes';
 import { TbSheet } from '../ui/sheet';
-import { DESTINATIONS_BARRE, Destination, destinationsDe } from './destinations';
+import { Destination, dernierOnglet, destinationsDe, placesBarre } from './destinations';
 
 /** The lens follows the finger once held this long (ms), or as soon as the finger slides. */
 const APPUI_LONG = 220;
@@ -81,11 +81,14 @@ export class Shell implements OnInit, OnDestroy {
     { initialValue: this.router.url },
   );
 
-  protected readonly destinations = computed(() => destinationsDe(this.auth));
+  /** « Maison » look: the words and the short bar of a home. */
+  protected readonly maison = computed(() => this.prefs.style() !== 'panneau');
+  protected readonly destinations = computed(() => destinationsDe(this.auth, this.maison()));
   /** Places of the bar of phones before « Plus ». */
-  protected readonly dansBarre = DESTINATIONS_BARRE;
+  protected readonly dansBarre = computed(() => placesBarre(this.maison()));
   /** Some pages only fit behind the last tab: it is « Plus » rather than « Compte ». */
-  protected readonly avecPlus = computed(() => this.destinations().length > DESTINATIONS_BARRE);
+  protected readonly avecPlus = computed(() => this.destinations().length > this.dansBarre());
+  protected readonly dernier = computed(() => dernierOnglet(this.maison(), this.avecPlus()));
   /** Phone held upright: the bar at the bottom, the last pages behind « Plus ». */
   protected readonly barreBas = this.plateforme.barreBas;
 
@@ -93,7 +96,7 @@ export class Shell implements OnInit, OnDestroy {
   protected readonly plusActif = computed(() => {
     const url = this.url().split('?')[0];
     if (['/app/plus', '/app/profil', '/app/preferences', '/app/a-propos'].some((u) => url.startsWith(u))) return true;
-    return this.barreBas() && this.destinations().slice(DESTINATIONS_BARRE).some((d) => this.estActive(d));
+    return this.barreBas() && this.destinations().slice(this.dansBarre()).some((d) => this.estActive(d));
   });
 
   // Scrolling (iOS / Android bars)
@@ -126,7 +129,7 @@ export class Shell implements OnInit, OnDestroy {
     if (this.natif.actif) {
       effect(() => {
         const dests = this.destinations();
-        const onglets: OngletNatif[] = dests.slice(0, DESTINATIONS_BARRE).map((d) => ({
+        const onglets: OngletNatif[] = dests.slice(0, this.dansBarre()).map((d) => ({
           id: d.lien,
           label: d.label,
           icone: iconeNative(d.icone),
@@ -134,11 +137,11 @@ export class Shell implements OnInit, OnDestroy {
         }));
         onglets.push({
           id: '/app/plus',
-          label: this.avecPlus() ? 'Plus' : 'Compte',
-          icone: this.avecPlus() ? 'plus' : 'compte',
+          label: this.dernier().label,
+          icone: this.dernier().natif,
           badge: this.avecPlus() && this.avis.disponible(),
         });
-        const actif = dests.slice(0, DESTINATIONS_BARRE).find((d) => this.estActive(d))?.lien ?? (this.plusActif() ? '/app/plus' : null);
+        const actif = dests.slice(0, this.dansBarre()).find((d) => this.estActive(d))?.lien ?? (this.plusActif() ? '/app/plus' : null);
         this.prefs.theme();
         // Phone held sideways: the rail of the page, not the bar
         this.natif.configurerBarre(onglets, actif, this.barreBas(), (id, retouche) => {

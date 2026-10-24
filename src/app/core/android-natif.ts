@@ -80,6 +80,8 @@ const ICONES: Record<string, string> = {
   'pi-cloud-download': 'maj',
   'pi-ellipsis-h': 'plus',
   'pi-user': 'compte',
+  'pi-home': 'maison',
+  'pi-cog': 'reglages',
   'pi-plus': 'ajouter',
   'pi-user-plus': 'ajouter_personne',
   'pi-eye': 'voir',

@@ -6,11 +6,12 @@ import { messageErreur } from '../../core/api.config';
 import { AuthService } from '../../core/auth';
 import { AvisMajService } from '../../core/avis-maj';
 import { PointT, Sparkline, sparkline } from '../../core/courbes';
-import { temps } from '../../core/dates';
+import { heure, temps } from '../../core/dates';
 import { ETATS, EtatSalle, ORDRE_ETATS, compte, etatDe } from '../../core/etat';
 import { ToastService } from '../../core/messages';
 import { FlipService } from '../../core/flip';
 import { PlateformeService } from '../../core/plateforme';
+import { PreferencesService } from '../../core/preferences';
 import { TransitionsService } from '../../core/transitions';
 import { correspond, normaliser, parNom, pluriel } from '../../core/texte';
 import { UniteService } from '../../core/unite';
@@ -27,6 +28,8 @@ import { SalleResume } from './resume';
 interface GroupeBatiment {
   batiment: Noeud | null;
   nom: string;
+  /** Panneau: the salles of each étage, one row of squares (nom null: directly in the bâtiment). */
+  etages: { nom: string | null; cle: string; salles: SalleResume[] }[];
   /** Key of the section in the folded sections (see replie). */
   cle: string;
   moyenne: number | null;
@@ -61,6 +64,9 @@ export class DashboardPage implements OnInit, OnDestroy {
   private readonly toasts = inject(ToastService);
   private readonly plateforme = inject(PlateformeService);
   private readonly transitions = inject(TransitionsService);
+  private readonly prefs = inject(PreferencesService);
+  /** Look of the site: the thermal map (Panneau) or the tiles of a home (Maison). */
+  protected readonly panneau = computed(() => this.prefs.style() === 'panneau');
   /** Cards glide to their new places when a filter or a favourite changes them. */
   private readonly flip = inject(FlipService);
 
@@ -160,10 +166,80 @@ export class DashboardPage implements OnInit, OnDestroy {
     return [...parBatiment.entries()]
       .map(([id, salles]) => {
         const batiment = salles[0].batiment;
-        return { batiment, nom: batiment?.name ?? 'Sans bâtiment', cle: id != null ? `b${id}` : 'sans', moyenne: moyennes.get(id) ?? null, salles };
+        return { batiment, nom: batiment?.name ?? 'Sans bâtiment', cle: id != null ? `b${id}` : 'sans', moyenne: moyennes.get(id) ?? null, salles, etages: this.parEtage(salles) };
       })
       .sort((a, b) => Number(a.batiment == null) - Number(b.batiment == null) || normaliser(a.nom).localeCompare(normaliser(b.nom), 'fr'));
   });
+
+  /** Panneau: one row per étage, in the order of their names; the salles without étage first. */
+  private parEtage(salles: SalleResume[]): GroupeBatiment['etages'] {
+    const m = new Map<number | null, { nom: string | null; cle: string; salles: SalleResume[] }>();
+    for (const r of salles) {
+      const etage = this.store.chemin(r.salle.id).find((n) => n.kind === 'ETAGE') ?? null;
+      const k = etage?.id ?? null;
+      const g = m.get(k) ?? { nom: etage?.name ?? null, cle: k == null ? 'sans' : `e${k}`, salles: [] };
+      g.salles.push(r);
+      m.set(k, g);
+    }
+    return [...m.values()].sort((a, b) => Number(a.nom != null) - Number(b.nom != null) || normaliser(a.nom ?? '').localeCompare(normaliser(b.nom ?? ''), 'fr', { numeric: true }));
+  }
+
+  /** Panneau: the state counters at the top, every state even at zero (a desk shows its lamps). */
+  protected readonly voyants = computed(() => {
+    const parEtat = new Map<EtatSalle, number>();
+    for (const r of this.toutes()) parEtat.set(r.etat, (parEtat.get(r.etat) ?? 0) + 1);
+    const l: { etat: EtatSalle; nombre: number }[] = [ETATS.TROP_CHAUD, ETATS.EN_CHAUFFE, ETATS.STABLE].map((etat) => ({ etat, nombre: parEtat.get(etat) ?? 0 }));
+    if (parEtat.get(ETATS.INCONNU)) l.push({ etat: ETATS.INCONNU, nombre: parEtat.get(ETATS.INCONNU)! });
+    return l;
+  });
+  protected readonly nomsVoyants: Record<string, string> = { chaud: 'Trop chaudes', chauffe: 'En chauffe', stable: 'Stables', inconnu: 'Sans mesure' };
+
+  /** Panneau: time of the last measure received, any salle. */
+  protected readonly dernierReleve = computed(() => {
+    const t = Math.max(0, ...this.toutes().map((r) => (r.salle.derniereMesure ? temps(r.salle.derniereMesure) : 0)).filter((x) => !isNaN(x)));
+    return t > 0 ? heure(new Date(t)) : null;
+  });
+
+  /**
+   * Maison: the house in one sentence, what a person wants to know first. « Il fait bon partout. »,
+   * or what is not comfortable, by name. Parts in bold: the names.
+   */
+  protected readonly phrase = computed<{ texte: string; nom?: boolean }[]>(() => {
+    const toutes = this.toutes();
+    if (!toutes.length) return [];
+    const par = (ton: string) => toutes.filter((r) => r.etat.ton === ton).map((r) => r.salle.name ?? '');
+    const chaudes = par('chaud');
+    const chauffent = par('chauffe');
+    const inconnues = par('inconnu');
+    if (!chaudes.length && !chauffent.length && !inconnues.length) return [{ texte: toutes.length > 1 ? 'Il fait bon partout.' : 'Il fait bon.' }];
+    const morceaux: { texte: string; nom?: boolean }[] = [];
+    const stables = toutes.length - chaudes.length - chauffent.length - inconnues.length;
+    if (stables >= toutes.length / 2) morceaux.push({ texte: 'Il fait bon presque partout. ' });
+    const noms = (l: string[]) => {
+      // More than three: a count rather than a list
+      if (l.length > 3) return [{ texte: `${l.length} pièces` }];
+      return l.flatMap((n, i) => [...(i ? [{ texte: i === l.length - 1 ? ' et ' : ', ' }] : []), { texte: n, nom: true }]);
+    };
+    const phrases: { texte: string; nom?: boolean }[][] = [];
+    if (chauffent.length) phrases.push([...noms(chauffent), { texte: chauffent.length > 1 ? ' chauffent' : ' chauffe' }]);
+    if (chaudes.length) phrases.push([{ texte: 'il fait un peu chaud dans ' }, ...noms(chaudes)]);
+    if (inconnues.length) phrases.push([{ texte: 'pas de mesure pour ' }, ...noms(inconnues)]);
+    phrases.forEach((p, i) => {
+      if (i) morceaux.push({ texte: i === phrases.length - 1 ? ' et ' : ', ' });
+      morceaux.push(...p);
+    });
+    morceaux.push({ texte: '.' });
+    // A capital letter at the start of each sentence
+    const premier = morceaux.findIndex((m, i) => i === 0 || morceaux[i - 1].texte.endsWith('. '));
+    if (premier >= 0 && !morceaux[premier].nom) morceaux[premier] = { ...morceaux[premier], texte: morceaux[premier].texte.charAt(0).toUpperCase() + morceaux[premier].texte.slice(1) };
+    const apres = morceaux.findIndex((m, i) => i > 0 && morceaux[i - 1].texte.endsWith('. '));
+    if (apres > 0 && !morceaux[apres].nom) morceaux[apres] = { ...morceaux[apres], texte: morceaux[apres].texte.charAt(0).toUpperCase() + morceaux[apres].texte.slice(1) };
+    return morceaux;
+  });
+
+  /** Maison: few rooms, no search nor filters; one bâtiment, no section titles. */
+  protected readonly avecFiltres = computed(() => this.panneau() || this.toutes().length > 12);
+  protected readonly plusieursBatiments = computed(() => this.store.batiments().length > 1);
 
   protected readonly vide = computed(() => this.store.arbre() != null && this.toutes().length === 0);
   protected readonly aucunResultat = computed(() => this.toutes().length > 0 && this.favoris().length === 0 && this.groupes().length === 0);

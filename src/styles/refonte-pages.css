@@ -1,0 +1,181 @@
+/*
+ * Pages built for the 2026-10 look (refonte.css): the dashboard (thermal map / tiles of a home)
+ * and the page of a salle (control desk / thermostat).
+ */
+
+/* ============================== Aperçu ============================== */
+
+.tb-apercu-sous { margin: 6px 0 0; color: var(--md-on-surface-variant); font-size: .95rem; }
+/* Maison: the house in one sentence, the names in bold */
+.tb-apercu-phrase { max-width: 28ch; margin: 10px 0 0; font-size: clamp(1.25rem, 1.1rem + .6vw, 1.55rem); font-weight: 300; line-height: 1.3; color: var(--md-on-surface); }
+.tb-apercu-phrase b { font-weight: 600; }
+
+/* Panneau: the lamps of the desk, one cell per state */
+.tb-voyants { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); margin: 0 0 16px; border: 1px solid var(--md-outline-variant); border-radius: var(--tb-shape-lg); background: var(--tb-glass); overflow: hidden; }
+.tb-voyant { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-width: 0; padding: 10px 14px 12px; border: 0; border-left: 1px solid var(--md-outline-variant); background: none; color: var(--md-on-surface); font: inherit; text-align: left; cursor: pointer; }
+.tb-voyant:first-child { border-left: 0; }
+.tb-voyant b { font-size: 1.9rem; line-height: 1; }
+.tb-voyant span { display: flex; align-items: center; gap: 7px; color: var(--md-on-surface-variant); font-size: .85rem; white-space: nowrap; }
+.tb-lampe { flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--tone); box-shadow: 0 0 0 2px color-mix(in srgb, var(--tone) 24%, transparent); }
+.tb-voyant:hover:not(:disabled) { background: var(--md-surface-container-low); }
+.tb-voyant.tb-voyant-on { background: var(--md-surface-container-high); box-shadow: inset 0 -3px 0 var(--tone); }
+.tb-voyant:disabled { cursor: default; }
+.tb-voyant:disabled b { color: var(--md-on-surface-variant); }
+
+/* Panneau: the colour scale, legend of the squares */
+.tb-echelle { display: grid; grid-template-columns: 1fr 1fr 1fr; margin: 4px 0 6px; color: var(--md-on-surface-variant); font-size: .8rem; }
+.tb-echelle i { grid-column: 1 / -1; height: 8px; margin-bottom: 5px; border-radius: 4px; background: linear-gradient(90deg, #2f5fae, #a9c1e2 30%, var(--md-surface-container-highest) 50%, #f0b48f 70%, #c94a35); }
+:root[data-theme="dark"] .tb-echelle i { background: linear-gradient(90deg, #4673c4, #2b4467 30%, #2a312e 50%, #6e402a 70%, #c8523c); }
+.tb-echelle span:nth-of-type(2) { text-align: center; }
+.tb-echelle span:nth-of-type(3) { text-align: right; }
+
+/* Panneau: a row of squares per étage, its name written up its edge */
+.tb-etage { display: grid; grid-template-columns: 22px 1fr; gap: 8px; margin-bottom: 8px; }
+.tb-etage-nom { writing-mode: vertical-rl; transform: rotate(180deg); align-self: center; color: var(--md-on-surface-variant); font-size: .78rem; font-weight: 500; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-height: 100%; }
+.tb-etage:not(:has(.tb-etage-nom)) { grid-template-columns: 1fr; }
+.tb-cases { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 5px; }
+
+/* A square of the thermal map */
+:root .tb-room.tb-case {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 116px;
+    padding: 10px 12px 10px;
+    border: 0;
+    border-radius: var(--tb-shape-sm);
+    background: var(--c);
+    color: var(--t);
+    overflow: hidden;
+    box-shadow: none;
+    transition: transform var(--tb-fast) var(--tb-ease);
+}
+.tb-room.tb-case:hover { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--t) 40%, transparent); }
+.tb-room.tb-case:has(.tb-stretched:active) { transform: scale(.98); }
+.tb-case-nom { position: relative; z-index: 1; font-size: .9rem; font-weight: 500; line-height: 1.2; overflow-wrap: anywhere; }
+.tb-case-bas { position: relative; z-index: 1; display: flex; align-items: baseline; justify-content: space-between; gap: 6px; }
+.tb-case-bas b { font-size: 2.05rem; line-height: 1; letter-spacing: -.02em; }
+.tb-case-bas small { color: var(--d); font-family: var(--tb-font-chiffres); font-size: .85rem; font-weight: 500; white-space: nowrap; }
+.tb-case-courbe { position: absolute; left: 0; right: 0; bottom: 34px; width: 100%; height: 38px; opacity: .45; }
+.tb-case-courbe path { fill: none; stroke: var(--t); stroke-width: 1.4; vector-effect: non-scaling-stroke; }
+.tb-case-favori { position: absolute; top: 10px; right: 10px; color: var(--t); font-size: .75rem; opacity: .7; }
+.tb-case.tb-attente, .tb-tuile.tb-attente { background: var(--md-surface-container-high); animation: tb-attente-pulse 1.4s ease-in-out infinite; }
+
+/* Maison: soft tiles tinted by the temperature */
+.tb-tuiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+:root .tb-room.tb-tuile {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 168px;
+    padding: 16px 18px 14px;
+    border: 0;
+    border-radius: var(--tb-shape-xxl);
+    background: var(--c);
+    color: var(--md-on-surface);
+    overflow: hidden;
+    box-shadow: none;
+    transition: transform var(--tb-fast) var(--tb-ease);
+}
+.tb-room.tb-tuile:has(.tb-stretched:active) { transform: scale(.98); }
+.tb-tuile-nom { position: relative; z-index: 1; font-size: 1.02rem; padding-right: 30px; }
+.tb-tuile-t { position: relative; z-index: 1; margin-top: 6px; font-size: 3.4rem; line-height: 1; letter-spacing: -.045em; }
+.tb-tuile-t span { font-size: 1.5rem; vertical-align: 1.3rem; margin-left: 2px; font-weight: 300; }
+.tb-tuile-etat { position: relative; z-index: 1; margin-top: 4px; color: var(--md-on-surface-variant); font-size: .85rem; }
+.tb-tuile-etat b { color: var(--f); font-weight: 600; }
+.tb-tuile-courbe { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 46px; }
+.tb-tuile-aire { fill: color-mix(in srgb, var(--f) 14%, transparent); }
+.tb-tuile-ligne { fill: none; stroke: color-mix(in srgb, var(--f) 60%, transparent); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+.tb-tuile-favori { position: absolute; top: 10px; right: 10px; z-index: 2; display: grid; place-items: center; width: 34px; height: 34px; border: 0; border-radius: 50%; background: none; color: var(--md-on-surface-variant); cursor: pointer; opacity: .55; }
+.tb-tuile-favori.tb-fav-on { color: var(--tb-star); opacity: 1; }
+.tb-tuile-favori:hover { background: color-mix(in srgb, var(--md-on-surface) 8%, transparent); opacity: 1; }
+
+@media (max-width: 640px) {
+    .tb-cases { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
+    .tb-room.tb-case { min-height: 0; aspect-ratio: 1 / .95; padding: 8px 9px; }
+    .tb-case-nom { font-size: .8rem; }
+    .tb-case-bas { flex-direction: column; align-items: flex-start; gap: 0; }
+    .tb-case-bas b { font-size: 1.7rem; }
+    .tb-case-bas small { font-size: .74rem; }
+    .tb-case-courbe { display: none; }
+    .tb-tuiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .tb-room.tb-tuile { min-height: 158px; padding: 14px 15px 12px; border-radius: var(--tb-shape-xl); }
+    .tb-tuile-t { font-size: 3rem; }
+    .tb-voyant { padding: 9px 11px 10px; }
+    .tb-voyant b { font-size: 1.6rem; }
+    .tb-voyant span { font-size: .78rem; }
+}
+
+/* Entrance: the squares and tiles rise in turn, once */
+.tb-entering :is(.tb-cases, .tb-tuiles) > * { animation: tb-rise .45s var(--tb-ease) both; animation-delay: calc(.08s + var(--i, 0) * 30ms); }
+:is(.tb-cases, .tb-tuiles) > :nth-child(2) { --i: 1; } :is(.tb-cases, .tb-tuiles) > :nth-child(3) { --i: 2; }
+:is(.tb-cases, .tb-tuiles) > :nth-child(4) { --i: 3; } :is(.tb-cases, .tb-tuiles) > :nth-child(5) { --i: 4; }
+:is(.tb-cases, .tb-tuiles) > :nth-child(6) { --i: 5; } :is(.tb-cases, .tb-tuiles) > :nth-child(n + 7) { --i: 6; }
+/* Not the stripe of the old cards */
+.tb-room.tb-case::before, .tb-room.tb-tuile::before { display: none; }
+
+/* ============================== Page of a salle ============================== */
+
+/* Breadcrumb: a path, not buttons */
+.tb-crumb { padding: 0; background: none; font-weight: 500; }
+a.tb-crumb:hover { background: none; text-decoration: underline; }
+.tb-crumb-kind { padding: 2px 8px; border-radius: var(--tb-shape-full); background: var(--md-surface-container-high); color: var(--md-on-surface); font-size: .78rem; font-weight: 600; letter-spacing: 0; text-transform: none; }
+:root[data-style="panneau"] .tb-crumb-kind { border-radius: var(--tb-shape-xs); }
+
+/* Panneau: the reading of the desk */
+.tb-hero.tb-pupitre { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); align-items: start; }
+.tb-lecture { overflow: hidden; border: 1px solid color-mix(in srgb, var(--tone) 50%, var(--md-outline-variant)); border-radius: var(--tb-shape-xl); background: var(--tb-glass); }
+.tb-lecture-etat { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding: 9px 16px; background: var(--tone); color: #fff; font-weight: 600; font-size: .95rem; }
+.tb-ton-inconnu .tb-lecture-etat, .tb-lecture.tb-ton-inconnu .tb-lecture-etat { color: var(--md-surface-container-lowest); }
+:root[data-theme="dark"] .tb-lecture-etat { color: #121514; }
+.tb-lecture-corps { display: grid; grid-template-columns: 1fr 1fr; }
+.tb-lecture-corps > div { display: flex; flex-direction: column; gap: 6px; min-width: 0; padding: 16px 18px 18px; }
+.tb-lecture-corps > div + div { border-left: 1px solid var(--md-outline-variant); }
+.tb-lecture-corps small { color: var(--md-on-surface-variant); font-size: .85rem; }
+.tb-lecture .tb-temp-hero { font-size: clamp(3.2rem, 2.4rem + 3vw, 5rem); line-height: .95; }
+.tb-lecture .tb-temp-hero .tb-deg { font-size: .38em; margin: .18em 0 0 .08em; color: var(--md-on-surface-variant); }
+.tb-lecture-mesure { color: var(--tone); }
+.tb-lecture.tb-ton-stable .tb-lecture-mesure, .tb-lecture.tb-ton-inconnu .tb-lecture-mesure { color: var(--md-on-surface); }
+.tb-lecture-source { color: var(--md-on-surface-variant); font-size: .85rem; }
+.tb-lecture-pied { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px 16px; padding: 10px 18px; border-top: 1px solid var(--md-outline-variant); color: var(--md-on-surface-variant); font-size: .85rem; }
+
+/* Maison: a thermostat */
+.tb-hero.tb-thermostat { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+.tb-thermostat-zone { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 8px 0 12px; border-radius: var(--tb-shape-xxl); }
+.tb-thermostat-phrase { align-self: stretch; margin: 0 0 4px; font-size: clamp(1.2rem, 1.05rem + .6vw, 1.5rem); font-weight: 300; line-height: 1.3; }
+.tb-thermostat-seul { margin: 24px 0; font-size: 6rem; }
+.tb-thermostat-appliquer { margin-top: 6px; }
+.tb-thermostat-meta { margin-top: 4px; color: var(--md-on-surface-variant); font-size: .85rem; text-align: center; }
+.tb-thermostat-meta a { color: inherit; }
+/* The options for an étage or a bâtiment, without the form (the dial is the form) */
+.tb-consigne-options-seules .tb-consigne-options { margin-top: 0; }
+
+/* The dial */
+tb-molette { display: flex; flex-direction: column; align-items: center; }
+.tb-molette { position: relative; width: min(300px, 78vw); aspect-ratio: 1; }
+.tb-molette svg { width: 100%; height: 100%; overflow: visible; touch-action: none; }
+.tb-molette-piste { fill: none; stroke: color-mix(in srgb, var(--md-on-surface) 10%, transparent); stroke-width: 22; stroke-linecap: round; }
+.tb-molette-arc { fill: none; stroke: var(--m); stroke-width: 22; stroke-linecap: round; transition: stroke .6s ease; }
+.tb-molette-bouton { fill: var(--md-surface-container-lowest); stroke: var(--m); stroke-width: 3; cursor: grab; filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .18)); }
+.tb-molette-bouton:focus-visible { outline: none; stroke-width: 6; }
+.tb-molette-mobile { cursor: pointer; }
+.tb-molette-centre { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; pointer-events: none; }
+.tb-molette-centre small { color: var(--md-on-surface-variant); font-size: .9rem; }
+.tb-molette-centre b { font-size: clamp(4.4rem, 3.6rem + 3vw, 5.6rem); line-height: 1; letter-spacing: -.05em; }
+.tb-molette-centre b span { font-size: .4em; vertical-align: .9em; margin-left: .04em; font-weight: 300; }
+.tb-molette-centre em { font-style: normal; font-size: .95rem; }
+.tb-molette-centre em.tb-molette-nouvelle { color: var(--m); font-weight: 600; }
+.tb-molette-pas { display: flex; gap: 72px; margin-top: -14px; }
+.tb-molette-pas button { display: grid; place-items: center; width: 52px; height: 52px; border: 0; border-radius: 50%; background: var(--tb-field); color: var(--md-on-surface); font-size: 1.05rem; cursor: pointer; }
+.tb-molette-pas button:hover { background: var(--tb-field-hover); }
+.tb-molette-pas button:active { transform: scale(.94); }
+
+@media (max-width: 840px) {
+    .tb-hero.tb-pupitre, .tb-hero.tb-thermostat { grid-template-columns: 1fr; }
+    .tb-thermostat-phrase { text-align: left; }
+    .tb-lecture-corps > div { padding: 12px 14px 14px; }
+}
+
+/* The words of a square or tile sit above its curve, but a tap on them still opens the salle */
+:is(.tb-case-nom, .tb-case-bas, .tb-tuile-nom, .tb-tuile-t, .tb-tuile-etat, .tb-case-courbe, .tb-tuile-courbe) { pointer-events: none; }

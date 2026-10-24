@@ -41,6 +41,9 @@ export class UtilisateursPage implements OnInit {
   private readonly arbreAcces = viewChild(TbArbreAcces);
 
   protected readonly roles = ROLES;
+  protected nomRole(r: string | null | undefined): string {
+    return r ? (({ ADMIN: 'Administrateur', GESTIONNAIRE: 'Gestionnaire', VIEWER: 'Lecteur' }) as Record<string, string>)[r] ?? r : '';
+  }
   protected readonly recherche = signal('');
   /** Role chip picked, null for all. */
   protected readonly roleFiltre = signal<UserRole | null>(null);

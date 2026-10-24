@@ -1,7 +1,7 @@
 <header class="tb-page-head">
   <div class="tb-page-title">
     <span class="tb-eyebrow">Organisation</span>
-    <h1>Bâtiments et salles</h1>
+    <h1>{{ maison() ? 'Pièces' : 'Bâtiments et salles' }}</h1>
   </div>
   @if (auth.gestionnaire()) {
     <a routerLink="/app/gestion" class="tb-btn tb-tonal tb-hide-sm"><i class="pi pi-table"></i>Gérer en tableau</a>

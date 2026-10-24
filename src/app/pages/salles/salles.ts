@@ -6,6 +6,7 @@ import { firstValueFrom } from 'rxjs';
 import { messageErreur } from '../../core/api.config';
 import { AuthService } from '../../core/auth';
 import { ConfirmService, ToastService } from '../../core/messages';
+import { PreferencesService } from '../../core/preferences';
 import { UniteService } from '../../core/unite';
 import { Noeud, SalleKind } from '../../models/models';
 import { ArbreStore, ENFANTS, ICONES, LIBELLES } from '../../services/arbre.store';
@@ -29,6 +30,9 @@ export class SallesPage implements OnInit, OnDestroy {
   protected readonly auth = inject(AuthService);
   protected readonly store = inject(ArbreStore);
   protected readonly unite = inject(UniteService);
+  private readonly prefs = inject(PreferencesService);
+  /** « Maison »: the rooms of the house. */
+  protected readonly maison = computed(() => this.prefs.style() !== 'panneau');
   private readonly api = inject(HierarchieService);
   private readonly salles = inject(SalleService);
   private readonly toasts = inject(ToastService);

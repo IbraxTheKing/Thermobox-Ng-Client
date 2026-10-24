@@ -10,6 +10,7 @@ import { complet, heure, jjmmHHmm, parseDate, temps, versChamp, versLocal } from
 import { EtatSalle, etatDe, horsConsigne } from '../../core/etat';
 import { donnerFichier } from '../../core/fichier';
 import { ConfirmService, ToastService } from '../../core/messages';
+import { PreferencesService } from '../../core/preferences';
 import { normaliser, parNom } from '../../core/texte';
 import { UniteService, lireNombre } from '../../core/unite';
 import { Noeud, TemperatureType } from '../../models/models';
@@ -54,6 +55,9 @@ const SANS_BATIMENT = -1;
 export class MesuresPage implements OnInit {
   protected readonly auth = inject(AuthService);
   protected readonly unite = inject(UniteService);
+  /** « Maison »: the history of the house. */
+  protected readonly maison = computed(() => this.prefs.style() !== 'panneau');
+  private readonly prefs = inject(PreferencesService);
   private readonly store = inject(ArbreStore);
   private readonly climat = inject(ClimatService);
   private readonly temperatures = inject(TemperatureService);
