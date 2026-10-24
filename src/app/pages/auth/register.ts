@@ -2,7 +2,8 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
-import { messageErreur } from '../../core/api.config';
+import { ServeurService, adresseLisible, messageErreur, versBase } from '../../core/api.config';
+import { PlateformeService } from '../../core/plateforme';
 import { PreferencesService } from '../../core/preferences';
 import { UserService } from '../../services/user.service';
 import { TbPassword } from '../../ui/controles';
@@ -23,7 +24,10 @@ export function force(s: string): 0 | 1 | 2 {
   return points >= 4 ? 2 : points >= 2 ? 1 : 0;
 }
 
-/** Inscription (register.xhtml): a self-registered account is always a VIEWER. */
+/**
+ * Inscription (register.xhtml): a self-registered account is always a VIEWER. On the server of the
+ * app, or another one (the mobile app on first launch, or « Autre serveur »).
+ */
 @Component({
   selector: 'tb-register',
   imports: [RouterLink, TbPassword],
@@ -34,6 +38,8 @@ export class RegisterPage {
   private readonly users = inject(UserService);
   private readonly router = inject(Router);
   protected readonly prefs = inject(PreferencesService);
+  protected readonly serveur = inject(ServeurService);
+  protected readonly plateforme = inject(PlateformeService);
 
   protected readonly username = signal('');
   protected readonly password = signal('');
@@ -41,6 +47,9 @@ export class RegisterPage {
   protected readonly envoye = signal(false);
   protected readonly enCours = signal(false);
   protected readonly erreur = signal<string | null>(null);
+  protected readonly adresse = signal(this.serveur.saisie() ? adresseLisible(this.serveur.base()) : '');
+  protected readonly changerServeur = signal(false);
+  protected readonly champServeur = computed(() => this.serveur.inconnu() || this.changerServeur());
 
   protected readonly erreurNom = computed(() => {
     const n = this.username().trim();
@@ -66,11 +75,18 @@ export class RegisterPage {
     e.preventDefault();
     this.envoye.set(true);
     this.erreur.set(null);
+    const base = this.champServeur() ? (versBase(this.adresse()) ?? this.serveur.defaut) : this.serveur.base();
+    if (!base) {
+      this.erreur.set("Indique l'adresse du serveur ThermoBox");
+      return;
+    }
     if (this.erreurNom() || this.erreurMdp() || this.erreurConfirm()) return;
     this.enCours.set(true);
     try {
-      await firstValueFrom(this.users.add({ username: this.username().trim(), password: this.password() }));
-      await this.router.navigate(['/login'], { queryParams: { inscrit: 'true' } });
+      const username = this.username().trim();
+      await firstValueFrom(this.users.add({ username, password: this.password() }, base));
+      // The login page, ready for the new account: its server and its name
+      await this.router.navigate(['/login'], { queryParams: { inscrit: 'true', nom: username, serveur: base } });
     } catch (err) {
       const m = messageErreur(err, 'Inscription impossible');
       this.erreur.set(m === 'Username already taken' ? "Ce nom d'utilisateur est déjà pris" : m);

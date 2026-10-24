@@ -232,3 +232,49 @@
     .tb-en-selection .tb-gest-coche { animation: tb-coche .35s var(--tb-spring) both; }
     .tb-en-selection .tb-liste-gest > li:nth-child(-n + 12) .tb-gest-coche { animation-delay: calc(var(--i, 0) * 20ms); }
 }
+
+/* ============================== Pull to refresh (ui/tirer.ts) ============================== */
+
+.tb-tirer {
+    --tb-tirer-p: 0;
+    position: fixed;
+    top: var(--tb-topbar-h, 0px);
+    left: 50%;
+    z-index: 45;
+    opacity: 0;
+    pointer-events: none;
+}
+.tb-tirer-rond {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--md-surface-container-high, var(--md-surface));
+    color: var(--md-primary);
+    box-shadow: 0 2px 8px rgb(0 0 0 / .18);
+    font-size: 1.05rem;
+}
+/* The arrow turns with the pull, then points up when letting go would refresh */
+.tb-tirer .pi { transform: rotate(calc(var(--tb-tirer-p) * 180deg)); transition: transform .12s linear; }
+.tb-tirer-pret .tb-tirer-rond { background: var(--md-primary); color: var(--md-on-primary); }
+.tb-tirer-charge .pi { animation: tb-tirer-tourne .8s linear infinite; }
+.tb-tirer-charge .pi::before { content: "\e9f6"; }
+@keyframes tb-tirer-tourne { to { transform: rotate(360deg); } }
+/* The browser's own pull (Chrome reloads the whole app) stays out of it */
+html.tb-tirer-page { overscroll-behavior-y: contain; }
+:root[data-plateforme="ios"] .tb-tirer-rond { background: color-mix(in srgb, var(--md-surface) 80%, transparent); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+
+/* ============================== Phones: lighter motion ============================== */
+
+/*
+ * Touch screens (phones, tablets): the curves of the cards appear by fading in instead of being
+ * drawn from left to right. Drawing them animates a clip, which the browser redraws on every
+ * frame for each card (it can't hand it to the graphics chip as it does for fades and moves):
+ * on a phone, with the cards rising at the same time, it was the stutter of each page change.
+ */
+@media (hover: none) {
+    .tb-spark-new svg,
+    .tb-entering .tb-spark svg { animation-name: tb-fade-in; animation-duration: .6s; }
+    .tb-spark-new .tb-spark-fill { animation-name: tb-fade-in; animation-duration: .6s; }
+}

@@ -26,6 +26,7 @@ import { PreferencesService } from '../core/preferences';
 import { TitreService } from '../core/titre';
 import { TransitionsService } from '../core/transitions';
 import { ReglagesService } from '../services/reglages.service';
+import { TbComptes } from '../ui/comptes';
 import { TbSheet } from '../ui/sheet';
 import { DESTINATIONS_BARRE, Destination, destinationsDe } from './destinations';
 
@@ -47,7 +48,7 @@ const GLISSE = 8;
  */
 @Component({
   selector: 'tb-shell',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, TbSheet],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, TbSheet, TbComptes],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './shell.html',
   host: {
@@ -110,6 +111,8 @@ export class Shell implements OnInit, OnDestroy {
 
   // Lens held (iOS)
   protected readonly saisie = signal(false);
+  /** « Changer de compte » (rail of wide screens; on phones: the Plus page). */
+  protected readonly comptes = signal(false);
   /** Tab under the held lens. */
   protected readonly survolee = signal<string | null>(null);
   private appui: { id: number; x: number; t: number; dx: number; vx: number; minuterie: ReturnType<typeof setTimeout> } | null = null;
@@ -139,7 +142,10 @@ export class Shell implements OnInit, OnDestroy {
         this.prefs.theme();
         // Phone held sideways: the rail of the page, not the bar
         this.natif.configurerBarre(onglets, actif, this.barreBas(), (id, retouche) => {
-          if (retouche) scrollTo({ top: 0, behavior: this.prefs.animer() ? 'smooth' : 'auto' });
+          // The tab again: back to its first page (« Plus » from À propos, Salles from a
+          // salle…), as the web bar does; already there, back to the top
+          const ici = this.router.url.split(/[?#]/)[0];
+          if (retouche && ici === id) scrollTo({ top: 0, behavior: this.prefs.animer() ? 'smooth' : 'auto' });
           else void this.router.navigateByUrl(id);
         });
       });

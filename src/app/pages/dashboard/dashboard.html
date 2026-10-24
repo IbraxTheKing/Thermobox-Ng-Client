@@ -3,10 +3,13 @@
     <span class="tb-eyebrow">Bonjour {{ auth.user()?.username }}</span>
     <h1>Aperçu</h1>
   </div>
-  <button type="button" class="tb-btn tb-icon tb-tonal" data-action="actualiser" title="Actualiser" aria-label="Actualiser"
-          [class.tb-busy]="store.chargement()" (click)="actualiser()">
-    <i class="pi pi-refresh"></i>
-  </button>
+  <!-- Phones: pull the page down instead (TirerPourActualiser) -->
+  @if (!tirer()) {
+    <button type="button" class="tb-btn tb-icon tb-tonal" data-action="actualiser" title="Actualiser" aria-label="Actualiser"
+            [class.tb-busy]="store.chargement()" (click)="actualiser()">
+      <i class="pi pi-refresh"></i>
+    </button>
+  }
 </header>
 
 @if (avis.disponible()) {

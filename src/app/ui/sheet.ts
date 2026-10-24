@@ -53,7 +53,7 @@ const DUREE_FERMETURE = 320;
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (visible()) {
-      <div class="tb-scrim" [class.tb-scrim-ferme]="fermeture()" [class.tb-sheet-natif]="enNatif()" (pointerdown)="surFond($event)" (keydown.escape)="fermer()">
+      <div class="tb-scrim" [class.tb-scrim-ferme]="fermeture()" [class.tb-sheet-natif]="enNatif()" (pointerdown)="appuiFond($event)" (click)="clicFond($event)" (keydown.escape)="fermer()">
         <section
           #boite
           class="tb-dialog"
@@ -65,7 +65,7 @@ const DUREE_FERMETURE = 320;
           [attr.aria-hidden]="enNatif() ? true : null"
           tabindex="-1"
           (animationend)="finAnimation($event)"
-          (pointerdown)="debutGlisse($event)"
+          (touchstart)="debutGlisse($event)"
         >
           <div class="tb-grabber" aria-hidden="true"></div>
           @if (titre() || !sansEntete()) {
@@ -102,7 +102,8 @@ export class TbSheet {
   protected readonly enNatif = signal(false);
   private readonly boite = viewChild<ElementRef<HTMLElement>>('boite');
   private focusAvant: HTMLElement | null = null;
-  private glisse: { y: number; dy: number; t: number } | null = null;
+  /** The touch that began on the dark background around the sheet. */
+  private fondTouche = false;
   private verrouillee = false;
   private minuterie?: ReturnType<typeof setTimeout>;
 
@@ -176,8 +177,21 @@ export class TbSheet {
     liberer(this.doc);
   }
 
-  protected surFond(e: PointerEvent): void {
-    if (e.target === e.currentTarget) this.fermer();
+  /**
+   * A tap outside the sheet only closes it. Closed on the click, not on the press: closing as the
+   * finger touched let the end of that same tap go through to whatever was under the sheet.
+   */
+  protected appuiFond(e: PointerEvent): void {
+    this.fondTouche = e.target === e.currentTarget;
+  }
+
+  protected clicFond(e: MouseEvent): void {
+    const dehors = this.fondTouche && e.target === e.currentTarget;
+    this.fondTouche = false;
+    if (!dehors) return;
+    e.preventDefault();
+    e.stopPropagation();
+    this.fermer();
   }
 
   // ---------------------------------------------------------------- native menu (Android app)
@@ -222,43 +236,76 @@ export class TbSheet {
 
   // ---------------------------------------------------------------- swipe down to close
 
-  /** Phones: dragging the sheet down from its top closes it. */
-  protected debutGlisse(e: PointerEvent): void {
+  /**
+   * Phones: the whole sheet follows the finger down, from anywhere on it (its rows and buttons
+   * too: the tap that started the drag is then not a tap), as long as what is under the finger is
+   * scrolled to its top. Let go far or fast enough and it closes; else it springs back.
+   */
+  protected debutGlisse(e: TouchEvent): void {
     const boite = this.boite()?.nativeElement;
-    if (!boite || e.pointerType === 'mouse' || innerWidth > 640) return;
-    const corps = boite.querySelector('.tb-dialog-body');
-    if (corps && corps.scrollTop > 0) return;
-    if ((e.target as HTMLElement).closest('input, select, textarea, button, a, label')) return;
-    this.glisse = { y: e.clientY, dy: 0, t: Date.now() };
-    const bouger = (ev: PointerEvent) => {
-      if (!this.glisse) return;
-      this.glisse.dy = Math.max(0, ev.clientY - this.glisse.y);
-      boite.style.transform = `translateY(${this.glisse.dy}px)`;
+    if (!boite || e.touches.length !== 1 || innerWidth > 640) return;
+    const cible = e.target as HTMLElement;
+    // What takes the finger itself: a slider, text being selected, a chart
+    if (cible.closest('input[type="range"], textarea, .tb-graphique, [data-sans-geste]')) return;
+    // Something scrolled under the finger scrolls back up first
+    for (let el: HTMLElement | null = cible; el && el !== boite.parentElement; el = el.parentElement) {
+      if (el.scrollTop > 0) return;
+    }
+    const t0 = e.touches[0];
+    const g: { x: number; y: number; dy: number; t: number; vy: number; mode: '?' | 'oui' | 'non' } = { x: t0.clientX, y: t0.clientY, dy: 0, t: e.timeStamp, vy: 0, mode: '?' };
+
+    const bouger = (ev: TouchEvent) => {
+      const t = ev.touches[0];
+      const dy = t.clientY - g.y;
+      if (g.mode === '?') {
+        if (Math.hypot(t.clientX - g.x, dy) < 8) return;
+        g.mode = dy > 0 && Math.abs(dy) > Math.abs(t.clientX - g.x) ? 'oui' : 'non';
+        if (g.mode === 'non') {
+          finir();
+          return;
+        }
+        boite.style.transition = 'none';
+        // Not a tap on the row the finger started on
+        (this.doc.activeElement as HTMLElement | null)?.blur?.();
+      }
+      ev.preventDefault();
+      const dt = Math.max(1, ev.timeStamp - g.t);
+      g.vy = (Math.max(0, dy) - g.dy) / dt;
+      g.dy = Math.max(0, dy);
+      g.t = ev.timeStamp;
+      boite.style.transform = `translateY(${g.dy}px)`;
     };
     const lacher = () => {
-      this.doc.removeEventListener('pointermove', bouger);
-      this.doc.removeEventListener('pointerup', lacher);
-      this.doc.removeEventListener('pointercancel', lacher);
-      const g = this.glisse;
-      this.glisse = null;
-      if (!g) return;
-      const rapide = g.dy > 40 && Date.now() - g.t < 250;
-      boite.style.transition = 'transform .25s ease';
-      if (g.dy > boite.offsetHeight / 3 || rapide) {
-        boite.style.transform = 'translateY(100%)';
+      finir();
+      if (g.mode !== 'oui') return;
+      // The click that ends the drag must not press the button under the finger
+      const avaler = (c: Event) => {
+        c.preventDefault();
+        c.stopPropagation();
+      };
+      this.doc.addEventListener('click', avaler, true);
+      setTimeout(() => this.doc.removeEventListener('click', avaler, true), 350);
+      boite.style.transition = 'transform .28s cubic-bezier(.2, 0, 0, 1)';
+      if (g.dy > boite.offsetHeight / 3 || g.vy > 0.6) {
+        boite.style.transform = 'translateY(105%)';
         setTimeout(() => {
           boite.style.transition = '';
           boite.style.transform = '';
           this.ouvert.set(false);
           this.terminer();
-        }, 250);
+        }, 260);
       } else {
         boite.style.transform = '';
-        setTimeout(() => (boite.style.transition = ''), 250);
+        setTimeout(() => (boite.style.transition = ''), 280);
       }
     };
-    this.doc.addEventListener('pointermove', bouger);
-    this.doc.addEventListener('pointerup', lacher);
-    this.doc.addEventListener('pointercancel', lacher);
+    const finir = () => {
+      this.doc.removeEventListener('touchmove', bouger);
+      this.doc.removeEventListener('touchend', lacher);
+      this.doc.removeEventListener('touchcancel', lacher);
+    };
+    this.doc.addEventListener('touchmove', bouger, { passive: false });
+    this.doc.addEventListener('touchend', lacher);
+    this.doc.addEventListener('touchcancel', lacher);
   }
 }

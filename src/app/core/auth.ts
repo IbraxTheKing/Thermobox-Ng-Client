@@ -1,25 +1,51 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { Injectable, computed, effect, inject, signal, untracked } from '@angular/core';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
 import { LoginResponse, User, UserRole } from '../models/models';
-import { ServeurService } from './api.config';
+import { ServeurService, adresseLisible } from './api.config';
 import { initiale } from './texte';
 
-interface Session {
-  token: string;
-  expiresAt: string;
-  user: User;
+/**
+ * An account this device has logged in to: a user on a ThermoBox server. Kept after logging out
+ * (without its token), so the user can come back to it, or switch between their accounts (at home,
+ * at work…) in one tap.
+ */
+export interface Compte {
+  /** "<API base>|<username>" */
+  cle: string;
+  /** API base of the server ("/api", "https://thermobox.exemple.fr/api"). */
   serveur: string;
+  user: User;
+  /** null: logged out (or expired), the password is asked again. */
+  token: string | null;
+  expiresAt: string | null;
+  /** Last use (ms), most recent first in the lists. */
+  vu: number;
 }
 
-const CLE = 'tb-session';
+const CLE_COMPTES = 'tb-comptes';
+const CLE_ACTIF = 'tb-compte-actif';
+/** One account only, before saved accounts (migrated on first start). */
+const CLE_ANCIENNE = 'tb-session';
+
+export function cleCompte(serveur: string, username: string): string {
+  return `${serveur}|${username.toLowerCase()}`;
+}
+
+/** The account can be opened without its password. */
+export function ouvrable(c: Compte): boolean {
+  if (!c.token) return false;
+  const fin = c.expiresAt ? Date.parse(c.expiresAt) : NaN;
+  return isNaN(fin) || fin > Date.now();
+}
 
 /**
- * The logged-in user and their JWT (POST /api/auth/login). The token is kept on the device until
- * it expires or the user logs out; it is sent as "Authorization: Bearer" by authInterceptor.
- * The role rules mirror the REST resources (@RequiresRole / @RequiresAuth) and LoginBean.
+ * The logged-in user and their JWT (POST /api/auth/login), among the accounts saved on this
+ * device. Tokens are kept until they expire or the user logs out; the token of the current account
+ * is sent as "Authorization: Bearer" by authInterceptor. The role rules mirror the REST resources
+ * (@RequiresRole / @RequiresAuth) and LoginBean.
  */
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -27,12 +53,25 @@ export class AuthService {
   private readonly router = inject(Router);
   private readonly serveur = inject(ServeurService);
 
-  private readonly session = signal<Session | null>(lire());
+  private readonly liste = signal<Compte[]>(lireComptes());
+  private readonly actif = signal<string | null>(lireActif());
   private minuterie?: ReturnType<typeof setTimeout>;
 
-  readonly user = computed(() => this.session()?.user ?? null);
-  readonly token = computed(() => this.session()?.token ?? null);
-  readonly connecte = computed(() => this.session() != null);
+  /** Saved accounts, most recently used first. */
+  readonly comptes = computed(() => [...this.liste()].sort((a, b) => b.vu - a.vu));
+  /** The current account (logged in). */
+  readonly compte = computed(() => {
+    const c = this.liste().find((x) => x.cle === this.actif());
+    return c?.token ? c : null;
+  });
+  /** Key of the current account: what was loaded for another one must go (stores, caches). */
+  readonly cle = computed(() => this.compte()?.cle ?? null);
+
+  readonly user = computed(() => this.compte()?.user ?? null);
+  readonly token = computed(() => this.compte()?.token ?? null);
+  readonly connecte = computed(() => this.compte() != null);
+  /** Server of the current account, as people read it. */
+  readonly adresse = computed(() => adresseLisible(this.compte()?.serveur));
 
   readonly role = computed<UserRole | null>(() => this.user()?.type ?? null);
   readonly admin = computed(() => this.role() === 'ADMIN');
@@ -45,99 +84,195 @@ export class AuthService {
   readonly initiale = computed(() => initiale(this.user()?.username));
 
   constructor() {
-    const s = this.session();
-    if (s && (expiree(s) || s.serveur !== this.serveur.base())) this.oublier();
-    else this.programmerExpiration();
+    const c = this.liste().find((x) => x.cle === this.actif());
+    if (!c || !ouvrable(c)) {
+      if (c) this.modifier(c.cle, { token: null, expiresAt: null });
+      this.definirActif(null);
+    } else {
+      // The app talks to the server of the current account
+      if (c.serveur !== this.serveur.base()) this.serveur.utiliser(c.serveur);
+      this.programmerExpiration();
+    }
   }
 
-  async login(username: string, password: string): Promise<void> {
-    const r = await firstValueFrom(
-      this.http.post<LoginResponse>(this.serveur.url('/auth/login'), { username, password }),
-    );
-    const session: Session = { token: r.token, expiresAt: r.expiresAt, user: r.user, serveur: this.serveur.base() };
-    this.session.set(session);
-    ecrire(session);
+  /** Logs in on [base] (default: the current server); the account becomes the current one. */
+  async login(username: string, password: string, base = this.serveur.base()): Promise<void> {
+    const r = await firstValueFrom(this.http.post<LoginResponse>(`${base}/auth/login`, { username, password }));
+    const cle = cleCompte(base, r.user.username ?? username);
+    const compte: Compte = { cle, serveur: base, user: r.user, token: r.token, expiresAt: r.expiresAt, vu: Date.now() };
+    this.liste.update((l) => [...l.filter((x) => x.cle !== cle), compte]);
+    this.serveur.utiliser(base);
+    this.definirActif(cle);
+    this.sauver();
     this.programmerExpiration();
   }
 
-  /** Revokes the token on the server (a copy stops working too), then forgets it here. */
+  /** Revokes the token on the server (a copy stops working too); the account stays saved. */
   async logout(): Promise<void> {
-    if (this.token()) {
-      try {
-        await firstValueFrom(this.http.post(this.serveur.url('/auth/logout'), null));
-      } catch {
-        /* already expired or server unreachable: forgotten anyway */
-      }
+    const c = this.compte();
+    if (c) {
+      await this.revoquer(c);
+      this.modifier(c.cle, { token: null, expiresAt: null });
     }
-    this.oublier();
+    this.fermer();
+    // The login page lists the saved accounts, this one among them
     await this.router.navigateByUrl('/login');
+  }
+
+  /**
+   * Opens another saved account. Its token still valid: the app starts again on its dashboard
+   * (nothing of the previous account or server stays in memory). Otherwise its password is asked.
+   */
+  async basculer(cle: string): Promise<void> {
+    const c = this.liste().find((x) => x.cle === cle);
+    if (!c) return;
+    if (!ouvrable(c)) {
+      await this.router.navigate(['/login'], { queryParams: { compte: cle } });
+      return;
+    }
+    this.modifier(cle, { vu: Date.now() });
+    this.serveur.utiliser(c.serveur);
+    this.definirActif(cle);
+    this.sauver();
+    location.assign(new URL('app/apercu', document.baseURI).href);
+  }
+
+  /** Removes a saved account from this device (logged out on its server first). */
+  async oublierCompte(cle: string): Promise<void> {
+    const c = this.liste().find((x) => x.cle === cle);
+    if (!c) return;
+    const courant = this.actif() === cle && c.token != null;
+    await this.revoquer(c);
+    this.liste.update((l) => l.filter((x) => x.cle !== cle));
+    if (this.actif() === cle) this.definirActif(null);
+    this.sauver();
+    if (courant) {
+      clearTimeout(this.minuterie);
+      await this.router.navigateByUrl('/login');
+    }
   }
 
   /** The server refused the token (expired, revoked, account deleted): back to the login page. */
   expiree(): void {
-    if (!this.session()) return;
-    this.oublier();
-    void this.router.navigate(['/login'], { queryParams: { session: 'expiree' } });
+    const c = this.compte();
+    if (!c) return;
+    this.modifier(c.cle, { token: null, expiresAt: null });
+    this.fermer();
+    void this.router.navigate(['/login'], { queryParams: { session: 'expiree', compte: c.cle } });
   }
 
   /** Reloads the user from the server (role or name changed meanwhile). */
   async rafraichirUtilisateur(): Promise<void> {
-    const s = this.session();
-    if (!s) return;
+    const c = this.compte();
+    if (!c) return;
     const user = await firstValueFrom(this.http.get<User>(this.serveur.url('/auth/me')));
-    const maj = { ...s, user };
-    this.session.set(maj);
-    ecrire(maj);
+    this.modifier(c.cle, { user });
+    this.sauver();
   }
 
   /** After a change of one's own profile. */
   majUtilisateur(user: User): void {
-    const s = this.session();
-    if (!s) return;
-    const maj = { ...s, user: { ...s.user, ...user } };
-    this.session.set(maj);
-    ecrire(maj);
+    const c = this.compte();
+    if (!c) return;
+    this.modifier(c.cle, { user: { ...c.user, ...user } });
+    this.sauver();
   }
 
   estMoi(user: { id?: number | null } | null | undefined): boolean {
     return user?.id != null && user.id === this.user()?.id;
   }
 
+  /** The current account is closed on this device (deleted account): forgotten. */
   oublier(): void {
+    const cle = this.actif();
     clearTimeout(this.minuterie);
-    this.session.set(null);
-    ecrire(null);
+    if (cle) this.liste.update((l) => l.filter((x) => x.cle !== cle));
+    this.definirActif(null);
+    this.sauver();
+  }
+
+  private fermer(): void {
+    clearTimeout(this.minuterie);
+    this.definirActif(null);
+    this.sauver();
+  }
+
+  /** POST /auth/logout with the account's own token, on its own server. */
+  private async revoquer(c: Compte): Promise<void> {
+    if (!c.token) return;
+    try {
+      await firstValueFrom(this.http.post(`${c.serveur}/auth/logout`, null, { headers: { Authorization: `Bearer ${c.token}` } }));
+    } catch {
+      /* already expired or server unreachable: forgotten anyway */
+    }
+  }
+
+  private modifier(cle: string, champs: Partial<Compte>): void {
+    this.liste.update((l) => l.map((x) => (x.cle === cle ? { ...x, ...champs } : x)));
+  }
+
+  private definirActif(cle: string | null): void {
+    this.actif.set(cle);
+  }
+
+  private sauver(): void {
+    try {
+      localStorage.setItem(CLE_COMPTES, JSON.stringify(this.liste()));
+      const a = this.actif();
+      if (a) localStorage.setItem(CLE_ACTIF, a);
+      else localStorage.removeItem(CLE_ACTIF);
+    } catch {
+      /* private browsing: kept for this session only */
+    }
   }
 
   private programmerExpiration(): void {
     clearTimeout(this.minuterie);
-    const s = this.session();
-    if (!s) return;
-    const reste = Date.parse(s.expiresAt) - Date.now();
+    const c = this.compte();
+    if (!c?.expiresAt) return;
+    const reste = Date.parse(c.expiresAt) - Date.now();
     // setTimeout overflows past ~24.8 days: the check at the next start covers longer tokens
     if (reste > 0 && reste < 2_000_000_000) this.minuterie = setTimeout(() => this.expiree(), reste);
   }
 }
 
-function expiree(s: Session): boolean {
-  const fin = Date.parse(s.expiresAt);
-  return !isNaN(fin) && fin <= Date.now();
+function lireComptes(): Compte[] {
+  try {
+    const l = JSON.parse(localStorage.getItem(CLE_COMPTES) ?? 'null') as Compte[] | null;
+    if (Array.isArray(l)) return l.filter((c) => c?.cle && c.serveur && c.user);
+    // Before saved accounts: the one session becomes the first account
+    const s = JSON.parse(localStorage.getItem(CLE_ANCIENNE) ?? 'null') as { token: string; expiresAt: string; user: User; serveur: string } | null;
+    localStorage.removeItem(CLE_ANCIENNE);
+    if (!s?.token || !s.user) return [];
+    const cle = cleCompte(s.serveur, s.user.username ?? '');
+    const compte: Compte = { cle, serveur: s.serveur, user: s.user, token: s.token, expiresAt: s.expiresAt, vu: Date.now() };
+    localStorage.setItem(CLE_COMPTES, JSON.stringify([compte]));
+    localStorage.setItem(CLE_ACTIF, cle);
+    return [compte];
+  } catch {
+    return [];
+  }
 }
 
-function lire(): Session | null {
+function lireActif(): string | null {
   try {
-    const s = JSON.parse(localStorage.getItem(CLE) ?? 'null') as Session | null;
-    return s?.token ? s : null;
+    return localStorage.getItem(CLE_ACTIF);
   } catch {
     return null;
   }
 }
 
-function ecrire(s: Session | null): void {
-  try {
-    if (s) localStorage.setItem(CLE, JSON.stringify(s));
-    else localStorage.removeItem(CLE);
-  } catch {
-    /* private browsing */
-  }
+/**
+ * Runs [vider] whenever the current account changes (logout, another account): what a root store
+ * loaded for one account must never show for another. Call in an injection context.
+ */
+export function surChangementDeCompte(vider: () => void): void {
+  const auth = inject(AuthService);
+  let avant = auth.cle();
+  effect(() => {
+    const cle = auth.cle();
+    if (cle === avant) return;
+    avant = cle;
+    untracked(vider);
+  });
 }

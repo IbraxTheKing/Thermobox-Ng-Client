@@ -81,7 +81,7 @@
         @if (modeSelection()) {
           {{ selection().size ? selection().size + ' sélectionné(s)' : 'Touche les éléments' }}
         } @else {
-          {{ visibles().length }} élément(s)
+          {{ enArbre() || lignesListe().length === lignes().length ? lignes().length : lignesListe().length + ' sur ' + lignes().length }} élément(s)
         }
       </span>
       @if (modeSelection()) {
@@ -89,9 +89,20 @@
       }
       <button type="button" class="tb-btn tb-flat tb-gest-mode" (click)="basculerModeSelection()">{{ modeSelection() ? 'OK' : 'Sélectionner' }}</button>
     </div>
-    <ul class="tb-liste-gest" [class.tb-en-selection]="modeSelection()">
+    <ul class="tb-liste-gest" [class.tb-en-selection]="modeSelection()" [class.tb-gest-arbre]="enArbre()">
       @for (l of lignesTel(); track l.n.id) {
-        <li [attr.data-flip]="'g' + l.n.id">
+        <li [attr.data-flip]="'g' + l.n.id" [style.--tb-prof]="l.profondeur ?? 0" [class.tb-gest-racine]="enArbre() && l.profondeur === 0">
+          @if (enArbre()) {
+            <!-- Fold / unfold what the element contains -->
+            @if (l.enfants) {
+              <button type="button" class="tb-gest-plier" [attr.aria-expanded]="!plies().has(l.n.id)"
+                      [attr.aria-label]="(plies().has(l.n.id) ? 'Déplier ' : 'Replier ') + l.n.name" (click)="plier(l, $event)">
+                <i class="pi pi-chevron-down"></i>
+              </button>
+            } @else {
+              <span class="tb-gest-plier" aria-hidden="true"></span>
+            }
+          }
           <button
             type="button"
             class="tb-gest-ligne tb-ton-{{ l.etat.ton }}"
@@ -106,7 +117,12 @@
             <span class="tb-gest-icone"><i class="pi" [class]="icones[l.n.kind]"></i></span>
             <span class="tb-gest-texte">
               <strong>{{ l.n.name }}</strong>
-              <span class="tb-muted">{{ libelles[l.n.kind] }}@if (l.chemin) { · {{ l.chemin }} }</span>
+              @if (enArbre()) {
+                <!-- In the tree, the place is shown by the indent: what it contains instead -->
+                <span class="tb-muted">{{ libelles[l.n.kind] }}@if (l.enfants) { · {{ l.enfants }} élément{{ l.enfants > 1 ? 's' : '' }}@if (plies().has(l.n.id)) { (replié)} }</span>
+              } @else {
+                <span class="tb-muted">{{ libelles[l.n.kind] }}@if (l.chemin) { · {{ l.chemin }} }</span>
+              }
               @if (!l.n.rattache) {
                 <span class="tb-tag tb-tag-warning">Non rattaché</span>
               }
@@ -126,9 +142,9 @@
         <li class="tb-gest-vide tb-muted">{{ store.arbre() ? 'Aucun élément ne correspond' : 'Chargement…' }}</li>
       }
     </ul>
-    @if (visibles().length > limiteTel()) {
+    @if (lignesListe().length > limiteTel()) {
       <button type="button" class="tb-btn tb-tonal tb-gest-plus" (click)="limiteTel.set(limiteTel() + 50)">
-        Afficher {{ visibles().length - limiteTel() > 50 ? 50 : visibles().length - limiteTel() }} de plus
+        Afficher {{ lignesListe().length - limiteTel() > 50 ? 50 : lignesListe().length - limiteTel() }} de plus
       </button>
     }
   } @else {

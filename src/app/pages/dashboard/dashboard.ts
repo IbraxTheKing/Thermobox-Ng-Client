@@ -16,6 +16,8 @@ import { correspond, normaliser, parNom, pluriel } from '../../core/texte';
 import { UniteService } from '../../core/unite';
 import { Noeud, Point } from '../../models/models';
 import { ArbreStore } from '../../services/arbre.store';
+import { TirerPourActualiser } from '../../ui/tirer';
+import { CacheCourbes } from '../../core/cache-courbes';
 import { ClimatService } from '../../services/climat.service';
 import { FavoriService } from '../../services/favori.service';
 import { TbSalleCard } from './salle-card';
@@ -35,6 +37,7 @@ const SANS_BATIMENT = -1;
 const CLE_SECTIONS = 'tb-sections';
 const PERIODE_TENDANCE = 24 * 3_600_000;
 const VALIDITE_TENDANCES = 5 * 60_000;
+const CLE_TENDANCES = 'apercu';
 const SONDAGE = 30_000;
 
 /**
@@ -73,8 +76,13 @@ export class DashboardPage implements OnInit, OnDestroy {
   protected readonly batimentId = signal<number | null>(null);
 
   /** Curves of the last 24 h by salle: undefined while they load, null without enough measures. */
-  private readonly tendances = signal<Map<number, Sparkline | null> | null>(null);
-  private tendancesCalculees = 0;
+  private readonly cache = inject(CacheCourbes);
+  /** Phones: pull the page down to refresh it (the button is then hidden). */
+  protected readonly tirer = inject(TirerPourActualiser).activer(() => this.actualiser());
+  /** Kept in memory (CacheCourbes): back on the dashboard, the curves are there at once. */
+  private readonly tendancesGardees = this.cache.lire<Map<number, Sparkline | null>>(CLE_TENDANCES);
+  private readonly tendances = signal<Map<number, Sparkline | null> | null>(this.tendancesGardees?.valeur ?? null);
+  private tendancesCalculees = this.tendancesGardees ? Date.now() - this.tendancesGardees.age : 0;
   /** True in the refresh that brings the curves: they draw themselves once. */
   protected readonly courbesNouvelles = signal(false);
 
@@ -170,8 +178,10 @@ export class DashboardPage implements OnInit, OnDestroy {
     } catch (e) {
       this.toasts.error('Impossible de charger les salles', messageErreur(e));
     }
-    // The curves come in a second request, so the page shows without waiting for them
-    void this.chargerTendances(false).then(() => this.courbesNouvelles.set(true));
+    // The curves come in a second request, so the page shows without waiting for them; kept
+    // ones are already there (and don't draw themselves again)
+    const gardees = this.tendances();
+    void this.chargerTendances(false).then(() => this.courbesNouvelles.set(this.tendances() !== gardees));
     this.minuterie = setInterval(() => void this.rafraichir(true), SONDAGE);
   }
 
@@ -215,6 +225,7 @@ export class DashboardPage implements OnInit, OnDestroy {
       }
       this.tendances.set(m);
       this.tendancesCalculees = Date.now();
+      this.cache.ecrire(CLE_TENDANCES, m);
     } catch {
       if (!this.tendances()) this.tendances.set(new Map(salles.map((s) => [s.id, null])));
     }

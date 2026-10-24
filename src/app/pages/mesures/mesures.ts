@@ -14,6 +14,7 @@ import { normaliser, parNom } from '../../core/texte';
 import { UniteService, lireNombre } from '../../core/unite';
 import { Noeud, TemperatureType } from '../../models/models';
 import { ArbreStore } from '../../services/arbre.store';
+import { CacheCourbes, fraicheur } from '../../core/cache-courbes';
 import { ClimatService } from '../../services/climat.service';
 import { TemperatureService, TemperatureTypee } from '../../services/temperature.service';
 import { SerieGraphique, TbGraphique } from '../../ui/graphique';
@@ -67,6 +68,7 @@ export class MesuresPage implements OnInit {
   protected readonly lignes = signal<Ligne[]>([]);
   protected readonly instants = signal<number[]>([]);
   protected readonly chargement = signal(false);
+  private readonly cache = inject(CacheCourbes);
   protected readonly masquees = signal<Set<number>>(new Set());
   protected readonly tri = signal<{ par: Tri; desc: boolean } | null>(null);
 
@@ -118,7 +120,17 @@ export class MesuresPage implements OnInit {
     await this.charger();
   }
 
-  protected async charger(): Promise<void> {
+  protected async charger(forcer = false): Promise<void> {
+    // Kept in memory (CacheCourbes): the curves already read for these choices show at once, and
+    // are read again only when no longer recent
+    const cle = `mesures|${this.parBatiment()}|${this.batimentId()}|${this.periodeHeures()}`;
+    const garde = this.cache.lire<{ lignes: Ligne[]; instants: number[] }>(cle);
+    if (garde) {
+      this.instants.set(garde.valeur.instants);
+      this.lignes.set(garde.valeur.lignes);
+      this.masquees.set(new Set());
+      if (!forcer && garde.age < fraicheur(this.periodeHeures())) return;
+    }
     this.chargement.set(true);
     try {
       // A bâtiment's curve aggregates all its boxes: only for a user who may see all of it
@@ -161,9 +173,13 @@ export class MesuresPage implements OnInit {
           courbe: c,
         };
       });
-      this.instants.set(instants(debut.getTime(), fin.getTime(), p));
+      // The choices changed meanwhile: these curves are not the ones asked for any more
+      if (cle !== `mesures|${this.parBatiment()}|${this.batimentId()}|${this.periodeHeures()}`) return;
+      const ins = instants(debut.getTime(), fin.getTime(), p);
+      this.instants.set(ins);
       this.lignes.set(lignes);
-      this.masquees.set(new Set());
+      if (!garde) this.masquees.set(new Set());
+      this.cache.ecrire(cle, { lignes, instants: ins });
     } catch (e) {
       this.toasts.error('Impossible de charger les courbes', messageErreur(e));
     } finally {
@@ -173,7 +189,7 @@ export class MesuresPage implements OnInit {
 
   protected async actualiser(): Promise<void> {
     await this.store.charger(true).catch(() => undefined);
-    await this.charger();
+    await this.charger(true);
   }
 
   protected periode(h: number): void {

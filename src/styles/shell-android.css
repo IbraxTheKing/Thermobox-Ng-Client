@@ -270,3 +270,6 @@
     :root.tb-android-natif .tb-rail { display: none; }
     :root.tb-android-natif .tb-page-head > .tb-fab { display: none !important; }
 }
+
+/* Android app: the <select> lists open as native Material lists (AndroidNatifService) */
+.tb-selects-natifs select { pointer-events: none; }

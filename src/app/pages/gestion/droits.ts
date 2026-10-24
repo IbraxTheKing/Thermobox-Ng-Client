@@ -16,6 +16,7 @@ import { TbSheet } from '../../ui/sheet';
 import { TbSwitch } from '../../ui/controles';
 import { PlateformeService } from '../../core/plateforme';
 import { FlipService } from '../../core/flip';
+import { suivreBarreSelection } from '../../ui/barre-selection';
 
 /**
  * « Utilisateurs et groupes » tab of the Gestion page (ADMIN only, gestion-droits.xhtml): roles
@@ -29,6 +30,10 @@ import { FlipService } from '../../core/flip';
   templateUrl: './droits.html',
 })
 export class DroitsTab implements OnInit {
+  constructor() {
+    suivreBarreSelection(() => this.selection().size > 0 && !this.tel());
+  }
+
   protected readonly auth = inject(AuthService);
   protected readonly droits = inject(DroitsStore);
   protected readonly arbre = inject(ArbreStore);

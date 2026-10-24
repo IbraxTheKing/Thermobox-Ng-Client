@@ -295,7 +295,7 @@ a:hover > .tb-logo { transform: rotate(-6deg) scale(1.05); }
         margin: 0;
         box-shadow: var(--tb-elev-3);
     }
-    body:has(.tb-barre-on) .tb-fab { opacity: 0; pointer-events: none; }
+    :root.tb-barre-ouverte .tb-fab { opacity: 0; pointer-events: none; }
 }
 
 /*

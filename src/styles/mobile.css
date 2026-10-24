@@ -183,7 +183,7 @@
         font-size: .72rem;
     }
     tb-gestion .tb-barre-actions > .tb-btn .pi { font-size: 1.15rem; }
-    .tb-main:has(tb-gestion .tb-barre-on) { padding-bottom: calc(var(--tb-nav-bas) + 110px); }
+    :root.tb-barre-ouverte .tb-main { padding-bottom: calc(var(--tb-nav-bas) + 110px); }
 }
 
 /* ============================== Préférences ============================== */
@@ -286,3 +286,32 @@ body.tb-graphique-ouvert .tb-rail, body.tb-graphique-ouvert .tb-topbar { visibil
 a.tb-pref-apropos { margin-top: 16px; text-decoration: none; }
 .tb-apropos-version.tb-apropos-dev { background: var(--tb-chauffe-container); color: var(--tb-on-chauffe-container); }
 .tb-liste-ligne.tb-apropos-maj .tb-apropos-version { background: var(--md-primary); color: var(--md-on-primary); }
+
+/* ============================== Gestion (phones): the tree ============================== */
+
+/* Each element under the one that contains it: indented, a fold button before it */
+.tb-liste-gest.tb-gest-arbre > li { display: flex; align-items: stretch; padding-left: calc(var(--tb-prof, 0) * 14px); }
+.tb-liste-gest.tb-gest-arbre > li > .tb-gest-ligne { flex: 1 1 auto; min-width: 0; padding-left: 4px; }
+.tb-gest-plier {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 30px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 10px;
+    background: none;
+    color: var(--md-on-surface-variant);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+button.tb-gest-plier:active { background: color-mix(in srgb, var(--md-on-surface) 8%, transparent); }
+.tb-gest-plier .pi { font-size: .8rem; transition: transform .2s var(--tb-ease, ease); }
+.tb-gest-plier[aria-expanded="false"] .pi { transform: rotate(-90deg); }
+/* A new top-level element (a bâtiment): a clearer break than the thin separators */
+.tb-liste-gest.tb-gest-arbre > li.tb-gest-racine:not(:first-child) { margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--md-outline-variant); }
+.tb-liste-gest.tb-gest-arbre > li.tb-gest-racine > .tb-gest-ligne::before { display: none; }
+.tb-liste-gest.tb-gest-arbre > li.tb-gest-racine .tb-gest-texte > strong { font-size: 1.05rem; }
+/* Separators from the text on, whatever the indent */
+.tb-liste-gest.tb-gest-arbre > li + li > .tb-gest-ligne::before { left: 48px; }

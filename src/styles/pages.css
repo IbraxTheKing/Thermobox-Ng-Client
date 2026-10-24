@@ -11,6 +11,19 @@
 @media (max-width: 640px) {
     .tb-public .tb-main { padding: calc(20px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(32px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left)); }
     .tb-auth-card { padding: 22px 18px 18px; border-radius: var(--tb-shape-xl); }
+
+    /* Phones: one centred column, the brand smaller above the form, the whole in the middle of
+       the screen (it was aligned left, the logo and the name taking half of the screen) */
+    .tb-public .tb-main { justify-content: center; }
+    .tb-auth { max-width: 440px; margin: auto; gap: 16px; }
+    .tb-auth-brand { align-items: center; gap: 6px; margin: 0 0 6px; text-align: center; }
+    .tb-auth .tb-logo-xl { width: 64px; height: 64px; margin-bottom: 4px; }
+    .tb-auth-name { font-size: 2.6rem; }
+    .tb-auth-tagline { max-width: none; font-size: 1rem; }
+    .tb-auth-card > .tb-panel-title { text-align: center; }
+    .tb-auth-pied { flex-direction: column; justify-content: center; text-align: center; }
+    .tb-auth-pied .tb-serveur-btn { margin: 0; }
+    .tb-auth-comptes .tb-panel-title { text-align: left; }
 }
 
 /* ============================== Loading placeholders ============================== */
@@ -231,3 +244,57 @@ button.tb-drill-crumb, button.tb-drill-main { border: 0; background: none; font:
 @media (max-width: 640px) {
     .tb-segmented.tb-gest-onglets > button { white-space: normal; line-height: 1.2; text-align: center; }
 }
+
+/* ============================== Saved accounts (ui/comptes.ts) ============================== */
+
+.tb-comptes { display: flex; flex-direction: column; gap: 2px; margin: 0 0 6px; padding: 0; list-style: none; }
+.tb-comptes > li { display: flex; align-items: center; gap: 4px; }
+.tb-compte {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+    min-height: 60px;
+    padding: 8px 12px;
+    border: 0;
+    border-radius: var(--tb-shape-md);
+    background: none;
+    color: var(--md-on-surface);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color .2s ease;
+}
+.tb-compte:hover, .tb-compte:active { background: color-mix(in srgb, var(--md-on-surface) 6%, transparent); }
+.tb-compte.tb-compte-actif { background: var(--md-secondary-container); color: var(--md-on-secondary-container); cursor: default; }
+.tb-compte .tb-avatar { flex: none; width: 40px; height: 40px; font-size: 1rem; }
+.tb-compte-texte { display: flex; flex: 1 1 auto; flex-direction: column; min-width: 0; }
+.tb-compte-texte strong { overflow: hidden; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+/* The server, under the name: what tells « home » from « work » */
+.tb-compte-adresse {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    overflow: hidden;
+    color: var(--md-on-surface-variant);
+    font-size: .85rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.tb-compte-adresse .pi { flex: none; font-size: .75rem; opacity: .8; }
+.tb-compte-coche { flex: none; color: var(--md-primary); font-size: 1.1rem; }
+.tb-compte-oublier { flex: none; color: var(--md-on-surface-variant); }
+.tb-compte-ajout { width: 100%; margin-top: 4px; border-top: 1px solid var(--md-outline-variant); border-radius: 0 0 var(--tb-shape-md) var(--tb-shape-md); }
+
+/* Login page: the saved accounts, above the form */
+.tb-auth-comptes { padding: 6px; }
+.tb-auth-comptes .tb-panel-title { margin: 10px 12px 6px; font-size: 1rem; font-weight: 750; color: var(--md-on-surface-variant); }
+.tb-auth-compte-choisi { display: flex; align-items: center; gap: 12px; margin: 0 0 18px; padding: 10px 12px; border-radius: var(--tb-shape-lg); background: var(--md-secondary-container); color: var(--md-on-secondary-container); }
+.tb-auth-compte-choisi .tb-avatar { flex: none; width: 40px; height: 40px; font-size: 1rem; }
+.tb-auth-compte-choisi .tb-compte-adresse { color: inherit; opacity: .8; }
+/* Registration: the server the account is created on */
+.tb-auth-serveur { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; margin: -4px 0 16px; color: var(--md-on-surface-variant); font-size: .92rem; }
+.tb-auth-serveur strong { color: var(--md-on-surface); font-weight: 700; overflow-wrap: anywhere; }
+.tb-auth-serveur .tb-serveur-btn { padding: 6px 12px; margin-right: -12px; font-size: .9rem; }

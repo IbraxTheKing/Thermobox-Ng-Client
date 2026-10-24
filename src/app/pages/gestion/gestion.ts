@@ -7,6 +7,7 @@ import { AuthService } from '../../core/auth';
 import { EtatSalle, etatDe, horsConsigne } from '../../core/etat';
 import { ConfirmService, ToastService } from '../../core/messages';
 import { FlipService } from '../../core/flip';
+import { suivreBarreSelection } from '../../ui/barre-selection';
 import { PlateformeService } from '../../core/plateforme';
 import { normaliser } from '../../core/texte';
 import { TransitionsService } from '../../core/transitions';
@@ -31,6 +32,9 @@ interface Ligne {
   chemin: string;
   etat: EtatSalle;
   boitier: boolean;
+  /** Phones, tree order: depth under the top level, and how many elements it contains. */
+  profondeur?: number;
+  enfants?: number;
 }
 
 const PAR_PAGE = 50;
@@ -128,6 +132,7 @@ export class GestionPage implements OnInit {
   protected readonly nombreATraiter = computed(() => this.lignes().filter((l) => this.aTraiter(l)).length);
 
   constructor() {
+    suivreBarreSelection(() => this.onglet() === 'salles' && this.barreVisible());
     // « À traiter »: the page turns to the colour of what is to be done, as the JSF one
     effect(() => this.transitions.definirTon(this.seulementATraiter() && this.onglet() === 'salles' ? 'chauffe' : null));
     inject(DestroyRef).onDestroy(() => this.transitions.definirTon(null));
@@ -154,7 +159,46 @@ export class GestionPage implements OnInit {
   protected readonly modeSelection = signal(false);
   /** Rows shown on a phone: 50 more at a time. */
   protected readonly limiteTel = signal(50);
-  protected readonly lignesTel = computed(() => this.visibles().slice(0, this.limiteTel()));
+
+  /**
+   * Phones, nothing searched or filtered: the elements in the order of the tree, each one under
+   * the one that contains it (bâtiment → étage → salle → boîtier), indented, and folded on demand.
+   * A flat list sorted by place showed a bâtiment's étages after the other bâtiments.
+   */
+  protected readonly enArbre = computed(() => this.tel() && !this.recherche().trim() && this.type() == null && !this.seulementATraiter());
+  /** Folded elements (their content hidden). */
+  protected readonly plies = signal<Set<number>>(new Set());
+  protected readonly lignesArbre = computed<Ligne[]>(() => {
+    const parId = new Map(this.lignes().map((l) => [l.n.id, l]));
+    const enfants = this.store.enfants();
+    const plies = this.plies();
+    const res: Ligne[] = [];
+    const compter = (id: number): number => (enfants.get(id) ?? []).reduce((n, c) => n + (parId.has(c.id) ? 1 : 0) + (parId.has(c.id) ? 0 : compter(c.id)), 0);
+    const visiter = (n: Noeud, profondeur: number) => {
+      const l = parId.get(n.id);
+      // An element the user may not manage (a bâtiment around their salles): its content shown at its place
+      if (l) res.push({ ...l, profondeur, enfants: compter(n.id) });
+      if (l && plies.has(n.id)) return;
+      for (const c of enfants.get(n.id) ?? []) visiter(c, l ? profondeur + 1 : profondeur);
+    };
+    for (const r of this.store.racines()) visiter(r, 0);
+    return res;
+  });
+  /** What the phone list shows. */
+  protected readonly lignesListe = computed(() => (this.enArbre() ? this.lignesArbre() : this.visibles()));
+  protected readonly lignesTel = computed(() => this.lignesListe().slice(0, this.limiteTel()));
+
+  protected plier(l: Ligne, ev: Event): void {
+    ev.stopPropagation();
+    this.flip.animer(() =>
+      this.plies.update((s) => {
+        const t = new Set(s);
+        if (t.has(l.n.id)) t.delete(l.n.id);
+        else t.add(l.n.id);
+        return t;
+      }),
+    );
+  }
   /** Actions of the ticked rows: on a phone, only in selection mode. */
   protected readonly barreVisible = computed(() => this.selection().size > 0 && (!this.tel() || this.modeSelection()));
 
