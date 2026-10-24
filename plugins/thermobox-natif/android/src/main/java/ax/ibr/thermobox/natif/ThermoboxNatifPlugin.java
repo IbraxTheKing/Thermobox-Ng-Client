@@ -96,6 +96,8 @@ public class ThermoboxNatifPlugin extends Plugin {
         ICONES.put("deplacer", R.drawable.tb_deplacer);
         ICONES.put("etoile", R.drawable.tb_etoile);
         ICONES.put("coche", R.drawable.tb_coche);
+        ICONES.put("maison", R.drawable.tb_maison);
+        ICONES.put("reglages", R.drawable.tb_reglages);
     }
 
     @Nullable private BottomNavigationView barre;

@@ -28,7 +28,7 @@
 <div class="tb-summary">
   @for (r of roles; track r) {
     <button type="button" class="tb-summary-chip tb-role-chip tb-role-{{ r }}" [class.tb-chip-on]="roleFiltre() === r" [attr.aria-pressed]="roleFiltre() === r" (click)="basculerRole(r)">
-      <i class="pi pi-check tb-chip-check"></i>{{ r }}<span class="tb-chip-n">{{ nombre(r) }}</span>
+      <i class="pi pi-check tb-chip-check"></i>{{ nomRole(r) }}<span class="tb-chip-n">{{ nombre(r) }}</span>
     </button>
   }
 </div>
@@ -39,7 +39,7 @@
       <span class="tb-avatar tb-user-avatar tb-role-{{ l.user.type }}">{{ initiale(l.user.username) }}</span>
       <div class="tb-user-text">
         <strong>{{ l.user.username }} @if (auth.estMoi(l.user)) { <span class="tb-tag tb-tag-info tb-ml">vous</span> }</strong>
-        <span class="tb-role-tag tb-role-{{ l.user.type }}">{{ l.user.type }}</span>
+        <span class="tb-role-tag tb-role-{{ l.user.type }}">{{ nomRole(l.user.type) }}</span>
         <span class="tb-user-acces"><i class="pi pi-key"></i>{{ resume(l) }}</span>
       </div>
       <div class="tb-user-actions">
@@ -70,7 +70,7 @@
       <select id="tb-u-role" class="tb-select" [class.tb-invalid]="formEnvoye() && !formRole()" (change)="formRole.set($any($event.target).value)">
         <option value="" [selected]="!formRole()">Choisir…</option>
         @for (r of roles; track r) {
-          <option [value]="r" [selected]="formRole() === r">{{ r }}</option>
+          <option [value]="r" [selected]="formRole() === r">{{ nomRole(r) }}</option>
         }
       </select>
       @if (formEnvoye() && !formRole()) {
@@ -95,7 +95,7 @@
 <tb-sheet [(ouvert)]="dlgAcces" titre="Accès" [largeur]="520">
   @if (accesUser(); as l) {
     <p class="tb-muted tb-acces-intro">
-      Ce que <strong>{{ l.user.username }}</strong> ({{ l.user.type }}) peut consulter{{ l.user.type === 'GESTIONNAIRE' ? ' et piloter' : '' }}.
+      Ce que <strong>{{ l.user.username }}</strong> ({{ nomRole(l.user.type) }}) peut consulter{{ l.user.type === 'GESTIONNAIRE' ? ' et piloter' : '' }}.
     </p>
     <div class="tb-acces-mode" role="radiogroup">
       <label class="tb-choix"><input type="radio" name="tb-acces-mode" [checked]="!accesRestreint()" (change)="accesRestreint.set(false)" />Tout ThermoBox</label>

@@ -1,4 +1,6 @@
 <div class="tb-busy-bar" [class.tb-busy-on]="activite.occupe()" aria-hidden="true"></div>
+<!-- « Maison »: the page of a room takes the colour of its temperature (FondService) -->
+<div class="tb-fond-page" #fond aria-hidden="true"></div>
 
 <!-- Top bar (phones): the brand, then the title of the page once it has scrolled away. No actions. -->
 <header class="tb-topbar">
@@ -8,7 +10,7 @@
 
 <!-- Navigation rail (wide screens), bar at the bottom (phones) -->
 <nav class="tb-rail" [class.tb-saisie-lentille]="saisie()" aria-label="Navigation principale" (transitionend)="placerLentille()">
-  <a routerLink="/app/apercu" class="tb-rail-brand" title="Thermobox"><span class="tb-logo" aria-hidden="true"></span></a>
+  <a routerLink="/app/apercu" class="tb-rail-brand" title="Thermobox"><span class="tb-logo" aria-hidden="true"></span><span class="tb-rail-brand-nom">Thermobox</span></a>
 
   <div class="tb-dests" #dests (pointerdown)="debutAppui($event)">
     <span class="tb-lentille" aria-hidden="true"></span>
@@ -17,8 +19,8 @@
         class="tb-dest"
         draggable="false"
         [routerLink]="d.lien"
-        [class.tb-dest-on]="estActive(d) && !(barreBas() && i >= dansBarre)"
-        [class.tb-dest-cache]="i >= dansBarre"
+        [class.tb-dest-on]="estActive(d) && !(barreBas() && i >= dansBarre())"
+        [class.tb-dest-cache]="i >= dansBarre()"
         [class.tb-dest-survol]="survolee() === d.lien"
         [attr.aria-current]="estActive(d) ? 'page' : null"
         [attr.data-lien]="d.lien"
@@ -46,27 +48,34 @@
       (click)="surDestination()"
     >
       <span class="tb-dest-icon">
-        <i class="pi" [class.pi-ellipsis-h]="avecPlus()" [class.pi-user]="!avecPlus()"></i>
+        <i class="pi" [class]="dernier().icone"></i>
         @if (avecPlus() && avis.disponible()) {
           <span class="tb-dest-badge"></span>
         }
       </span>
-      <span class="tb-dest-label">{{ avecPlus() ? 'Plus' : 'Compte' }}</span>
+      <span class="tb-dest-label">{{ dernier().label }}</span>
     </a>
   </div>
 
   <!-- Wide screens: the account, at the bottom of the rail -->
   <div class="tb-rail-end">
-    <a routerLink="/app/preferences" class="tb-icon-btn tb-prefs-btn" routerLinkActive="tb-prefs-on" title="Préférences" aria-label="Préférences">
-      <i class="pi pi-sliders-v"></i>
-    </a>
     <a routerLink="/app/profil" class="tb-avatar" routerLinkActive="tb-avatar-on" [title]="'Mon profil (' + auth.user()?.username + ' · ' + auth.adresse() + ')'">{{ auth.initiale() }}</a>
-    <button type="button" class="tb-icon-btn tb-comptes-btn" (click)="comptes.set(true)" title="Changer de compte" aria-label="Changer de compte">
-      <i class="pi pi-users"></i>
-    </button>
-    <button type="button" class="tb-icon-btn tb-logout" (click)="deconnecter()" title="Déconnexion" aria-label="Déconnexion">
-      <i class="pi pi-sign-out"></i>
-    </button>
+    <!-- Desktop: who, on which server -->
+    <a routerLink="/app/profil" class="tb-rail-compte" title="Mon profil">
+      <span class="tb-avatar" aria-hidden="true">{{ auth.initiale() }}</span>
+      <span><strong>{{ auth.user()?.username }}</strong><small>{{ auth.adresse() }}</small></span>
+    </a>
+    <div class="tb-rail-actions">
+      <a routerLink="/app/preferences" class="tb-icon-btn tb-prefs-btn" routerLinkActive="tb-prefs-on" title="Préférences" aria-label="Préférences">
+        <i class="pi pi-sliders-v"></i>
+      </a>
+      <button type="button" class="tb-icon-btn tb-comptes-btn" (click)="comptes.set(true)" title="Changer de compte" aria-label="Changer de compte">
+        <i class="pi pi-users"></i>
+      </button>
+      <button type="button" class="tb-icon-btn tb-logout" (click)="deconnecter()" title="Déconnexion" aria-label="Déconnexion">
+        <i class="pi pi-sign-out"></i>
+      </button>
+    </div>
   </div>
 </nav>
 

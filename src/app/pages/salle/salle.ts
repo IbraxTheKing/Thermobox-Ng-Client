@@ -10,6 +10,9 @@ import { complet, jjmmAHHmm, jjmmHHmm, temps, versChamp } from '../../core/dates
 import { etatDe } from '../../core/etat';
 import { ConfirmService, ToastService } from '../../core/messages';
 import { PlateformeService } from '../../core/plateforme';
+import { PreferencesService } from '../../core/preferences';
+import { couleurTemperature, teinteDouce, teinteForte } from '../../core/couleurs';
+import { FondService } from '../../core/fond';
 import { TitreService } from '../../core/titre';
 import { TransitionsService } from '../../core/transitions';
 import { FlipService } from '../../core/flip';
@@ -26,6 +29,7 @@ import { SalleService } from '../../services/salle.service';
 import { TbStepper, TbSwitch, TbWatch } from '../../ui/controles';
 import { SerieGraphique, TbGraphique } from '../../ui/graphique';
 import { TbPhotoImg } from '../../ui/photo';
+import { TbMolette } from '../../ui/molette';
 
 /** One colour per box or salle, defined by the theme (light and dark differ). */
 const PALETTE = Array.from({ length: 8 }, (_, i) => `--tb-serie-${i + 1}`);
@@ -38,7 +42,7 @@ const TAILLE_MAX_PHOTO = 10 * 1024 * 1024;
  */
 @Component({
   selector: 'tb-salle',
-  imports: [RouterLink, TbStepper, TbSwitch, TbWatch, TbGraphique, TbPhotoImg],
+  imports: [RouterLink, TbStepper, TbSwitch, TbWatch, TbGraphique, TbPhotoImg, TbMolette],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './salle.html',
 })
@@ -97,6 +101,37 @@ export class SallePage implements OnDestroy {
   protected readonly etat = computed(() => etatDe(this.element()?.temperature, this.element()?.consigne?.value));
   protected readonly derniereMesure = computed(() => this.element()?.derniereMesure ?? null);
 
+  // Look of the site (tokens.css)
+  private readonly prefs = inject(PreferencesService);
+  private readonly fond = inject(FondService);
+  protected readonly panneau = computed(() => this.prefs.style() === 'panneau');
+  private readonly sombre = computed(() => this.prefs.theme() === 'dark');
+  /** Maison: the colour of the temperature itself (the dial, the page behind it). */
+  protected readonly couleurMaison = computed(() => teinteForte(couleurTemperature(this.element()?.temperature ?? null), this.sombre()));
+  /** Panneau: the gap to the consigne, written beside the state. */
+  protected readonly ecart = computed(() => {
+    const e = this.element();
+    return e?.temperature != null && e.consigne?.value != null ? e.temperature - e.consigne.value : null;
+  });
+  /** Maison: the dial was turned away from the current consigne. */
+  protected readonly consigneModifiee = computed(() => {
+    const v = this.nouvelleConsigne();
+    const c = this.element()?.consigne?.value;
+    return v != null && (c == null || Math.abs(this.unite.saisieVersCelsius(v) - c) >= 0.05);
+  });
+  /** Maison: what the room is doing, in a sentence. */
+  protected readonly phraseMaison = computed(() => {
+    const e = this.element();
+    if (!e || this.boitier()) return '';
+    const c = e.consigne?.value;
+    switch (this.etat().ton) {
+      case 'stable': return 'Il fait bon.';
+      case 'chauffe': return `Chauffe pour atteindre ${this.unite.t(c)} ${this.unite.symbole()}.`;
+      case 'chaud': return `Un peu chaud : ${this.unite.ecart(this.ecart()).replace('+', '')} au-dessus de l'objectif.`;
+      default: return e.temperature == null ? 'Pas encore de mesure.' : "Pas d'objectif réglé.";
+    }
+  });
+
   /** « Étage 1 (19,0 °C), Everest (22,5 °C) » */
   protected readonly consignesPropresLabel = computed(() =>
     (this.detail()?.consignesPropres ?? []).map((c) => `${c.sourceName} (${this.unite.t(c.value)} ${this.unite.symbole()})`).join(', '),
@@ -152,6 +187,12 @@ export class SallePage implements OnDestroy {
       if (e) this.transitions.definirTon(this.etat().ton);
     });
     inject(DestroyRef).onDestroy(() => this.transitions.definirTon(null));
+    // Maison: the page takes the soft colour of the temperature
+    effect(() => {
+      const e = this.element();
+      this.fond.teinter(e && !this.panneau() ? teinteDouce(couleurTemperature(e.temperature ?? null), this.sombre()) : null);
+    });
+    inject(DestroyRef).onDestroy(() => this.fond.teinter(null));
     effect(() => {
       const id = Number(this.id());
       untracked(() => void this.ouvrir(id));

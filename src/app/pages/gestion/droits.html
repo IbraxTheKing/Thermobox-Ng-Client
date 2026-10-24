@@ -86,7 +86,7 @@
             <td class="tb-col-role">
               <select class="tb-select tb-gest-role" [disabled]="auth.estMoi(l.user)" (change)="changerRole(l, $any($event.target).value)" [attr.aria-label]="'Rôle de ' + l.user.username">
                 @for (r of roles; track r) {
-                  <option [value]="r" [selected]="l.user.type === r">{{ r }}</option>
+                  <option [value]="r" [selected]="l.user.type === r">{{ nomRole(r) }}</option>
                 }
               </select>
             </td>
@@ -154,7 +154,7 @@
     <select id="tb-d-role" class="tb-select" (change)="roleGroupe.set($any($event.target).value || null)">
       <option value="" [selected]="!roleGroupe()">Choisir…</option>
       @for (r of roles; track r) {
-        <option [value]="r" [selected]="roleGroupe() === r">{{ r }}</option>
+        <option [value]="r" [selected]="roleGroupe() === r">{{ nomRole(r) }}</option>
       }
     </select>
   </div>

@@ -1,7 +1,17 @@
 <header class="tb-page-head">
   <div class="tb-page-title">
-    <span class="tb-eyebrow">Bonjour {{ auth.user()?.username }}</span>
-    <h1>Aperçu</h1>
+    @if (panneau()) {
+      <h1>Aperçu</h1>
+      <p class="tb-apercu-sous">
+        {{ pluriel(toutes().length, 'salle') }}@if (dernierReleve(); as h) {, dernier relevé à {{ h }}}
+      </p>
+    } @else {
+      <h1>Maison</h1>
+      <!-- The house in one sentence -->
+      @if (phrase().length) {
+        <p class="tb-apercu-phrase">@for (m of phrase(); track $index) {@if (m.nom) {<b>{{ m.texte }}</b>} @else {<span>{{ m.texte }}</span>}}</p>
+      }
+    }
   </div>
   <!-- Phones: pull the page down instead (TirerPourActualiser) -->
   @if (!tirer()) {
@@ -19,40 +29,49 @@
       <strong>Nouvelle version de ThermoBox disponible</strong>
       <span>{{ avis.resume() }}</span>
     </div>
-    <a routerLink="/app/mises-a-jour" class="tb-btn tb-flat">Voir <i class="pi pi-arrow-right"></i></a>
+    <a routerLink="/app/mises-a-jour" class="tb-btn tb-flat">Voir</a>
   </div>
 }
 
-<!-- Filter chips: one tap shows only the salles in that state, a second tap shows them all -->
-<div class="tb-summary">
-  @for (c of compteurs(); track c.etat.cle) {
-    <button
-      type="button"
-      class="tb-summary-chip tb-ton-{{ c.etat.ton }}"
-      [class.tb-chip-on]="etatFiltre() === c.etat"
-      [attr.aria-pressed]="etatFiltre() === c.etat"
-      [title]="etatFiltre() === c.etat ? 'Afficher toutes les salles' : 'Afficher seulement ces salles'"
-      (click)="basculerEtat(c.etat)"
-    >
-      <i class="pi pi-check tb-chip-check"></i>{{ c.texte }}
-    </button>
-  }
-</div>
-
-<div class="tb-toolbar">
-  <span class="tb-search">
-    <i class="pi pi-search"></i>
-    <input class="tb-input" type="search" placeholder="Rechercher une salle, un étage, un bâtiment…" autocomplete="off" enterkeyhint="search"
-           aria-label="Rechercher" [value]="recherche()" (input)="chercher($any($event.target).value)" />
-  </span>
-  <select class="tb-select tb-filter" aria-label="Bâtiment" [value]="batimentId() ?? ''" (change)="choisirBatiment($any($event.target).value)">
-    <option value="">Tous les bâtiments</option>
-    @for (b of batiments(); track b.id) {
-      <option [value]="b.id" [selected]="batimentId() === b.id">{{ b.name }}</option>
+@if (panneau()) {
+  <!-- The lamps of the desk: how many salles in each state; a tap shows only those -->
+  <div class="tb-voyants" role="group" aria-label="Salles par état">
+    @for (v of voyants(); track v.etat.cle) {
+      <button type="button" class="tb-voyant tb-ton-{{ v.etat.ton }}" [class.tb-voyant-on]="etatFiltre() === v.etat"
+              [attr.aria-pressed]="etatFiltre() === v.etat" [disabled]="!v.nombre && etatFiltre() !== v.etat" (click)="basculerEtat(v.etat)">
+        <b class="tb-chiffres">{{ v.nombre }}</b>
+        <span><i class="tb-lampe" aria-hidden="true"></i>{{ nomsVoyants[v.etat.ton] }}</span>
+      </button>
     }
-    <option [value]="SANS_BATIMENT" [selected]="batimentId() === SANS_BATIMENT">Sans bâtiment</option>
-  </select>
-</div>
+  </div>
+}
+
+@if (avecFiltres()) {
+  <div class="tb-toolbar">
+    <span class="tb-search">
+      <i class="pi pi-search"></i>
+      <input class="tb-input" type="search" [placeholder]="panneau() ? 'Rechercher une salle, un étage, un bâtiment' : 'Rechercher une pièce'" autocomplete="off" enterkeyhint="search"
+             aria-label="Rechercher" [value]="recherche()" (input)="chercher($any($event.target).value)" />
+    </span>
+    @if (plusieursBatiments()) {
+      <select class="tb-select tb-filter" aria-label="Bâtiment" [value]="batimentId() ?? ''" (change)="choisirBatiment($any($event.target).value)">
+        <option value="">Tous les bâtiments</option>
+        @for (b of batiments(); track b.id) {
+          <option [value]="b.id" [selected]="batimentId() === b.id">{{ b.name }}</option>
+        }
+        <option [value]="SANS_BATIMENT" [selected]="batimentId() === SANS_BATIMENT">Sans bâtiment</option>
+      </select>
+    }
+  </div>
+}
+
+@if (panneau() && toutes().length) {
+  <!-- The scale of the squares: the legend of the whole page -->
+  <div class="tb-echelle" aria-hidden="true">
+    <i></i>
+    <span>Trop froid</span><span>À la consigne</span><span>Trop chaud</span>
+  </div>
+}
 
 @if (auth.voitBoitiers() && store.boitiersNonRattaches() > 0) {
   <div class="tb-banner">
@@ -62,18 +81,15 @@
       <span>Leurs mesures ne comptent dans aucune salle tant qu'ils ne sont pas rattachés.</span>
     </div>
     @if (auth.admin()) {
-      <a routerLink="/app/salles" class="tb-btn tb-flat">Les ranger <i class="pi pi-arrow-right"></i></a>
+      <a routerLink="/app/salles" class="tb-btn tb-flat">Les ranger</a>
     }
   </div>
 }
 
 @if (enAttente()) {
-  <div class="tb-cards" aria-busy="true">
-    @for (i of [1, 2, 3]; track i) {
-      <article class="tb-room tb-ton-inconnu tb-room-attente">
-        <div class="tb-room-head"><div class="tb-attente-ligne" style="width: 60%"></div><div class="tb-attente-ligne" style="width: 40%"></div></div>
-        <div class="tb-spark-loading"><span class="tb-spark-caption">24 h</span></div>
-      </article>
+  <div [class]="panneau() ? 'tb-cases' : 'tb-tuiles'" aria-busy="true">
+    @for (i of [1, 2, 3, 4]; track i) {
+      <div class="tb-room tb-attente" [class.tb-case]="panneau()" [class.tb-tuile]="!panneau()"></div>
     }
   </div>
 }
@@ -94,8 +110,8 @@
 @if (aucunResultat()) {
   <div class="tb-empty" data-flip="aucun-resultat">
     <span class="tb-empty-icon"><i class="pi pi-search"></i></span>
-    <strong>Aucune salle ne correspond à ta recherche</strong>
-    <button type="button" class="tb-btn tb-tonal" (click)="effacerFiltres()"><i class="pi pi-times"></i>Effacer les filtres</button>
+    <strong>Rien ne correspond à ta recherche</strong>
+    <button type="button" class="tb-btn tb-tonal" (click)="effacerFiltres()">Effacer les filtres</button>
   </div>
 }
 
@@ -106,12 +122,12 @@
       <button type="button" class="tb-section-toggle" [attr.aria-expanded]="!replie('favoris')" (click)="basculerSection('favoris')">
         <span class="tb-section-icon tb-section-icon-fav"><i class="pi pi-star-fill"></i></span>
         Favoris
-        <span class="tb-section-meta">{{ pluriel(favoris().length, 'salle') }}</span>
+        <span class="tb-section-meta">{{ favoris().length }}</span>
         <i class="pi pi-chevron-down tb-section-chevron"></i>
       </button>
     </h2>
     <div class="tb-section-body">
-      <div class="tb-cards">
+      <div [class]="panneau() ? 'tb-cases' : 'tb-tuiles'">
         @for (r of favoris(); track r.salle.id) {
           <tb-salle-card [r]="r" [nouvelles]="courbesNouvelles()" (favori)="basculerFavori($event)" />
         }
@@ -122,23 +138,44 @@
 
 @for (g of groupes(); track g.cle) {
   <section class="tb-section" [class.tb-collapsed]="replie(g.cle)" [attr.data-section]="g.cle">
-    <h2 class="tb-section-title" [attr.data-flip]="'section-' + g.cle">
-      <button type="button" class="tb-section-toggle" [attr.aria-expanded]="!replie(g.cle)" (click)="basculerSection(g.cle)">
-        <span class="tb-section-icon"><i class="pi" [class.pi-building]="g.batiment" [class.pi-inbox]="!g.batiment"></i></span>
-        {{ g.nom }}
-        <span class="tb-section-meta">
-          {{ pluriel(g.salles.length, 'salle') }}
-          @if (g.moyenne != null) { · {{ unite.t(g.moyenne) }} {{ unite.symbole() }} en moyenne }
-        </span>
-        <i class="pi pi-chevron-down tb-section-chevron"></i>
-      </button>
-    </h2>
+    @if (panneau() || plusieursBatiments() || favoris().length) {
+      <h2 class="tb-section-title" [attr.data-flip]="'section-' + g.cle">
+        <button type="button" class="tb-section-toggle" [attr.aria-expanded]="!replie(g.cle)" (click)="basculerSection(g.cle)">
+          {{ panneau() || plusieursBatiments() ? g.nom : 'Toutes les pièces' }}
+          <span class="tb-section-meta">
+            @if (panneau()) {
+              {{ pluriel(g.salles.length, 'salle') }}
+              @if (g.moyenne != null) {, moyenne {{ unite.t(g.moyenne) }} {{ unite.symbole() }}}
+            } @else {
+              {{ g.salles.length }}
+            }
+          </span>
+          <i class="pi pi-chevron-down tb-section-chevron"></i>
+        </button>
+      </h2>
+    }
     <div class="tb-section-body">
-      <div class="tb-cards">
-        @for (r of g.salles; track r.salle.id) {
-          <tb-salle-card [r]="r" [nouvelles]="courbesNouvelles()" (favori)="basculerFavori($event)" />
+      @if (panneau()) {
+        <!-- One row of squares per étage, its name on its edge -->
+        @for (e of g.etages; track e.cle) {
+          <div class="tb-etage" [attr.data-flip]="g.cle + e.cle">
+            @if (e.nom) {
+              <span class="tb-etage-nom">{{ e.nom }}</span>
+            }
+            <div class="tb-cases">
+              @for (r of e.salles; track r.salle.id) {
+                <tb-salle-card [r]="r" [nouvelles]="courbesNouvelles()" (favori)="basculerFavori($event)" />
+              }
+            </div>
+          </div>
         }
-      </div>
+      } @else {
+        <div class="tb-tuiles">
+          @for (r of g.salles; track r.salle.id) {
+            <tb-salle-card [r]="r" [nouvelles]="courbesNouvelles()" (favori)="basculerFavori($event)" />
+          }
+        </div>
+      }
     </div>
   </section>
 }
