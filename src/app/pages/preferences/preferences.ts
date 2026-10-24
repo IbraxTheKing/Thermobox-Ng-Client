@@ -38,6 +38,8 @@ export class PreferencesPage {
   protected readonly enregistrementStyle = signal(false);
   /** Phones and tablets: no keyboard, no list. */
   protected readonly avecClavier = matchMedia('(hover: hover) and (pointer: fine)').matches;
+  /** The side bar of computers (the web on a wide screen). */
+  protected readonly avecBarre = this.plateforme.plateforme === 'web' && this.avecClavier;
   protected readonly nomPlateforme = { ios: 'iOS (Liquid Glass)', android: 'Android (Material 3)', web: 'Web (ThermoBox)' }[this.plateforme.plateforme];
 
   /** Saves the control-panel look for every user. */

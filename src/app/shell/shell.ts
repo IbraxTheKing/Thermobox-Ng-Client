@@ -195,6 +195,18 @@ export class Shell implements OnInit, OnDestroy {
     this.plateforme.vibrer();
   }
 
+  /** The side bar of computers: names and icons, or icons only (morphs where it can). */
+  protected replier(): void {
+    const changer = () => this.prefs.barreReduite.update((r) => !r);
+    const doc = this.doc as Document & { startViewTransition?: (f: () => void) => unknown };
+    if (!doc.startViewTransition || !this.prefs.animer()) return changer();
+    doc.startViewTransition(() => {
+      changer();
+      // Inside the callback: the snapshot must see the new width
+      this.doc.documentElement.dataset['barre'] = this.prefs.barreReduite() ? 'reduite' : 'complete';
+    });
+  }
+
   protected deconnecter(): void {
     void this.auth.logout();
   }

@@ -222,7 +222,7 @@ export class AndroidNatifService {
       if (this.dernier) this.configurerBarre(...this.dernier);
       this.fabConfig = '';
       this.planifierFab();
-    }).observe(this.root, { attributes: true, attributeFilter: ['data-theme', 'data-ton', 'data-style', 'data-teinte'] });
+    }).observe(this.root, { attributes: true, attributeFilter: ['data-theme', 'data-ton', 'data-style', 'data-teinte', 'data-fond'] });
   }
 
   /** Called by the shell whenever its tabs, the current page or the theme change. */
