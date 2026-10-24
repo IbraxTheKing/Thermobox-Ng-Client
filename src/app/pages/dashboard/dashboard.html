@@ -156,19 +156,21 @@
     }
     <div class="tb-section-body">
       @if (panneau()) {
-        <!-- One row of squares per étage, its name on its edge -->
-        @for (e of g.etages; track e.cle) {
-          <div class="tb-etage" [attr.data-flip]="g.cle + e.cle">
-            @if (e.nom) {
-              <span class="tb-etage-nom">{{ e.nom }}</span>
-            }
-            <div class="tb-cases">
-              @for (r of e.salles; track r.salle.id) {
-                <tb-salle-card [r]="r" [nouvelles]="courbesNouvelles()" (favori)="basculerFavori($event)" />
+        <!-- One row of squares per étage, its name on its edge (one child: the section folds whole) -->
+        <div class="tb-etages">
+          @for (e of g.etages; track e.cle) {
+            <div class="tb-etage" [attr.data-flip]="g.cle + e.cle">
+              @if (e.nom) {
+                <span class="tb-etage-nom">{{ e.nom }}</span>
               }
+              <div class="tb-cases">
+                @for (r of e.salles; track r.salle.id) {
+                  <tb-salle-card [r]="r" [nouvelles]="courbesNouvelles()" (favori)="basculerFavori($event)" />
+                }
+              </div>
             </div>
-          </div>
-        }
+          }
+        </div>
       } @else {
         <div class="tb-tuiles">
           @for (r of g.salles; track r.salle.id) {

@@ -123,10 +123,15 @@
         } @else {
           <tb-molette [temperature]="e.temperature" [consigne]="e.consigne?.value" [(valeur)]="nouvelleConsigne"
                       [modifiable]="auth.peutReglerConsigne()" [couleur]="couleurMaison()" [vtId]="e.id" />
-          @if (auth.peutReglerConsigne() && consigneModifiee()) {
-            <button type="button" class="tb-btn tb-btn-lg tb-thermostat-appliquer" [class.tb-busy]="envoi()" [disabled]="envoi()" (click)="envoyerConsigne()">
-              <i class="pi" [class.pi-check]="!envoi()" [class.pi-spinner]="envoi()"></i>Régler sur {{ unite.t(unite.saisieVersCelsius(nouvelleConsigne()!)) }}°
-            </button>
+          @if (auth.peutReglerConsigne()) {
+            <div class="tb-thermostat-action">
+              @if (consigneModifiee()) {
+                <button type="button" class="tb-btn tb-btn-lg tb-thermostat-appliquer" animate.enter="tb-entre" animate.leave="tb-sort"
+                        [class.tb-busy]="envoi()" [disabled]="envoi()" (click)="envoyerConsigne()">
+                  <i class="pi" [class.pi-check]="!envoi()" [class.pi-spinner]="envoi()"></i>Régler sur {{ unite.t(unite.saisieVersCelsius(nouvelleConsigne()!)) }}°
+                </button>
+              }
+            </div>
           }
         }
         <span class="tb-thermostat-meta">

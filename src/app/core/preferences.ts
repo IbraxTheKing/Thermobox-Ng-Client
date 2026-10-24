@@ -13,6 +13,8 @@ interface Stockees {
   teinte?: boolean;
   unite?: Unite;
   clavier?: boolean;
+  /** Computers: the side bar folded into a rail of icons. */
+  barreReduite?: boolean;
 }
 
 const CLE = 'tb-preferences';
@@ -45,6 +47,8 @@ export class PreferencesService {
   readonly teinte = signal(this.stockees.teinte ?? true);
   readonly unite = signal<Unite>(this.stockees.unite ?? 'C');
   readonly clavier = signal(this.stockees.clavier ?? true);
+  /** Computers: the side bar shows the names of the pages, or only their icons. */
+  readonly barreReduite = signal(this.stockees.barreReduite ?? false);
   readonly style = signal<StyleSite>('verre');
 
   /** The system asks for less motion: no transitions between pages, nothing slides or pops. */
@@ -63,20 +67,22 @@ export class PreferencesService {
       root.dataset['teinte'] = this.teinte() ? 'on' : 'off';
       root.dataset['style'] = this.style();
       root.dataset['unite'] = this.unite() === 'F' ? '°F' : '°C';
+      root.dataset['barre'] = this.barreReduite() ? 'reduite' : 'complete';
       // Colour of the browser / status bar, as the canvas
       const meta = this.doc.querySelector('meta[name="theme-color"]');
       meta?.setAttribute('content', this.couleurFond());
     });
     effect(() => {
-      ecrire({ theme: this.choixTheme(), teinte: this.teinte(), unite: this.unite(), clavier: this.clavier() });
+      ecrire({ theme: this.choixTheme(), teinte: this.teinte(), unite: this.unite(), clavier: this.clavier(), barreReduite: this.barreReduite() });
     });
   }
 
   /** Colour of the page behind everything, for the status bar. */
   couleurFond(): string {
     const panneau = this.style() === 'panneau';
-    if (this.theme() === 'dark') return panneau ? '#16191e' : '#0f141c';
-    return panneau ? '#eef1f5' : '#bccde2';
+    // --tb-fond of tokens.css
+    if (this.theme() === 'dark') return panneau ? '#181c1a' : '#151b19';
+    return panneau ? '#e3e6e0' : '#e9efec';
   }
 
   /**

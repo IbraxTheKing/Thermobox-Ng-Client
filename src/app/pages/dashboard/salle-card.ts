@@ -5,6 +5,7 @@ import { couleurEcart, couleurTemperature, teinteDouce, teinteForte } from '../.
 import { PreferencesService } from '../../core/preferences';
 import { UniteService } from '../../core/unite';
 import { TbWatch } from '../../ui/controles';
+import { TbPhotoImg } from '../../ui/photo';
 import { SalleResume } from './resume';
 
 /**
@@ -17,14 +18,14 @@ import { SalleResume } from './resume';
  */
 @Component({
   selector: 'tb-salle-card',
-  imports: [RouterLink, TbWatch],
+  imports: [RouterLink, TbWatch, TbPhotoImg],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { style: 'display: contents' },
   template: `
     @let s = r().salle;
     @if (panneau()) {
       <article
-        class="tb-room tb-case tb-ton-{{ r().etat.ton }}"
+        class="tb-room tb-case tb-ton-{{ r().etat.ton }}" [class.tb-avec-photo]="s.image != null"
         [style.--c]="caseCouleur().fond" [style.--t]="caseCouleur().texte" [style.--d]="caseCouleur().doux"
         [attr.data-flip]="s.id"
         data-vt="salle-card" [attr.data-vt-id]="s.id"
@@ -33,6 +34,9 @@ import { SalleResume } from './resume';
         <a [routerLink]="['/app/salle', s.id]" class="tb-stretched" [title]="'Ouvrir ' + s.name">
           <span class="tb-sr-only">Ouvrir {{ s.name }}</span>
         </a>
+        @if (s.image != null) {
+          <span class="tb-case-photo" data-vt="salle-photo" [attr.data-vt-id]="s.id"><tb-photo-img [salleId]="s.id" [version]="s.image" /></span>
+        }
         <span class="tb-case-nom" data-vt="salle-nom" [attr.data-vt-id]="s.id">{{ s.name }}</span>
         @if (r().tendance; as t) {
           <svg class="tb-case-courbe" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true"><path [attr.d]="t.ligne" /></svg>
@@ -47,7 +51,7 @@ import { SalleResume } from './resume';
       </article>
     } @else {
       <article
-        class="tb-room tb-tuile tb-ton-{{ r().etat.ton }}"
+        class="tb-room tb-tuile tb-ton-{{ r().etat.ton }}" [class.tb-avec-photo]="s.image != null"
         [style.--c]="tuile().fond" [style.--f]="tuile().fort"
         [attr.data-flip]="s.id"
         data-vt="salle-card" [attr.data-vt-id]="s.id"
@@ -60,6 +64,9 @@ import { SalleResume } from './resume';
                 [title]="s.favori ? 'Retirer des favoris' : 'Ajouter aux favoris'" (click)="favori.emit(s.id)">
           <i class="pi" [class.pi-star-fill]="s.favori" [class.pi-star]="!s.favori"></i>
         </button>
+        @if (s.image != null) {
+          <span class="tb-tuile-photo" data-vt="salle-photo" [attr.data-vt-id]="s.id"><tb-photo-img [salleId]="s.id" [version]="s.image" /></span>
+        }
         <span class="tb-tuile-nom" data-vt="salle-nom" [attr.data-vt-id]="s.id">{{ s.name }}</span>
         <span class="tb-tuile-t tb-chiffres" data-vt="salle-temp" [attr.data-vt-id]="s.id" [tbWatch]="s.temperature">{{ unite.t(s.temperature) }}<span>°</span></span>
         <span class="tb-tuile-etat">

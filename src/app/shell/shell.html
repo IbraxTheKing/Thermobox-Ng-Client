@@ -11,6 +11,11 @@
 <!-- Navigation rail (wide screens), bar at the bottom (phones) -->
 <nav class="tb-rail" [class.tb-saisie-lentille]="saisie()" aria-label="Navigation principale" (transitionend)="placerLentille()">
   <a routerLink="/app/apercu" class="tb-rail-brand" title="Thermobox"><span class="tb-logo" aria-hidden="true"></span><span class="tb-rail-brand-nom">Thermobox</span></a>
+  <!-- Computers: the side bar folds into a rail of icons, and back -->
+  <button type="button" class="tb-rail-replier" (click)="replier()"
+          [title]="prefs.barreReduite() ? 'Afficher le nom des pages' : 'Réduire la barre'" [attr.aria-label]="prefs.barreReduite() ? 'Afficher le nom des pages' : 'Réduire la barre'">
+    <i class="pi pi-angle-double-left"></i>
+  </button>
 
   <div class="tb-dests" #dests (pointerdown)="debutAppui($event)">
     <span class="tb-lentille" aria-hidden="true"></span>
@@ -57,21 +62,21 @@
     </a>
   </div>
 
-  <!-- Wide screens: the account, at the bottom of the rail -->
+  <!-- Wide screens: the account at the foot of the rail; a click drops the menu of the saved accounts -->
   <div class="tb-rail-end">
-    <a routerLink="/app/profil" class="tb-avatar" routerLinkActive="tb-avatar-on" [title]="'Mon profil (' + auth.user()?.username + ' · ' + auth.adresse() + ')'">{{ auth.initiale() }}</a>
-    <!-- Desktop: who, on which server -->
-    <a routerLink="/app/profil" class="tb-rail-compte" title="Mon profil">
-      <span class="tb-avatar" aria-hidden="true">{{ auth.initiale() }}</span>
-      <span><strong>{{ auth.user()?.username }}</strong><small>{{ auth.adresse() }}</small></span>
-    </a>
+    <div class="tb-rail-compte-zone">
+      <button type="button" class="tb-rail-compte" data-comptes-ouvre aria-haspopup="dialog" [attr.aria-expanded]="comptes()"
+              [title]="'Comptes (' + auth.user()?.username + ' · ' + auth.adresse() + ')'" (click)="comptes.set(!comptes())">
+        <span class="tb-avatar" aria-hidden="true">{{ auth.initiale() }}</span>
+        <span class="tb-rail-compte-texte"><strong>{{ auth.user()?.username }}</strong><small>{{ auth.adresse() }}</small></span>
+        <i class="pi pi-chevron-up tb-rail-compte-fleche" aria-hidden="true"></i>
+      </button>
+      <tb-comptes mode="menu" [(ouvert)]="comptes" />
+    </div>
     <div class="tb-rail-actions">
       <a routerLink="/app/preferences" class="tb-icon-btn tb-prefs-btn" routerLinkActive="tb-prefs-on" title="Préférences" aria-label="Préférences">
         <i class="pi pi-sliders-v"></i>
       </a>
-      <button type="button" class="tb-icon-btn tb-comptes-btn" (click)="comptes.set(true)" title="Changer de compte" aria-label="Changer de compte">
-        <i class="pi pi-users"></i>
-      </button>
       <button type="button" class="tb-icon-btn tb-logout" (click)="deconnecter()" title="Déconnexion" aria-label="Déconnexion">
         <i class="pi pi-sign-out"></i>
       </button>
@@ -83,7 +88,6 @@
   <router-outlet />
 </main>
 
-<tb-comptes [(ouvert)]="comptes" />
 
 <!-- "?" : keyboard shortcuts -->
 <tb-sheet [(ouvert)]="clavier.aide" titre="Raccourcis clavier" [largeur]="760">

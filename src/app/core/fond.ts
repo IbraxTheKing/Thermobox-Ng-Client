@@ -10,8 +10,22 @@ import { Injectable, inject } from '@angular/core';
 export class FondService {
   private readonly doc = inject(DOCUMENT);
 
+  private derniere: string | null = null;
+
   teinter(couleur: string | null): void {
+    if (couleur === this.derniere) return;
+    this.derniere = couleur;
     const fond = this.doc.querySelector<HTMLElement>('.tb-fond-page');
     if (fond) fond.style.backgroundColor = couleur ?? 'transparent';
+    // The bars drawn outside the page (the native bar of Android) take it too: --tb-teinte-page,
+    // and data-fond so they know when it changed
+    const root = this.doc.documentElement;
+    if (couleur) {
+      root.style.setProperty('--tb-teinte-page', couleur);
+      root.dataset['fond'] = couleur;
+    } else {
+      root.style.removeProperty('--tb-teinte-page');
+      delete root.dataset['fond'];
+    }
   }
 }

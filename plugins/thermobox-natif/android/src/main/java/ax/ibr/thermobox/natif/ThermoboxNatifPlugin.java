@@ -1,5 +1,6 @@
 package ax.ibr.thermobox.natif;
 
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.res.ColorStateList;
@@ -280,7 +281,7 @@ public class ThermoboxNatifPlugin extends Plugin {
         int actif = couleur(c, "actif", sombre ? 0xFFE3EAF6 : 0xFF0B2A57);
         int indicateur = couleur(c, "indicateur", sombre ? 0xFF2E4A78 : 0xFFCFE0F8);
         int badge = couleur(c, "badge", 0xFFBA1A1A);
-        b.setBackgroundColor(fond);
+        teindre(b, fond);
         b.setItemIconTintList(selon(actif, normal));
         b.setItemTextColor(selon(actif, normal));
         b.setItemActiveIndicatorColor(ColorStateList.valueOf(indicateur));
@@ -288,6 +289,32 @@ public class ThermoboxNatifPlugin extends Plugin {
             BadgeDrawable d = b.getBadge(i);
             if (d != null) d.setBackgroundColor(badge);
         }
+    }
+
+    /** Colour of the bar shown, and the fade towards a new one (the page fades the same way). */
+    @Nullable private Integer fondBarre;
+    @Nullable private ValueAnimator fondanime;
+
+    /**
+     * The bar takes the colour of the page: at once the first time, then fading as the page does
+     * (« Maison »: a room tinted by its temperature, the dial being turned…).
+     */
+    private void teindre(BottomNavigationView b, int fond) {
+        if (fondanime != null) fondanime.cancel();
+        Integer depuis = fondBarre;
+        fondBarre = fond;
+        if (depuis == null || depuis == fond || !b.isShown()) {
+            poserFond(b, fond);
+            return;
+        }
+        fondanime = ValueAnimator.ofArgb(depuis, fond);
+        fondanime.setDuration(600);
+        fondanime.addUpdateListener(a -> poserFond(b, (int) a.getAnimatedValue()));
+        fondanime.start();
+    }
+
+    private void poserFond(BottomNavigationView b, int fond) {
+        b.setBackgroundColor(fond);
         // Gesture bar / buttons of the system: same colour as the bar under them
         if (Build.VERSION.SDK_INT < 35) getActivity().getWindow().setNavigationBarColor(fond);
     }

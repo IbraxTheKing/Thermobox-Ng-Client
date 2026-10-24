@@ -49,6 +49,19 @@
           <button type="button" role="radio" [attr.aria-checked]="prefs.fahrenheit()" [class.tb-seg-on]="prefs.fahrenheit()" (click)="prefs.unite.set('F')">°F</button>
         </div>
       </div>
+      @if (avecBarre) {
+        <div class="tb-pref tb-pref-barre">
+          <span class="tb-section-icon"><i class="pi pi-bars"></i></span>
+          <div class="tb-pref-text">
+            <strong>Barre de navigation</strong>
+            <span class="tb-muted">Sur un grand écran : le nom des pages à côté de leur icône, ou les icônes seules pour laisser plus de place. La flèche en haut de la barre fait la même chose.</span>
+          </div>
+          <div class="tb-segmented" role="radiogroup" aria-label="Barre de navigation">
+            <button type="button" role="radio" [attr.aria-checked]="!prefs.barreReduite()" [class.tb-seg-on]="!prefs.barreReduite()" (click)="prefs.barreReduite.set(false)">Complète</button>
+            <button type="button" role="radio" [attr.aria-checked]="prefs.barreReduite()" [class.tb-seg-on]="prefs.barreReduite()" (click)="prefs.barreReduite.set(true)">Icônes</button>
+          </div>
+        </div>
+      }
     </div>
     <p class="tb-muted tb-pref-portee">Enregistré sur cet appareil uniquement. Interface : {{ nomPlateforme }}.</p>
   </section>

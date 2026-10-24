@@ -107,7 +107,14 @@ export class SallePage implements OnDestroy {
   protected readonly panneau = computed(() => this.prefs.style() === 'panneau');
   private readonly sombre = computed(() => this.prefs.theme() === 'dark');
   /** Maison: the colour of the temperature itself (the dial, the page behind it). */
-  protected readonly couleurMaison = computed(() => teinteForte(couleurTemperature(this.element()?.temperature ?? null), this.sombre()));
+  protected readonly couleurMaison = computed(() => teinteForte(couleurTemperature(this.temperatureAffichee()), this.sombre()));
+  /**
+   * Maison: the temperature the page is coloured by: the one of the room, or, while the dial is
+   * being turned, the one asked for (the page previews it).
+   */
+  private readonly temperatureAffichee = computed(() =>
+    this.consigneModifiee() && this.auth.peutReglerConsigne() ? this.unite.saisieVersCelsius(this.nouvelleConsigne()!) : (this.element()?.temperature ?? null),
+  );
   /** Panneau: the gap to the consigne, written beside the state. */
   protected readonly ecart = computed(() => {
     const e = this.element();
@@ -190,7 +197,7 @@ export class SallePage implements OnDestroy {
     // Maison: the page takes the soft colour of the temperature
     effect(() => {
       const e = this.element();
-      this.fond.teinter(e && !this.panneau() ? teinteDouce(couleurTemperature(e.temperature ?? null), this.sombre()) : null);
+      this.fond.teinter(e && !this.panneau() ? teinteDouce(couleurTemperature(this.temperatureAffichee()), this.sombre()) : null);
     });
     inject(DestroyRef).onDestroy(() => this.fond.teinter(null));
     effect(() => {
@@ -332,6 +339,13 @@ export class SallePage implements OnDestroy {
       const texte = details.charAt(0).toUpperCase() + details.slice(1);
       if (r.echecs.length) this.toasts.warn(titre, `${texte}. Non transmise à : ${r.echecs.map((x) => x.name).join(', ')}`);
       else this.toasts.info(titre, texte);
+      // The colours follow at once, here and on the dashboard: the element takes its new consigne
+      // before the server's answer, the tree (and what inherits from it) is read again
+      const consigne = { value: celsius, date: new Date().toISOString(), heritee: false, sourceId: e.id, sourceName: e.name };
+      const d = this.detail();
+      if (d) this.detail.set({ ...d, element: { ...d.element, consigne } });
+      this.store.remplacer({ ...e, consigne });
+      void this.store.charger(true).catch(() => undefined);
       this.nouvelleConsigne.set(null);
       this.forcer.set(false);
       await this.rafraichir(e.id, true);

@@ -145,7 +145,13 @@ a.tb-crumb:hover { background: none; text-decoration: underline; }
 .tb-thermostat-zone { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 8px 0 12px; border-radius: var(--tb-shape-xxl); }
 .tb-thermostat-phrase { align-self: stretch; margin: 0 0 4px; font-size: clamp(1.2rem, 1.05rem + .6vw, 1.5rem); font-weight: 300; line-height: 1.3; }
 .tb-thermostat-seul { margin: 24px 0; font-size: 6rem; }
-.tb-thermostat-appliquer { margin-top: 6px; }
+/* Its place is kept: the button slides in and out without moving what is below */
+.tb-thermostat-action { display: grid; place-items: center; min-height: 56px; margin-top: 6px; }
+.tb-thermostat-appliquer { transform-origin: center top; }
+.tb-entre { animation: tb-bouton-entre .32s cubic-bezier(.3, 1.4, .5, 1) both; }
+.tb-sort { animation: tb-bouton-sort .18s ease-in both; }
+@keyframes tb-bouton-entre { from { opacity: 0; transform: translateY(-6px) scale(.9); } }
+@keyframes tb-bouton-sort { to { opacity: 0; transform: translateY(-4px) scale(.94); } }
 .tb-thermostat-meta { margin-top: 4px; color: var(--md-on-surface-variant); font-size: .85rem; text-align: center; }
 .tb-thermostat-meta a { color: inherit; }
 /* The options for an étage or a bâtiment, without the form (the dial is the form) */
@@ -154,22 +160,41 @@ a.tb-crumb:hover { background: none; text-decoration: underline; }
 /* The dial */
 tb-molette { display: flex; flex-direction: column; align-items: center; }
 .tb-molette { position: relative; width: min(300px, 78vw); aspect-ratio: 1; }
-.tb-molette svg { width: 100%; height: 100%; overflow: visible; touch-action: none; }
+/* The page scrolls over the dial: only the knob takes the finger */
+.tb-molette svg { width: 100%; height: 100%; overflow: visible; touch-action: pan-y; -webkit-user-select: none; user-select: none; }
 .tb-molette-piste { fill: none; stroke: color-mix(in srgb, var(--md-on-surface) 10%, transparent); stroke-width: 22; stroke-linecap: round; }
-.tb-molette-arc { fill: none; stroke: var(--m); stroke-width: 22; stroke-linecap: round; transition: stroke .6s ease; }
-.tb-molette-bouton { fill: var(--md-surface-container-lowest); stroke: var(--m); stroke-width: 3; cursor: grab; filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .18)); }
+.tb-molette-arc { fill: none; stroke: var(--m); stroke-width: 22; stroke-linecap: round; transition: stroke-dasharray .35s var(--tb-ease-out, cubic-bezier(.2, .8, .2, 1)), stroke .6s ease; }
+.tb-molette-poignee { transform-box: view-box; transform-origin: 150px 150px; transition: transform .35s var(--tb-ease-out, cubic-bezier(.2, .8, .2, 1)); }
+/* Held: the knob is under the finger, no easing behind it */
+.tb-molette-saisie :is(.tb-molette-arc, .tb-molette-poignee) { transition-duration: 0s, .6s; }
+.tb-molette-saisie .tb-molette-poignee { transition: none; }
+.tb-molette-prise { fill: transparent; cursor: grab; touch-action: none; }
+.tb-molette-bouton { fill: var(--md-surface-container-lowest); stroke: var(--m); stroke-width: 3; cursor: grab; touch-action: none; filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .18)); transition: stroke .6s ease, r .2s ease; }
+.tb-molette-saisie .tb-molette-bouton { r: 19; cursor: grabbing; }
 .tb-molette-bouton:focus-visible { outline: none; stroke-width: 6; }
-.tb-molette-mobile { cursor: pointer; }
 .tb-molette-centre { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; pointer-events: none; }
 .tb-molette-centre small { color: var(--md-on-surface-variant); font-size: .9rem; }
 .tb-molette-centre b { font-size: clamp(4.4rem, 3.6rem + 3vw, 5.6rem); line-height: 1; letter-spacing: -.05em; }
 .tb-molette-centre b span { font-size: .4em; vertical-align: .9em; margin-left: .04em; font-weight: 300; }
 .tb-molette-centre em { font-style: normal; font-size: .95rem; }
-.tb-molette-centre em.tb-molette-nouvelle { color: var(--m); font-weight: 600; }
+.tb-molette-centre em.tb-molette-nouvelle { color: var(--m); font-weight: 600; animation: tb-objectif .28s cubic-bezier(.3, 1.5, .5, 1); }
+@keyframes tb-objectif { from { transform: translateY(3px) scale(.92); opacity: .4; } }
 .tb-molette-pas { display: flex; gap: 72px; margin-top: -14px; }
-.tb-molette-pas button { display: grid; place-items: center; width: 52px; height: 52px; border: 0; border-radius: 50%; background: var(--tb-field); color: var(--md-on-surface); font-size: 1.05rem; cursor: pointer; }
+.tb-molette-pas button {
+    display: grid; place-items: center; width: 52px; height: 52px; border: 0; border-radius: 50%;
+    background: var(--tb-field); color: var(--md-on-surface); font-size: 1.05rem; cursor: pointer;
+    touch-action: manipulation; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+    transition: transform .15s ease, background-color .2s ease, color .2s ease;
+}
 .tb-molette-pas button:hover { background: var(--tb-field-hover); }
 .tb-molette-pas button:active { transform: scale(.94); }
+/* Held down: the button fills with the colour of the dial and breathes while it repeats */
+.tb-molette-pas button.tb-maintenu { background: var(--m); color: var(--tb-fond); animation: tb-maintenu .5s ease-in-out infinite alternate; }
+@keyframes tb-maintenu { from { transform: scale(.94); } to { transform: scale(1.06); } }
+@media (prefers-reduced-motion: reduce) {
+    .tb-molette-arc, .tb-molette-poignee { transition: none; }
+    .tb-molette-pas button.tb-maintenu, .tb-molette-centre em.tb-molette-nouvelle { animation: none; }
+}
 
 @media (max-width: 840px) {
     .tb-hero.tb-pupitre, .tb-hero.tb-thermostat { grid-template-columns: 1fr; }
@@ -179,3 +204,24 @@ tb-molette { display: flex; flex-direction: column; align-items: center; }
 
 /* The words of a square or tile sit above its curve, but a tap on them still opens the salle */
 :is(.tb-case-nom, .tb-case-bas, .tb-tuile-nom, .tb-tuile-t, .tb-tuile-etat, .tb-case-courbe, .tb-tuile-courbe) { pointer-events: none; }
+
+/* ============================== Photos on the dashboard ============================== */
+
+/* Panneau: the photo as a strip across the top of the square, the reading below it */
+.tb-case-photo { display: block; flex: none; height: 64px; margin: -10px -12px 8px; overflow: hidden; pointer-events: none; }
+.tb-case-photo img, .tb-tuile-photo img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.tb-room.tb-case.tb-avec-photo .tb-case-courbe { bottom: 30px; height: 30px; }
+.tb-room.tb-case.tb-avec-photo .tb-case-favori { padding: 3px 4px; border-radius: 3px; background: color-mix(in srgb, var(--c) 85%, transparent); opacity: 1; }
+
+/* Maison: the photo at the top of the tile, the colour of the room beneath it */
+.tb-tuile-photo { display: block; flex: none; height: 108px; margin: -16px -18px 12px; overflow: hidden; pointer-events: none; border-radius: var(--tb-shape-xxl) var(--tb-shape-xxl) 0 0; }
+.tb-room.tb-tuile.tb-avec-photo .tb-tuile-favori { background: color-mix(in srgb, var(--tb-fond) 80%, transparent); opacity: 1; }
+.tb-room.tb-tuile.tb-avec-photo .tb-tuile-t { font-size: 2.8rem; margin-top: 2px; }
+
+@media (max-width: 640px) {
+    .tb-case-photo { height: 34px; margin: -8px -9px 6px; }
+    .tb-room.tb-case.tb-avec-photo .tb-case-courbe { display: none; }
+    .tb-tuile-photo { height: 84px; }
+}
+.tb-room.tb-tuile.tb-avec-photo { padding-bottom: 34px; }
+.tb-room.tb-tuile.tb-avec-photo .tb-tuile-courbe { height: 30px; }

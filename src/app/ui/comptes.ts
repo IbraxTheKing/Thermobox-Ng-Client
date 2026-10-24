@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component, computed, inject, model } from '@angular/core';
-import { Router } from '@angular/router';
+import { NgTemplateOutlet } from '@angular/common';
+import { ChangeDetectionStrategy, Component, DOCUMENT, ElementRef, computed, effect, inject, input, model } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
 
 import { adresseLisible } from '../core/api.config';
 import { AuthService, Compte, ouvrable } from '../core/auth';
@@ -13,14 +14,18 @@ import { TbSheet } from './sheet';
  * it was logged out or has expired); « Ajouter un compte » logs in to another one, the current
  * account stays saved.
  *
+ * Two forms: a sheet (phones, the Plus page) and, on a computer, a menu that drops from the
+ * account at the foot of the side bar (mode="menu"; closed by a click elsewhere or Escape).
+ *
  *   <tb-comptes [(ouvert)]="comptes" />
+ *   <tb-comptes mode="menu" [(ouvert)]="menuComptes" />
  */
 @Component({
   selector: 'tb-comptes',
-  imports: [TbSheet],
+  imports: [TbSheet, RouterLink, NgTemplateOutlet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <tb-sheet [(ouvert)]="ouvert" titre="Comptes" [largeur]="440">
+    <ng-template #liste>
       <ul class="tb-comptes">
         @for (c of lignes(); track c.cle) {
           <li>
@@ -43,10 +48,26 @@ import { TbSheet } from './sheet';
           </li>
         }
       </ul>
-      <button type="button" class="tb-sheet-item tb-compte-ajout" (click)="ajouter()">
-        <i class="pi pi-user-plus"></i>Ajouter un compte
-      </button>
-    </tb-sheet>
+    </ng-template>
+
+    @if (mode() === 'menu') {
+      @if (ouvert()) {
+        <div class="tb-comptes-menu" role="dialog" aria-label="Comptes" animate.enter="tb-menu-entre" animate.leave="tb-menu-sort">
+          <ng-container *ngTemplateOutlet="liste" />
+          <div class="tb-comptes-menu-pied">
+            <button type="button" class="tb-sheet-item tb-compte-ajout" (click)="ajouter()"><i class="pi pi-user-plus"></i>Ajouter un compte</button>
+            <a routerLink="/app/profil" class="tb-sheet-item" (click)="ouvert.set(false)"><i class="pi pi-user"></i>Mon profil</a>
+          </div>
+        </div>
+      }
+    } @else {
+      <tb-sheet [(ouvert)]="ouvert" titre="Comptes" [largeur]="440">
+        <ng-container *ngTemplateOutlet="liste" />
+        <button type="button" class="tb-sheet-item tb-compte-ajout" (click)="ajouter()">
+          <i class="pi pi-user-plus"></i>Ajouter un compte
+        </button>
+      </tb-sheet>
+    }
   `,
 })
 export class TbComptes {
@@ -55,6 +76,29 @@ export class TbComptes {
   private readonly confirm = inject(ConfirmService);
 
   readonly ouvert = model(false);
+  readonly mode = input<'feuille' | 'menu'>('feuille');
+
+  constructor() {
+    // The menu: a click outside it (and outside what opened it) or Escape closes it
+    const doc = inject(DOCUMENT);
+    const hote = inject(ElementRef<HTMLElement>).nativeElement as HTMLElement;
+    const dehors = (e: PointerEvent) => {
+      const t = e.target as Element | null;
+      if (t && !hote.contains(t) && !t.closest('[data-comptes-ouvre]')) this.ouvert.set(false);
+    };
+    const echap = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') this.ouvert.set(false);
+    };
+    effect((onCleanup) => {
+      if (this.mode() !== 'menu' || !this.ouvert()) return;
+      doc.addEventListener('pointerdown', dehors, true);
+      doc.addEventListener('keydown', echap);
+      onCleanup(() => {
+        doc.removeEventListener('pointerdown', dehors, true);
+        doc.removeEventListener('keydown', echap);
+      });
+    });
+  }
 
   protected readonly lignes = computed(() =>
     this.auth.comptes().map((compte) => ({

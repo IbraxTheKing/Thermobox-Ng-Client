@@ -181,58 +181,120 @@ a:hover > .tb-logo { transform: none; }
 .tb-dest.tb-dest-on .tb-dest-icon { background: var(--md-on-surface); color: var(--tb-fond); box-shadow: none; animation: none; }
 .tb-dest.tb-dest-on { color: var(--md-on-surface); }
 .tb-dest-badge { box-shadow: 0 0 0 2px var(--md-surface-container-low); }
-.tb-rail-compte { display: none; }
+/* The account at the foot of the rail: its avatar (and, in the side bar, its name and server) */
+.tb-rail-compte-zone { position: relative; }
+.tb-rail-compte { display: flex; align-items: center; gap: 10px; padding: 0; border: 0; border-radius: var(--tb-shape-full); background: none; color: var(--md-on-surface); font: inherit; cursor: pointer; }
+.tb-rail-compte-texte { display: none; }
+.tb-rail-compte-fleche { display: none; margin-left: auto; color: var(--md-on-surface-variant); font-size: .75rem; transition: transform var(--tb-medium) var(--tb-ease); }
+.tb-rail-compte[aria-expanded="true"] .tb-rail-compte-fleche { transform: rotate(180deg); }
+.tb-rail-compte:focus-visible { outline: 2px solid var(--md-primary); outline-offset: 2px; }
 
+/* The menu of the saved accounts (TbComptes mode="menu"): beside the rail of icons */
+.tb-comptes-menu {
+    position: absolute;
+    z-index: 70;
+    left: calc(100% + 16px);
+    bottom: -6px;
+    width: 320px;
+    padding: 8px;
+    border: 1px solid var(--md-outline-variant);
+    border-radius: var(--tb-shape-xl);
+    background: var(--md-surface-container-lowest);
+    color: var(--md-on-surface);
+    box-shadow: 0 18px 48px rgba(0, 0, 0, .16), 0 2px 6px rgba(0, 0, 0, .06);
+    transform-origin: 0 100%;
+    text-align: left;
+}
+:root[data-theme="dark"] .tb-comptes-menu { background: var(--md-surface-container-high); box-shadow: 0 18px 48px rgba(0, 0, 0, .5); }
+:root[data-style="panneau"] .tb-comptes-menu { border-radius: var(--tb-shape-md); }
+.tb-comptes-menu .tb-comptes { max-height: min(50vh, 420px); margin: 0; overflow-y: auto; }
+.tb-comptes-menu-pied { display: flex; flex-direction: column; margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--md-outline-variant); }
+.tb-comptes-menu-pied .tb-sheet-item { min-height: 44px; text-decoration: none; }
+.tb-menu-entre { animation: tb-menu-entre .22s cubic-bezier(.2, .9, .3, 1.15) both; }
+.tb-menu-sort { animation: tb-menu-sort .14s ease-in both; }
+@keyframes tb-menu-entre { from { opacity: 0; transform: translateY(6px) scale(.96); } }
+@keyframes tb-menu-sort { to { opacity: 0; transform: translateY(4px) scale(.98); } }
+@media (prefers-reduced-motion: reduce) { .tb-menu-entre, .tb-menu-sort { animation-duration: 1ms; } }
+
+/*
+ * The side bar can be folded back into the rail of icons (the arrow at its top, or the
+ * Préférences page): html[data-barre="reduite"]. :where() keeps the specificity of each rule.
+ */
 @media (min-width: 1200px) and (not ((orientation: landscape) and (max-height: 520px))) {
-    :root { --tb-rail: 268px; }
-    .tb-rail {
-        inset: 0 auto 0 0;
-        width: calc(var(--tb-rail) - 24px);
-        margin: 14px 0 14px 14px;
-        padding: 22px 12px 14px;
-        align-items: stretch;
-        gap: 4px;
-    }
-    .tb-rail-brand { display: flex; align-items: center; justify-content: flex-start; gap: 10px; margin: 0 8px 26px; color: var(--md-on-surface); font-size: 1.25rem; font-weight: 600; letter-spacing: -.02em; }
-    .tb-rail-brand .tb-logo { width: 28px; height: 28px; }
-    .tb-rail-brand-nom { display: inline; }
-    :root[data-style="panneau"] .tb-rail-brand { font-family: var(--tb-font-chiffres); }
-    .tb-dests { align-items: stretch; gap: 2px; }
-    .tb-dest {
-        flex-direction: row;
-        gap: 12px;
-        width: auto;
-        min-height: 44px;
-        padding: 0 12px;
-        border-radius: var(--tb-shape-full);
-        font-size: .98rem;
-        font-weight: 500;
-    }
-    .tb-dest-icon { width: 22px; height: 22px; border-radius: 0; }
-    .tb-dest-icon .pi { font-size: 1.1rem; }
-    .tb-dest-badge { top: -2px; right: -4px; }
-    .tb-dest.tb-dest-on { background: var(--md-on-surface); color: var(--tb-fond); }
-    .tb-dest.tb-dest-on .tb-dest-icon { background: none; color: inherit; }
-    .tb-dest:hover:not(.tb-dest-on) { background: color-mix(in srgb, var(--md-on-surface) 6%, transparent); }
-    :root[data-style="panneau"] .tb-dest { border-radius: var(--tb-shape-sm); }
-    /* Panneau: the page shown, a lamp on its edge rather than a filled block */
-    :root[data-style="panneau"] .tb-dest.tb-dest-on { background: var(--md-surface-container-high); color: var(--md-on-surface); box-shadow: inset 4px 0 0 var(--md-on-surface); }
+    :root:not([data-barre="reduite"]):not([data-plateforme="android"]) { --tb-rail: 268px; }
+    :where(:root:not([data-barre="reduite"])) {
+        .tb-rail {
+            inset: 0 auto 0 0;
+            width: calc(var(--tb-rail) - 24px);
+            margin: 14px 0 14px 14px;
+            padding: 22px 12px 14px;
+            align-items: stretch;
+            gap: 4px;
+        }
+        .tb-rail-brand { display: flex; align-items: center; justify-content: flex-start; gap: 10px; margin: 0 8px 26px; color: var(--md-on-surface); font-size: 1.25rem; font-weight: 600; letter-spacing: -.02em; }
+        .tb-rail-brand .tb-logo { width: 28px; height: 28px; }
+        .tb-rail-brand-nom { display: inline; }
+        &[data-style="panneau"] .tb-rail-brand { font-family: var(--tb-font-chiffres); }
+        .tb-dests { align-items: stretch; gap: 6px; }
+        .tb-dest {
+            flex-direction: row;
+            gap: 14px;
+            width: auto;
+            min-height: 46px;
+            padding: 0 14px;
+            border-radius: var(--tb-shape-full);
+            font-size: .98rem;
+            font-weight: 500;
+        }
+        .tb-dest-icon { width: 22px; height: 22px; border-radius: 0; }
+        .tb-dest-icon .pi { font-size: 1.1rem; }
+        .tb-dest-badge { top: -2px; right: -4px; }
+        .tb-dest.tb-dest-on { background: var(--md-on-surface); color: var(--tb-fond); }
+        .tb-dest.tb-dest-on .tb-dest-icon { background: none; color: inherit; }
+        .tb-dest:hover:not(.tb-dest-on) { background: color-mix(in srgb, var(--md-on-surface) 6%, transparent); }
+        &[data-style="panneau"] .tb-dest { border-radius: var(--tb-shape-sm); }
+        /* Panneau: the page shown, a lamp on its edge rather than a filled block */
+        &[data-style="panneau"] .tb-dest.tb-dest-on { background: var(--md-surface-container-high); color: var(--md-on-surface); box-shadow: inset 4px 0 0 var(--md-on-surface); }
 
-    /* The account at the foot: who, on which server; then the three actions */
-    .tb-rail-end { flex-direction: column; align-items: stretch; gap: 6px; padding-top: 12px; border-top: 1px solid var(--md-outline-variant); }
-    .tb-rail-compte { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: var(--tb-shape-lg); color: var(--md-on-surface); text-decoration: none; }
-    .tb-rail-compte:hover { background: color-mix(in srgb, var(--md-on-surface) 6%, transparent); }
-    .tb-rail-compte > span:last-child { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
-    .tb-rail-compte strong { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .tb-rail-compte small { color: var(--md-on-surface-variant); font-size: .8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .tb-rail-end > .tb-avatar { display: none; }
-    .tb-rail-actions { display: flex; gap: 4px; }
-    .tb-rail-actions .tb-icon-btn { flex: 1; width: auto; height: 38px; }
+        /* The account at the foot: who, on which server; then the three actions */
+        .tb-rail-end { flex-direction: column; align-items: stretch; gap: 6px; padding-top: 12px; border-top: 1px solid var(--md-outline-variant); }
+        .tb-rail-compte { width: 100%; padding: 6px 10px 6px 8px; border-radius: var(--tb-shape-lg); text-align: left; }
+        .tb-rail-compte:hover, .tb-rail-compte[aria-expanded="true"] { background: color-mix(in srgb, var(--md-on-surface) 6%, transparent); }
+        &[data-style="panneau"] .tb-rail-compte { border-radius: var(--tb-shape-sm); }
+        .tb-rail-compte-texte { display: flex; flex: 1 1 auto; flex-direction: column; min-width: 0; line-height: 1.25; }
+        .tb-rail-compte strong { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .tb-rail-compte small { color: var(--md-on-surface-variant); font-size: .8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .tb-rail-compte-fleche { display: inline-block; }
+        /* The menu of the accounts drops above the account, as wide as the bar */
+        .tb-comptes-menu { left: 0; bottom: calc(100% + 8px); width: max(100%, 300px); transform-origin: 50% 100%; }
+        .tb-rail-actions { display: flex; gap: 4px; }
+        .tb-rail-actions .tb-icon-btn { flex: 1; width: auto; height: 38px; }
+        /* The arrow that folds the bar, at the end of the brand */
+        .tb-rail-replier { position: absolute; top: 24px; right: 12px; }
+    }
+    /* Folded: the arrow under the logo, pointing the other way */
+    :root[data-barre="reduite"] .tb-rail-replier { margin: -10px 0 8px; }
+    :root[data-barre="reduite"] .tb-rail-replier .pi { transform: rotate(180deg); }
+    :root[data-barre="reduite"] :is(.tb-rail-brand-nom, .tb-rail-actions-texte) { display: none; }
+    :root[data-barre="reduite"] .tb-rail-actions { display: contents; }
+    :root[data-barre="reduite"] .tb-dests { gap: 10px; }
 }
 @media (max-width: 1199px), (orientation: landscape) and (max-height: 520px) {
     .tb-rail-brand-nom, .tb-rail-actions-texte { display: none; }
     .tb-rail-actions { display: contents; }
+    .tb-rail-replier { display: none; }
+    /* The rail of icons: a little more air between them */
+    .tb-dests { gap: 10px; }
 }
+.tb-rail-replier {
+    display: grid; place-items: center; flex: none; width: 32px; height: 32px; padding: 0; border: 0; border-radius: var(--tb-shape-full);
+    background: none; color: var(--md-on-surface-variant); cursor: pointer;
+    transition: background-color var(--tb-fast) linear, color var(--tb-fast) linear;
+}
+.tb-rail-replier:hover { background: color-mix(in srgb, var(--md-on-surface) 7%, transparent); color: var(--md-on-surface); }
+.tb-rail-replier .pi { font-size: .9rem; transition: transform var(--tb-medium) var(--tb-ease); }
+/* Only the web on a computer has the side bar */
+:root:not([data-plateforme="web"]) .tb-rail-replier { display: none; }
 
 /* Phones on the web (not iOS, not the Android app): flat bars */
 @media (max-width: 840px) {
@@ -262,3 +324,24 @@ a:hover > .tb-logo { transform: none; }
 :root .tb-gest-icone { background: transparent; color: var(--md-on-surface-variant); border-radius: 0; width: 28px; }
 :root .tb-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 6l4 4 4-4' fill='none' stroke='%235a6660' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
 :root[data-theme="dark"] .tb-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 6l4 4 4-4' fill='none' stroke='%23a7b0ab' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+
+/* ============================== Android: the native bar in the colours of the page ============================== */
+
+/*
+ * The bar (and the rail) are a shade of the page behind them, not a tint of the brand: in
+ * « Maison », a room coloured by its temperature colours the bar too (FondService, AndroidNatifService).
+ */
+:root[data-plateforme="android"][data-theme] {
+    --tb-m3-surface: color-mix(in srgb, var(--md-on-surface) 3%, var(--tb-fond));
+    --tb-m3-container: color-mix(in srgb, var(--md-on-surface) 6%, var(--tb-fond));
+    --tb-m3-container-high: color-mix(in srgb, var(--md-on-surface) 9%, var(--tb-fond));
+    --tb-m3-indicateur: color-mix(in srgb, var(--md-on-surface) 14%, var(--tb-fond));
+    --tb-m3-on-indicateur: var(--md-on-surface);
+}
+:root[data-plateforme="android"][data-theme][data-teinte="on"][data-fond]:not([data-style="panneau"]) {
+    --tb-m3-surface: color-mix(in srgb, var(--md-on-surface) 3%, var(--tb-teinte-page));
+    --tb-m3-container: color-mix(in srgb, var(--md-on-surface) 6%, var(--tb-teinte-page));
+    --tb-m3-indicateur: color-mix(in srgb, var(--md-on-surface) 14%, var(--tb-teinte-page));
+}
+/* The setting of the side bar only means something where the side bar is */
+@media (max-width: 1199px) { .tb-pref-barre { display: none; } }
