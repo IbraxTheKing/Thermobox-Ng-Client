@@ -250,9 +250,10 @@ export class DashboardPage implements OnInit, OnDestroy {
   protected readonly organisable = computed(() => this.groupes().length > 1);
 
   /**
-   * The handle of a title held and dragged (mouse, finger, pen): every section folds to its title,
-   * the one held follows the pointer, the others make room; let go, it takes its new place and
-   * the sections open again, the one moved where it was let go.
+   * The handle of a title held and dragged (mouse, finger, pen): every section folds to its title
+   * (the cards fold away as when a section is closed), the one held follows the pointer, the
+   * others slide to make room; let go, it glides into its place and the sections open again, the
+   * one moved staying where it was let go.
    */
   protected saisirSection(cle: string, e: PointerEvent): void {
     if (e.button !== 0) return;
@@ -260,60 +261,93 @@ export class DashboardPage implements OnInit, OnDestroy {
     const poignee = e.currentTarget as HTMLElement;
     poignee.setPointerCapture(e.pointerId);
     const y0 = e.clientY;
-    let d: { sections: HTMLElement[]; el: HTMLElement; i: number; cible: number; rects: DOMRect[]; pas: number; y: number } | null = null;
+    let pointeurY = e.clientY;
+    let image = 0;
+    const decalages = new Map<HTMLElement, number>();
+    let d: { sections: HTMLElement[]; el: HTMLElement; i: number; cible: number; prise: number } | null = null;
 
-    const commencer = (y: number) => {
-      this.hote.classList.add('tb-reorg');
-      this.deplacee.set(cle);
+    /** Top of a section in the page, without the shift it was given. */
+    const naturel = (s: HTMLElement) => s.getBoundingClientRect().top + scrollY - (decalages.get(s) ?? 0);
+    const decaler = (s: HTMLElement, y: number) => {
+      decalages.set(s, y);
+      s.style.transform = y ? `translateY(${y}px)` : '';
+    };
+
+    // Every frame while held: the sections fold under the pointer, the page may scroll
+    const suivre = () => {
+      image = requestAnimationFrame(suivre);
+      if (!d) return;
+      // Near the top or the bottom of the screen: the page scrolls by itself
+      if (pointeurY < 70) scrollBy(0, -10);
+      else if (pointeurY > innerHeight - 70) scrollBy(0, 10);
+      const tops = d.sections.map(naturel);
+      const hauts = d.sections.map((s) => s.offsetHeight);
+      const voulu = pointeurY + scrollY - d.prise;
+      decaler(d.el, voulu - tops[d.i]);
+      const centre = voulu + hauts[d.i] / 2;
+      const cible = tops.filter((t, k) => k !== d!.i && t + hauts[k] / 2 < centre).length;
+      if (cible !== d.cible) this.plateforme.vibrer();
+      d.cible = cible;
+      const ecart = tops.length > 1 ? Math.max(0, tops[1] - tops[0] - hauts[0]) : 0;
+      const pas = hauts[d.i] + ecart;
+      d.sections.forEach((s, k) => {
+        if (k === d!.i) return;
+        decaler(s, k > d!.i && k <= cible ? -pas : k < d!.i && k >= cible ? pas : 0);
+      });
+    };
+
+    const commencer = () => {
       const sections = [...this.hote.querySelectorAll<HTMLElement>('.tb-section[data-groupe]')];
       const el = sections.find((s) => s.dataset['groupe'] === cle);
       if (!el) return;
-      // Folded: the title held comes back under the pointer
-      const r = el.getBoundingClientRect();
-      window.scrollBy({ top: r.top + r.height / 2 - y, behavior: 'instant' });
-      const rects = sections.map((s) => s.getBoundingClientRect());
-      const i = sections.indexOf(el);
-      const pas = rects.length > 1 ? Math.abs(rects[1].top - rects[0].top) : r.height;
-      d = { sections, el, i, cible: i, rects, pas, y };
+      d = { sections, el, i: sections.indexOf(el), cible: sections.indexOf(el), prise: y0 + scrollY - naturel(el) };
+      this.deplacee.set(cle);
+      this.hote.classList.add('tb-reorg');
       this.plateforme.vibrer();
+      image = requestAnimationFrame(suivre);
     };
     const bouger = (ev: PointerEvent) => {
-      if (!d) {
-        if (Math.abs(ev.clientY - y0) < 4) return;
-        commencer(ev.clientY);
-        if (!d) return;
-      }
-      const g = d as { sections: HTMLElement[]; el: HTMLElement; i: number; cible: number; rects: DOMRect[]; pas: number; y: number };
-      const dy = ev.clientY - g.y;
-      g.el.style.transform = `translateY(${dy}px)`;
-      const centre = g.rects[g.i].top + g.rects[g.i].height / 2 + dy;
-      const cible = g.rects.filter((r, k) => k !== g.i && r.top + r.height / 2 < centre).length;
-      if (cible !== g.cible) this.plateforme.vibrer();
-      g.cible = cible;
-      g.sections.forEach((s, k) => {
-        if (k === g.i) return;
-        const decale = k > g.i && k <= cible ? -g.pas : k < g.i && k >= cible ? g.pas : 0;
-        s.style.transform = decale ? `translateY(${decale}px)` : '';
-      });
+      pointeurY = ev.clientY;
+      if (!d && Math.abs(ev.clientY - y0) >= 4) commencer();
     };
     const fin = () => {
       poignee.removeEventListener('pointermove', bouger);
       poignee.removeEventListener('pointerup', fin);
       poignee.removeEventListener('pointercancel', fin);
+      cancelAnimationFrame(image);
       if (!d) return;
       const g = d as { sections: HTMLElement[]; el: HTMLElement; i: number; cible: number };
+      const avant = g.el.getBoundingClientRect().top;
+      // The others are already where they go: no jump when the order changes under them
+      for (const s of g.sections) {
+        s.style.transition = 'none';
+        s.style.transform = '';
+      }
       const cles = g.sections.map((s) => s.dataset['groupe']!);
       const [x] = cles.splice(g.i, 1);
       cles.splice(g.cible, 0, x);
-      g.sections.forEach((s) => (s.style.transform = ''));
       this.ranger(cles);
-      // Once in its place: the sections open again, the one moved stays where it was let go
       afterNextRender(
         () => {
-          const avant = g.el.getBoundingClientRect().top;
-          this.hote.classList.remove('tb-reorg');
-          this.deplacee.set(null);
-          window.scrollBy({ top: g.el.getBoundingClientRect().top - avant, behavior: 'instant' });
+          // The one held glides from where it was let go into its place…
+          const apres = g.el.getBoundingClientRect().top;
+          g.el.style.transform = `translateY(${avant - apres}px)`;
+          void g.el.offsetWidth;
+          g.el.style.transition = 'transform .28s cubic-bezier(.2, .8, .2, 1), box-shadow .28s';
+          g.el.style.transform = '';
+          setTimeout(() => {
+            for (const s of g.sections) s.style.transition = '';
+            // …then the sections open again, the page following it so that it stays in view
+            const repere = g.el.getBoundingClientRect().top;
+            this.hote.classList.remove('tb-reorg');
+            this.deplacee.set(null);
+            const finOuverture = performance.now() + 650;
+            const garder = () => {
+              scrollBy(0, g.el.getBoundingClientRect().top - repere);
+              if (performance.now() < finOuverture) requestAnimationFrame(garder);
+            };
+            requestAnimationFrame(garder);
+          }, 280);
         },
         { injector: this.injector },
       );

@@ -25,8 +25,8 @@
 /* Panneau: the colour scale, legend of the squares, with its handles (a range of gaps) */
 .tb-echelle { margin: 4px 0 12px; color: var(--md-on-surface-variant); font-size: .8rem; }
 .tb-echelle-barre { position: relative; height: 26px; }
-.tb-echelle-degrade { position: absolute; left: 0; right: 0; top: 9px; height: 8px; border-radius: 4px; background: linear-gradient(90deg, #2f5fae, #a9c1e2 30%, var(--md-surface-container-highest) 50%, #f0b48f 70%, #c94a35); }
-:root[data-theme="dark"] .tb-echelle-degrade { background: linear-gradient(90deg, #4673c4, #2b4467 30%, #2a312e 50%, #6e402a 70%, #c8523c); }
+.tb-echelle-degrade { position: absolute; left: 0; right: 0; top: 9px; height: 8px; border-radius: 4px; background: linear-gradient(90deg, #2f5fae, #a9c1e2 26%, #b7dbc1 40%, #acd5b7 50%, #b7dbc1 60%, #f0b48f 74%, #c94a35); }
+:root[data-theme="dark"] .tb-echelle-degrade { background: linear-gradient(90deg, #4673c4, #2b4467 26%, #224834 40%, #215037 50%, #224834 60%, #6e402a 74%, #c8523c); }
 /* What is left out of the range: the bar greyed under it */
 .tb-echelle-hors { position: absolute; top: 7px; height: 12px; background: color-mix(in srgb, var(--tb-fond) 78%, transparent); pointer-events: none; transition: left .12s, width .12s; }
 /* One tick per salle */
@@ -307,10 +307,12 @@ tb-molette { display: flex; flex-direction: column; align-items: center; }
 @media (hover: none) { .tb-section-poignee { opacity: .75; } }
 
 /* Dragging: every section folds to its title; the one held floats above the others */
-.tb-reorg .tb-section[data-groupe] .tb-section-body,
-.tb-reorg .tb-section[data-section="favoris"] .tb-section-body { display: none; }
-.tb-reorg .tb-section[data-groupe] { margin-bottom: 8px; padding: 6px 8px 6px 14px; border-radius: var(--tb-shape-lg); background: color-mix(in srgb, var(--md-on-surface) 5%, var(--tb-fond)); transition: transform .2s var(--tb-ease); }
-.tb-reorg .tb-section[data-groupe] .tb-section-title { margin-bottom: 0; }
+/* (folded as a closed section is: the cards shrink away with the fold, then come back) */
+.tb-reorg .tb-section .tb-section-body { grid-template-rows: 0fr; opacity: 0; }
+.tb-reorg .tb-section .tb-section-body > * { overflow: hidden; visibility: hidden; transition: visibility 0s var(--tb-fold); }
+.tb-reorg .tb-section .tb-section-title { margin-bottom: 0; }
+.tb-section[data-groupe] { border-radius: var(--tb-shape-lg); transition: background-color .3s ease, padding .3s var(--tb-ease), margin .3s var(--tb-ease); }
+.tb-reorg .tb-section[data-groupe] { margin-bottom: 8px; padding: 6px 8px 6px 14px; background: color-mix(in srgb, var(--md-on-surface) 5%, var(--tb-fond)); transition: transform .22s var(--tb-ease), background-color .3s ease, padding .3s var(--tb-ease), margin .3s var(--tb-ease); }
 .tb-reorg .tb-section.tb-deplacee { position: relative; z-index: 5; transition: none; box-shadow: 0 14px 36px rgba(0, 0, 0, .18); cursor: grabbing; }
 .tb-reorg .tb-section.tb-deplacee .tb-section-poignee { cursor: grabbing; }
 :root[data-style="panneau"] .tb-reorg .tb-section[data-groupe] { border: 1px solid var(--md-outline-variant); border-radius: var(--tb-shape-sm); }
