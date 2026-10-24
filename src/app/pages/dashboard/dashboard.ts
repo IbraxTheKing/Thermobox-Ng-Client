@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, OnDestroy, OnInit, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, Injector, OnDestroy, OnInit, afterNextRender, computed, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
@@ -21,6 +21,8 @@ import { TirerPourActualiser } from '../../ui/tirer';
 import { CacheCourbes } from '../../core/cache-courbes';
 import { ClimatService } from '../../services/climat.service';
 import { FavoriService } from '../../services/favori.service';
+import { PlageEcart } from './plage-ecart';
+import { TbApercuSalle } from './apercu-salle';
 import { TbSalleCard } from './salle-card';
 import { SalleResume } from './resume';
 
@@ -50,9 +52,11 @@ const SONDAGE = 30_000;
  */
 @Component({
   selector: 'tb-dashboard',
-  imports: [RouterLink, TbSalleCard],
+  imports: [RouterLink, TbSalleCard, TbApercuSalle],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './dashboard.html',
+  // Computers: the size of the cards (the slider of the header)
+  host: { '[style.--z]': 'prefs.tailleCartes()' },
 })
 export class DashboardPage implements OnInit, OnDestroy {
   protected readonly auth = inject(AuthService);
@@ -64,7 +68,8 @@ export class DashboardPage implements OnInit, OnDestroy {
   private readonly toasts = inject(ToastService);
   private readonly plateforme = inject(PlateformeService);
   private readonly transitions = inject(TransitionsService);
-  private readonly prefs = inject(PreferencesService);
+  protected readonly prefs = inject(PreferencesService);
+  protected readonly plage = inject(PlageEcart);
   /** Look of the site: the thermal map (Panneau) or the tiles of a home (Maison). */
   protected readonly panneau = computed(() => this.prefs.style() === 'panneau');
   /** Cards glide to their new places when a filter or a favourite changes them. */
@@ -128,8 +133,65 @@ export class DashboardPage implements OnInit, OnDestroy {
       .filter((r) => b == null || (b === SANS_BATIMENT ? r.batiment == null : r.batiment?.id === b))
       .filter((r) => !recherche.trim() || correspond(`${r.salle.name} ${r.chemin}`, recherche))
       .filter((r) => etat == null || r.etat === etat)
+      .filter((r) => !this.panneau() || this.dansPlage(r.ecart))
       .sort(parNom((r) => r.salle.name));
   });
+
+  // ---------------------------------------------------------------- Panneau: the scale
+
+  /** The scale spans ±2.5 tolerances: beyond, the colour no longer changes. */
+  protected readonly etendue = computed(() => Math.round(2.5 * this.prefs.tolerance() * 10) / 10);
+  protected readonly plageActive = computed(() => this.plage.bas() != null || this.plage.haut() != null);
+  /** Position of a gap on the bar, 0-100. */
+  protected pourcent(ecart: number): number {
+    const e = this.etendue();
+    return ((Math.max(-e, Math.min(e, ecart)) + e) / (2 * e)) * 100;
+  }
+  private dansPlage(ecart: number | null): boolean {
+    const bas = this.plage.bas();
+    const haut = this.plage.haut();
+    if (bas == null && haut == null) return true;
+    if (ecart == null) return false;
+    return (bas == null || ecart >= bas - 1e-9) && (haut == null || ecart <= haut + 1e-9);
+  }
+  /** Each salle as a tick on the bar, where its gap puts it. */
+  protected readonly marques = computed(() =>
+    this.toutes()
+      .filter((r) => r.ecart != null)
+      .map((r) => ({ id: r.salle.id, nom: r.salle.name ?? '', ecart: r.ecart!, pct: this.pourcent(r.ecart!), dedans: this.dansPlage(r.ecart) })),
+  );
+  /** A handle moved: at the end of the bar, no bound on that side. */
+  protected poserBorne(cote: 'bas' | 'haut', valeur: number): void {
+    const e = this.etendue();
+    const v = Math.round(valeur * 10) / 10;
+    this.flip.animer(() => {
+      if (cote === 'bas') this.plage.bas.set(v <= -e ? null : Math.min(v, this.plage.haut() ?? e));
+      else this.plage.haut.set(v >= e ? null : Math.max(v, this.plage.bas() ?? -e));
+    });
+  }
+  protected toutAfficher(): void {
+    this.flip.animer(() => {
+      this.plage.bas.set(null);
+      this.plage.haut.set(null);
+    });
+  }
+  protected poserTolerance(t: number): void {
+    this.prefs.tolerance.set(t);
+    // The bounds stay inside the new scale
+    const e = this.etendue();
+    if (this.plage.bas() != null && this.plage.bas()! <= -e) this.plage.bas.set(null);
+    if (this.plage.haut() != null && this.plage.haut()! >= e) this.plage.haut.set(null);
+  }
+  /** « De −1,0 °C à +2,0 °C », « +1,0 °C et plus »… */
+  protected readonly textePlage = computed(() => {
+    const b = this.plage.bas();
+    const h = this.plage.haut();
+    if (b == null && h == null) return '';
+    if (b == null) return `${this.unite.ecart(h)} et moins`;
+    if (h == null) return `${this.unite.ecart(b)} et plus`;
+    return `De ${this.unite.ecart(b)} à ${this.unite.ecart(h)}`;
+  });
+  protected readonly nombreVisibles = computed(() => this.visibles().length);
 
   protected readonly favoris = computed(() => this.visibles().filter((r) => r.salle.favori));
 
@@ -168,8 +230,161 @@ export class DashboardPage implements OnInit, OnDestroy {
         const batiment = salles[0].batiment;
         return { batiment, nom: batiment?.name ?? 'Sans bâtiment', cle: id != null ? `b${id}` : 'sans', moyenne: moyennes.get(id) ?? null, salles, etages: this.parEtage(salles) };
       })
-      .sort((a, b) => Number(a.batiment == null) - Number(b.batiment == null) || normaliser(a.nom).localeCompare(normaliser(b.nom), 'fr'));
+      .sort((a, b) => {
+        // The order arranged by hand first (the handles of the titles), then by name
+        const ordre = this.prefs.ordreBatiments();
+        const ia = ordre.indexOf(a.cle);
+        const ib = ordre.indexOf(b.cle);
+        if (ia >= 0 || ib >= 0) return (ia < 0 ? Infinity : ia) - (ib < 0 ? Infinity : ib);
+        return Number(a.batiment == null) - Number(b.batiment == null) || normaliser(a.nom).localeCompare(normaliser(b.nom), 'fr');
+      });
   });
+
+  // ---------------------------------------------------------------- arranging the bâtiments
+
+  private readonly hote = inject(ElementRef<HTMLElement>).nativeElement as HTMLElement;
+  private readonly injector = inject(Injector);
+  /** The section being dragged by its handle. */
+  protected readonly deplacee = signal<string | null>(null);
+  /** Handles only where there is something to arrange (and a title to hold). */
+  protected readonly organisable = computed(() => this.groupes().length > 1);
+
+  /**
+   * The handle of a title held and dragged (mouse, finger, pen): every section folds to its title
+   * (the cards fold away as when a section is closed), the one held follows the pointer, the
+   * others slide to make room; let go, it glides into its place and the sections open again, the
+   * one moved staying where it was let go.
+   */
+  protected saisirSection(cle: string, e: PointerEvent): void {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    const poignee = e.currentTarget as HTMLElement;
+    poignee.setPointerCapture(e.pointerId);
+    const y0 = e.clientY;
+    let pointeurY = e.clientY;
+    let image = 0;
+    const decalages = new Map<HTMLElement, number>();
+    let d: { sections: HTMLElement[]; el: HTMLElement; i: number; cible: number; prise: number } | null = null;
+
+    /** Top of a section in the page, without the shift it was given. */
+    const naturel = (s: HTMLElement) => s.getBoundingClientRect().top + scrollY - (decalages.get(s) ?? 0);
+    const decaler = (s: HTMLElement, y: number) => {
+      decalages.set(s, y);
+      s.style.transform = y ? `translateY(${y}px)` : '';
+    };
+
+    // Every frame while held: the sections fold under the pointer, the page may scroll
+    const suivre = () => {
+      image = requestAnimationFrame(suivre);
+      if (!d) return;
+      // Near the top or the bottom of the screen: the page scrolls by itself
+      if (pointeurY < 70) scrollBy(0, -10);
+      else if (pointeurY > innerHeight - 70) scrollBy(0, 10);
+      const tops = d.sections.map(naturel);
+      const hauts = d.sections.map((s) => s.offsetHeight);
+      const voulu = pointeurY + scrollY - d.prise;
+      decaler(d.el, voulu - tops[d.i]);
+      const centre = voulu + hauts[d.i] / 2;
+      const cible = tops.filter((t, k) => k !== d!.i && t + hauts[k] / 2 < centre).length;
+      if (cible !== d.cible) this.plateforme.vibrer();
+      d.cible = cible;
+      const ecart = tops.length > 1 ? Math.max(0, tops[1] - tops[0] - hauts[0]) : 0;
+      const pas = hauts[d.i] + ecart;
+      d.sections.forEach((s, k) => {
+        if (k === d!.i) return;
+        decaler(s, k > d!.i && k <= cible ? -pas : k < d!.i && k >= cible ? pas : 0);
+      });
+    };
+
+    const commencer = () => {
+      const sections = [...this.hote.querySelectorAll<HTMLElement>('.tb-section[data-groupe]')];
+      const el = sections.find((s) => s.dataset['groupe'] === cle);
+      if (!el) return;
+      d = { sections, el, i: sections.indexOf(el), cible: sections.indexOf(el), prise: y0 + scrollY - naturel(el) };
+      this.deplacee.set(cle);
+      this.hote.classList.add('tb-reorg');
+      this.plateforme.vibrer();
+      image = requestAnimationFrame(suivre);
+    };
+    const bouger = (ev: PointerEvent) => {
+      pointeurY = ev.clientY;
+      if (!d && Math.abs(ev.clientY - y0) >= 4) commencer();
+    };
+    const fin = () => {
+      poignee.removeEventListener('pointermove', bouger);
+      poignee.removeEventListener('pointerup', fin);
+      poignee.removeEventListener('pointercancel', fin);
+      cancelAnimationFrame(image);
+      if (!d) return;
+      const g = d as { sections: HTMLElement[]; el: HTMLElement; i: number; cible: number };
+      const avant = g.el.getBoundingClientRect().top;
+      // The others are already where they go: no jump when the order changes under them
+      for (const s of g.sections) {
+        s.style.transition = 'none';
+        s.style.transform = '';
+      }
+      const cles = g.sections.map((s) => s.dataset['groupe']!);
+      const [x] = cles.splice(g.i, 1);
+      cles.splice(g.cible, 0, x);
+      this.ranger(cles);
+      afterNextRender(
+        () => {
+          // The one held glides from where it was let go into its place…
+          const apres = g.el.getBoundingClientRect().top;
+          g.el.style.transform = `translateY(${avant - apres}px)`;
+          void g.el.offsetWidth;
+          g.el.style.transition = 'transform .28s cubic-bezier(.2, .8, .2, 1), box-shadow .28s';
+          g.el.style.transform = '';
+          setTimeout(() => {
+            for (const s of g.sections) s.style.transition = '';
+            // …then the sections open again, the page following it so that it stays in view
+            const repere = g.el.getBoundingClientRect().top;
+            this.hote.classList.remove('tb-reorg');
+            this.deplacee.set(null);
+            const finOuverture = performance.now() + 650;
+            const garder = () => {
+              scrollBy(0, g.el.getBoundingClientRect().top - repere);
+              if (performance.now() < finOuverture) requestAnimationFrame(garder);
+            };
+            requestAnimationFrame(garder);
+          }, 280);
+        },
+        { injector: this.injector },
+      );
+    };
+    poignee.addEventListener('pointermove', bouger);
+    poignee.addEventListener('pointerup', fin);
+    poignee.addEventListener('pointercancel', fin);
+  }
+
+  /** Keyboard: the arrows move the section held by its handle one place up or down. */
+  protected deplacerSection(cle: string, sens: -1 | 1, e: Event): void {
+    e.preventDefault();
+    const cles = this.groupes().map((g) => g.cle);
+    const i = cles.indexOf(cle);
+    const j = i + sens;
+    if (i < 0 || j < 0 || j >= cles.length) return;
+    [cles[i], cles[j]] = [cles[j], cles[i]];
+    this.flip.animer(() => this.ranger(cles));
+    // The focus stays on the handle that moved
+    const poignee = e.currentTarget as HTMLElement;
+    afterNextRender(() => poignee.focus(), { injector: this.injector });
+  }
+
+  /** The new order, keeping the place of the bâtiments filtered out for now. */
+  private ranger(cles: string[]): void {
+    const avant = this.prefs.ordreBatiments().filter((c) => !cles.includes(c));
+    this.prefs.ordreBatiments.set([...cles, ...avant]);
+  }
+
+  // ---------------------------------------------------------------- overview of a card (long press)
+
+  protected readonly apercuId = signal<number | null>(null);
+  /** Follows the salle while it is open (a favourite toggled, a refresh). */
+  protected readonly apercu = computed(() => this.toutes().find((x) => x.salle.id === this.apercuId()) ?? null);
+  protected ouvrirApercu(id: number): void {
+    this.apercuId.set(id);
+  }
 
   /** Panneau: one row per étage, in the order of their names; the salles without étage first. */
   private parEtage(salles: SalleResume[]): GroupeBatiment['etages'] {
@@ -340,6 +555,8 @@ export class DashboardPage implements OnInit, OnDestroy {
       this.recherche.set('');
       this.batimentId.set(null);
       this.etatFiltre.set(null);
+      this.plage.bas.set(null);
+      this.plage.haut.set(null);
     });
   }
 

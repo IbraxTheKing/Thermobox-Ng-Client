@@ -13,6 +13,13 @@
       }
     }
   </div>
+  <!-- Computers: the size of the cards -->
+  <label class="tb-taille-cartes" title="Taille des cartes">
+    <i class="pi pi-th-large" aria-hidden="true"></i>
+    <input type="range" min="0.75" max="1.6" step="0.05" [value]="prefs.tailleCartes()" (input)="prefs.tailleCartes.set(+$any($event.target).value)"
+           aria-label="Taille des cartes" />
+    <i class="pi pi-stop" aria-hidden="true"></i>
+  </label>
   <!-- Phones: pull the page down instead (TirerPourActualiser) -->
   @if (!tirer()) {
     <button type="button" class="tb-btn tb-icon tb-tonal" data-action="actualiser" title="Actualiser" aria-label="Actualiser"
@@ -66,10 +73,47 @@
 }
 
 @if (panneau() && toutes().length) {
-  <!-- The scale of the squares: the legend of the whole page -->
-  <div class="tb-echelle" aria-hidden="true">
-    <i></i>
-    <span>Trop froid</span><span>À la consigne</span><span>Trop chaud</span>
+  <!--
+    The scale of the squares, legend of the whole page, and its controls: two handles keep only
+    the salles whose gap lies between them; each salle is a tick on the bar. The tolerance below
+    stretches the scale (and the colours of the squares).
+  -->
+  <div class="tb-echelle" [class.tb-echelle-active]="plageActive()">
+    <div class="tb-echelle-barre">
+      <i class="tb-echelle-degrade" aria-hidden="true"></i>
+      <span class="tb-echelle-hors" aria-hidden="true" [style.left.%]="0" [style.width.%]="pourcent(plage.bas() ?? -etendue())"></span>
+      <span class="tb-echelle-hors" aria-hidden="true" [style.left.%]="pourcent(plage.haut() ?? etendue())" [style.right.%]="0"></span>
+      @for (m of marques(); track m.id) {
+        <b class="tb-echelle-marque" [class.tb-echelle-dehors]="!m.dedans" [style.left.%]="m.pct" [title]="m.nom + ' : ' + unite.ecart(m.ecart)"></b>
+      }
+      <input type="range" class="tb-echelle-poignee" [min]="-etendue()" [max]="etendue()" step="0.1" [value]="plage.bas() ?? -etendue()"
+             aria-label="Écart minimal à la consigne" [attr.aria-valuetext]="plage.bas() == null ? 'Sans limite' : unite.ecart(plage.bas())"
+             (input)="poserBorne('bas', +$any($event.target).value)" />
+      <input type="range" class="tb-echelle-poignee" [min]="-etendue()" [max]="etendue()" step="0.1" [value]="plage.haut() ?? etendue()"
+             aria-label="Écart maximal à la consigne" [attr.aria-valuetext]="plage.haut() == null ? 'Sans limite' : unite.ecart(plage.haut())"
+             (input)="poserBorne('haut', +$any($event.target).value)" />
+    </div>
+    <div class="tb-echelle-legende" aria-hidden="true">
+      <span>Trop froid <small class="tb-chiffres">{{ unite.ecart(-etendue()) }}</small></span>
+      <span>À la consigne</span>
+      <span><small class="tb-chiffres">{{ unite.ecart(etendue()) }}</small> Trop chaud</span>
+    </div>
+    <div class="tb-echelle-outils">
+      @if (plageActive()) {
+        <span class="tb-echelle-filtre">
+          <b>{{ textePlage() }}</b> · {{ nombreVisibles() }} {{ nombreVisibles() > 1 ? 'salles' : 'salle' }} sur {{ toutes().length }}
+          <button type="button" class="tb-btn tb-flat tb-btn-sm" (click)="toutAfficher()">Tout afficher</button>
+        </span>
+      } @else {
+        <span class="tb-echelle-aide">Glisse les poignées de la barre pour ne garder que certains écarts.</span>
+      }
+      <label class="tb-tolerance">
+        Tolérance
+        <input type="range" min="0.5" max="3" step="0.5" [value]="prefs.tolerance()" (input)="poserTolerance(+$any($event.target).value)"
+               aria-label="Tolérance : écart qui colore une salle à moitié" />
+        <output class="tb-chiffres">±{{ unite.ecart(prefs.tolerance()).slice(1) }}</output>
+      </label>
+    </div>
   </div>
 }
 
@@ -129,7 +173,7 @@
     <div class="tb-section-body">
       <div [class]="panneau() ? 'tb-cases' : 'tb-tuiles'">
         @for (r of favoris(); track r.salle.id) {
-          <tb-salle-card [r]="r" [nouvelles]="courbesNouvelles()" (favori)="basculerFavori($event)" />
+          <tb-salle-card [r]="r" [nouvelles]="courbesNouvelles()" (favori)="basculerFavori($event)" (apercu)="ouvrirApercu($event)" />
         }
       </div>
     </div>
@@ -137,7 +181,7 @@
 }
 
 @for (g of groupes(); track g.cle) {
-  <section class="tb-section" [class.tb-collapsed]="replie(g.cle)" [attr.data-section]="g.cle">
+  <section class="tb-section" [class.tb-collapsed]="replie(g.cle)" [class.tb-deplacee]="deplacee() === g.cle" [attr.data-section]="g.cle" [attr.data-groupe]="g.cle">
     @if (panneau() || plusieursBatiments() || favoris().length) {
       <h2 class="tb-section-title" [attr.data-flip]="'section-' + g.cle">
         <button type="button" class="tb-section-toggle" [attr.aria-expanded]="!replie(g.cle)" (click)="basculerSection(g.cle)">
@@ -152,6 +196,13 @@
           </span>
           <i class="pi pi-chevron-down tb-section-chevron"></i>
         </button>
+        <!-- Drag it up or down (or the arrows of the keyboard) to arrange the bâtiments -->
+        @if (organisable()) {
+          <button type="button" class="tb-section-poignee" [title]="'Déplacer ' + g.nom" [attr.aria-label]="'Déplacer ' + g.nom + ' (flèches haut et bas)'"
+                  (pointerdown)="saisirSection(g.cle, $event)" (keydown.arrowup)="deplacerSection(g.cle, -1, $event)" (keydown.arrowdown)="deplacerSection(g.cle, 1, $event)">
+            <i class="pi pi-bars"></i>
+          </button>
+        }
       </h2>
     }
     <div class="tb-section-body">
@@ -165,7 +216,7 @@
               }
               <div class="tb-cases">
                 @for (r of e.salles; track r.salle.id) {
-                  <tb-salle-card [r]="r" [nouvelles]="courbesNouvelles()" (favori)="basculerFavori($event)" />
+                  <tb-salle-card [r]="r" [nouvelles]="courbesNouvelles()" (favori)="basculerFavori($event)" (apercu)="ouvrirApercu($event)" />
                 }
               </div>
             </div>
@@ -174,10 +225,13 @@
       } @else {
         <div class="tb-tuiles">
           @for (r of g.salles; track r.salle.id) {
-            <tb-salle-card [r]="r" [nouvelles]="courbesNouvelles()" (favori)="basculerFavori($event)" />
+            <tb-salle-card [r]="r" [nouvelles]="courbesNouvelles()" (favori)="basculerFavori($event)" (apercu)="ouvrirApercu($event)" />
           }
         </div>
       }
     </div>
   </section>
 }
+
+<!-- A card held down: its whole day and its details -->
+<tb-apercu-salle [r]="apercu()" (fermer)="apercuId.set(null)" (favori)="basculerFavori($event)" />

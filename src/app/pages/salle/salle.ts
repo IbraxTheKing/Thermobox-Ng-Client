@@ -11,7 +11,7 @@ import { etatDe } from '../../core/etat';
 import { ConfirmService, ToastService } from '../../core/messages';
 import { PlateformeService } from '../../core/plateforme';
 import { PreferencesService } from '../../core/preferences';
-import { couleurTemperature, teinteDouce, teinteForte } from '../../core/couleurs';
+import { couleurEcartMaison, couleurPiece, couleurTemperature, teinteDouce, teinteForte } from '../../core/couleurs';
 import { FondService } from '../../core/fond';
 import { TitreService } from '../../core/titre';
 import { TransitionsService } from '../../core/transitions';
@@ -107,14 +107,22 @@ export class SallePage implements OnDestroy {
   protected readonly panneau = computed(() => this.prefs.style() === 'panneau');
   private readonly sombre = computed(() => this.prefs.theme() === 'dark');
   /** Maison: the colour of the temperature itself (the dial, the page behind it). */
-  protected readonly couleurMaison = computed(() => teinteForte(couleurTemperature(this.temperatureAffichee()), this.sombre()));
+  protected readonly couleurMaison = computed(() => teinteForte(this.couleurBase(), this.sombre()));
   /**
-   * Maison: the temperature the page is coloured by: the one of the room, or, while the dial is
-   * being turned, the one asked for (the page previews it).
+   * Maison: the colour of the room (its gap to the consigne, or its temperature: Préférences).
+   * While the dial is being turned, the page previews the consigne asked for: by gap, the room
+   * against that consigne; by temperature, the temperature asked for.
    */
-  private readonly temperatureAffichee = computed(() =>
-    this.consigneModifiee() && this.auth.peutReglerConsigne() ? this.unite.saisieVersCelsius(this.nouvelleConsigne()!) : (this.element()?.temperature ?? null),
-  );
+  private readonly couleurBase = computed(() => {
+    const e = this.element();
+    const mode = this.prefs.couleursMaison();
+    const tolerance = this.prefs.tolerance();
+    if (this.consigneModifiee() && this.auth.peutReglerConsigne()) {
+      const nouvelle = this.unite.saisieVersCelsius(this.nouvelleConsigne()!);
+      return mode === 'ecart' && e?.temperature != null ? couleurEcartMaison(e.temperature - nouvelle, tolerance) : couleurTemperature(nouvelle);
+    }
+    return couleurPiece(e?.temperature, e?.consigne?.value, mode, tolerance);
+  });
   /** Panneau: the gap to the consigne, written beside the state. */
   protected readonly ecart = computed(() => {
     const e = this.element();
@@ -197,7 +205,7 @@ export class SallePage implements OnDestroy {
     // Maison: the page takes the soft colour of the temperature
     effect(() => {
       const e = this.element();
-      this.fond.teinter(e && !this.panneau() ? teinteDouce(couleurTemperature(this.temperatureAffichee()), this.sombre()) : null);
+      this.fond.teinter(e && !this.panneau() ? teinteDouce(this.couleurBase(), this.sombre()) : null);
     });
     inject(DestroyRef).onDestroy(() => this.fond.teinter(null));
     effect(() => {
