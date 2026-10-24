@@ -35,6 +35,22 @@
         </div>
         <tb-switch [checked]="prefs.teinte()" (checkedChange)="prefs.teinte.set($event)" label="Couleurs selon l'état" />
       </div>
+      @if (!panneau()) {
+        <div class="tb-pref">
+          <span class="tb-section-icon"><i class="pi pi-sliders-h"></i></span>
+          <div class="tb-pref-text">
+            <strong>Couleur des pièces</strong>
+            <span class="tb-muted">
+              Selon l'écart à l'objectif : vert quand la pièce est à la bonne température, bleu en dessous, orangé puis rouge au-dessus.
+              Selon la température : du bleu frais au rouge, quel que soit l'objectif.
+            </span>
+          </div>
+          <div class="tb-segmented" role="radiogroup" aria-label="Couleur des pièces">
+            <button type="button" role="radio" [attr.aria-checked]="prefs.couleursMaison() === 'ecart'" [class.tb-seg-on]="prefs.couleursMaison() === 'ecart'" (click)="prefs.couleursMaison.set('ecart')">Écart</button>
+            <button type="button" role="radio" [attr.aria-checked]="prefs.couleursMaison() === 'temperature'" [class.tb-seg-on]="prefs.couleursMaison() === 'temperature'" (click)="prefs.couleursMaison.set('temperature')">Température</button>
+          </div>
+        </div>
+      }
       <div class="tb-pref">
         <span class="tb-section-icon"><i class="pi pi-sun"></i></span>
         <div class="tb-pref-text">

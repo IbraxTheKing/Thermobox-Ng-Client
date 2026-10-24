@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
-import { couleurEcart, couleurTemperature, teinteDouce, teinteForte } from '../../core/couleurs';
+import { couleurEcart, couleurPiece, teinteDouce, teinteForte } from '../../core/couleurs';
 import { PreferencesService } from '../../core/preferences';
 import { UniteService } from '../../core/unite';
 import { TbWatch } from '../../ui/controles';
@@ -12,7 +12,10 @@ import { SalleResume } from './resume';
  * A salle on the dashboard, in the look of the site (tokens.css):
  *
  * - Panneau: a square of the thermal map, coloured by its gap to the consigne;
- * - Maison: a soft tile tinted by the temperature itself, its day as a gentle curve.
+ * - Maison: a soft tile tinted by its gap to the consigne (or its temperature: Préférences), its
+ *   day as a gentle curve.
+ *
+ * Its photo, when it has one, lies behind it under the colour.
  *
  * The square or tile opens into the page of the salle (data-vt: TransitionsService).
  */
@@ -93,7 +96,7 @@ export class TbSalleCard {
   protected readonly panneau = computed(() => this.prefs.style() === 'panneau');
   private readonly sombre = computed(() => this.prefs.theme() === 'dark');
 
-  protected readonly caseCouleur = computed(() => couleurEcart(this.r().ecart, this.sombre()));
+  protected readonly caseCouleur = computed(() => couleurEcart(this.r().ecart, this.sombre(), this.prefs.tolerance()));
   protected readonly ecartTexte = computed(() => {
     const e = this.r().ecart;
     if (e == null) return this.r().salle.temperature == null ? 'pas de mesure' : 'sans consigne';
@@ -101,7 +104,8 @@ export class TbSalleCard {
   });
 
   protected readonly tuile = computed(() => {
-    const c = couleurTemperature(this.r().salle.temperature);
+    const s = this.r().salle;
+    const c = couleurPiece(s.temperature, s.consigne?.value, this.prefs.couleursMaison(), this.prefs.tolerance());
     return { fond: teinteDouce(c, this.sombre()), fort: teinteForte(c, this.sombre()) };
   });
   protected readonly etatMaison = computed(() => ({ chauffe: 'Chauffe', chaud: 'Un peu chaud', inconnu: 'Pas de mesure', stable: 'Confortable' })[this.r().etat.ton]);

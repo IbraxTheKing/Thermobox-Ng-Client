@@ -22,18 +22,58 @@
 .tb-voyant:disabled { cursor: default; }
 .tb-voyant:disabled b { color: var(--md-on-surface-variant); }
 
-/* Panneau: the colour scale, legend of the squares */
-.tb-echelle { display: grid; grid-template-columns: 1fr 1fr 1fr; margin: 4px 0 6px; color: var(--md-on-surface-variant); font-size: .8rem; }
-.tb-echelle i { grid-column: 1 / -1; height: 8px; margin-bottom: 5px; border-radius: 4px; background: linear-gradient(90deg, #2f5fae, #a9c1e2 30%, var(--md-surface-container-highest) 50%, #f0b48f 70%, #c94a35); }
-:root[data-theme="dark"] .tb-echelle i { background: linear-gradient(90deg, #4673c4, #2b4467 30%, #2a312e 50%, #6e402a 70%, #c8523c); }
-.tb-echelle span:nth-of-type(2) { text-align: center; }
-.tb-echelle span:nth-of-type(3) { text-align: right; }
+/* Panneau: the colour scale, legend of the squares, with its handles (a range of gaps) */
+.tb-echelle { margin: 4px 0 12px; color: var(--md-on-surface-variant); font-size: .8rem; }
+.tb-echelle-barre { position: relative; height: 26px; }
+.tb-echelle-degrade { position: absolute; left: 0; right: 0; top: 9px; height: 8px; border-radius: 4px; background: linear-gradient(90deg, #2f5fae, #a9c1e2 30%, var(--md-surface-container-highest) 50%, #f0b48f 70%, #c94a35); }
+:root[data-theme="dark"] .tb-echelle-degrade { background: linear-gradient(90deg, #4673c4, #2b4467 30%, #2a312e 50%, #6e402a 70%, #c8523c); }
+/* What is left out of the range: the bar greyed under it */
+.tb-echelle-hors { position: absolute; top: 7px; height: 12px; background: color-mix(in srgb, var(--tb-fond) 78%, transparent); pointer-events: none; transition: left .12s, width .12s; }
+/* One tick per salle */
+.tb-echelle-marque { position: absolute; top: 4px; width: 2px; height: 18px; margin-left: -1px; border-radius: 1px; background: var(--md-on-surface); opacity: .7; pointer-events: none; transition: left .4s var(--tb-ease), opacity .2s; }
+.tb-echelle-marque.tb-echelle-dehors { opacity: .2; }
+/* Two native sliders on top of each other: only their handles take the pointer */
+.tb-echelle-poignee { position: absolute; inset: 0; width: 100%; height: 26px; margin: 0; background: none; pointer-events: none; -webkit-appearance: none; appearance: none; }
+.tb-echelle-poignee::-webkit-slider-runnable-track { height: 26px; background: none; }
+.tb-echelle-poignee::-moz-range-track { height: 26px; background: none; }
+.tb-echelle-poignee::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 14px; height: 26px; border: 2px solid var(--md-on-surface); border-radius: 3px;
+    background: var(--tb-fond); cursor: ew-resize; pointer-events: auto;
+}
+.tb-echelle-poignee::-moz-range-thumb { width: 10px; height: 22px; border: 2px solid var(--md-on-surface); border-radius: 3px; background: var(--tb-fond); cursor: ew-resize; pointer-events: auto; }
+.tb-echelle-poignee:focus-visible { outline: none; }
+.tb-echelle-poignee:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px color-mix(in srgb, var(--md-primary) 35%, transparent); }
+.tb-echelle-legende { display: grid; grid-template-columns: 1fr 1fr 1fr; margin-top: 2px; }
+.tb-echelle-legende small { margin: 0 4px; font-size: .78rem; opacity: .8; }
+.tb-echelle-legende span:nth-child(2) { text-align: center; }
+.tb-echelle-legende span:nth-child(3) { text-align: right; }
+.tb-echelle-outils { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 16px; min-height: 34px; margin-top: 6px; }
+.tb-echelle-filtre { display: flex; align-items: center; gap: 8px; color: var(--md-on-surface); }
+.tb-echelle-filtre b { font-weight: 600; }
+.tb-echelle-aide { opacity: .8; }
+.tb-btn.tb-btn-sm { min-height: 30px; padding: 0 10px; font-size: .82rem; }
+.tb-tolerance { display: flex; align-items: center; gap: 8px; color: var(--md-on-surface); }
+.tb-tolerance input { width: 120px; accent-color: var(--md-on-surface); }
+.tb-tolerance output { min-width: 3.4em; font-weight: 500; }
+@media (hover: none) {
+    .tb-echelle-aide { display: none; }
+}
+
+/* Computers: the size of the cards, beside the refresh button */
+.tb-taille-cartes { display: flex; align-items: center; gap: 8px; margin-left: auto; margin-right: 8px; color: var(--md-on-surface-variant); }
+.tb-taille-cartes .pi:first-child { font-size: .75rem; }
+.tb-taille-cartes .pi:last-child { font-size: 1.05rem; }
+.tb-taille-cartes input { width: 110px; accent-color: var(--md-on-surface); }
+@media (max-width: 840px), (hover: none) {
+    .tb-taille-cartes { display: none; }
+    tb-dashboard { --z: 1 !important; }
+}
 
 /* Panneau: a row of squares per étage, its name written up its edge */
 .tb-etage { display: grid; grid-template-columns: 22px 1fr; gap: 8px; margin-bottom: 8px; }
 .tb-etage-nom { writing-mode: vertical-rl; transform: rotate(180deg); align-self: center; color: var(--md-on-surface-variant); font-size: .78rem; font-weight: 500; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-height: 100%; }
 .tb-etage:not(:has(.tb-etage-nom)) { grid-template-columns: 1fr; }
-.tb-cases { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 5px; }
+.tb-cases { display: grid; grid-template-columns: repeat(auto-fill, minmax(calc(150px * var(--z, 1)), 1fr)); gap: 5px; }
 
 /* A square of the thermal map */
 :root .tb-room.tb-case {
@@ -41,7 +81,7 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    min-height: 116px;
+    min-height: calc(116px * var(--z, 1));
     padding: 10px 12px 10px;
     border: 0;
     border-radius: var(--tb-shape-sm);
@@ -55,7 +95,7 @@
 .tb-room.tb-case:has(.tb-stretched:active) { transform: scale(.98); }
 .tb-case-nom { position: relative; z-index: 1; font-size: .9rem; font-weight: 500; line-height: 1.2; overflow-wrap: anywhere; }
 .tb-case-bas { position: relative; z-index: 1; display: flex; align-items: baseline; justify-content: space-between; gap: 6px; }
-.tb-case-bas b { font-size: 2.05rem; line-height: 1; letter-spacing: -.02em; }
+.tb-case-bas b { font-size: calc(2.05rem * var(--z, 1)); line-height: 1; letter-spacing: -.02em; }
 .tb-case-bas small { color: var(--d); font-family: var(--tb-font-chiffres); font-size: .85rem; font-weight: 500; white-space: nowrap; }
 .tb-case-courbe { position: absolute; left: 0; right: 0; bottom: 34px; width: 100%; height: 38px; opacity: .45; }
 .tb-case-courbe path { fill: none; stroke: var(--t); stroke-width: 1.4; vector-effect: non-scaling-stroke; }
@@ -63,12 +103,12 @@
 .tb-case.tb-attente, .tb-tuile.tb-attente { background: var(--md-surface-container-high); animation: tb-attente-pulse 1.4s ease-in-out infinite; }
 
 /* Maison: soft tiles tinted by the temperature */
-.tb-tuiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+.tb-tuiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(calc(200px * var(--z, 1)), 1fr)); gap: 12px; }
 :root .tb-room.tb-tuile {
     position: relative;
     display: flex;
     flex-direction: column;
-    min-height: 168px;
+    min-height: calc(168px * var(--z, 1));
     padding: 16px 18px 14px;
     border: 0;
     border-radius: var(--tb-shape-xxl);
@@ -80,7 +120,7 @@
 }
 .tb-room.tb-tuile:has(.tb-stretched:active) { transform: scale(.98); }
 .tb-tuile-nom { position: relative; z-index: 1; font-size: 1.02rem; padding-right: 30px; }
-.tb-tuile-t { position: relative; z-index: 1; margin-top: 6px; font-size: 3.4rem; line-height: 1; letter-spacing: -.045em; }
+.tb-tuile-t { position: relative; z-index: 1; margin-top: 6px; font-size: calc(3.4rem * var(--z, 1)); line-height: 1; letter-spacing: -.045em; }
 .tb-tuile-t span { font-size: 1.5rem; vertical-align: 1.3rem; margin-left: 2px; font-weight: 300; }
 .tb-tuile-etat { position: relative; z-index: 1; margin-top: 4px; color: var(--md-on-surface-variant); font-size: .85rem; }
 .tb-tuile-etat b { color: var(--f); font-weight: 600; }
@@ -207,21 +247,18 @@ tb-molette { display: flex; flex-direction: column; align-items: center; }
 
 /* ============================== Photos on the dashboard ============================== */
 
-/* Panneau: the photo as a strip across the top of the square, the reading below it */
-.tb-case-photo { display: block; flex: none; height: 64px; margin: -10px -12px 8px; overflow: hidden; pointer-events: none; }
+/* The photo lies behind the whole card, under its colour: the words stay on the colour */
+.tb-case-photo, .tb-tuile-photo { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; border-radius: inherit; }
 .tb-case-photo img, .tb-tuile-photo img { display: block; width: 100%; height: 100%; object-fit: cover; }
-.tb-room.tb-case.tb-avec-photo .tb-case-courbe { bottom: 30px; height: 30px; }
-.tb-room.tb-case.tb-avec-photo .tb-case-favori { padding: 3px 4px; border-radius: 3px; background: color-mix(in srgb, var(--c) 85%, transparent); opacity: 1; }
+.tb-case-photo::after, .tb-tuile-photo::after { content: ""; position: absolute; inset: 0; }
 
-/* Maison: the photo at the top of the tile, the colour of the room beneath it */
-.tb-tuile-photo { display: block; flex: none; height: 108px; margin: -16px -18px 12px; overflow: hidden; pointer-events: none; border-radius: var(--tb-shape-xxl) var(--tb-shape-xxl) 0 0; }
-.tb-room.tb-tuile.tb-avec-photo .tb-tuile-favori { background: color-mix(in srgb, var(--tb-fond) 80%, transparent); opacity: 1; }
-.tb-room.tb-tuile.tb-avec-photo .tb-tuile-t { font-size: 2.8rem; margin-top: 2px; }
+/* Panneau: the photo in greys, as a texture under the colour of the gap */
+.tb-case-photo img { filter: grayscale(1) contrast(.9) brightness(1.05); }
+.tb-case-photo::after { background: color-mix(in srgb, var(--c) 80%, transparent); }
 
-@media (max-width: 640px) {
-    .tb-case-photo { height: 34px; margin: -8px -9px 6px; }
-    .tb-room.tb-case.tb-avec-photo .tb-case-courbe { display: none; }
-    .tb-tuile-photo { height: 84px; }
-}
-.tb-room.tb-tuile.tb-avec-photo { padding-bottom: 34px; }
-.tb-room.tb-tuile.tb-avec-photo .tb-tuile-courbe { height: 30px; }
+/* Maison: the photo shows through at the top, the colour of the room thickens towards the words */
+.tb-tuile-photo img { filter: saturate(.85); }
+.tb-tuile-photo::after { background: linear-gradient(180deg, color-mix(in srgb, var(--c) 38%, transparent) 0%, color-mix(in srgb, var(--c) 80%, transparent) 50%, color-mix(in srgb, var(--c) 94%, transparent) 100%); }
+.tb-room.tb-tuile.tb-avec-photo .tb-tuile-favori { background: color-mix(in srgb, var(--c) 70%, transparent); opacity: 1; }
+.tb-room.tb-tuile.tb-avec-photo .tb-tuile-favori:not(.tb-fav-on) { color: var(--md-on-surface); }
+

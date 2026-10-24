@@ -21,6 +21,7 @@ import { TirerPourActualiser } from '../../ui/tirer';
 import { CacheCourbes } from '../../core/cache-courbes';
 import { ClimatService } from '../../services/climat.service';
 import { FavoriService } from '../../services/favori.service';
+import { PlageEcart } from './plage-ecart';
 import { TbSalleCard } from './salle-card';
 import { SalleResume } from './resume';
 
@@ -53,6 +54,8 @@ const SONDAGE = 30_000;
   imports: [RouterLink, TbSalleCard],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './dashboard.html',
+  // Computers: the size of the cards (the slider of the header)
+  host: { '[style.--z]': 'prefs.tailleCartes()' },
 })
 export class DashboardPage implements OnInit, OnDestroy {
   protected readonly auth = inject(AuthService);
@@ -64,7 +67,8 @@ export class DashboardPage implements OnInit, OnDestroy {
   private readonly toasts = inject(ToastService);
   private readonly plateforme = inject(PlateformeService);
   private readonly transitions = inject(TransitionsService);
-  private readonly prefs = inject(PreferencesService);
+  protected readonly prefs = inject(PreferencesService);
+  protected readonly plage = inject(PlageEcart);
   /** Look of the site: the thermal map (Panneau) or the tiles of a home (Maison). */
   protected readonly panneau = computed(() => this.prefs.style() === 'panneau');
   /** Cards glide to their new places when a filter or a favourite changes them. */
@@ -128,8 +132,65 @@ export class DashboardPage implements OnInit, OnDestroy {
       .filter((r) => b == null || (b === SANS_BATIMENT ? r.batiment == null : r.batiment?.id === b))
       .filter((r) => !recherche.trim() || correspond(`${r.salle.name} ${r.chemin}`, recherche))
       .filter((r) => etat == null || r.etat === etat)
+      .filter((r) => !this.panneau() || this.dansPlage(r.ecart))
       .sort(parNom((r) => r.salle.name));
   });
+
+  // ---------------------------------------------------------------- Panneau: the scale
+
+  /** The scale spans ±2.5 tolerances: beyond, the colour no longer changes. */
+  protected readonly etendue = computed(() => Math.round(2.5 * this.prefs.tolerance() * 10) / 10);
+  protected readonly plageActive = computed(() => this.plage.bas() != null || this.plage.haut() != null);
+  /** Position of a gap on the bar, 0-100. */
+  protected pourcent(ecart: number): number {
+    const e = this.etendue();
+    return ((Math.max(-e, Math.min(e, ecart)) + e) / (2 * e)) * 100;
+  }
+  private dansPlage(ecart: number | null): boolean {
+    const bas = this.plage.bas();
+    const haut = this.plage.haut();
+    if (bas == null && haut == null) return true;
+    if (ecart == null) return false;
+    return (bas == null || ecart >= bas - 1e-9) && (haut == null || ecart <= haut + 1e-9);
+  }
+  /** Each salle as a tick on the bar, where its gap puts it. */
+  protected readonly marques = computed(() =>
+    this.toutes()
+      .filter((r) => r.ecart != null)
+      .map((r) => ({ id: r.salle.id, nom: r.salle.name ?? '', ecart: r.ecart!, pct: this.pourcent(r.ecart!), dedans: this.dansPlage(r.ecart) })),
+  );
+  /** A handle moved: at the end of the bar, no bound on that side. */
+  protected poserBorne(cote: 'bas' | 'haut', valeur: number): void {
+    const e = this.etendue();
+    const v = Math.round(valeur * 10) / 10;
+    this.flip.animer(() => {
+      if (cote === 'bas') this.plage.bas.set(v <= -e ? null : Math.min(v, this.plage.haut() ?? e));
+      else this.plage.haut.set(v >= e ? null : Math.max(v, this.plage.bas() ?? -e));
+    });
+  }
+  protected toutAfficher(): void {
+    this.flip.animer(() => {
+      this.plage.bas.set(null);
+      this.plage.haut.set(null);
+    });
+  }
+  protected poserTolerance(t: number): void {
+    this.prefs.tolerance.set(t);
+    // The bounds stay inside the new scale
+    const e = this.etendue();
+    if (this.plage.bas() != null && this.plage.bas()! <= -e) this.plage.bas.set(null);
+    if (this.plage.haut() != null && this.plage.haut()! >= e) this.plage.haut.set(null);
+  }
+  /** « De −1,0 °C à +2,0 °C », « +1,0 °C et plus »… */
+  protected readonly textePlage = computed(() => {
+    const b = this.plage.bas();
+    const h = this.plage.haut();
+    if (b == null && h == null) return '';
+    if (b == null) return `${this.unite.ecart(h)} et moins`;
+    if (h == null) return `${this.unite.ecart(b)} et plus`;
+    return `De ${this.unite.ecart(b)} à ${this.unite.ecart(h)}`;
+  });
+  protected readonly nombreVisibles = computed(() => this.visibles().length);
 
   protected readonly favoris = computed(() => this.visibles().filter((r) => r.salle.favori));
 
@@ -340,6 +401,8 @@ export class DashboardPage implements OnInit, OnDestroy {
       this.recherche.set('');
       this.batimentId.set(null);
       this.etatFiltre.set(null);
+      this.plage.bas.set(null);
+      this.plage.haut.set(null);
     });
   }
 

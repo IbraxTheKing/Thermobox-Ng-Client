@@ -2,6 +2,7 @@ import { DOCUMENT } from '@angular/common';
 import { Injectable, computed, effect, inject, signal } from '@angular/core';
 
 import { StyleSite } from '../models/models';
+import { CouleursMaison } from './couleurs';
 
 export type Theme = 'light' | 'dark';
 /** What the user picked on the Préférences page: a theme, or the one of the system. */
@@ -15,6 +16,9 @@ interface Stockees {
   clavier?: boolean;
   /** Computers: the side bar folded into a rail of icons. */
   barreReduite?: boolean;
+  couleursMaison?: CouleursMaison;
+  tolerance?: number;
+  tailleCartes?: number;
 }
 
 const CLE = 'tb-preferences';
@@ -49,6 +53,12 @@ export class PreferencesService {
   readonly clavier = signal(this.stockees.clavier ?? true);
   /** Computers: the side bar shows the names of the pages, or only their icons. */
   readonly barreReduite = signal(this.stockees.barreReduite ?? false);
+  /** « Maison »: rooms coloured by their gap to the consigne (default) or by their temperature. */
+  readonly couleursMaison = signal<CouleursMaison>(this.stockees.couleursMaison ?? 'ecart');
+  /** Degrees of gap that colour a room halfway (1 °C by default): the gap scales stretch with it. */
+  readonly tolerance = signal(this.stockees.tolerance ?? 1);
+  /** Computers: size of the cards of the dashboard, 1 = as designed. */
+  readonly tailleCartes = signal(this.stockees.tailleCartes ?? 1);
   readonly style = signal<StyleSite>('verre');
 
   /** The system asks for less motion: no transitions between pages, nothing slides or pops. */
@@ -73,7 +83,16 @@ export class PreferencesService {
       meta?.setAttribute('content', this.couleurFond());
     });
     effect(() => {
-      ecrire({ theme: this.choixTheme(), teinte: this.teinte(), unite: this.unite(), clavier: this.clavier(), barreReduite: this.barreReduite() });
+      ecrire({
+        theme: this.choixTheme(),
+        teinte: this.teinte(),
+        unite: this.unite(),
+        clavier: this.clavier(),
+        barreReduite: this.barreReduite(),
+        couleursMaison: this.couleursMaison(),
+        tolerance: this.tolerance(),
+        tailleCartes: this.tailleCartes(),
+      });
     });
   }
 
