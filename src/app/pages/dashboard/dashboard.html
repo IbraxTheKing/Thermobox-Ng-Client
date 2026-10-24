@@ -173,7 +173,7 @@
     <div class="tb-section-body">
       <div [class]="panneau() ? 'tb-cases' : 'tb-tuiles'">
         @for (r of favoris(); track r.salle.id) {
-          <tb-salle-card [r]="r" [nouvelles]="courbesNouvelles()" (favori)="basculerFavori($event)" />
+          <tb-salle-card [r]="r" [nouvelles]="courbesNouvelles()" (favori)="basculerFavori($event)" (apercu)="ouvrirApercu($event)" />
         }
       </div>
     </div>
@@ -181,7 +181,7 @@
 }
 
 @for (g of groupes(); track g.cle) {
-  <section class="tb-section" [class.tb-collapsed]="replie(g.cle)" [attr.data-section]="g.cle">
+  <section class="tb-section" [class.tb-collapsed]="replie(g.cle)" [class.tb-deplacee]="deplacee() === g.cle" [attr.data-section]="g.cle" [attr.data-groupe]="g.cle">
     @if (panneau() || plusieursBatiments() || favoris().length) {
       <h2 class="tb-section-title" [attr.data-flip]="'section-' + g.cle">
         <button type="button" class="tb-section-toggle" [attr.aria-expanded]="!replie(g.cle)" (click)="basculerSection(g.cle)">
@@ -196,6 +196,13 @@
           </span>
           <i class="pi pi-chevron-down tb-section-chevron"></i>
         </button>
+        <!-- Drag it up or down (or the arrows of the keyboard) to arrange the bâtiments -->
+        @if (organisable()) {
+          <button type="button" class="tb-section-poignee" [title]="'Déplacer ' + g.nom" [attr.aria-label]="'Déplacer ' + g.nom + ' (flèches haut et bas)'"
+                  (pointerdown)="saisirSection(g.cle, $event)" (keydown.arrowup)="deplacerSection(g.cle, -1, $event)" (keydown.arrowdown)="deplacerSection(g.cle, 1, $event)">
+            <i class="pi pi-bars"></i>
+          </button>
+        }
       </h2>
     }
     <div class="tb-section-body">
@@ -209,7 +216,7 @@
               }
               <div class="tb-cases">
                 @for (r of e.salles; track r.salle.id) {
-                  <tb-salle-card [r]="r" [nouvelles]="courbesNouvelles()" (favori)="basculerFavori($event)" />
+                  <tb-salle-card [r]="r" [nouvelles]="courbesNouvelles()" (favori)="basculerFavori($event)" (apercu)="ouvrirApercu($event)" />
                 }
               </div>
             </div>
@@ -218,10 +225,13 @@
       } @else {
         <div class="tb-tuiles">
           @for (r of g.salles; track r.salle.id) {
-            <tb-salle-card [r]="r" [nouvelles]="courbesNouvelles()" (favori)="basculerFavori($event)" />
+            <tb-salle-card [r]="r" [nouvelles]="courbesNouvelles()" (favori)="basculerFavori($event)" (apercu)="ouvrirApercu($event)" />
           }
         </div>
       }
     </div>
   </section>
 }
+
+<!-- A card held down: its whole day and its details -->
+<tb-apercu-salle [r]="apercu()" (fermer)="apercuId.set(null)" (favori)="basculerFavori($event)" />

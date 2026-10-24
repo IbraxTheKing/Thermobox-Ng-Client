@@ -262,3 +262,66 @@ tb-molette { display: flex; flex-direction: column; align-items: center; }
 .tb-room.tb-tuile.tb-avec-photo .tb-tuile-favori { background: color-mix(in srgb, var(--c) 70%, transparent); opacity: 1; }
 .tb-room.tb-tuile.tb-avec-photo .tb-tuile-favori:not(.tb-fav-on) { color: var(--md-on-surface); }
 
+
+/* ============================== A card held down ============================== */
+
+/* No menu of the system, no text picked: the press is ours */
+.tb-room.tb-case, .tb-room.tb-tuile { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+/* Held: the card sinks slowly, the overview opens when it is all the way down */
+:root .tb-room.tb-case.tb-appui, :root .tb-room.tb-tuile.tb-appui { transform: scale(.95); transition: transform .33s cubic-bezier(.3, 0, .5, 1); }
+
+.tb-apercu-salle { display: flex; flex-direction: column; gap: 16px; }
+.tb-apercu-salle-chemin { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: -4px 0 0; color: var(--md-on-surface-variant); font-size: .9rem; }
+.tb-apercu-salle-etat { display: inline-flex; align-items: center; gap: 7px; background: color-mix(in srgb, var(--tone) 14%, transparent); color: var(--md-on-surface); }
+.tb-apercu-salle-chiffres, .tb-apercu-salle-jour { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; margin: 0; border-radius: var(--tb-shape-lg); background: var(--md-outline-variant); overflow: hidden; }
+.tb-apercu-salle-chiffres > div, .tb-apercu-salle-jour > div { padding: 10px 14px 12px; background: color-mix(in srgb, var(--md-on-surface) 3%, var(--md-surface-container-lowest)); }
+.tb-apercu-salle dt { color: var(--md-on-surface-variant); font-size: .8rem; }
+.tb-apercu-salle dd { margin: 2px 0 0; font-size: 1.35rem; line-height: 1.15; }
+.tb-apercu-salle-jour dd { font-size: 1.05rem; }
+:root[data-style="panneau"] :is(.tb-apercu-salle-chiffres, .tb-apercu-salle-jour) { border: 1px solid var(--md-outline-variant); border-radius: var(--tb-shape-sm); }
+.tb-chart.tb-apercu-salle-courbe { height: 280px; }
+.tb-apercu-salle-attente { display: flex; align-items: center; justify-content: center; gap: 10px; height: 100%; min-height: 240px; border-radius: var(--tb-shape-lg); background: var(--tb-field); color: var(--md-on-surface-variant); }
+.tb-apercu-salle-pied { margin: 0; color: var(--md-on-surface-variant); font-size: .88rem; }
+.tb-apercu-salle-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+@media (max-width: 640px) {
+    .tb-apercu-salle-chiffres, .tb-apercu-salle-jour { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .tb-chart.tb-apercu-salle-courbe { height: auto; }
+    .tb-apercu-salle-courbe .tb-graphique-zone { height: 240px; }
+    .tb-apercu-salle-actions .tb-btn { flex: 1; justify-content: center; }
+}
+
+/* ============================== Arranging the bâtiments ============================== */
+
+/* The handle at the end of a title: on a computer when the title is pointed at, always on a phone */
+.tb-section-title:has(.tb-section-poignee) { flex-wrap: nowrap; }
+.tb-section-title:has(.tb-section-poignee) .tb-section-toggle { flex: 1 1 auto; width: auto; min-width: 0; }
+.tb-section-poignee {
+    display: grid; place-items: center; flex: none; width: 36px; height: 36px; padding: 0; border: 0; border-radius: var(--tb-shape-md);
+    background: none; color: var(--md-on-surface-variant); cursor: grab; touch-action: none;
+    opacity: 0; transition: opacity var(--tb-fast) linear, background-color var(--tb-fast) linear;
+}
+.tb-section-poignee .pi { font-size: .95rem; }
+.tb-section:hover .tb-section-poignee, .tb-section-poignee:focus-visible, .tb-reorg .tb-section-poignee { opacity: 1; }
+.tb-section-poignee:hover { background: color-mix(in srgb, var(--md-on-surface) 7%, transparent); }
+.tb-section-poignee:focus-visible { outline: 2px solid var(--md-primary); outline-offset: 2px; }
+@media (hover: none) { .tb-section-poignee { opacity: .75; } }
+
+/* Dragging: every section folds to its title; the one held floats above the others */
+.tb-reorg .tb-section[data-groupe] .tb-section-body,
+.tb-reorg .tb-section[data-section="favoris"] .tb-section-body { display: none; }
+.tb-reorg .tb-section[data-groupe] { margin-bottom: 8px; padding: 6px 8px 6px 14px; border-radius: var(--tb-shape-lg); background: color-mix(in srgb, var(--md-on-surface) 5%, var(--tb-fond)); transition: transform .2s var(--tb-ease); }
+.tb-reorg .tb-section[data-groupe] .tb-section-title { margin-bottom: 0; }
+.tb-reorg .tb-section.tb-deplacee { position: relative; z-index: 5; transition: none; box-shadow: 0 14px 36px rgba(0, 0, 0, .18); cursor: grabbing; }
+.tb-reorg .tb-section.tb-deplacee .tb-section-poignee { cursor: grabbing; }
+:root[data-style="panneau"] .tb-reorg .tb-section[data-groupe] { border: 1px solid var(--md-outline-variant); border-radius: var(--tb-shape-sm); }
+
+/* ============================== Card ↔ salle: the layers ============================== */
+
+/*
+ * The photo of the salle page has no twin on a card (the card's photo is part of the card): it
+ * stays under the card and its words while it fades, never above them.
+ */
+::view-transition-group(*.tb-vt-photo) { z-index: 1; }
+::view-transition-group(*.tb-card), ::view-transition-group(*.tb-vt-texte) { z-index: 2; }
+::view-transition-old(*.tb-vt-photo):only-child { animation: tb-fade-out .22s ease both; }
+::view-transition-new(*.tb-vt-photo):only-child { animation: tb-fade-in .3s .15s ease both; }

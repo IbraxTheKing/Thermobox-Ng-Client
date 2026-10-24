@@ -19,6 +19,7 @@ interface Stockees {
   couleursMaison?: CouleursMaison;
   tolerance?: number;
   tailleCartes?: number;
+  ordreBatiments?: string[];
 }
 
 const CLE = 'tb-preferences';
@@ -59,6 +60,8 @@ export class PreferencesService {
   readonly tolerance = signal(this.stockees.tolerance ?? 1);
   /** Computers: size of the cards of the dashboard, 1 = as designed. */
   readonly tailleCartes = signal(this.stockees.tailleCartes ?? 1);
+  /** Order of the bâtiments on the dashboard, as arranged by hand (keys of its sections). */
+  readonly ordreBatiments = signal<string[]>(this.stockees.ordreBatiments ?? []);
   readonly style = signal<StyleSite>('verre');
 
   /** The system asks for less motion: no transitions between pages, nothing slides or pops. */
@@ -92,6 +95,7 @@ export class PreferencesService {
         couleursMaison: this.couleursMaison(),
         tolerance: this.tolerance(),
         tailleCartes: this.tailleCartes(),
+        ordreBatiments: this.ordreBatiments(),
       });
     });
   }

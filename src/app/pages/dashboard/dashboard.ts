@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, OnDestroy, OnInit, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, Injector, OnDestroy, OnInit, afterNextRender, computed, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
@@ -22,6 +22,7 @@ import { CacheCourbes } from '../../core/cache-courbes';
 import { ClimatService } from '../../services/climat.service';
 import { FavoriService } from '../../services/favori.service';
 import { PlageEcart } from './plage-ecart';
+import { TbApercuSalle } from './apercu-salle';
 import { TbSalleCard } from './salle-card';
 import { SalleResume } from './resume';
 
@@ -51,7 +52,7 @@ const SONDAGE = 30_000;
  */
 @Component({
   selector: 'tb-dashboard',
-  imports: [RouterLink, TbSalleCard],
+  imports: [RouterLink, TbSalleCard, TbApercuSalle],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './dashboard.html',
   // Computers: the size of the cards (the slider of the header)
@@ -229,8 +230,127 @@ export class DashboardPage implements OnInit, OnDestroy {
         const batiment = salles[0].batiment;
         return { batiment, nom: batiment?.name ?? 'Sans bâtiment', cle: id != null ? `b${id}` : 'sans', moyenne: moyennes.get(id) ?? null, salles, etages: this.parEtage(salles) };
       })
-      .sort((a, b) => Number(a.batiment == null) - Number(b.batiment == null) || normaliser(a.nom).localeCompare(normaliser(b.nom), 'fr'));
+      .sort((a, b) => {
+        // The order arranged by hand first (the handles of the titles), then by name
+        const ordre = this.prefs.ordreBatiments();
+        const ia = ordre.indexOf(a.cle);
+        const ib = ordre.indexOf(b.cle);
+        if (ia >= 0 || ib >= 0) return (ia < 0 ? Infinity : ia) - (ib < 0 ? Infinity : ib);
+        return Number(a.batiment == null) - Number(b.batiment == null) || normaliser(a.nom).localeCompare(normaliser(b.nom), 'fr');
+      });
   });
+
+  // ---------------------------------------------------------------- arranging the bâtiments
+
+  private readonly hote = inject(ElementRef<HTMLElement>).nativeElement as HTMLElement;
+  private readonly injector = inject(Injector);
+  /** The section being dragged by its handle. */
+  protected readonly deplacee = signal<string | null>(null);
+  /** Handles only where there is something to arrange (and a title to hold). */
+  protected readonly organisable = computed(() => this.groupes().length > 1);
+
+  /**
+   * The handle of a title held and dragged (mouse, finger, pen): every section folds to its title,
+   * the one held follows the pointer, the others make room; let go, it takes its new place and
+   * the sections open again, the one moved where it was let go.
+   */
+  protected saisirSection(cle: string, e: PointerEvent): void {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    const poignee = e.currentTarget as HTMLElement;
+    poignee.setPointerCapture(e.pointerId);
+    const y0 = e.clientY;
+    let d: { sections: HTMLElement[]; el: HTMLElement; i: number; cible: number; rects: DOMRect[]; pas: number; y: number } | null = null;
+
+    const commencer = (y: number) => {
+      this.hote.classList.add('tb-reorg');
+      this.deplacee.set(cle);
+      const sections = [...this.hote.querySelectorAll<HTMLElement>('.tb-section[data-groupe]')];
+      const el = sections.find((s) => s.dataset['groupe'] === cle);
+      if (!el) return;
+      // Folded: the title held comes back under the pointer
+      const r = el.getBoundingClientRect();
+      window.scrollBy({ top: r.top + r.height / 2 - y, behavior: 'instant' });
+      const rects = sections.map((s) => s.getBoundingClientRect());
+      const i = sections.indexOf(el);
+      const pas = rects.length > 1 ? Math.abs(rects[1].top - rects[0].top) : r.height;
+      d = { sections, el, i, cible: i, rects, pas, y };
+      this.plateforme.vibrer();
+    };
+    const bouger = (ev: PointerEvent) => {
+      if (!d) {
+        if (Math.abs(ev.clientY - y0) < 4) return;
+        commencer(ev.clientY);
+        if (!d) return;
+      }
+      const g = d as { sections: HTMLElement[]; el: HTMLElement; i: number; cible: number; rects: DOMRect[]; pas: number; y: number };
+      const dy = ev.clientY - g.y;
+      g.el.style.transform = `translateY(${dy}px)`;
+      const centre = g.rects[g.i].top + g.rects[g.i].height / 2 + dy;
+      const cible = g.rects.filter((r, k) => k !== g.i && r.top + r.height / 2 < centre).length;
+      if (cible !== g.cible) this.plateforme.vibrer();
+      g.cible = cible;
+      g.sections.forEach((s, k) => {
+        if (k === g.i) return;
+        const decale = k > g.i && k <= cible ? -g.pas : k < g.i && k >= cible ? g.pas : 0;
+        s.style.transform = decale ? `translateY(${decale}px)` : '';
+      });
+    };
+    const fin = () => {
+      poignee.removeEventListener('pointermove', bouger);
+      poignee.removeEventListener('pointerup', fin);
+      poignee.removeEventListener('pointercancel', fin);
+      if (!d) return;
+      const g = d as { sections: HTMLElement[]; el: HTMLElement; i: number; cible: number };
+      const cles = g.sections.map((s) => s.dataset['groupe']!);
+      const [x] = cles.splice(g.i, 1);
+      cles.splice(g.cible, 0, x);
+      g.sections.forEach((s) => (s.style.transform = ''));
+      this.ranger(cles);
+      // Once in its place: the sections open again, the one moved stays where it was let go
+      afterNextRender(
+        () => {
+          const avant = g.el.getBoundingClientRect().top;
+          this.hote.classList.remove('tb-reorg');
+          this.deplacee.set(null);
+          window.scrollBy({ top: g.el.getBoundingClientRect().top - avant, behavior: 'instant' });
+        },
+        { injector: this.injector },
+      );
+    };
+    poignee.addEventListener('pointermove', bouger);
+    poignee.addEventListener('pointerup', fin);
+    poignee.addEventListener('pointercancel', fin);
+  }
+
+  /** Keyboard: the arrows move the section held by its handle one place up or down. */
+  protected deplacerSection(cle: string, sens: -1 | 1, e: Event): void {
+    e.preventDefault();
+    const cles = this.groupes().map((g) => g.cle);
+    const i = cles.indexOf(cle);
+    const j = i + sens;
+    if (i < 0 || j < 0 || j >= cles.length) return;
+    [cles[i], cles[j]] = [cles[j], cles[i]];
+    this.flip.animer(() => this.ranger(cles));
+    // The focus stays on the handle that moved
+    const poignee = e.currentTarget as HTMLElement;
+    afterNextRender(() => poignee.focus(), { injector: this.injector });
+  }
+
+  /** The new order, keeping the place of the bâtiments filtered out for now. */
+  private ranger(cles: string[]): void {
+    const avant = this.prefs.ordreBatiments().filter((c) => !cles.includes(c));
+    this.prefs.ordreBatiments.set([...cles, ...avant]);
+  }
+
+  // ---------------------------------------------------------------- overview of a card (long press)
+
+  protected readonly apercuId = signal<number | null>(null);
+  /** Follows the salle while it is open (a favourite toggled, a refresh). */
+  protected readonly apercu = computed(() => this.toutes().find((x) => x.salle.id === this.apercuId()) ?? null);
+  protected ouvrirApercu(id: number): void {
+    this.apercuId.set(id);
+  }
 
   /** Panneau: one row per étage, in the order of their names; the salles without étage first. */
   private parEtage(salles: SalleResume[]): GroupeBatiment['etages'] {

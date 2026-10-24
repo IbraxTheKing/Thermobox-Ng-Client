@@ -233,6 +233,12 @@ export class TransitionsService {
       if (pris.has(nom) || (carte && e !== carte && !carte.contains(e) && e.closest('.tb-room'))) continue;
       pris.add(nom);
       e.style.setProperty('view-transition-name', `${nom}-${id}`);
+      // Their layers: the photo under the card and its words (motion.css), whichever page it
+      // comes from; a photo alone (the card has none to morph into) fades under the card
+      if (!e.style.getPropertyValue('view-transition-class')) {
+        e.style.setProperty('view-transition-class', nom === 'salle-photo' ? 'tb-vt-photo' : 'tb-vt-texte');
+        e.dataset['vtClasse'] = '';
+      }
       this.nommes.push(e);
     }
   }
@@ -241,8 +247,9 @@ export class TransitionsService {
     for (const e of this.nommes.splice(0)) {
       e.style.removeProperty('view-transition-name');
       // Set here only on the page; the cards carry their own (salle-card.ts)
-      if (e.dataset['vtPlein'] != null && !e.classList.contains('tb-room')) e.style.removeProperty('view-transition-class');
+      if ((e.dataset['vtPlein'] != null && !e.classList.contains('tb-room')) || e.dataset['vtClasse'] != null) e.style.removeProperty('view-transition-class');
       delete e.dataset['vtPlein'];
+      delete e.dataset['vtClasse'];
     }
   }
 
