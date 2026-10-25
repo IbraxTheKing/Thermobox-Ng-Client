@@ -52,43 +52,80 @@
     </div>
   }
 
-  @if (panneau()) {
-    <!-- Panneau: the reading of the desk, the panel taking the colour of the state as a lamp -->
-    <div class="tb-hero tb-pupitre">
-      <div class="tb-lecture tb-ton-{{ etat().ton }}" data-vt="salle-card" [attr.data-vt-id]="e.id" style="view-transition-class: tb-card">
-        <div class="tb-lecture-etat">
-          <span>{{ etat().label }}</span>
-          @if (ecart() != null && etat().ton !== 'stable') {
-            <span>{{ unite.ecart(ecart()) }} {{ ecart()! > 0 ? 'au-dessus' : 'en dessous' }} de la consigne</span>
-          }
-        </div>
-        <div class="tb-lecture-corps">
-          <div>
-            <small>{{ boitier() ? 'Mesurée' : auth.voitBoitiers() ? 'Moyenne des boîtiers' : 'Mesurée' }}</small>
-            <span class="tb-temp-hero tb-lecture-mesure" data-vt="salle-temp" [attr.data-vt-id]="e.id" [tbWatch]="e.temperature">{{ unite.t(e.temperature) }}<span class="tb-deg">{{ unite.symbole() }}</span></span>
-          </div>
-          @if (!boitier()) {
-            <div>
-              <small>Consigne</small>
-              <span class="tb-temp-hero" [tbWatch]="e.consigne?.value">{{ unite.t(e.consigne?.value) }}<span class="tb-deg">{{ unite.symbole() }}</span></span>
-              @if (e.consigne?.heritee) {
-                <a [routerLink]="['/app/salle', e.consigne!.sourceId]" class="tb-lecture-source">héritée de {{ e.consigne!.sourceName }}</a>
-              }
-            </div>
-          }
-        </div>
-        <div class="tb-lecture-pied">
-          @if (derniereMesure()) {
-            Mesuré le {{ jjmmAHHmm(derniereMesure()) }}
-          } @else if (!boitier() && !e.boitiers && auth.voitBoitiers()) {
-            Aucun boîtier rattaché
+  <ng-template #optionsConsigne>
+    <!-- Étage / bâtiment: what keeps its own consigne below, and the switch that forces the new one on it -->
+    @if (conteneur() || d.consignesPropres.length) {
+      <div class="tb-consigne-options">
+        <span class="tb-consigne-options-icon"><i class="pi pi-info-circle"></i></span>
+        <div class="tb-consigne-options-text">
+          @if (d.consignesPropres.length) {
+            <strong>{{ d.consignesPropres.length }} élément(s) ont leur propre consigne</strong>
+            <span>{{ consignesPropresLabel() }}</span>
           } @else {
-            Pas encore de mesure
-          }
-          @if (!boitier() && e.consigne?.date) {
-            <span>Consigne depuis le {{ jjmmAHHmm(e.consigne!.date) }}</span>
+            <strong>Toutes les salles suivent cette consigne</strong>
+            <span>Aucun étage ni aucune salle n'a de consigne propre ici.</span>
           }
         </div>
+        <div class="tb-switch-row">
+          <tb-switch [(checked)]="forcer" label="Forcer la consigne pour toutes les salles" />
+          <span class="tb-switch-text" (click)="forcer.set(!forcer())">Forcer la consigne pour toutes les salles</span>
+        </div>
+      </div>
+    }
+  </ng-template>
+
+  @if (panneau()) {
+    <!-- Panneau: the reading of the desk, the panel taking the colour of the state as a lamp; under it, the setting of the consigne; the photo beside them -->
+    <div class="tb-hero tb-pupitre">
+      <div class="tb-pupitre-gauche">
+        <div class="tb-lecture tb-ton-{{ etat().ton }}" data-vt="salle-card" [attr.data-vt-id]="e.id" style="view-transition-class: tb-card">
+          <div class="tb-lecture-etat">
+            <span>{{ etat().label }}</span>
+            @if (ecart() != null && etat().ton !== 'stable') {
+              <span>{{ unite.ecart(ecart()) }} {{ ecart()! > 0 ? 'au-dessus' : 'en dessous' }} de la consigne</span>
+            }
+          </div>
+          <div class="tb-lecture-corps">
+            <div>
+              <small>{{ boitier() ? 'Mesurée' : auth.voitBoitiers() ? 'Moyenne des boîtiers' : 'Mesurée' }}</small>
+              <span class="tb-temp-hero tb-lecture-mesure" data-vt="salle-temp" [attr.data-vt-id]="e.id" [tbWatch]="e.temperature">{{ unite.t(e.temperature) }}<span class="tb-deg">{{ unite.symbole() }}</span></span>
+            </div>
+            @if (!boitier()) {
+              <div>
+                <small>Consigne</small>
+                <span class="tb-temp-hero" [tbWatch]="e.consigne?.value">{{ unite.t(e.consigne?.value) }}<span class="tb-deg">{{ unite.symbole() }}</span></span>
+                @if (e.consigne?.heritee) {
+                  <a [routerLink]="['/app/salle', e.consigne!.sourceId]" class="tb-lecture-source">héritée de {{ e.consigne!.sourceName }}</a>
+                }
+              </div>
+            }
+          </div>
+          <div class="tb-lecture-pied">
+            @if (derniereMesure()) {
+              Mesuré le {{ jjmmAHHmm(derniereMesure()) }}
+            } @else if (!boitier() && !e.boitiers && auth.voitBoitiers()) {
+              Aucun boîtier rattaché
+            } @else {
+              Pas encore de mesure
+            }
+            @if (!boitier() && e.consigne?.date) {
+              <span>Consigne depuis le {{ jjmmAHHmm(e.consigne!.date) }}</span>
+            }
+          </div>
+        </div>
+        <!-- New consigne (ADMIN / GESTIONNAIRE): right under the reading -->
+        @if (auth.peutReglerConsigne() && !boitier()) {
+          <div class="tb-reglage">
+            <div class="tb-reglage-ligne">
+              <span class="tb-reglage-titre" [title]="conteneur() ? 'Les salles sans consigne propre la suivent, et leurs boîtiers la reçoivent.' : 'Enregistrée sur la salle et envoyée à chacun de ses boîtiers.'">Nouvelle consigne</span>
+              <tb-stepper [(valeur)]="nouvelleConsigne" />
+              <button type="button" class="tb-btn" [class.tb-busy]="envoi()" [disabled]="envoi()" (click)="envoyerConsigne()">
+                <i class="pi" [class.pi-send]="!envoi()" [class.pi-spinner]="envoi()"></i>Envoyer
+              </button>
+            </div>
+            <ng-container *ngTemplateOutlet="optionsConsigne" />
+          </div>
+        }
       </div>
     <!-- Photo: changed by the administrators -->
       <div class="tb-photo" [class.tb-photo-empty]="e.image == null" data-vt="salle-photo" [attr.data-vt-id]="e.id">
@@ -165,43 +202,18 @@
   }
 
   <!-- New consigne (ADMIN / GESTIONNAIRE) -->
-  @if (auth.peutReglerConsigne() && !boitier() && (panneau() || conteneur() || d.consignesPropres.length)) {
+  @if (auth.peutReglerConsigne() && !boitier() && !panneau() && (conteneur() || d.consignesPropres.length)) {
     <div class="tb-card tb-consigne-card" [class.tb-consigne-options-seules]="!panneau()">
       <div class="tb-card-head">
         <span class="tb-section-icon"><i class="pi pi-sliders-h"></i></span>
         <div>
-          <h2>{{ panneau() ? 'Régler la consigne' : 'Ce qui est dedans' }}</h2>
+          <h2>Ce qui est dedans</h2>
           <span class="tb-muted">
             {{ conteneur() ? 'Les salles sans consigne propre la suivent, et leurs boîtiers la reçoivent.' : 'Enregistrée sur la salle et envoyée à chacun de ses boîtiers.' }}
           </span>
         </div>
       </div>
-      <div class="tb-consigne-form" [hidden]="!panneau()">
-        <tb-stepper [(valeur)]="nouvelleConsigne" />
-        <button type="button" class="tb-btn tb-btn-lg" [class.tb-busy]="envoi()" [disabled]="envoi()" (click)="envoyerConsigne()">
-          <i class="pi" [class.pi-send]="!envoi()" [class.pi-spinner]="envoi()"></i>Envoyer
-        </button>
-      </div>
-
-      <!-- Étage / bâtiment: what keeps its own consigne below, and the switch that forces the new one on it -->
-      @if (conteneur() || d.consignesPropres.length) {
-        <div class="tb-consigne-options">
-          <span class="tb-consigne-options-icon"><i class="pi pi-info-circle"></i></span>
-          <div class="tb-consigne-options-text">
-            @if (d.consignesPropres.length) {
-              <strong>{{ d.consignesPropres.length }} élément(s) ont leur propre consigne</strong>
-              <span>{{ consignesPropresLabel() }}</span>
-            } @else {
-              <strong>Toutes les salles suivent cette consigne</strong>
-              <span>Aucun étage ni aucune salle n'a de consigne propre ici.</span>
-            }
-          </div>
-          <div class="tb-switch-row">
-            <tb-switch [(checked)]="forcer" label="Forcer la consigne pour toutes les salles" />
-            <span class="tb-switch-text" (click)="forcer.set(!forcer())">Forcer la consigne pour toutes les salles</span>
-          </div>
-        </div>
-      }
+      <ng-container *ngTemplateOutlet="optionsConsigne" />
     </div>
   }
 
