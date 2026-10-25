@@ -182,6 +182,8 @@ a.tb-crumb:hover { background: none; text-decoration: underline; }
 
 /* Maison: a thermostat */
 .tb-hero.tb-thermostat { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+/* The photo at the height of the dial, not at the top of the row */
+.tb-hero.tb-thermostat > .tb-photo { align-self: center; }
 .tb-thermostat-zone { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 8px 0 12px; border-radius: var(--tb-shape-xxl); }
 .tb-thermostat-phrase { align-self: stretch; margin: 0 0 4px; font-size: clamp(1.2rem, 1.05rem + .6vw, 1.5rem); font-weight: 300; line-height: 1.3; }
 .tb-thermostat-seul { margin: 24px 0; font-size: 6rem; }
@@ -349,3 +351,28 @@ tb-molette { display: flex; flex-direction: column; align-items: center; }
     .tb-molette-centre b { font-size: clamp(3.4rem, 14vh, 4.6rem); }
     .tb-hero.tb-thermostat > .tb-photo, .tb-hero.tb-pupitre > .tb-photo { max-height: 78vh; }
 }
+
+/* ============================== Card → salle: the photo flies out of the card ============================== */
+
+/*
+ * TransitionsService (envolerPhoto): the photo of the salle page leaves the card it was in (and
+ * goes back into it), above the card, cut to its own frame while it changes size.
+ */
+:root.tb-vt-vol::view-transition-group(*.tb-vt-photo) { z-index: 3; overflow: hidden; }
+:root.tb-vt-vol::view-transition-group(*.tb-vt-texte) { z-index: 4; }
+:root.tb-vt-vol::view-transition-image-pair(*.tb-vt-photo) { position: absolute; inset: 0; }
+:root.tb-vt-vol::view-transition-old(*.tb-vt-photo),
+:root.tb-vt-vol::view-transition-new(*.tb-vt-photo) { width: 100%; height: 100%; object-fit: cover; }
+:root.tb-vt-vol::view-transition-new(*.tb-vt-photo):only-child { animation: tb-fade-in .12s ease both; }
+:root.tb-vt-vol::view-transition-old(*.tb-vt-photo):only-child { animation: none; }
+
+/* ============================== The dial: consigne being set, temperature now ============================== */
+
+/* The line across the track: where the temperature is now */
+.tb-molette-repere { transform-box: view-box; transform-origin: 150px 150px; transition: transform .6s var(--tb-ease); pointer-events: none; }
+.tb-molette-repere line { stroke: var(--md-on-surface); stroke-width: 3.5; stroke-linecap: round; opacity: .85; }
+/* Being set: the consigne is the big figure, in the colour of the dial; it pops at each step */
+.tb-molette-objectif { color: var(--m); }
+.tb-molette-reglage .tb-molette-objectif { animation: tb-objectif .24s cubic-bezier(.3, 1.5, .5, 1); }
+.tb-molette-reglage em { color: var(--md-on-surface-variant); }
+@media (prefers-reduced-motion: reduce) { .tb-molette-reglage .tb-molette-objectif { animation: none; } .tb-molette-repere { transition: none; } }

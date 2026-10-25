@@ -123,6 +123,12 @@ export class TransitionsService {
     this.root.classList.toggle('tb-vt-in', carte);
     // The card (or the salle page) we leave: its picture is taken on the next frame
     if (carte) this.nommer(id, depuis === 'apercu');
+    // The photo flies out of the card (and back into it): where it starts, measured on the page
+    // we leave, before it changes
+    const aller = vers === 'salle/:id';
+    const carteAvant = carte && aller && this.carteCliquee?.id === id && this.carteCliquee.el.isConnected ? cadre(this.carteCliquee.el) : null;
+    const photoAvant = carte && !aller ? this.photoNommee(id) : null;
+    const departRetour = photoAvant ? cadre(photoAvant) : null;
     this.surNouvellePage = () => {
       // The page we arrive on, before its picture is taken
       if (carte) {
@@ -142,13 +148,16 @@ export class TransitionsService {
     };
     // Not through the wrapped startViewTransition (created before this service): late, but done
     transition.updateCallbackDone.catch(() => undefined).then(() => this.nouvellePage());
+    if (carte && (carteAvant || departRetour)) {
+      transition.ready.then(() => this.envolerPhoto(id, carteAvant, departRetour)).catch(() => undefined);
+    }
     transition.finished
       .catch(() => undefined)
       .then(() => {
         this.denommer();
         if (this.courante !== transition) return;
         this.courante = null;
-        this.root.classList.remove('tb-vt-in', 'tb-carte', 'tb-carte-plein');
+        this.root.classList.remove('tb-vt-in', 'tb-carte', 'tb-carte-plein', 'tb-vt-vol');
         if (this.tonPrevu) this.fondu();
       });
   }
@@ -224,6 +233,14 @@ export class TransitionsService {
       page.style.setProperty('view-transition-class', 'tb-card');
       page.dataset['vtPlein'] = '';
       this.nommes.push(page);
+      // The salle page: its photo flies on its own, out of the card (envolerPhoto)
+      const photo = carte ? null : tous.find((e) => e.dataset['vt'] === 'salle-photo' && !e.classList.contains('tb-photo-empty'));
+      if (photo) {
+        photo.style.setProperty('view-transition-name', `salle-photo-${id}`);
+        photo.style.setProperty('view-transition-class', 'tb-vt-photo');
+        photo.dataset['vtClasse'] = '';
+        this.nommes.push(photo);
+      }
       return;
     }
     const pris = new Set<string>();
@@ -240,6 +257,36 @@ export class TransitionsService {
         e.dataset['vtClasse'] = '';
       }
       this.nommes.push(e);
+    }
+  }
+
+  /** The photo of the salle page, named for the transition, if the salle has one. */
+  private photoNommee(id: string): HTMLElement | null {
+    const p = this.nommes.find((e) => e.style.getPropertyValue('view-transition-name') === `salle-photo-${id}`);
+    return p && !p.classList.contains('tb-photo-empty') ? p : null;
+  }
+
+  /**
+   * The photo of the salle leaves its card on the dashboard and lands in its frame on the salle
+   * page; back, it flies from its frame into the card and melts into it. One group of the view
+   * transition (the photo was already pictured on its own), animated by the compositor:
+   * position, size, corners.
+   */
+  private envolerPhoto(id: string, carteAvant: Cadre | null, departRetour: Cadre | null): void {
+    const pseudo = `::view-transition-group(salle-photo-${id})`;
+    const options: KeyframeAnimationOptions = { duration: 520, easing: 'cubic-bezier(.2, .8, .2, 1)', fill: 'both', pseudoElement: pseudo };
+    if (carteAvant) {
+      const photo = this.photoNommee(id);
+      if (!photo) return;
+      this.root.classList.add('tb-vt-vol');
+      this.root.animate(images(carteAvant, cadre(photo)), options);
+    } else if (departRetour) {
+      const carte = this.nommes.find((e) => e.style.getPropertyValue('view-transition-name') === `salle-card-${id}` && e.classList.contains('tb-room'));
+      if (!carte) return;
+      this.root.classList.add('tb-vt-vol');
+      this.root.animate(images(departRetour, cadre(carte)), options);
+      // It melts into the card at the end of the way
+      this.root.animate({ opacity: [1, 1, 0], offset: [0, 0.6, 1] }, { ...options, pseudoElement: `::view-transition-old(salle-photo-${id})` });
     }
   }
 
@@ -301,4 +348,26 @@ function chemin(s: ActivatedRouteSnapshot): string {
 
 function estCarte(depuis: string, vers: string): boolean {
   return (depuis === 'apercu' && vers === 'salle/:id') || (depuis === 'salle/:id' && vers === 'apercu');
+}
+
+interface Cadre {
+  x: number;
+  y: number;
+  l: number;
+  h: number;
+  rayon: string;
+}
+
+/** Where an element is on the screen, and its corners. */
+function cadre(e: HTMLElement): Cadre {
+  const r = e.getBoundingClientRect();
+  return { x: r.left, y: r.top, l: r.width, h: r.height, rayon: getComputedStyle(e).borderRadius || '0px' };
+}
+
+/** Keyframes of a view transition group going from one frame to another. */
+function images(de: Cadre, a: Cadre): Keyframe[] {
+  return [
+    { transform: `translate(${de.x}px, ${de.y}px)`, width: `${de.l}px`, height: `${de.h}px`, borderRadius: de.rayon },
+    { transform: `translate(${a.x}px, ${a.y}px)`, width: `${a.l}px`, height: `${a.h}px`, borderRadius: a.rayon },
+  ];
 }
