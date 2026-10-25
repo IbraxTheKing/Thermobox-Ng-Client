@@ -356,3 +356,6 @@ a:hover > .tb-logo { transform: none; }
 .tb-pref-text { flex: 1 1 260px; }
 .tb-pref > :is(.tb-segmented, tb-switch) { flex: none; max-width: 100%; margin-left: auto; }
 .tb-segmented > button { flex-shrink: 0; white-space: nowrap; }
+/* A switch is small: it stays beside its text */
+.tb-pref:has(> tb-switch) { flex-wrap: nowrap; }
+.tb-pref:has(> tb-switch) .tb-pref-text { flex-basis: auto; }

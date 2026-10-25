@@ -327,3 +327,25 @@ tb-molette { display: flex; flex-direction: column; align-items: center; }
 ::view-transition-group(*.tb-card), ::view-transition-group(*.tb-vt-texte) { z-index: 2; }
 ::view-transition-old(*.tb-vt-photo):only-child { animation: tb-fade-out .22s ease both; }
 ::view-transition-new(*.tb-vt-photo):only-child { animation: tb-fade-in .3s .15s ease both; }
+
+/* ============================== The page of a salle: the photo beside the reading ============================== */
+
+/*
+ * Phones and tablets: the photo keeps the proportions of a photo beside the dial (never stretched
+ * to its height). Computers keep the photo as tall as the reading beside it.
+ */
+@media (hover: none) and (pointer: coarse) {
+    .tb-hero.tb-thermostat > .tb-photo, .tb-hero.tb-pupitre > .tb-photo { align-self: center; min-height: 0; aspect-ratio: 4 / 3; }
+    .tb-hero.tb-thermostat > .tb-photo.tb-photo-empty, .tb-hero.tb-pupitre > .tb-photo.tb-photo-empty { aspect-ratio: auto; min-height: 220px; }
+}
+
+/*
+ * Phone held sideways (and small tablets): the dial and the photo side by side, both within the
+ * height of the screen, rather than a dial then a photo as wide as the screen under it.
+ */
+@media (orientation: landscape) and (max-height: 520px) {
+    .tb-hero.tb-thermostat, .tb-hero.tb-pupitre { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; }
+    .tb-molette { width: min(250px, 62vh); }
+    .tb-molette-centre b { font-size: clamp(3.4rem, 14vh, 4.6rem); }
+    .tb-hero.tb-thermostat > .tb-photo, .tb-hero.tb-pupitre > .tb-photo { max-height: 78vh; }
+}

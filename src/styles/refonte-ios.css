@@ -1,0 +1,163 @@
+/*
+ * iOS: Liquid Glass beyond the navigation ([data-plateforme="ios"]).
+ *
+ * - « Maison »: the whole interface is glass. The page gets a soft light of its own (and the
+ *   colour of the room, FondService), the tiles, panels, banners, buttons and fields are clear
+ *   glass over it: blurred, saturated, a bright rim. The tiles keep the colour of their room,
+ *   seen through the glass. The tab bar and the other glass of the chrome take the colour of the
+ *   page.
+ * - « Panneau »: much less. Panels stay enamel; only the chrome (tab bar, rail, sheets) is a thin,
+ *   nearly opaque glass, in the colour of the page too.
+ *
+ * Loaded after refonte.css and refonte-pages.css: same components, another material.
+ */
+
+/* ============================== The glass follows the page ============================== */
+
+/*
+ * A colour property, so that it fades: the glass changes colour at the pace of the page behind it
+ * (the room's colour fades in .8 s, tokens.css), not at once.
+ */
+@property --tb-ios-page {
+    syntax: '<color>';
+    inherits: true;
+    initial-value: transparent;
+}
+:root[data-plateforme="ios"] { transition: --tb-ios-page .8s ease; }
+
+:root[data-plateforme="ios"] {
+    /* The colour behind: the room's (a salle in « Maison »), else the page's */
+    --tb-ios-page: var(--tb-teinte-page, var(--tb-fond));
+    --tb-lg-fond: color-mix(in srgb, var(--tb-ios-page) 48%, rgb(255 255 255 / .3));
+    --tb-lg-fond-fort: color-mix(in srgb, var(--tb-ios-page) 62%, rgb(255 255 255 / .45));
+    --tb-lg-lentille: color-mix(in srgb, var(--tb-ios-page) 25%, rgb(255 255 255 / .62));
+}
+:root[data-plateforme="ios"][data-theme="dark"] {
+    --tb-lg-fond: color-mix(in srgb, var(--tb-ios-page) 55%, rgb(40 46 44 / .35));
+    --tb-lg-fond-fort: color-mix(in srgb, var(--tb-ios-page) 68%, rgb(40 46 44 / .5));
+    --tb-lg-lentille: color-mix(in srgb, var(--tb-ios-page) 30%, rgb(255 255 255 / .16));
+}
+/* Panneau: a thin glass, nearly opaque, still in the colour of the page */
+:root[data-plateforme="ios"][data-style="panneau"] {
+    --tb-lg-fond: color-mix(in srgb, var(--tb-ios-page) 86%, transparent);
+    --tb-lg-fond-fort: color-mix(in srgb, var(--tb-ios-page) 92%, transparent);
+    --tb-lg-flou: blur(12px) saturate(140%);
+    --tb-lg-reflet: inset 0 1px 0 rgb(255 255 255 / .35);
+}
+:root[data-plateforme="ios"][data-style="panneau"][data-theme="dark"] { --tb-lg-reflet: inset 0 1px 0 rgb(255 255 255 / .06); }
+
+/* ============================== « Maison »: a light behind the glass ============================== */
+
+/*
+ * Glass over a flat colour looks flat: the page gets a soft light (a brighter sky top left, the
+ * colour of the brand and a cooler blue lower down). The layer of the room's colour carries it, so
+ * a room tinted by its temperature keeps that light too.
+ */
+:root[data-plateforme="ios"]:not([data-style="panneau"]) .tb-fond-page {
+    display: block;
+    background-image:
+        radial-gradient(70% 45% at 12% 0%, rgb(255 255 255 / .75), transparent 70%),
+        radial-gradient(55% 40% at 95% 28%, color-mix(in srgb, var(--md-primary) 22%, transparent), transparent 70%),
+        radial-gradient(80% 50% at 30% 100%, rgb(110 160 205 / .22), transparent 70%);
+}
+:root[data-plateforme="ios"][data-theme="dark"]:not([data-style="panneau"]) .tb-fond-page {
+    background-image:
+        radial-gradient(70% 45% at 12% 0%, rgb(255 255 255 / .07), transparent 70%),
+        radial-gradient(55% 40% at 95% 28%, color-mix(in srgb, var(--md-primary) 26%, transparent), transparent 70%),
+        radial-gradient(80% 50% at 30% 100%, rgb(70 120 170 / .18), transparent 70%);
+}
+/* Without « Couleurs selon l'état »: the light, not the room's colour */
+:root[data-plateforme="ios"][data-teinte="off"]:not([data-style="panneau"]) .tb-fond-page { background-color: transparent !important; }
+
+/* ============================== « Maison »: glass surfaces ============================== */
+
+:root[data-plateforme="ios"]:not([data-style="panneau"]) {
+    --tb-ios-verre: color-mix(in srgb, var(--tb-glass-solid) 52%, transparent);
+    --tb-ios-verre-fort: color-mix(in srgb, var(--tb-glass-solid) 70%, transparent);
+    --tb-ios-flou: blur(22px) saturate(180%);
+    --tb-ios-bord: rgb(255 255 255 / .65);
+    --tb-ios-ombre: 0 10px 30px rgb(25 40 55 / .08), 0 1px 3px rgb(25 40 55 / .05);
+}
+:root[data-plateforme="ios"][data-theme="dark"]:not([data-style="panneau"]) {
+    --tb-ios-verre: color-mix(in srgb, var(--tb-glass-solid) 50%, transparent);
+    --tb-ios-verre-fort: color-mix(in srgb, var(--tb-glass-solid) 68%, transparent);
+    --tb-ios-bord: rgb(255 255 255 / .12);
+    --tb-ios-ombre: 0 10px 30px rgb(0 0 0 / .3);
+}
+
+:root[data-plateforme="ios"]:not([data-style="panneau"]) :is(.tb-card, .tb-box, .tb-empty, .tb-stat, .tb-hero-reading, .tb-panel,
+.tb-liste-groupe, .tb-liste-gest, .tb-table, .tb-banner, .tb-user, .tb-voyants) {
+    border: .5px solid var(--tb-ios-bord);
+    background: var(--tb-ios-verre);
+    box-shadow: var(--tb-lg-reflet), var(--tb-ios-ombre);
+    -webkit-backdrop-filter: var(--tb-ios-flou);
+    backdrop-filter: var(--tb-ios-flou);
+}
+/*
+ * The photo of a salle is not glass: an image frosted under a blur would linger, blurred, while the
+ * page changes (view transitions picture it with its backdrop). A plain frame, a bright rim.
+ */
+:root[data-plateforme="ios"]:not([data-style="panneau"]) .tb-photo {
+    border: .5px solid var(--tb-ios-bord);
+    background: var(--tb-glass-solid);
+    box-shadow: var(--tb-lg-reflet), var(--tb-ios-ombre);
+}
+
+/* A banner keeps its colour, through the glass */
+:root[data-plateforme="ios"]:not([data-style="panneau"]) .tb-banner.tb-banner-info { background: color-mix(in srgb, var(--md-primary-container) 55%, transparent); }
+
+/* The tiles: the colour of the room seen through glass, a bright rim, a soft shadow */
+:root[data-plateforme="ios"]:not([data-style="panneau"]) .tb-room.tb-tuile {
+    border: .5px solid var(--tb-ios-bord);
+    background: color-mix(in srgb, var(--c) 64%, transparent);
+    box-shadow: var(--tb-lg-reflet), var(--tb-ios-ombre);
+    -webkit-backdrop-filter: var(--tb-ios-flou);
+    backdrop-filter: var(--tb-ios-flou);
+}
+:root[data-plateforme="ios"]:not([data-style="panneau"]) .tb-tuile-photo::after {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--c) 30%, transparent) 0%, color-mix(in srgb, var(--c) 70%, transparent) 50%, color-mix(in srgb, var(--c) 86%, transparent) 100%);
+}
+:root[data-plateforme="ios"]:not([data-style="panneau"]) .tb-room.tb-tuile.tb-avec-photo .tb-tuile-favori,
+:root[data-plateforme="ios"]:not([data-style="panneau"]) .tb-tuile-favori:hover {
+    background: var(--tb-lg-fond);
+    -webkit-backdrop-filter: var(--tb-lg-flou);
+    backdrop-filter: var(--tb-lg-flou);
+}
+
+/* Buttons, fields, chips: glass pills */
+:root[data-plateforme="ios"]:not([data-style="panneau"]) :is(.tb-btn.tb-tonal, .tb-btn.tb-icon.tb-tonal, .tb-input, .tb-select, .tb-summary-chip:not(.tb-chip-on), .tb-segmented, .tb-molette-pas button, .tb-icon-btn) {
+    border: .5px solid var(--tb-ios-bord);
+    background-color: var(--tb-ios-verre-fort);
+    box-shadow: var(--tb-lg-reflet);
+    -webkit-backdrop-filter: var(--tb-ios-flou);
+    backdrop-filter: var(--tb-ios-flou);
+}
+:root[data-plateforme="ios"]:not([data-style="panneau"]) .tb-input:focus { border-color: var(--md-primary); }
+/* The main button: the brand through glass */
+:root[data-plateforme="ios"]:not([data-style="panneau"]) .tb-btn:not(.tb-tonal):not(.tb-flat):not(.tb-btn-danger) {
+    background: color-mix(in srgb, var(--md-primary) 86%, transparent);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / .3), 0 6px 18px color-mix(in srgb, var(--md-primary) 25%, transparent);
+    -webkit-backdrop-filter: var(--tb-ios-flou);
+    backdrop-filter: var(--tb-ios-flou);
+}
+/* The dial: its track is frosted, its knob a drop of glass */
+:root[data-plateforme="ios"]:not([data-style="panneau"]) .tb-molette-piste { stroke: rgb(255 255 255 / .45); }
+:root[data-plateforme="ios"][data-theme="dark"]:not([data-style="panneau"]) .tb-molette-piste { stroke: rgb(255 255 255 / .1); }
+:root[data-plateforme="ios"]:not([data-style="panneau"]) .tb-molette-bouton { fill: rgb(255 255 255 / .85); }
+
+/* A card held down sinks into the glass */
+:root[data-plateforme="ios"]:not([data-style="panneau"]) .tb-room.tb-tuile.tb-appui { box-shadow: var(--tb-lg-reflet), 0 2px 8px rgb(25 40 55 / .08); }
+
+/* ============================== Panneau: a hint of it ============================== */
+
+/* Panels stay enamel; a light rim on top says they are panels of an iOS app */
+:root[data-plateforme="ios"][data-style="panneau"] :is(.tb-panel, .tb-card, .tb-stat, .tb-voyants) { box-shadow: var(--tb-lg-reflet); }
+
+/* Less motion, less glass work: the system asks for it */
+@media (prefers-reduced-transparency: reduce) {
+    :root[data-plateforme="ios"] * { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+    :root[data-plateforme="ios"]:not([data-style="panneau"]) { --tb-ios-verre: var(--tb-glass-solid); --tb-ios-verre-fort: var(--tb-glass-solid); }
+}
+
+/* Without « Couleurs selon l'état », the page keeps its own colour: so does the glass */
+:root[data-plateforme="ios"][data-teinte="off"] { --tb-ios-page: var(--tb-fond); }
