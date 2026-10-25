@@ -129,7 +129,12 @@ export class Shell implements OnInit, OnDestroy {
     if (this.natif.actif) {
       effect(() => {
         const dests = this.destinations();
-        const onglets: OngletNatif[] = dests.slice(0, this.dansBarre()).map((d) => ({
+        // Phone held upright: the bar at the bottom (the first pages, then « Plus »); tablet or
+        // phone held sideways: the rail on the left with every page, as on a computer
+        const rail = !this.barreBas();
+        const places = rail ? Math.min(dests.length, 6) : this.dansBarre();
+        const dernier = rail ? dernierOnglet(this.maison(), dests.length > places) : this.dernier();
+        const onglets: OngletNatif[] = dests.slice(0, places).map((d) => ({
           id: d.lien,
           label: d.label,
           icone: iconeNative(d.icone),
@@ -137,20 +142,25 @@ export class Shell implements OnInit, OnDestroy {
         }));
         onglets.push({
           id: '/app/plus',
-          label: this.dernier().label,
-          icone: this.dernier().natif,
-          badge: this.avecPlus() && this.avis.disponible(),
+          label: dernier.label,
+          icone: dernier.natif,
+          badge: (rail ? dests.length > places : this.avecPlus()) && this.avis.disponible(),
         });
-        const actif = dests.slice(0, this.dansBarre()).find((d) => this.estActive(d))?.lien ?? (this.plusActif() ? '/app/plus' : null);
+        const actif = dests.slice(0, places).find((d) => this.estActive(d))?.lien ?? (this.plusActif() ? '/app/plus' : null);
         this.prefs.theme();
-        // Phone held sideways: the rail of the page, not the bar
-        this.natif.configurerBarre(onglets, actif, this.barreBas(), (id, retouche) => {
-          // The tab again: back to its first page (« Plus » from À propos, Salles from a
-          // salle…), as the web bar does; already there, back to the top
-          const ici = this.router.url.split(/[?#]/)[0];
-          if (retouche && ici === id) scrollTo({ top: 0, behavior: this.prefs.animer() ? 'smooth' : 'auto' });
-          else void this.router.navigateByUrl(id);
-        });
+        this.natif.configurerBarre(
+          onglets,
+          actif,
+          true,
+          (id, retouche) => {
+            // The tab again: back to its first page (« Plus » from À propos, Salles from a
+            // salle…), as the web bar does; already there, back to the top
+            const ici = this.router.url.split(/[?#]/)[0];
+            if (retouche && ici === id) scrollTo({ top: 0, behavior: this.prefs.animer() ? 'smooth' : 'auto' });
+            else void this.router.navigateByUrl(id);
+          },
+          rail ? 'rail' : 'bas',
+        );
       });
     }
     // The lens of the iOS tab bar follows the selected destination

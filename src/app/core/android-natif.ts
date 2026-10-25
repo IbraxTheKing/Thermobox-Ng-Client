@@ -16,6 +16,9 @@ export interface OngletNatif {
   badge?: boolean;
 }
 
+/** The bar at the bottom (phone held upright) or the rail on the left (tablet, phone sideways). */
+export type ModeBarre = 'bas' | 'rail';
+
 /** #RRGGBB ou #AARRGGBB */
 interface CouleursBarre {
   fond: string;
@@ -26,9 +29,9 @@ interface CouleursBarre {
 }
 
 interface ThermoboxNatifPlugin {
-  configurerBarre(o: { onglets: OngletNatif[]; actif: string | null; visible: boolean; sombre: boolean; couleurs: CouleursBarre }): Promise<{ hauteur: number }>;
+  configurerBarre(o: { onglets: OngletNatif[]; actif: string | null; visible: boolean; sombre: boolean; couleurs: CouleursBarre; mode: ModeBarre }): Promise<{ hauteur: number; largeur?: number }>;
   selectionnerOnglet(o: { id: string | null }): Promise<void>;
-  afficherBarre(o: { visible: boolean }): Promise<{ hauteur: number }>;
+  afficherBarre(o: { visible: boolean }): Promise<{ hauteur: number; largeur?: number }>;
   configurerFab(o: { visible: boolean; label?: string; icone?: string; etendu?: boolean; couleurs?: { fond: string; texte: string } }): Promise<void>;
   etendreFab(o: { etendu: boolean }): Promise<void>;
   snackbar(o: { texte: string; longue?: boolean }): Promise<void>;
@@ -41,7 +44,7 @@ interface ThermoboxNatifPlugin {
   }): Promise<{ id: string | null }>;
   addListener(e: 'onglet', f: (d: { id: string; retouche: boolean }) => void): Promise<PluginListenerHandle>;
   addListener(e: 'fab', f: () => void): Promise<PluginListenerHandle>;
-  addListener(e: 'hauteur', f: (d: { hauteur: number; visible: boolean }) => void): Promise<PluginListenerHandle>;
+  addListener(e: 'hauteur', f: (d: { hauteur: number; largeur?: number; visible: boolean }) => void): Promise<PluginListenerHandle>;
   activerRetour(o: { actif: boolean }): Promise<void>;
   addListener(e: 'retour', f: (d: EtapeRetour) => void): Promise<PluginListenerHandle>;
 }
@@ -181,6 +184,7 @@ export class AndroidNatifService {
   /** A sheet of the page is open: the native bar would cover its bottom (its buttons). */
   private feuille = false;
   private barreVoulue = false;
+  private mode: ModeBarre = 'bas';
   private fabCible: HTMLElement | null = null;
   private fabConfig = '';
   private fabEtendu = true;
@@ -197,7 +201,7 @@ export class AndroidNatifService {
     this.root.classList.add('tb-android-natif');
     void plugin.addListener('onglet', ({ id, retouche }) => this.surOnglet?.(id, retouche));
     void plugin.addListener('fab', () => this.fabCible?.click());
-    void plugin.addListener('hauteur', ({ hauteur }) => this.poserHauteur(hauteur));
+    void plugin.addListener('hauteur', ({ hauteur, largeur }) => this.poserHauteur(hauteur, largeur ?? 0));
     // Back: the plugin's (predictive gesture, Android 14+); the App plugin's only with an older
     // build of the plugin
     void App.addListener('backButton', () => this.retour());
@@ -226,18 +230,21 @@ export class AndroidNatifService {
   }
 
   /** Called by the shell whenever its tabs, the current page or the theme change. */
-  configurerBarre(onglets: OngletNatif[], actifId: string | null, visible: boolean, surOnglet: (id: string, retouche: boolean) => void): void {
+  configurerBarre(onglets: OngletNatif[], actifId: string | null, visible: boolean, surOnglet: (id: string, retouche: boolean) => void, mode: ModeBarre = 'bas'): void {
     if (!plugin) return;
-    this.dernier = [onglets, actifId, visible, surOnglet];
+    this.dernier = [onglets, actifId, visible, surOnglet, mode];
     this.surOnglet = surOnglet;
     this.barreVoulue = visible;
-    const o = { onglets, actif: actifId, visible: visible && !this.clavier && !this.feuille, sombre: this.root.dataset['theme'] === 'dark', couleurs: this.couleursBarre() };
+    this.mode = mode;
+    // The bar leaves room for the keyboard and the sheets; the rail, on the side, stays
+    const cachee = mode === 'bas' && (this.clavier || this.feuille);
+    const o = { onglets, actif: actifId, visible: visible && !cachee, sombre: this.root.dataset['theme'] === 'dark', couleurs: this.couleursBarre(), mode };
     const cle = JSON.stringify(o);
     if (cle === this.barreEnvoyee) return;
     this.barreEnvoyee = cle;
     void plugin
       .configurerBarre(o)
-      .then(({ hauteur }) => this.poserHauteur(hauteur))
+      .then(({ hauteur, largeur }) => this.poserHauteur(hauteur, largeur ?? 0))
       .catch((e) => console.error('Barre native', e));
   }
 
@@ -254,10 +261,15 @@ export class AndroidNatifService {
     this.poserHauteur(0);
   }
 
-  private poserHauteur(h: number): void {
+  /** Room taken by the bar at the bottom (h) or by the rail on the left (l), in CSS px. */
+  private poserHauteur(h: number, l = 0): void {
     this.hauteurBarre.set(h);
     if (h > 0) this.root.style.setProperty('--tb-nav-bas', `${h}px`);
     else this.root.style.removeProperty('--tb-nav-bas');
+    // The page moves right of the native rail (its own rail is hidden: shell-android.css)
+    if (l > 0) this.root.style.setProperty('--tb-rail', `${l}px`);
+    else this.root.style.removeProperty('--tb-rail');
+    this.root.classList.toggle('tb-rail-natif', l > 0);
   }
 
   private estChamp(t: EventTarget | null): boolean {
@@ -378,7 +390,8 @@ export class AndroidNatifService {
     if (!plugin) return;
     const web = this.doc.querySelector<HTMLElement>('.tb-page-head > .tb-fab');
     // Hidden while rows are ticked (Gestion), while typing, without the bar (landscape)
-    const visible = !!web && !web.hasAttribute('disabled') && !this.clavier && !this.feuille && this.barreVoulue && !this.doc.querySelector('.tb-barre-on');
+    // Beside a rail (wide screen) the action stays in the header of the page, as on a computer
+    const visible = !!web && !web.hasAttribute('disabled') && !this.clavier && !this.feuille && this.barreVoulue && this.mode === 'bas' && !this.doc.querySelector('.tb-barre-on');
     const label = web?.textContent?.trim() ?? '';
     const icone = iconeNative(web?.querySelector('.pi')?.className ?? '');
     const config = `${visible}|${label}|${icone}|${this.root.dataset['theme']}|${this.root.dataset['ton'] ?? ''}`;

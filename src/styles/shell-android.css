@@ -267,9 +267,10 @@
  * la barre native, posée par AndroidNatifService. Téléphone tenu de côté : le rail de la page.
  */
 @media (max-width: 840px) and (not ((orientation: landscape) and (max-height: 520px))) {
-    :root.tb-android-natif .tb-rail { display: none; }
     :root.tb-android-natif .tb-page-head > .tb-fab { display: none !important; }
 }
+/* Tablet, phone held sideways: the native rail (NavigationRailView) is on the left, --tb-rail its width */
+:root.tb-android-natif .tb-rail { display: none; }
 
 /* Android app: the <select> lists open as native Material lists (AndroidNatifService) */
 .tb-selects-natifs select { pointer-events: none; }

@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 
 import { AuthService } from '../../core/auth';
 import { AvisMajService } from '../../core/avis-maj';
+import { PlateformeService } from '../../core/plateforme';
 import { PreferencesService } from '../../core/preferences';
 import { destinationsDe, placesBarre } from '../../shell/destinations';
 import { TbComptes } from '../../ui/comptes';
@@ -92,7 +93,9 @@ export class PlusPage {
   protected readonly comptes = signal(false);
   protected readonly autresComptes = computed(() => this.auth.comptes().length - 1);
   private readonly prefs = inject(PreferencesService);
+  private readonly plateforme = inject(PlateformeService);
   protected readonly maison = computed(() => this.prefs.style() !== 'panneau');
-  protected readonly autres = computed(() => destinationsDe(this.auth, this.maison()).slice(placesBarre(this.maison())));
+  /** The pages that are not in the bar; beside a rail (tablet, phone sideways), every page is in it. */
+  protected readonly autres = computed(() => (this.plateforme.barreBas() ? destinationsDe(this.auth, this.maison()).slice(placesBarre(this.maison())) : []));
   protected readonly role = computed(() => ({ ADMIN: 'Administrateur', GESTIONNAIRE: 'Gestionnaire', VIEWER: 'Lecteur' })[this.auth.user()?.type ?? 'VIEWER'] ?? '');
 }
