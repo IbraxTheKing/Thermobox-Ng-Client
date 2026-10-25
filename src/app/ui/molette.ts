@@ -18,6 +18,10 @@ const CADENCE = [150, 110, 80, 60];
  * which repeat when held). The arc spans the range people set at home (10-30 °C); the bounds of a
  * consigne still apply.
  *
+ * While the consigne is set, it becomes the big figure in the centre and the temperature goes
+ * underneath; a line across the track always shows where the temperature is now (for everyone,
+ * a VIEWER too, who sees the dial without its knob).
+ *
  * Only the knob turns the dial: a finger that lands on the arc to scroll the page, or a click
  * beside it, changes nothing.
  *
@@ -34,6 +38,12 @@ const CADENCE = [150, 110, 80, 60];
           <!-- The filled part: the same path, drawn up to the consigne (it slides, not jumps) -->
           <path class="tb-molette-arc" [attr.d]="piste()" pathLength="270" [style.stroke-dasharray]="angle() + ' 1000'" />
         }
+        @if (repere() != null) {
+          <!-- Where the temperature is now, across the track: the gap to the consigne at a glance -->
+          <g class="tb-molette-repere" [style.transform]="'rotate(' + repere() + 'deg)'">
+            <line [attr.x1]="bordInterieur[0]" [attr.y1]="bordInterieur[1]" [attr.x2]="bordExterieur[0]" [attr.y2]="bordExterieur[1]" />
+          </g>
+        }
         @if (modifiable() && position() != null) {
           <g class="tb-molette-poignee" [style.transform]="'rotate(' + angle() + 'deg)'">
             <!-- A wider ring than the knob, easier to catch with a finger -->
@@ -48,12 +58,22 @@ const CADENCE = [150, 110, 80, 60];
           </g>
         }
       </svg>
-      <div class="tb-molette-centre">
-        <small>Il fait</small>
-        <b class="tb-chiffres" [attr.data-vt]="vtId() != null ? 'salle-temp' : null" [attr.data-vt-id]="vtId()">{{ unite.t(temperature()) }}<span>°</span></b>
-        <!-- Re-created at each step: the new figure pops in -->
-        @for (o of [objectif()]; track o) {
-          <em [class.tb-molette-nouvelle]="modifie()">{{ o }}</em>
+      <div class="tb-molette-centre" [class.tb-molette-reglage]="reglage()">
+        <!-- Being set: the figure is the consigne asked for, the temperature goes underneath -->
+        @if (reglage()) {
+          <small>Objectif</small>
+          @for (v of [texte(valeur())]; track v) {
+            <b class="tb-chiffres tb-molette-objectif">{{ v }}<span>°</span></b>
+          }
+          <em>Il fait {{ unite.t(temperature()) }}°</em>
+        } @else {
+          <small>Il fait</small>
+          <b class="tb-chiffres" [attr.data-vt]="vtId() != null ? 'salle-temp' : null" [attr.data-vt-id]="vtId()">{{ unite.t(temperature()) }}<span>°</span></b>
+          @if (consigne() != null) {
+            <em>Objectif {{ unite.t(consigne()) }}°</em>
+          } @else {
+            <em>Pas d'objectif</em>
+          }
         }
       </div>
     </div>
@@ -108,10 +128,14 @@ export class TbMolette {
     const v = this.valeur();
     return v != null && (c == null || Math.abs(this.unite.saisieVersCelsius(v) - c) >= 0.05);
   });
-  protected readonly objectif = computed(() => {
-    if (this.valeur() != null && this.modifie()) return `Objectif ${this.texte(this.valeur())}°`;
-    if (this.consigne() != null) return `Objectif ${this.unite.t(this.consigne())}°`;
-    return "Pas d'objectif";
+  /** The consigne is being set (held, or turned away from the current one): it is the big figure. */
+  protected readonly reglage = computed(() => this.valeur() != null && (this.modifie() || this.saisie() || this.maintenu() !== 0));
+  /** Degrees along the arc of the temperature now (the line across the track), null without it. */
+  protected readonly repere = computed(() => {
+    const t = this.temperature();
+    if (t == null) return null;
+    const v = Math.min(this.haut(), Math.max(this.bas(), this.unite.depuisCelsius(t)));
+    return ((v - this.bas()) / (this.haut() - this.bas())) * OUVERTURE;
   });
 
   /** The whole track, and the start of the arc (where the knob sits before it is rotated). */
@@ -121,6 +145,8 @@ export class TbMolette {
     return `M${x1.toFixed(1)},${y1.toFixed(1)} A${R},${R} 0 1 1 ${x2.toFixed(1)},${y2.toFixed(1)}`;
   });
   protected readonly depart = point(0);
+  protected readonly bordInterieur = point(0, R - 17);
+  protected readonly bordExterieur = point(0, R + 17);
 
   constructor() {
     inject(DestroyRef).onDestroy(() => this.relacher());
@@ -218,8 +244,8 @@ export class TbMolette {
   }
 }
 
-/** Point of the arc [a] degrees from its start. */
-function point(a: number): [number, number] {
+/** Point of the arc [a] degrees from its start (at [rayon] from the centre). */
+function point(a: number, rayon = R): [number, number] {
   const r = ((DEBUT + a) * Math.PI) / 180;
-  return [C + R * Math.cos(r), C + R * Math.sin(r)];
+  return [C + rayon * Math.cos(r), C + rayon * Math.sin(r)];
 }

@@ -25,6 +25,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.view.ContextThemeWrapper;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.core.widget.NestedScrollView;
 
 import com.getcapacitor.JSArray;
@@ -40,6 +43,7 @@ import com.google.android.material.bottomsheet.BottomSheetDragHandleView;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
 import com.google.android.material.navigation.NavigationBarView;
+import com.google.android.material.navigationrail.NavigationRailView;
 import com.google.android.material.snackbar.Snackbar;
 
 import org.json.JSONException;
@@ -53,7 +57,9 @@ import java.util.Map;
 /**
  * Composants natifs Material 3 de Thermobox, posés par-dessus la page web (WebView) :
  * <ul>
- *   <li>la barre de navigation du bas (NavigationBarView / BottomNavigationView) : indicateur
+ *   <li>la navigation (NavigationBarView) : la barre du bas sur un téléphone tenu droit
+ *   (BottomNavigationView), un rail à gauche sur une tablette ou un téléphone tenu de côté
+ *   (NavigationRailView), comme le rail d'icônes de l'interface sur ordinateur ; indicateur
  *   pilule, ondes, badges et retour haptique du système ;</li>
  *   <li>le bouton d'action principal de la page (ExtendedFloatingActionButton), qui se réduit à son
  *   icône quand on fait défiler la page vers le bas ;</li>
@@ -63,8 +69,8 @@ import java.util.Map;
  * La page web garde tout le reste. Les couleurs viennent de la page (thème ThermoBox, clair ou
  * sombre, teinte de l'état) : l'application reste ThermoBox, les composants sont ceux d'Android.
  *
- * Événements : « onglet » ({ id, retouche }), « fab », « hauteur » ({ hauteur } en px CSS : place
- * prise en bas de l'écran par la barre, système compris), « retour » ({ etape, progres, bord, y }).
+ * Événements : « onglet » ({ id, retouche }), « fab », « hauteur » ({ hauteur, largeur } en px
+ * CSS : place prise en bas de l'écran par la barre, système compris, ou à gauche par le rail), « retour » ({ etape, progres, bord, y }).
  *
  * Retour (geste ou bouton) : une fois activé par la page (activerRetour), le plugin le prend
  * avant l'activité et le décrit à la page étape par étape (« debut », « progres » de 0 à 1 pendant
@@ -101,7 +107,10 @@ public class ThermoboxNatifPlugin extends Plugin {
         ICONES.put("reglages", R.drawable.tb_reglages);
     }
 
-    @Nullable private BottomNavigationView barre;
+    @Nullable private NavigationBarView barre;
+    /** « bas » (barre du bas) ou « rail » (rail à gauche). */
+    private String mode = "bas";
+    private int derniereLargeur = -1;
     @Nullable private ExtendedFloatingActionButton fab;
     private final List<String> onglets = new ArrayList<>();
     /** La sélection vient de la page : pas d'événement « onglet » en retour. */
@@ -157,7 +166,8 @@ public class ThermoboxNatifPlugin extends Plugin {
 
     /**
      * onglets : [{ id, label, icone, badge }], actif : id ou null, visible, sombre,
-     * couleurs : { fond, normal, actif, indicateur, badge }.
+     * couleurs : { fond, normal, actif, indicateur, badge }, mode : « bas » (5 onglets au plus) ou
+     * « rail » (7 au plus).
      */
     @PluginMethod
     public void configurerBarre(PluginCall call) {
@@ -166,11 +176,17 @@ public class ThermoboxNatifPlugin extends Plugin {
         boolean visible = Boolean.TRUE.equals(call.getBoolean("visible", true));
         JSObject couleurs = call.getObject("couleurs");
         Boolean modeSombre = call.getBoolean("sombre");
+        String modeVoulu = "rail".equals(call.getString("mode")) ? "rail" : "bas";
         ui(() -> {
             try {
-                if (modeSombre != null && modeSombre != sombre) {
-                    // Les vues sont recréées dans le bon thème (ondes, états)
-                    sombre = modeSombre;
+                boolean autreTheme = modeSombre != null && modeSombre != sombre;
+                if (autreTheme || !modeVoulu.equals(mode)) {
+                    // Les vues sont recréées dans le bon thème (ondes, états) ou sous l'autre forme
+                    if (modeSombre != null) sombre = modeSombre;
+                    mode = modeVoulu;
+                    if (fondanime != null) fondanime.cancel();
+                    fondBarre = null;
+                    derniereLargeur = -1;
                     retirer(barre);
                     barre = null;
                     // The new bar has no tabs yet: filled again below (it stayed empty, then
@@ -178,7 +194,7 @@ public class ThermoboxNatifPlugin extends Plugin {
                     onglets.clear();
                     derniereHauteur = -1;
                 }
-                BottomNavigationView b = obtenirBarre();
+                NavigationBarView b = obtenirBarre();
                 remplir(b, liste);
                 colorer(b, couleurs);
                 selectionner(b, actif);
@@ -208,13 +224,29 @@ public class ThermoboxNatifPlugin extends Plugin {
         });
     }
 
-    private BottomNavigationView obtenirBarre() {
+    private NavigationBarView obtenirBarre() {
         if (barre != null) return barre;
-        BottomNavigationView b = new BottomNavigationView(contexte());
+        NavigationBarView b;
+        FrameLayout.LayoutParams lp;
+        if ("rail".equals(mode)) {
+            // Tablet, phone held sideways: the rail of icons of the computers, on the left
+            NavigationRailView r = new NavigationRailView(contexte());
+            r.setMenuGravity(Gravity.TOP | Gravity.CENTER_HORIZONTAL);
+            r.setItemMinimumHeight(px(60));
+            // Under the status bar, above the bar of the system, beside a notch: its own padding
+            ViewCompat.setOnApplyWindowInsetsListener(r, (v, insets) -> {
+                Insets s = insets.getInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout());
+                v.setPadding(s.left, s.top + px(12), 0, s.bottom);
+                return insets;
+            });
+            b = r;
+            lp = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT, Gravity.START);
+        } else {
+            b = new BottomNavigationView(contexte());
+            lp = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.BOTTOM);
+        }
         b.setLabelVisibilityMode(NavigationBarView.LABEL_VISIBILITY_LABELED);
         b.setElevation(0);
-        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.BOTTOM);
         b.setOnItemSelectedListener(item -> {
             if (!selectionParLaPage) {
                 b.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
@@ -237,6 +269,10 @@ public class ThermoboxNatifPlugin extends Plugin {
         return b;
     }
 
+    private boolean enRail() {
+        return barre instanceof NavigationRailView;
+    }
+
     private void envoyerOnglet(MenuItem item, boolean retouche) {
         int i = item.getItemId();
         if (i < 0 || i >= onglets.size()) return;
@@ -246,7 +282,7 @@ public class ThermoboxNatifPlugin extends Plugin {
         notifyListeners("onglet", data);
     }
 
-    private void remplir(BottomNavigationView b, JSArray liste) throws JSONException {
+    private void remplir(NavigationBarView b, JSArray liste) throws JSONException {
         List<JSONObject> items = new ArrayList<>();
         for (int i = 0; i < liste.length(); i++) items.add(liste.getJSONObject(i));
         List<String> ids = new ArrayList<>();
@@ -275,7 +311,7 @@ public class ThermoboxNatifPlugin extends Plugin {
         }
     }
 
-    private void colorer(BottomNavigationView b, @Nullable JSObject c) {
+    private void colorer(NavigationBarView b, @Nullable JSObject c) {
         int fond = couleur(c, "fond", sombre ? 0xFF1B2230 : 0xFFE7EEF8);
         int normal = couleur(c, "normal", sombre ? 0xFFC3CBD8 : 0xFF4C6480);
         int actif = couleur(c, "actif", sombre ? 0xFFE3EAF6 : 0xFF0B2A57);
@@ -299,7 +335,7 @@ public class ThermoboxNatifPlugin extends Plugin {
      * The bar takes the colour of the page: at once the first time, then fading as the page does
      * (« Maison »: a room tinted by its temperature, the dial being turned…).
      */
-    private void teindre(BottomNavigationView b, int fond) {
+    private void teindre(NavigationBarView b, int fond) {
         if (fondanime != null) fondanime.cancel();
         Integer depuis = fondBarre;
         fondBarre = fond;
@@ -313,13 +349,14 @@ public class ThermoboxNatifPlugin extends Plugin {
         fondanime.start();
     }
 
-    private void poserFond(BottomNavigationView b, int fond) {
+    private void poserFond(NavigationBarView b, int fond) {
         b.setBackgroundColor(fond);
-        // Gesture bar / buttons of the system: same colour as the bar under them
-        if (Build.VERSION.SDK_INT < 35) getActivity().getWindow().setNavigationBarColor(fond);
+        // Gesture bar / buttons of the system: same colour as the bar under them (the page is
+        // under them beside a rail)
+        if (Build.VERSION.SDK_INT < 35 && !(b instanceof NavigationRailView)) getActivity().getWindow().setNavigationBarColor(fond);
     }
 
-    private void selectionner(BottomNavigationView b, @Nullable String id) {
+    private void selectionner(NavigationBarView b, @Nullable String id) {
         int i = id == null ? -1 : onglets.indexOf(id);
         selectionParLaPage = true;
         try {
@@ -340,16 +377,19 @@ public class ThermoboxNatifPlugin extends Plugin {
 
     private void montrer(boolean visible) {
         barreVisible = visible;
-        BottomNavigationView b = barre;
+        NavigationBarView b = barre;
         if (b != null) {
+            // The bar slides up from the bottom, the rail in from the left
+            boolean rail = b instanceof NavigationRailView;
             if (visible) {
                 if (b.getVisibility() != View.VISIBLE) {
                     b.setVisibility(View.VISIBLE);
-                    b.setTranslationY(b.getHeight() > 0 ? b.getHeight() : px(80));
+                    if (rail) b.setTranslationX(-(b.getWidth() > 0 ? b.getWidth() : px(80)));
+                    else b.setTranslationY(b.getHeight() > 0 ? b.getHeight() : px(80));
                 }
-                b.animate().translationY(0).setDuration(250).withEndAction(null).start();
+                b.animate().translationX(0).translationY(0).setDuration(250).withEndAction(null).start();
             } else if (b.getVisibility() == View.VISIBLE) {
-                b.animate().translationY(b.getHeight()).setDuration(200).withEndAction(() -> {
+                (rail ? b.animate().translationX(-b.getWidth()) : b.animate().translationY(b.getHeight())).setDuration(200).withEndAction(() -> {
                     if (!barreVisible) b.setVisibility(View.GONE);
                     signalerHauteur();
                 }).start();
@@ -361,17 +401,22 @@ public class ThermoboxNatifPlugin extends Plugin {
 
     private JSObject hauteur() {
         JSObject r = new JSObject();
-        BottomNavigationView b = barre;
-        r.put("hauteur", b != null && barreVisible && b.getHeight() > 0 ? versCss(b.getHeight()) : 0);
+        NavigationBarView b = barre;
+        boolean montree = b != null && barreVisible;
+        r.put("hauteur", montree && !enRail() && b.getHeight() > 0 ? versCss(b.getHeight()) : 0);
+        r.put("largeur", montree && enRail() && b.getWidth() > 0 ? versCss(b.getWidth()) : 0);
         r.put("visible", barreVisible);
         return r;
     }
 
     private void signalerHauteur() {
-        BottomNavigationView b = barre;
-        int h = b != null && barreVisible ? b.getHeight() : 0;
-        if (h == derniereHauteur) return;
+        NavigationBarView b = barre;
+        boolean montree = b != null && barreVisible;
+        int h = montree && !enRail() ? b.getHeight() : 0;
+        int l = montree && enRail() ? b.getWidth() : 0;
+        if (h == derniereHauteur && l == derniereLargeur) return;
         derniereHauteur = h;
+        derniereLargeur = l;
         notifyListeners("hauteur", hauteur());
     }
 
@@ -449,8 +494,8 @@ public class ThermoboxNatifPlugin extends Plugin {
     private void placerFab() {
         ExtendedFloatingActionButton f = fab;
         if (f == null) return;
-        BottomNavigationView b = barre;
-        int bas = px(16) + (b != null && barreVisible ? b.getHeight() : 0);
+        NavigationBarView b = barre;
+        int bas = px(16) + (b != null && barreVisible && !enRail() ? b.getHeight() : 0);
         FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) f.getLayoutParams();
         if (lp.bottomMargin != bas) {
             lp.bottomMargin = bas;

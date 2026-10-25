@@ -222,7 +222,7 @@ a:hover > .tb-logo { transform: none; }
  */
 @media (min-width: 1200px) and (not ((orientation: landscape) and (max-height: 520px))) {
     :root:not([data-barre="reduite"]):not([data-plateforme="android"]) { --tb-rail: 268px; }
-    :where(:root:not([data-barre="reduite"])) {
+    :where(:root:not([data-barre="reduite"]):not([data-plateforme="android"])) {
         .tb-rail {
             inset: 0 auto 0 0;
             width: calc(var(--tb-rail) - 24px);
@@ -345,3 +345,17 @@ a:hover > .tb-logo { transform: none; }
 }
 /* The setting of the side bar only means something where the side bar is */
 @media (max-width: 1199px) { .tb-pref-barre { display: none; } }
+
+/* ============================== Préférences: controls never cut ============================== */
+
+/*
+ * A choice keeps all its buttons: when the row is too narrow for the text and the control side by
+ * side (tablets, the Android buttons with their check mark), the control goes under the text.
+ */
+.tb-pref { flex-wrap: wrap; }
+.tb-pref-text { flex: 1 1 260px; }
+.tb-pref > :is(.tb-segmented, tb-switch) { flex: none; max-width: 100%; margin-left: auto; }
+.tb-segmented > button { flex-shrink: 0; white-space: nowrap; }
+/* A switch is small: it stays beside its text */
+.tb-pref:has(> tb-switch) { flex-wrap: nowrap; }
+.tb-pref:has(> tb-switch) .tb-pref-text { flex-basis: auto; }
