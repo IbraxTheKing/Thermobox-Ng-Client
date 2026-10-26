@@ -81,9 +81,7 @@ export class PreferencesService {
       root.dataset['style'] = this.style();
       root.dataset['unit'] = this.unit() === 'F' ? '°F' : '°C';
       root.dataset['sidebar'] = this.sidebarCollapsed() ? 'collapsed' : 'full';
-      // Colour of the browser / status bar, as the canvas
-      const meta = this.doc.querySelector('meta[name="theme-color"]');
-      meta?.setAttribute('content', this.backgroundColor());
+      // The colour of the window / of the browser bars follows: WindowColorService
     });
     effect(() => {
       write({
@@ -98,14 +96,6 @@ export class PreferencesService {
         buildingOrder: this.buildingOrder(),
       });
     });
-  }
-
-  /** Colour of the page behind everything, for the status bar. */
-  backgroundColor(): string {
-    const panel = this.style() === 'panel';
-    // --tb-background of tokens.css
-    if (this.theme() === 'dark') return panel ? '#181c1a' : '#151b19';
-    return panel ? '#e3e6e0' : '#e9efec';
   }
 
   /**
