@@ -51,8 +51,15 @@
     </div>
   }
 
+  @if (!store.tree()) {
+    <div class="tb-skeleton" aria-busy="true" aria-label="Chargement des bâtiments et salles">
+    @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+      <div class="tb-skeleton-row" [style.--w]="[62, 48, 70, 55, 66, 44][i - 1] + '%'"><span></span><span></span></div>
+    }
+  </div>
+  }
   <ul class="tb-drill-list">
-    @for (n of content(); track n.id) {
+    @for (n of content().slice(0, shownContent.count()); track n.id) {
       <li class="tb-drill-item">
         @if (isFolder(n)) {
           <button type="button" class="tb-drill-main" (click)="open(n.id)">
@@ -69,6 +76,7 @@
       </li>
     }
   </ul>
+  <tb-more [total]="content().length" [shown]="shownContent.count()" (more)="shownContent.more()" />
 
   @if (store.tree() && !content().length) {
     <div class="tb-empty tb-empty-sm">{{ folderId() == null ? 'Aucun bâtiment pour le moment.' : 'Rien ici pour le moment.' }}</div>
@@ -111,22 +119,29 @@
   @if (auth.admin()) {
     <div
       class="tb-tree-root"
-      [class.tb-hover]="hover() === 'racine'"
+      [class.tb-hover]="hover() === 'root'"
       [class.tb-visible]="slide() != null"
-      (dragover)="onHover($event, 'racine')"
+      (dragover)="onHover($event, 'root')"
       (dragleave)="hover.set(null)"
       (drop)="drop($event, null)"
     >
       <i class="pi pi-link"></i> Premier niveau : déposer ici détache l'élément
     </div>
   }
-  <ng-container *ngTemplateOutlet="branch; context: { $implicit: store.roots() }" />
+  @if (!store.tree()) {
+    <div class="tb-skeleton" aria-busy="true" aria-label="Chargement des bâtiments et salles">
+    @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+      <div class="tb-skeleton-row" [style.--w]="[62, 48, 70, 55, 66, 44][i - 1] + '%'"><span></span><span></span></div>
+    }
+  </div>
+  }
+  <ng-container *ngTemplateOutlet="branch; context: { $implicit: shownChildren(-1, store.roots()), parent: -1, total: store.roots().length }" />
   @if (store.tree() && !store.roots().length) {
     <div class="tb-empty tb-empty-sm">Aucun bâtiment pour le moment.</div>
   }
 </div>
 
-<ng-template #branch let-nodes>
+<ng-template #branch let-nodes let-parent="parent" let-total="total">
   <ul role="group">
     @for (n of nodes; track n.id) {
       <li role="treeitem" [attr.aria-expanded]="children(n.id).length ? !isFolded(n.id) : null">
@@ -188,17 +203,24 @@
         @if (children(n.id).length) {
           <div class="tb-tree-children" [class.tb-folded]="isFolded(n.id)">
             <div>
-              <ng-container *ngTemplateOutlet="branch; context: { $implicit: children(n.id) }" />
+              @if (drawChildren(n.id)) {
+                <ng-container *ngTemplateOutlet="branch; context: { $implicit: shownChildren(n.id, children(n.id)), parent: n.id, total: children(n.id).length }" />
+              }
             </div>
           </div>
         }
+      </li>
+    }
+    @if (total > nodes.length) {
+      <li class="tb-tree-more">
+        <button type="button" class="tb-btn tb-flat" (click)="moreChildren(parent)"><i class="pi pi-angle-down"></i>Afficher la suite ({{ total - nodes.length }} de plus)</button>
       </li>
     }
   </ul>
 </ng-template>
 
 <!-- Phones: actions on the element picked with ⋮ -->
-<tb-sheet [open]="selection() != null" (ouvertChange)="!$event && selection.set(null)" title="" noHeader nativeMenu [width]="560">
+<tb-sheet [open]="selection() != null" (openChange)="!$event && selection.set(null)" title="" noHeader nativeMenu [width]="560">
   @if (selection(); as s) {
     <div class="tb-sheet-head">
       <i class="pi tb-tree-icon" [class]="icon(s)"></i>

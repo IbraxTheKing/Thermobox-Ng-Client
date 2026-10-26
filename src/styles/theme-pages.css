@@ -390,3 +390,28 @@ tb-dial { display: flex; flex-direction: column; align-items: center; }
 /* − / + held down: the button holds its pressed look while it repeats */
 .tb-stepper button.tb-held { background: var(--md-on-surface); color: var(--tb-background); }
 .tb-stepper button { touch-action: manipulation; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+
+/* A block of cards far from the screen (many rooms): an empty box of its height, a whole row wide */
+.tb-vph { grid-column: 1 / -1; min-height: 1px; pointer-events: none; }
+
+/*
+ * A card whose 24 h curve is on its way: a faint still line, and a light passing over it (a
+ * transform only: no repaint, cheap for dozens of cards at once).
+ */
+.tb-curve-wait { position: absolute; left: 0; right: 0; overflow: hidden; pointer-events: none; }
+.tb-room-tile-curve-wait { bottom: 0; height: 46px; }
+.tb-cell-curve-wait { bottom: 34px; height: 38px; }
+.tb-curve-wait svg { width: 100%; height: 100%; }
+.tb-curve-wait path { fill: none; stroke: var(--f, var(--t, currentColor)); stroke-width: 1.4; stroke-dasharray: 2 4; stroke-linecap: round; opacity: .45; vector-effect: non-scaling-stroke; }
+.tb-curve-wait::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(100deg, transparent 25%, color-mix(in srgb, var(--f, var(--t, #fff)) 30%, transparent) 50%, transparent 75%);
+    transform: translateX(-100%);
+    animation: tb-shimmer 1.6s ease-in-out infinite;
+    will-change: transform;
+}
+@media (max-width: 640px) { .tb-cell-curve-wait { display: none; } }
+@media (prefers-reduced-motion: reduce) { .tb-curve-wait::after { animation: none; display: none; } }
+:root[data-motion="off"] .tb-curve-wait::after { display: none; }

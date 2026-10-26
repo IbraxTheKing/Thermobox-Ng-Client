@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
@@ -15,12 +15,13 @@ import { UserService } from '../../services/user.service';
 import { TbAccessTree } from '../../ui/access-tree';
 import { TbPassword } from '../../ui/controls';
 import { TbSheet } from '../../ui/sheet';
+import { ShownCount, TbMore } from '../../ui/more';
 import { bytes } from '../auth/register';
 
 /** Utilisateurs (users.xhtml), ADMIN: accounts, their role and what they may see. */
 @Component({
   selector: 'tb-users-page',
-  imports: [RouterLink, TbSheet, TbPassword, TbAccessTree],
+  imports: [RouterLink, TbSheet, TbPassword, TbAccessTree, TbMore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './users.html',
 })
@@ -53,12 +54,29 @@ export class UsersPage implements OnInit {
     return this.access.users().filter((l) => (!word || l.user.username.toLowerCase().includes(word)) && (this.roleFilter() == null || l.user.type === this.roleFilter()));
   });
 
+  /** Hundreds of accounts: a part at a time, their accesses read as they are shown. */
+  protected readonly shown = new ShownCount(50);
+  protected readonly shownRows = computed(() => this.visible().slice(0, this.shown.count()));
+
   protected count(r: UserRole): number {
     return this.access.users().filter((l) => l.user.type === r).length;
   }
 
   protected initial = initial;
   protected summary = AccessStore.longSummary;
+
+  constructor() {
+    // Another search or role: from the top again
+    effect(() => {
+      this.search();
+      this.roleFilter();
+      untracked(() => this.shown.reset());
+    });
+    effect(() => {
+      const ids = this.shownRows().map((l) => l.user.id!);
+      untracked(() => void this.access.ensure(ids));
+    });
+  }
 
   async ngOnInit(): Promise<void> {
     await this.load();

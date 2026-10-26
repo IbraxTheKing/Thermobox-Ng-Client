@@ -25,7 +25,7 @@ const PACE = [150, 110, 80, 60];
  * Only the knob turns the dial: a finger that lands on the arc to scroll the page, or a click
  * beside it, changes nothing.
  *
- *   <tb-dial [temperature]="e.temperature" [consigne]="e.consigne?.value" [(valeur)]="nouvelle" [couleur]="c" />
+ *   <tb-dial [temperature]="e.temperature" [setpoint]="e.setpoint?.value" [(value)]="newSetpoint" [color]="c" />
  */
 @Component({
   selector: 'tb-dial',

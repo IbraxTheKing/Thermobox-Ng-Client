@@ -37,6 +37,9 @@ declare module 'chart.js' {
   }
 }
 
+/** Beyond this many curves, the chart is drawn without animation. */
+const MAX_ANIMATED = 8;
+
 Chart.register(LineController, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend);
 
 /** One curve. Values in Celsius (shown in the unit of the Preferences page). */
@@ -47,6 +50,8 @@ export interface ChartSeries {
   values: (number | null)[];
   /** setpoint: dashed steps (a setpoint holds until the next one); moyenne: thick line. */
   role?: 'setpoint' | 'average';
+  /** Given: the curve is hidden (true) or shown (false) whatever was toggled before. */
+  hidden?: boolean;
 }
 
 /** Values at one instant, read under the finger (phones). */
@@ -302,13 +307,17 @@ export class TbChart implements OnDestroy {
       this.chart.data.labels = labels;
       this.chart.data.datasets = datasets;
       this.chart.options = options;
-      visible.forEach((v, i) => this.chart!.setDatasetVisibility(i, v));
+      visible.forEach((v, i) => this.chart!.setDatasetVisibility(i, series[i].hidden != null ? !series[i].hidden : v));
       this.chart.update();
       this.read(null);
       return;
     }
     this.chart?.destroy();
     this.chart = new Chart(this.canvas().nativeElement, { type: 'line', data: { labels, datasets }, options, plugins: [crosshair] });
+    if (series.some((s) => s.hidden)) {
+      series.forEach((s, i) => this.chart!.setDatasetVisibility(i, !s.hidden));
+      this.chart.update('none');
+    }
     this.read(null);
   }
 
@@ -323,7 +332,10 @@ export class TbChart implements OnDestroy {
       maintainAspectRatio: false,
       layout: { padding: { top: mobile ? 8 : 4, right: mobile ? 0 : 4, bottom: 0, left: 0 } },
       // Phones: shorter (each frame of it redraws the whole chart, during the page transition)
-      animation: animate ? { duration: mobile ? 450 : 900, easing: 'easeOutQuart' } : false,
+      // Many curves (the measurements page): drawn at once, an animation of each would cost more
+      // than it shows
+      animation: animate && n <= MAX_ANIMATED ? { duration: mobile ? 450 : 900, easing: 'easeOutQuart' } : false,
+      normalized: true,
       interaction: { mode: 'index', intersect: false },
       // Phones: the values under the finger go to the reading strip; lifted, back to the last ones
       onHover: mobile

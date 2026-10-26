@@ -49,7 +49,8 @@ import { RoomSummary } from './summary';
         }
         <span class="tb-cell-name" data-vt="room-name" [attr.data-vt-id]="s.id">{{ s.name }}</span>
         @if (r().trend; as t) {
-          <svg class="tb-cell-curve" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true"><path [attr.d]="t.row" /></svg>
+          <svg class="tb-cell-curve" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true"><path [attr.d]="t.row" /></svg>        } @else if (r().trend === undefined) {
+          <span class="tb-curve-wait tb-cell-curve-wait" aria-hidden="true"><svg viewBox="0 0 100 40" preserveAspectRatio="none"><path d="M0 26 C 12 18, 22 16, 34 22 S 56 34, 68 26 S 88 12, 100 18" /></svg></span>
         }
         <span class="tb-cell-bottom">
           <b class="tb-figures" data-vt="room-temp" [attr.data-vt-id]="s.id" [tbWatch]="s.temperature">{{ unit.t(s.temperature) }}°</b>
@@ -88,7 +89,9 @@ import { RoomSummary } from './summary';
         @if (r().trend; as t) {
           <svg class="tb-room-tile-curve" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true">
             <path class="tb-room-tile-area" [attr.d]="t.area" /><path class="tb-room-tile-line" [attr.d]="t.row" />
-          </svg>
+          </svg>        } @else if (r().trend === undefined) {
+          <!-- Its curve is on its way: a faint line with a light passing over it -->
+          <span class="tb-curve-wait tb-room-tile-curve-wait" aria-hidden="true"><svg viewBox="0 0 100 40" preserveAspectRatio="none"><path d="M0 28 C 12 20, 22 18, 34 24 S 56 36, 68 28 S 88 14, 100 20" /></svg></span>
         }
       </article>
     }

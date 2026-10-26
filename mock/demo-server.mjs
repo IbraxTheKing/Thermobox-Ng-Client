@@ -8,6 +8,9 @@
  *   npm run demo            # this server on :8080 + ng serve (proxy /api → :8080)
  *   node mock/demo-server.mjs [--port 8080] [--app dist/Thermobox-Ng-Client/browser] [--api v2|v1|old]
  *
+ * --seed huge: the large set of the server's DBPopulate (10 buildings, 320 rooms, 960 devices,
+ * 30 days of measurements every 10 minutes, 500 accounts user001… / user1234, 20 groups).
+ *
  * --api: v2 (default) a 26.12 server; v1 a 26.11 server (French API and /api/server only); old a
  * server before 26.11 (French API only).
  *
@@ -18,6 +21,7 @@
  */
 import { createServer } from 'node:http';
 import { randomBytes } from 'node:crypto';
+import { gzipSync } from 'node:zlib';
 import { readFile, stat } from 'node:fs/promises';
 import { extname, join, normalize, resolve } from 'node:path';
 
@@ -36,7 +40,10 @@ const API = option('api', 'v2');
 const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;
-const MEASURE_STEP = 15 * MINUTE;
+/** demo: the small set; huge: as the server's DBPopulate "huge" (960 devices, 4 million measurements). */
+const SEED = option('seed', 'demo');
+const MEASURE_STEP = (SEED === 'huge' ? 10 : 15) * MINUTE;
+const HISTORY_DAYS = SEED === 'huge' ? 30 : 31;
 
 let nextId = 1;
 const id = () => nextId++;
@@ -48,94 +55,192 @@ const users = [
   { id: id(), username: 'camille', password: 'camille1234', type: 'VIEWER' },
 ];
 
-/** Elements: { id, name, kind }, links child → parent. */
+/** Elements: { id, name, kind }, links child → parent (and the children of each, rebuilt on change). */
 const elements = [];
+const byId = new Map();
 const parents = new Map();
+let childIndex = null;
+const setParent = (childId, parentId) => {
+  if (parentId == null) parents.delete(childId);
+  else parents.set(childId, parentId);
+  childIndex = null;
+};
 function element(name, kind, parent) {
   const e = { id: id(), name, kind };
   elements.push(e);
-  if (parent) parents.set(e.id, parent.id);
+  byId.set(e.id, e);
+  if (parent) setParent(e.id, parent.id);
   return e;
 }
-const bldA = element('Bâtiment A', 'BUILDING');
-const fl1 = element('Étage 1', 'FLOOR', bldA);
-const s101 = element('Salle 101', 'ROOM', fl1);
-const s102 = element('Salle 102', 'ROOM', fl1);
-const fl2 = element('Étage 2', 'FLOOR', bldA);
-const s201 = element('Amphithéâtre', 'ROOM', fl2);
-const s202 = element('Bibliothèque', 'ROOM', fl2);
-const bldB = element('Bâtiment B', 'BUILDING');
-const meeting = element('Salle de réunion', 'ROOM', bldB);
-const serverRoom = element('Salle serveurs', 'ROOM', bldB);
-const lobby = element('Accueil', 'ROOM', bldB);
-const devices = [
-  [element('Boîtier 101-A', 'DEVICE', s101), 21.2],
-  [element('Boîtier 101-B', 'DEVICE', s101), 20.6],
-  [element('Boîtier 102', 'DEVICE', s102), 19.1],
-  [element('Boîtier amphi nord', 'DEVICE', s201), 22.4],
-  [element('Boîtier amphi sud', 'DEVICE', s201), 23.1],
-  [element('Boîtier biblio', 'DEVICE', s202), 20.9],
-  [element('Boîtier réunion', 'DEVICE', meeting), 21.4],
-  [element('Boîtier baie 1', 'DEVICE', serverRoom), 18.4],
-  [element('Boîtier baie 2', 'DEVICE', serverRoom), 19.7],
-  [element('Boîtier accueil', 'DEVICE', lobby), 17.6],
-  [element('Boîtier 0x3F2A', 'DEVICE', null), 20.2],
-];
+function removeElement(e) {
+  elements.splice(elements.indexOf(e), 1);
+  byId.delete(e.id);
+  for (const [c, p] of [...parents]) if (p === e.id || c === e.id) parents.delete(c);
+  childIndex = null;
+}
 
-/** Temperatures: { id, type: 'setpoint' | 'measurement', value, date (ms), room (element id) } */
-const temperatures = [];
+/** Setpoints: { id, type: 'setpoint', value, date (ms), room (element id) }, by element too. */
+const setpoints = [];
+const setpointsOf = new Map();
 function temperature(type, value, date, room) {
+  if (type === 'measurement') return addMeasurement(room, value, date);
   const t = { id: id(), type, value: Math.round(value * 10) / 10, date, room };
-  temperatures.push(t);
+  setpoints.push(t);
+  if (room != null) setpointsOf.set(room, [...(setpointsOf.get(room) ?? []), t]);
   return t;
 }
 
-const now = Date.now();
-temperature('setpoint', 21, now - 40 * DAY, bldA.id);
-temperature('setpoint', 20.5, now - 6 * DAY, bldA.id);
-temperature('setpoint', 21, now - 2 * DAY, bldA.id);
-temperature('setpoint', 21.5, now - 40 * DAY, bldB.id);
-temperature('setpoint', 18, now - 40 * DAY, serverRoom.id);
-temperature('setpoint', 22.5, now - 3 * DAY, s201.id);
+/**
+ * Measurements, per device, as columns (millions of them for the huge set): dates and values,
+ * NaN for one deleted. Their id: MEASURE_ID + device × 10^5 + index. Those added by hand without
+ * a device are kept aside.
+ */
+const MEASURE_ID = 1e9;
+const series = new Map();
+const loose = [];
+function seriesOf(deviceId) {
+  let s = series.get(deviceId);
+  if (!s) series.set(deviceId, (s = { t: [], v: [] }));
+  return s;
+}
+function addMeasurement(deviceId, value, date) {
+  const v = Math.round(value * 10) / 10;
+  if (deviceId == null) {
+    const m = { id: id(), type: 'measurement', value: v, date, room: null };
+    loose.push(m);
+    return m;
+  }
+  const s = seriesOf(deviceId);
+  // Kept in date order (a reading by hand in the past goes to its place)
+  let i = s.t.length;
+  while (i > 0 && s.t[i - 1] > date) i--;
+  s.t.splice(i, 0, date);
+  s.v.splice(i, 0, v);
+  return { id: MEASURE_ID + deviceId * 1e5 + i, type: 'measurement', value: v, date, room: deviceId };
+}
+function measurementById(mid) {
+  if (mid < MEASURE_ID) return null;
+  const deviceId = Math.floor((mid - MEASURE_ID) / 1e5);
+  const i = (mid - MEASURE_ID) % 1e5;
+  const s = series.get(deviceId);
+  return s && i < s.t.length && !Number.isNaN(s.v[i]) ? { s, i, deviceId } : null;
+}
 
-// 30 days of measures per box: a daily cycle around its own level, drawn towards the setpoint
-const historyStart = Math.floor((now - 31 * DAY) / MEASURE_STEP) * MEASURE_STEP;
+const now = Date.now();
+const devices = [];
+let bldA, bldB, s101, s201, serverRoom;
+if (SEED === 'huge') {
+  // 10 buildings × 4 floors × 8 rooms × 3 devices, 50 devices not attached, 500 limited accounts, 20 groups
+  for (let b = 1; b <= 10; b++) {
+    const bld = element(`Bâtiment ${String.fromCharCode(64 + b)}`, 'BUILDING');
+    temperature('setpoint', 20 + (b % 3) * 0.5, now - 20 * DAY, bld.id);
+    for (let f = 0; f < 4; f++) {
+      const fl = element(`Étage ${f}`, 'FLOOR', bld);
+      if (f === 3) temperature('setpoint', 19, now - 10 * DAY, fl.id);
+      for (let r = 1; r <= 8; r++) {
+        const room = element(`Salle ${String.fromCharCode(64 + b)}${f}${String(r).padStart(2, '0')}`, 'ROOM', fl);
+        if (r === 8) temperature('setpoint', 17 + (b + f) % 5, now - 5 * DAY, room.id);
+        for (let k = 1; k <= 3; k++) devices.push([element(`Boîtier ${room.name.slice(6)}-${k}`, 'DEVICE', room), 17 + ((b * 7 + f * 3 + r + k) % 70) / 10]);
+      }
+    }
+  }
+  for (let k = 1; k <= 50; k++) devices.push([element(`Boîtier 0x${(0x4000 + k).toString(16).toUpperCase()}`, 'DEVICE', null), 20]);
+  const buildings = elements.filter((e) => e.kind === 'BUILDING');
+  for (let u = 1; u <= 500; u++) users.push({ id: id(), username: `user${String(u).padStart(3, '0')}`, password: 'user1234', type: u % 10 === 0 ? 'MANAGER' : 'VIEWER' });
+} else {
+  bldA = element('Bâtiment A', 'BUILDING');
+  const fl1 = element('Étage 1', 'FLOOR', bldA);
+  s101 = element('Salle 101', 'ROOM', fl1);
+  const s102 = element('Salle 102', 'ROOM', fl1);
+  const fl2 = element('Étage 2', 'FLOOR', bldA);
+  s201 = element('Amphithéâtre', 'ROOM', fl2);
+  const s202 = element('Bibliothèque', 'ROOM', fl2);
+  bldB = element('Bâtiment B', 'BUILDING');
+  const meeting = element('Salle de réunion', 'ROOM', bldB);
+  serverRoom = element('Salle serveurs', 'ROOM', bldB);
+  const lobby = element('Accueil', 'ROOM', bldB);
+  devices.push(
+    [element('Boîtier 101-A', 'DEVICE', s101), 21.2],
+    [element('Boîtier 101-B', 'DEVICE', s101), 20.6],
+    [element('Boîtier 102', 'DEVICE', s102), 19.1],
+    [element('Boîtier amphi nord', 'DEVICE', s201), 22.4],
+    [element('Boîtier amphi sud', 'DEVICE', s201), 23.1],
+    [element('Boîtier biblio', 'DEVICE', s202), 20.9],
+    [element('Boîtier réunion', 'DEVICE', meeting), 21.4],
+    [element('Boîtier baie 1', 'DEVICE', serverRoom), 18.4],
+    [element('Boîtier baie 2', 'DEVICE', serverRoom), 19.7],
+    [element('Boîtier accueil', 'DEVICE', lobby), 17.6],
+    [element('Boîtier 0x3F2A', 'DEVICE', null), 20.2],
+  );
+  temperature('setpoint', 21, now - 40 * DAY, bldA.id);
+  temperature('setpoint', 20.5, now - 6 * DAY, bldA.id);
+  temperature('setpoint', 21, now - 2 * DAY, bldA.id);
+  temperature('setpoint', 21.5, now - 40 * DAY, bldB.id);
+  temperature('setpoint', 18, now - 40 * DAY, serverRoom.id);
+  temperature('setpoint', 22.5, now - 3 * DAY, s201.id);
+}
+
+// The history of each device: a daily cycle around its own level, a slow drift, some noise
+const historyStart = Math.floor((now - HISTORY_DAYS * DAY) / MEASURE_STEP) * MEASURE_STEP;
 for (const [b, level] of devices) {
-  const phase = Math.random() * Math.PI * 2;
+  const phase = (b.id * 2.399) % (Math.PI * 2);
+  const s = seriesOf(b.id);
   for (let t = historyStart; t <= now; t += MEASURE_STEP) {
-    const hour = new Date(t).getHours() + new Date(t).getMinutes() / 60;
+    const hour = ((t / HOUR) % 24 + 24) % 24;
     const day = Math.sin(((hour - 6) / 24) * Math.PI * 2) * 0.9;
     const slow = Math.sin(t / (3 * DAY) + phase) * 0.6;
-    temperature('measurement', level + day + slow + (Math.random() - 0.5) * 0.25, t, b.id);
+    s.t.push(t);
+    s.v.push(Math.round((level + day + slow + (Math.random() - 0.5) * 0.25) * 10) / 10);
   }
 }
 
-// Every 30 s, each box reports
+// Every 30 s, each device reports
 setInterval(() => {
   const t = Date.now();
   for (const [b, level] of devices) {
     const last = lastMeasurement(b.id);
     const target = effectiveSetpoint(parents.get(b.id) ? elementById(parents.get(b.id)) : b)?.setpoint.value ?? level;
     const v = (last?.value ?? level) + (target - (last?.value ?? level)) * 0.04 + (Math.random() - 0.5) * 0.2;
-    temperature('measurement', v, t, b.id);
+    addMeasurement(b.id, v, t);
   }
 }, 30_000).unref();
 
-const favorites = new Map([[1, new Set([s101.id, serverRoom.id])]]);
+const favorites = new Map([[1, new Set(SEED === 'huge' ? [] : [s101.id, serverRoom.id])]]);
 /** Limited users: user id → granted element ids. Absent: sees everything. */
-const restricted = new Map([[3, new Set([bldA.id])], [4, new Set()]]);
-const groups = [{ id: id(), name: 'Équipe bâtiment B', description: 'Techniciens du bâtiment B', members: new Set([4]), elements: new Set([bldB.id]) }];
+const restricted = new Map(SEED === 'huge' ? [] : [[3, new Set([bldA.id])], [4, new Set()]]);
+const groups = SEED === 'huge' ? [] : [{ id: id(), name: 'Équipe bâtiment B', description: 'Techniciens du bâtiment B', members: new Set([4]), elements: new Set([bldB.id]) }];
+if (SEED === 'huge') {
+  const buildings = elements.filter((e) => e.kind === 'BUILDING');
+  const floors = elements.filter((e) => e.kind === 'FLOOR');
+  restricted.set(3, new Set([buildings[0].id]));
+  for (const u of users.slice(4)) restricted.set(u.id, new Set([(u.id % 3 ? floors[u.id % floors.length] : buildings[u.id % buildings.length]).id]));
+  for (let g = 1; g <= 20; g++) {
+    groups.push({ id: id(), name: `Équipe ${g}`, description: `Techniciens du bâtiment ${String.fromCharCode(64 + ((g - 1) % 10) + 1)}`, members: new Set(users.slice(4 + g * 20, 4 + g * 20 + 15).map((u) => u.id)), elements: new Set([buildings[(g - 1) % 10].id]) });
+  }
+}
 const images = new Map();
 const settings = { style: 'glass' };
 const tokens = new Map();
 
 // ================================================================ hierarchy and climate
 
-const elementById = (i) => elements.find((e) => e.id === i) ?? null;
-const childrenOf = (p) => elements.filter((e) => parents.get(e.id) === p.id).sort(byKind);
+const elementById = (i) => byId.get(i) ?? null;
 const KIND_ORDER = ['BUILDING', 'FLOOR', 'ROOM', 'DEVICE'];
 function byKind(a, b) {
   return KIND_ORDER.indexOf(a.kind) - KIND_ORDER.indexOf(b.kind) || a.name.localeCompare(b.name, 'fr');
+}
+function childrenOf(p) {
+  if (!childIndex) {
+    childIndex = new Map();
+    for (const e of elements) {
+      const pid = parents.get(e.id);
+      if (pid == null) continue;
+      if (!childIndex.has(pid)) childIndex.set(pid, []);
+      childIndex.get(pid).push(e);
+    }
+    for (const l of childIndex.values()) l.sort(byKind);
+  }
+  return childIndex.get(p.id) ?? [];
 }
 function pathOf(e) {
   const r = [];
@@ -164,14 +269,15 @@ const devicesUnder = (e) => (e.kind === 'DEVICE' ? [e] : descendants(e).filter((
 const PARENTS = { BUILDING: [], FLOOR: ['BUILDING'], ROOM: ['FLOOR', 'BUILDING'], DEVICE: ['ROOM'] };
 
 function lastMeasurement(deviceId) {
-  let d = null;
-  for (const t of temperatures) if (t.type === 'measurement' && t.room === deviceId && (!d || t.date > d.date)) d = t;
-  return d;
+  const s = series.get(deviceId);
+  if (!s) return null;
+  for (let i = s.t.length - 1; i >= 0; i--) if (!Number.isNaN(s.v[i])) return { date: s.t[i], value: s.v[i] };
+  return null;
 }
 const measurements = (e) => devicesUnder(e).map((b) => ({ device: b, measurement: lastMeasurement(b.id) }));
 function ownSetpoint(e) {
   let d = null;
-  for (const t of temperatures) if (t.type === 'setpoint' && t.room === e.id && (!d || t.date > d.date)) d = t;
+  for (const t of setpointsOf.get(e.id) ?? []) if (!d || t.date > d.date) d = t;
   return d;
 }
 function effectiveSetpoint(e) {
@@ -185,29 +291,74 @@ function effectiveSetpoint(e) {
   return null;
 }
 function ownSetpoints(e) {
+  const eff = effectiveSetpoint(e);
   return descendants(e)
     .filter((d) => d.kind === 'FLOOR' || d.kind === 'ROOM')
     .map((d) => ({ d, c: ownSetpoint(d) }))
-    .filter((x) => x.c && x.c.date >= (effectiveSetpoint(e)?.setpoint.date ?? 0) && x.c.value !== effectiveSetpoint(e)?.setpoint.value)
+    .filter((x) => x.c && x.c.date >= (eff?.setpoint.date ?? 0) && x.c.value !== eff?.setpoint.value)
     .map((x) => ({ setpoint: x.c, source: x.d, inherited: false }));
 }
+/** First index of [t] (sorted) at or after [x]. */
+function lowerBound(t, x) {
+  let lo = 0;
+  let hi = t.length;
+  while (lo < hi) {
+    const m = (lo + hi) >> 1;
+    if (t[m] < x) lo = m + 1;
+    else hi = m;
+  }
+  return lo;
+}
 function history(e, start, end) {
-  return devicesUnder(e).map((b) => ({
-    device: b,
-    measurements: temperatures.filter((t) => t.type === 'measurement' && t.room === b.id && t.date >= start && t.date <= end).sort((x, y) => x.date - y.date),
-  }));
+  return devicesUnder(e).map((b) => {
+    const s = series.get(b.id) ?? { t: [], v: [] };
+    const out = [];
+    for (let i = lowerBound(s.t, start); i < s.t.length && s.t[i] <= end; i++) if (!Number.isNaN(s.v[i])) out.push({ date: s.t[i], value: s.v[i] });
+    return { device: b, measurements: out };
+  });
 }
 function runningAverage(hs) {
   const dates = [...new Set(hs.flatMap((h) => h.measurements.map((m) => m.date)))].sort((a, b) => a - b);
   const pos = hs.map(() => 0);
   const lastValues = hs.map(() => null);
   return dates.map((d) => {
-    hs.forEach((h, i) => {
-      while (pos[i] < h.measurements.length && h.measurements[pos[i]].date <= d) lastValues[i] = h.measurements[pos[i]++].value;
-    });
-    const v = lastValues.filter((x) => x != null);
-    return { date: d, value: v.reduce((a, b) => a + b, 0) / v.length };
+    let sum = 0;
+    let n = 0;
+    for (let i = 0; i < hs.length; i++) {
+      const m = hs[i].measurements;
+      while (pos[i] < m.length && m[pos[i]].date <= d) lastValues[i] = m[pos[i]++].value;
+      if (lastValues[i] != null) (sum += lastValues[i]), n++;
+    }
+    return { date: d, value: sum / n };
   });
+}
+/** Largest-Triangle-Three-Buckets, as the server (CurveSampling): at most [n] real points. */
+function sample(points, n) {
+  if (!n || points.length <= n || n < 3) return points;
+  const out = [points[0]];
+  const size = (points.length - 2) / (n - 2);
+  let a = 0;
+  for (let i = 0; i < n - 2; i++) {
+    const from = Math.floor((i + 1) * size) + 1;
+    const to = Math.min(Math.floor((i + 2) * size) + 1, points.length);
+    let ax = 0;
+    let ay = 0;
+    const nextTo = Math.min(Math.floor((i + 3) * size) + 1, points.length);
+    for (let k = to; k < nextTo; k++) (ax += points[k].date), (ay += points[k].value);
+    const cnt = Math.max(1, nextTo - to);
+    ax /= cnt;
+    ay /= cnt;
+    let best = from;
+    let area = -1;
+    for (let k = from; k < to; k++) {
+      const s = Math.abs((points[a].date - ax) * (points[k].value - points[a].value) - (points[a].date - points[k].date) * (ay - points[a].value));
+      if (s > area) (area = s), (best = k);
+    }
+    out.push(points[best]);
+    a = best;
+  }
+  out.push(points[points.length - 1]);
+  return out;
 }
 
 // ================================================================ accesses
@@ -296,6 +447,14 @@ const json = (b) => {
   } catch {
     return null;
   }
+};
+/** ?points=N (26.12): at most N points per curve, 1000 by default, 0 for all; false when invalid. A server before 26.12 sends every point. */
+const pointsOf = (q) => {
+  if (API !== 'v2') return 0;
+  const raw = q.get('points');
+  if (raw == null || raw === '') return 1000;
+  const n = Number(raw);
+  return n === 0 || (Number.isInteger(n) && n >= 3 && n <= 10000) ? n : false;
 };
 const period = (q) => {
   const start = Date.parse(q.get('start') ?? '');
@@ -413,9 +572,10 @@ route('GET', '/api/v2/rooms', 'auth', ({ scopeOf }) => ok(elements.filter((e) =>
 route('DELETE', '/api/v2/rooms/{id}', 'ADMIN', ({ p }) => {
   const e = elementById(+p.id);
   if (!e) return empty();
-  for (const [c, parent] of [...parents]) if (parent === e.id || c === e.id) parents.delete(c);
-  elements.splice(elements.indexOf(e), 1);
-  for (let i = temperatures.length - 1; i >= 0; i--) if (temperatures[i].room === e.id) temperatures.splice(i, 1);
+  removeElement(e);
+  series.delete(e.id);
+  setpointsOf.delete(e.id);
+  for (let i = setpoints.length - 1; i >= 0; i--) if (setpoints[i].room === e.id) setpoints.splice(i, 1);
   images.delete(e.id);
   return empty();
 });
@@ -458,14 +618,14 @@ route('GET', '/api/v2/hierarchy/elements/{id}', 'auth', ({ p, user, scopeOf }) =
 });
 function place(e, parentId) {
   if (parentId == null) {
-    parents.delete(e.id);
+    setParent(e.id, null);
     return null;
   }
   const parent = elementById(parentId);
   if (!parent) return error(400, `Unknown parent ${parentId}`);
   if (!PARENTS[e.kind].includes(parent.kind)) return error(400, `${e.kind} cannot go into ${parent.kind}`);
   if (descendants(e).some((d) => d.id === parent.id) || parent.id === e.id) return error(400, 'An element cannot go into what it contains');
-  parents.set(e.id, parent.id);
+  setParent(e.id, parent.id);
   return null;
 }
 route('POST', '/api/v2/hierarchy/elements', 'ADMIN', ({ body, user, scopeOf }) => {
@@ -476,6 +636,8 @@ route('POST', '/api/v2/hierarchy/elements', 'ADMIN', ({ body, user, scopeOf }) =
   const refusal = place(e, c.parentId ?? null);
   if (refusal) return refusal;
   elements.push(e);
+  byId.set(e.id, e);
+  childIndex = null;
   return ok(node(e, user, scopeOf), 201);
 });
 route('PUT', '/api/v2/hierarchy/elements/{id}', 'ADMIN', ({ p, body, user, scopeOf }) => {
@@ -504,34 +666,41 @@ route('GET', '/api/v2/climate/{id}/history', 'auth', ({ p, q, user, scopeOf }) =
   const [start, end] = per;
   const hs = history(e, start, end);
   const c = effectiveSetpoint(e);
-  const setpoints = c ? temperatures.filter((t) => t.type === 'setpoint' && t.room === c.source.id && t.date <= end) : [];
+  const points = pointsOf(q);
+  if (points === false) return error(400, 'points must be 0 (every point) or between 3 and 10000');
+  const curve = (l) => sample(l, points).map(point);
+  const setpoints = c ? (setpointsOf.get(c.source.id) ?? []).filter((t) => t.date <= end) : [];
   // The one in force at the start, then those of the period
   const before = setpoints.filter((t) => t.date < start).sort((a, b) => b.date - a.date)[0];
   const periodSetpoints = [...(before ? [{ ...before, date: start }] : []), ...setpoints.filter((t) => t.date >= start)].sort((a, b) => a.date - b.date);
   const container = e.kind === 'FLOOR' || e.kind === 'BUILDING';
   return ok({
-    devices: container || !seesDevices(user) ? [] : hs.map((h) => ({ id: h.device.id, name: h.device.name, points: h.measurements.map(point) })),
+    devices: container || !seesDevices(user) ? [] : hs.map((h) => ({ id: h.device.id, name: h.device.name, points: curve(h.measurements) })),
     rooms: container
       ? descendants(e)
           .filter((d) => d.kind === 'ROOM')
           .sort(byKind)
           .map((s) => {
             const ids = new Set(devicesUnder(s).map((b) => b.id));
-            return { id: s.id, name: s.name, points: runningAverage(hs.filter((h) => ids.has(h.device.id))).map(point) };
+            return { id: s.id, name: s.name, points: curve(runningAverage(hs.filter((h) => ids.has(h.device.id)))) };
           })
           .filter((s) => s.points.length)
       : [],
-    average: runningAverage(hs).map(point),
+    average: curve(runningAverage(hs)),
     setpoints: periodSetpoints.map(point),
   });
 });
 route('GET', '/api/v2/climate/averages', 'auth', ({ q, scopeOf }) => {
   const per = period(q);
   if (!per) return error(400, 'start and end must be ISO-8601 instants, start before end');
+  const points = pointsOf(q);
+  if (points === false) return error(400, 'points must be 0 (every point) or between 3 and 10000');
+  const ids = [...new Set((q.get('ids') ?? '').split(',').map(Number).filter(Boolean))];
+  if (ids.length > 200) return error(400, 'At most 200 ids per request');
   const r = {};
-  for (const i of (q.get('ids') ?? '').split(',').map(Number).filter(Boolean)) {
+  for (const i of ids) {
     const e = elementById(i);
-    if (e && canSee(scopeOf, e)) r[i] = runningAverage(history(e, per[0], per[1])).map(point);
+    if (e && canSee(scopeOf, e)) r[i] = sample(runningAverage(history(e, per[0], per[1])), points).map(point);
   }
   return ok(r);
 });
@@ -569,13 +738,93 @@ route('PUT', '/api/v2/favorites/{id}', 'auth', ({ p, user, scopeOf }) => {
 });
 route('DELETE', '/api/v2/favorites/{id}', 'auth', ({ p, user }) => (favorites.get(user.id)?.delete(+p.id), empty()));
 
-// ---- temperatures (entities: dates as Jackson arrays)
+// ---- temperatures (entities: dates as Jackson arrays), a page at a time since 26.12
 const temperatureDto = (t) => ({ id: t.id, value: t.value, date: dateArray(t.date) });
-const allowed = (scopeOf) => temperatures.filter((t) => canSee(scopeOf, elementById(t.room)));
-route('GET', '/api/v2/temperatures', 'auth', ({ scopeOf }) => ok(allowed(scopeOf).map(temperatureDto)));
-route('GET', '/api/v2/temperatures/type/{type}', 'auth', ({ p, scopeOf }) => {
-  if (!['setpoint', 'measurement'].includes(p.type)) return ok(null);
-  return ok(allowed(scopeOf).filter((t) => t.type === p.type).map(temperatureDto));
+/**
+ * The temperatures of [type] ('setpoint', 'measurement' or null for both) the user may see, the
+ * latest first, from [offset]: merged from the end of each device's column, never all at once.
+ */
+function* latestFirst(type, scopeOf) {
+  const sources = [];
+  if (type !== 'measurement') sources.push({ list: [...setpoints, ...(type == null ? [] : [])].filter((t) => canSee(scopeOf, elementById(t.room))).sort((a, b) => a.date - b.date), kind: 'list' });
+  if (type !== 'setpoint') {
+    sources.push({ list: [...loose].sort((a, b) => a.date - b.date), kind: 'list' });
+    for (const [deviceId, col] of series) if (canSee(scopeOf, elementById(deviceId))) sources.push({ col, deviceId, kind: 'col' });
+  }
+  // A heap on the date of the next one of each source (from its end)
+  const heap = [];
+  const date = (h) => (h.src.kind === 'col' ? h.src.col.t[h.i] : h.src.list[h.i].date);
+  const push = (h) => {
+    heap.push(h);
+    let k = heap.length - 1;
+    while (k > 0) {
+      const pk = (k - 1) >> 1;
+      if (date(heap[pk]) >= date(heap[k])) break;
+      [heap[pk], heap[k]] = [heap[k], heap[pk]];
+      k = pk;
+    }
+  };
+  const pop = () => {
+    const top = heap[0];
+    const last = heap.pop();
+    if (heap.length) {
+      heap[0] = last;
+      let k = 0;
+      for (;;) {
+        const l = 2 * k + 1;
+        const r = l + 1;
+        let m = k;
+        if (l < heap.length && date(heap[l]) > date(heap[m])) m = l;
+        if (r < heap.length && date(heap[r]) > date(heap[m])) m = r;
+        if (m === k) break;
+        [heap[m], heap[k]] = [heap[k], heap[m]];
+        k = m;
+      }
+    }
+    return top;
+  };
+  for (const src of sources) {
+    const n = src.kind === 'col' ? src.col.t.length : src.list.length;
+    if (n) push({ src, i: n - 1 });
+  }
+  while (heap.length) {
+    const h = pop();
+    if (h.src.kind === 'col') {
+      if (!Number.isNaN(h.src.col.v[h.i])) yield { id: MEASURE_ID + h.src.deviceId * 1e5 + h.i, value: h.src.col.v[h.i], date: h.src.col.t[h.i] };
+    } else yield h.src.list[h.i];
+    if (h.i > 0) push({ src: h.src, i: h.i - 1 });
+  }
+}
+function countOf(type, scopeOf) {
+  let n = 0;
+  if (type !== 'measurement') n += setpoints.filter((t) => canSee(scopeOf, elementById(t.room))).length;
+  if (type !== 'setpoint') {
+    n += loose.length;
+    for (const [deviceId, col] of series) if (canSee(scopeOf, elementById(deviceId))) n += col.v.reduce((a, v) => a + (Number.isNaN(v) ? 0 : 1), 0);
+  }
+  return n;
+}
+function temperaturePage(type, q, scopeOf) {
+  // Before 26.12: every temperature in one answer
+  if (API !== 'v2') return ok([...latestFirst(type, scopeOf)].map(temperatureDto));
+  const limit = q.get('limit') == null ? 1000 : Number(q.get('limit'));
+  const offset = q.get('offset') == null ? 0 : Number(q.get('offset'));
+  if (!(Number.isInteger(limit) && limit >= 1 && limit <= 10000 && Number.isInteger(offset) && offset >= 0)) return error(400, 'limit must be between 1 and 10000, offset at least 0');
+  const out = [];
+  let k = 0;
+  for (const t of latestFirst(type, scopeOf)) {
+    if (k++ < offset) continue;
+    out.push(temperatureDto(t));
+    if (out.length >= limit) break;
+  }
+  const r = ok(out);
+  if (scopeOf.all && offset === 0) r.headers = { 'X-Total-Count': String(countOf(type, scopeOf)) };
+  return r;
+}
+route('GET', '/api/v2/temperatures', 'auth', ({ q, scopeOf }) => temperaturePage(null, q, scopeOf));
+route('GET', '/api/v2/temperatures/type/{type}', 'auth', ({ p, q, scopeOf }) => {
+  if (!['setpoint', 'measurement'].includes(p.type)) return empty(204);
+  return temperaturePage(p.type, q, scopeOf);
 });
 route('POST', '/api/v2/temperatures/type/{type}', 'ADMIN', ({ p, body }) => {
   const c = json(body) ?? {};
@@ -584,18 +833,36 @@ route('POST', '/api/v2/temperatures/type/{type}', 'ADMIN', ({ p, body }) => {
   temperature(p.type, c.value, c.date ? Date.parse(c.date) : Date.now(), null);
   return empty(201);
 });
+const parseDateBody = (d) => (Array.isArray(d) ? new Date(d[0], d[1] - 1, d[2], d[3] ?? 0, d[4] ?? 0).getTime() : Date.parse(d));
 route('PUT', '/api/v2/temperatures/{id}', 'ADMIN', ({ p, body }) => {
-  const t = temperatures.find((x) => x.id === +p.id);
   const c = json(body) ?? {};
+  const m = measurementById(+p.id);
+  if (m) {
+    if (typeof c.value === 'number') m.s.v[m.i] = c.value;
+    if (c.date) {
+      const value = m.s.v[m.i];
+      m.s.v[m.i] = NaN;
+      addMeasurement(m.deviceId, value, parseDateBody(c.date));
+    }
+    return empty();
+  }
+  const t = setpoints.find((x) => x.id === +p.id) ?? loose.find((x) => x.id === +p.id);
   if (t) {
     if (typeof c.value === 'number') t.value = c.value;
-    if (c.date) t.date = Array.isArray(c.date) ? new Date(c.date[0], c.date[1] - 1, c.date[2], c.date[3] ?? 0, c.date[4] ?? 0).getTime() : Date.parse(c.date);
+    if (c.date) t.date = parseDateBody(c.date);
   }
   return empty();
 });
 route('DELETE', '/api/v2/temperatures/{id}', 'ADMIN', ({ p }) => {
-  const i = temperatures.findIndex((x) => x.id === +p.id);
-  if (i >= 0) temperatures.splice(i, 1);
+  const m = measurementById(+p.id);
+  if (m) m.s.v[m.i] = NaN;
+  for (const list of [setpoints, loose]) {
+    const i = list.findIndex((x) => x.id === +p.id);
+    if (i >= 0) {
+      const [t] = list.splice(i, 1);
+      if (t.room != null) setpointsOf.set(t.room, (setpointsOf.get(t.room) ?? []).filter((x) => x !== t));
+    }
+  }
   return empty();
 });
 
@@ -767,6 +1034,7 @@ createServer(async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, HEAD');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept, Authorization');
+  res.setHeader('Access-Control-Expose-Headers', 'X-Total-Count, ETag');
   if (req.method === 'OPTIONS') return res.writeHead(200).end();
   if (!url.pathname.startsWith('/api/')) {
     if (APP && (await serveStatic(url.pathname, res))) return;
@@ -821,7 +1089,13 @@ function send(res, r) {
     res.writeHead(r.status, { 'Content-Type': r.type, ...(r.headers ?? {}) });
     return res.end(r.raw);
   }
-  if (r.body === undefined) return res.writeHead(r.status).end();
-  res.writeHead(r.status, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify(r.body));
+  if (r.body === undefined) return res.writeHead(r.status, r.headers ?? {}).end();
+  const text = JSON.stringify(r.body);
+  // Compressed as the real server does (EncodingFilter) for the clients that accept it
+  if (text.length > 1024 && /\bgzip\b/.test(res.req.headers['accept-encoding'] ?? '')) {
+    res.writeHead(r.status, { 'Content-Type': 'application/json', 'Content-Encoding': 'gzip', Vary: 'Accept-Encoding', ...(r.headers ?? {}) });
+    return res.end(gzipSync(text));
+  }
+  res.writeHead(r.status, { 'Content-Type': 'application/json', ...(r.headers ?? {}) });
+  res.end(text);
 }

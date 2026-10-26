@@ -34,7 +34,7 @@
 </div>
 
 <div class="tb-users">
-  @for (l of visible(); track l.user.id) {
+  @for (l of shownRows(); track l.user.id) {
     <div class="tb-user" [attr.data-flip]="'u' + l.user.id">
       <span class="tb-avatar tb-user-avatar tb-role-{{ l.user.type }}">{{ initial(l.user.username) }}</span>
       <div class="tb-user-text">
@@ -54,6 +54,7 @@
     <div class="tb-empty tb-empty-sm">{{ access.loaded() ? 'Aucun utilisateur ne correspond.' : 'Chargement…' }}</div>
   }
 </div>
+<tb-more [total]="visible().length" [shown]="shownRows().length" (more)="shown.more()" label="Afficher d'autres utilisateurs" />
 
 <tb-sheet [(open)]="dlgUser" title="Utilisateur" [width]="420">
   <form (submit)="save($event)" novalidate>

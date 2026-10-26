@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal, viewChild, effect, untracked } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 
 import { errorMessage } from '../../core/api.config';
@@ -13,6 +13,7 @@ import { UserService } from '../../services/user.service';
 import { TbAccessTree } from '../../ui/access-tree';
 import { Option, TbMultipleChoice } from '../../ui/multiple-choice';
 import { TbSheet } from '../../ui/sheet';
+import { ShownCount, TbMore } from '../../ui/more';
 import { TbSwitch } from '../../ui/controls';
 import { PlatformService } from '../../core/platform';
 import { FlipService } from '../../core/flip';
@@ -25,13 +26,22 @@ import { followSelectionBar } from '../../ui/selection-bar';
  */
 @Component({
   selector: 'tb-access',
-  imports: [TbSheet, TbSwitch, TbMultipleChoice, TbAccessTree],
+  imports: [TbSheet, TbSwitch, TbMultipleChoice, TbAccessTree, TbMore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './access.html',
 })
 export class AccessTab implements OnInit {
   constructor() {
     followSelectionBar(() => this.selection().size > 0 && !this.phone());
+    effect(() => {
+      this.search();
+      untracked(() => this.shown.reset());
+    });
+    // The accesses of the users shown, as they are shown
+    effect(() => {
+      const ids = this.shownRows().map((l) => l.user.id!);
+      untracked(() => void this.access.ensure(ids));
+    });
   }
 
   protected readonly auth = inject(AuthService);
@@ -58,6 +68,9 @@ export class AccessTab implements OnInit {
     const word = this.search().trim().toLowerCase();
     return this.access.users().filter((l) => !word || l.user.username.toLowerCase().includes(word) || l.groups.some((g) => g.toLowerCase().includes(word)));
   });
+  /** Hundreds of accounts: a part at a time, their accesses read as they are shown. */
+  protected readonly shown = new ShownCount(50);
+  protected readonly shownRows = computed(() => this.visible().slice(0, this.shown.count()));
   protected readonly selectedRows = computed(() => this.access.users().filter((l) => this.selection().has(l.user.id!)));
   protected readonly allChecked = computed(() => this.visible().length > 0 && this.visible().every((l) => this.selection().has(l.user.id!)));
 
@@ -169,6 +182,8 @@ export class AccessTab implements OnInit {
 
   /** Sees everything ([tout]) or only their accesses and groups. */
   protected async selectionAccess(all: boolean): Promise<void> {
+    // Their accesses as they are now, before changing them
+    await this.access.ensure([...this.selection()]);
     let n = 0;
     for (const l of this.selectedRows().filter((x) => x.user.type !== 'ADMIN')) {
       try {

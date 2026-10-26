@@ -171,11 +171,19 @@
       </button>
     </h2>
     <div class="tb-section-body">
-      <div [class]="panel() ? 'tb-cells' : 'tb-room-tiles'">
-        @for (r of favorites(); track r.room.id) {
-          <tb-room-card [r]="r" [fresh]="newCurves()" (favorite)="toggleFavorite($event)" (overview)="openOverview($event)" />
-        }
-      </div>
+      @if (!large() || !isFolded('favorites')) {
+        <div [class]="panel() ? 'tb-cells' : 'tb-room-tiles'" data-vgrid="favorites">
+          @for (b of blocksOf('favorites'); track b.key) {
+            @if (isDrawn(b)) {
+              @for (r of b.rooms; track r.room.id) {
+                <tb-room-card [r]="r" [fresh]="newCurves()" [attr.data-b]="b.key" (favorite)="toggleFavorite($event)" (overview)="openOverview($event)" />
+              }
+            } @else {
+              <div class="tb-vph" [attr.data-b]="b.key" [style.height.px]="heightOf(b)" aria-hidden="true"></div>
+            }
+          }
+        </div>
+      }
     </div>
   </section>
 }
@@ -206,7 +214,9 @@
       </h2>
     }
     <div class="tb-section-body">
-      @if (panel()) {
+      @if (large() && isFolded(g.key)) {
+        <!-- Folded, in a large page: nothing drawn until it opens -->
+      } @else if (panel()) {
         <!-- One row of squares per floor, its name on its edge (one child: the section folds whole) -->
         <div class="tb-floors">
           @for (e of g.floors; track e.key) {
@@ -214,18 +224,30 @@
               @if (e.name) {
                 <span class="tb-floor-name">{{ e.name }}</span>
               }
-              <div class="tb-cells">
-                @for (r of e.rooms; track r.room.id) {
-                  <tb-room-card [r]="r" [fresh]="newCurves()" (favorite)="toggleFavorite($event)" (overview)="openOverview($event)" />
+              <div class="tb-cells" [attr.data-vgrid]="g.key + '|' + e.key">
+                @for (b of blocksOf(g.key + '|' + e.key); track b.key) {
+                  @if (isDrawn(b)) {
+                    @for (r of b.rooms; track r.room.id) {
+                      <tb-room-card [r]="r" [fresh]="newCurves()" [attr.data-b]="b.key" (favorite)="toggleFavorite($event)" (overview)="openOverview($event)" />
+                    }
+                  } @else {
+                    <div class="tb-vph" [attr.data-b]="b.key" [style.height.px]="heightOf(b)" aria-hidden="true"></div>
+                  }
                 }
               </div>
             </div>
           }
         </div>
       } @else {
-        <div class="tb-room-tiles">
-          @for (r of g.rooms; track r.room.id) {
-            <tb-room-card [r]="r" [fresh]="newCurves()" (favorite)="toggleFavorite($event)" (overview)="openOverview($event)" />
+        <div class="tb-room-tiles" [attr.data-vgrid]="g.key">
+          @for (b of blocksOf(g.key); track b.key) {
+            @if (isDrawn(b)) {
+              @for (r of b.rooms; track r.room.id) {
+                <tb-room-card [r]="r" [fresh]="newCurves()" [attr.data-b]="b.key" (favorite)="toggleFavorite($event)" (overview)="openOverview($event)" />
+              }
+            } @else {
+              <div class="tb-vph" [attr.data-b]="b.key" [style.height.px]="heightOf(b)" aria-hidden="true"></div>
+            }
           }
         </div>
       }

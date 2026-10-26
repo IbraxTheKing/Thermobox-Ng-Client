@@ -135,7 +135,7 @@ export class TbRoomOverview {
     const start = end - DAY;
     const p = step(start, end);
     try {
-      const r = await firstValueFrom(this.climate.averages([id], new Date(start), new Date(end), true));
+      const r = await firstValueFrom(this.climate.averages([id], new Date(start), new Date(end), true, 2 * instants(start, end, p).length));
       if (this.current()?.room.id !== id) return;
       const points = (r[String(id)] ?? []).filter((x) => x.value != null).map((x) => ({ t: time(x.date), v: x.value! }));
       this.dayCurve.set({ c: curve(points, start, end, p), time: instants(start, end, p) });

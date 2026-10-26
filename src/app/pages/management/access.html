@@ -39,7 +39,7 @@
   @if (phone()) {
     <!-- Phones: one row per user, their settings in a sheet -->
     <ul class="tb-list-mgmt">
-      @for (l of visible(); track l.user.id) {
+      @for (l of shownRows(); track l.user.id) {
         <li [attr.data-flip]="'u' + l.user.id">
           <button type="button" class="tb-mgmt-row" (click)="openUser(l)">
             <span class="tb-avatar tb-user-avatar tb-role-{{ l.user.type }}">{{ initial(l.user.username) }}</span>
@@ -57,6 +57,7 @@
         <li class="tb-mgmt-empty tb-muted">{{ access.loaded() ? 'Aucun utilisateur ne correspond' : 'Chargement…' }}</li>
       }
     </ul>
+    <tb-more [total]="visible().length" [shown]="shownRows().length" (more)="shown.more()" label="Afficher d'autres utilisateurs" />
   } @else {
   <div class="tb-table tb-mgmt-table tb-access-table">
     <table>
@@ -70,7 +71,7 @@
         </tr>
       </thead>
       <tbody>
-        @for (l of visible(); track l.user.id) {
+        @for (l of shownRows(); track l.user.id) {
           <tr [class.tb-row-on]="selection().has(l.user.id!)" [attr.data-flip]="'u' + l.user.id">
             <td class="tb-col-check">
               <input type="checkbox" class="tb-check" [checked]="selection().has(l.user.id!)" (change)="check(l.user.id!, $any($event.target).checked)" [attr.aria-label]="'Sélectionner ' + l.user.username" />
@@ -104,6 +105,7 @@
         }
       </tbody>
     </table>
+    <tb-more [total]="visible().length" [shown]="shownRows().length" (more)="shown.more()" label="Afficher d'autres utilisateurs" />
   </div>
   }
 </section>

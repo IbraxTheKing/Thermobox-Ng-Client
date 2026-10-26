@@ -32,6 +32,23 @@ export class TemperatureService {
     return this.http.get<Temperature[] | null>(this.url(`/type/${type}`));
   }
 
+  /**
+   * A page of the temperatures of [type], the latest first (26.12: ?limit=&offset=, the total in
+   * X-Total-Count with the first page, for a user who sees everything). A server before 26.12
+   * answers every temperature at once: [all] then says so.
+   */
+  page(type: TemperatureType, offset: number, limit: number): Observable<{ items: Temperature[]; total: number | null; all: boolean }> {
+    return this.http
+      .get<Temperature[] | null>(this.url(`/type/${type}`), { params: { limit, offset }, observe: 'response' })
+      .pipe(
+        map((r) => {
+          const items = r.body ?? [];
+          const total = r.headers.get('X-Total-Count');
+          return { items, total: total != null && total !== '' ? Number(total) : null, all: items.length > limit };
+        }),
+      );
+  }
+
   /** The measurements and/or the setpoints, each with its type ("all": both lists). */
   getTyped(filter: TemperatureType | 'all'): Observable<TemperatureTyped[]> {
     const types: TemperatureType[] = filter === 'all' ? ['measurement', 'setpoint'] : [filter];

@@ -51,6 +51,9 @@ export const KIND_ORDER: RoomKind[] = ['BUILDING', 'FLOOR', 'ROOM', 'DEVICE'];
  * (GET /api/v2/hierarchy/tree), shared by the pages: dashboard, rooms, gestion, mesures, and the
  * lists of possible parents. Reloaded by each page when it opens, and by the 30-second polls.
  */
+/** A tree read less than this long ago is not read again by a page that opens. */
+const FRESH = 10_000;
+
 @Injectable({ providedIn: 'root' })
 export class TreeStore {
   private readonly api = inject(HierarchyService);
@@ -66,6 +69,8 @@ export class TreeStore {
   }
 
   readonly error = signal<string | null>(null);
+  /** The last tree read, to tell whether a poll brought anything new. */
+  private lastJson = '';
   readonly loading = signal(false);
 
   readonly nodes = computed(() => this.tree()?.nodes ?? []);
@@ -96,11 +101,45 @@ export class TreeStore {
   /** Boxes that measure but belong to no room (ADMIN, MANAGER). */
   readonly unattachedDevices = computed(() => this.nodes().filter((n) => n.kind === 'DEVICE' && !n.attached).length);
 
+  /** A reading in progress: asked again meanwhile (the shell, then the page), it is shared. */
+  private inFlight: Promise<void> | null = null;
+  private readAt = 0;
+
+  /**
+   * For a page that opens: the tree read a moment ago (another page, the shell) is still the one;
+   * otherwise read again, quietly when one is already shown.
+   */
+  async ensure(): Promise<void> {
+    if (this.tree() && Date.now() - this.readAt < FRESH) return;
+    await this.load(this.tree() != null);
+  }
+
   async load(quiet = false): Promise<void> {
+    if (this.inFlight) {
+      if (!quiet) this.loading.set(true);
+      try {
+        return await this.inFlight;
+      } finally {
+        if (!quiet) this.loading.set(false);
+      }
+    }
+    this.inFlight = this.read(quiet);
+    try {
+      await this.inFlight;
+    } finally {
+      this.inFlight = null;
+    }
+  }
+
+  private async read(quiet: boolean): Promise<void> {
     if (!quiet) this.loading.set(true);
     try {
       const a = await firstValueFrom(this.api.tree(quiet));
-      this.tree.set(a);
+      // Nothing changed (most polls): the pages keep what they computed from it
+      const json = JSON.stringify(a);
+      if (json !== this.lastJson || !this.tree()) this.tree.set(a);
+      this.readAt = Date.now();
+      this.lastJson = json;
       this.error.set(null);
     } catch (e) {
       this.error.set(errorMessage(e, "Impossible de charger les bâtiments et salles"));

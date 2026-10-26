@@ -27,6 +27,7 @@ import { TitleService } from '../core/title';
 import { TransitionsService } from '../core/transitions';
 import { SettingsService } from '../services/settings.service';
 import { ServerService } from '../core/api.config';
+import { TreeStore } from '../services/tree.store';
 import { TbAccounts } from '../ui/accounts';
 import { TbServerLogo } from '../ui/server-logo';
 import { TbSheet } from '../ui/sheet';
@@ -65,6 +66,7 @@ export class Shell implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   protected readonly auth = inject(AuthService);
   protected readonly server = inject(ServerService);
+  private readonly tree = inject(TreeStore);
   protected readonly prefs = inject(PreferencesService);
   protected readonly platform = inject(PlatformService);
   protected readonly notice = inject(UpdateNoticeService);
@@ -181,6 +183,8 @@ export class Shell implements OnInit, OnDestroy {
     addEventListener('scroll', this.onScrolling, { passive: true });
     addEventListener('resize', this.onResize, { passive: true });
     this.settings.load().subscribe({ error: () => undefined });
+    // The tree of buildings and rooms, read now for every page (shared with the page that asks)
+    if (!this.tree.tree()) void this.tree.load(true);
     void this.notice.check();
     void this.auth.refreshUser().catch(() => undefined);
     this.timer = setInterval(() => void this.notice.check(), 3_600_000);

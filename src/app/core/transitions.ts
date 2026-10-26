@@ -300,6 +300,12 @@ export class TransitionsService {
     }
   }
 
+  /** The room of the card clicked last (to open its page), as a number; null if none. */
+  lastCardId(): number | null {
+    const id = Number(this.clickedCard?.id);
+    return this.clickedCard && Number.isFinite(id) ? id : null;
+  }
+
   /** Back on the dashboard: the card reopens where it was on the screen when it was clicked. */
   private returnToCard(id: string): void {
     const card = this.doc.querySelector<HTMLElement>(`.tb-room[data-vt-id="${CSS.escape(id)}"]`);

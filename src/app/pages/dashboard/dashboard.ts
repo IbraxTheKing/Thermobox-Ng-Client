@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, Injector, OnDestroy, OnInit, afterNextRender, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, Injector, OnDestroy, OnInit, afterNextRender, computed, effect, inject, signal, untracked } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
@@ -19,7 +19,7 @@ import { Node, Point } from '../../models/models';
 import { TreeStore } from '../../services/tree.store';
 import { PullToRefresh } from '../../ui/pull-to-refresh';
 import { CurveCache } from '../../core/curve-cache';
-import { ClimateService } from '../../services/climate.service';
+import { ClimateService, SPARKLINE_POINTS } from '../../services/climate.service';
 import { FavoriteService } from '../../services/favorite.service';
 import { DeltaRange } from './delta-range';
 import { TbRoomOverview } from './room-overview';
@@ -44,6 +44,17 @@ const TREND_PERIOD = 24 * 3_600_000;
 const TREND_VALIDITY = 5 * 60_000;
 const TRENDS_KEY = 'overview';
 const POLL = 30_000;
+/** Beyond this many rooms, only the cards near the screen are drawn. */
+const WINDOWED = 48;
+/** Rows of cards per block (drawn or let go together). */
+const BLOCK_ROWS = 3;
+
+/** A few rows of cards of one grid, drawn or replaced by an empty box of their height. */
+interface Block {
+  key: string;
+  rooms: RoomSummary[];
+  rows: number;
+}
 
 /**
  * Overview (dashboard.xhtml): every room the user may see, as a card with its temperature, state,
@@ -83,7 +94,41 @@ export class DashboardPage implements OnInit, OnDestroy {
     // The page takes the colour of the state picked (« Couleurs selon l'état »)
     effect(() => this.transitions.setTone(this.stateFilter()?.tone ?? null));
     inject(DestroyRef).onDestroy(() => this.transitions.setTone(null));
+    // The window on the page follows the scroll (one measure per frame at most)
+    let frame = 0;
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(() => ((frame = 0), this.measure()));
+    };
+    addEventListener('scroll', schedule, { passive: true });
+    addEventListener('resize', schedule);
+    inject(DestroyRef).onDestroy(() => {
+      removeEventListener('scroll', schedule);
+      removeEventListener('resize', schedule);
+      cancelAnimationFrame(frame);
+    });
+    // Other cards (a search, a filter, a poll, a section folded): measured again once drawn
+    effect(() => {
+      this.blocks();
+      this.folded();
+      afterNextRender(schedule, { injector: this.injector });
+    });
+    // Back from a room: its card is drawn, wherever it is, for the transition to land in it
+    const back = this.transitions.lastCardId();
+    if (back != null) {
+      this.pinned.set(back);
+      setTimeout(() => this.pinned.set(null), 2000);
+    }
+    // The curves of the cards drawn, as they come (not those of hundreds of rooms never seen)
+    let pending: ReturnType<typeof setTimeout> | undefined;
+    effect((onCleanup) => {
+      const ids = this.shownIds();
+      if (!this.started) return;
+      pending = setTimeout(() => void untracked(() => this.loadTrends(true, [...ids], false)), 150);
+      onCleanup(() => clearTimeout(pending));
+    });
   }
+  /** The first curves were asked for (ngOnInit): later ones follow the cards drawn. */
+  private started = false;
   protected readonly buildingId = signal<number | null>(null);
 
   /** Curves of the last 24 h by room: undefined while they load, null without enough measures. */
@@ -111,7 +156,8 @@ export class DashboardPage implements OnInit, OnDestroy {
         building: this.store.buildingOf(room.id),
         state: stateOf(room.temperature, setpoint),
         delta: room.temperature != null && setpoint != null ? room.temperature - setpoint : null,
-        trend: trends ? (trends.get(room.id) ?? null) : undefined,
+        // undefined while it loads (or not asked for yet: a card not drawn), null without enough measures
+        trend: trends?.has(room.id) ? trends.get(room.id) : undefined,
       };
     });
   });
@@ -192,6 +238,157 @@ export class DashboardPage implements OnInit, OnDestroy {
     return `De ${this.unit.delta(b)} à ${this.unit.delta(h)}`;
   });
   protected readonly visibleCount = computed(() => this.visible().length);
+
+  // ---------------------------------------------------------------- many rooms: a window on the page
+
+  /**
+   * Hundreds of rooms: only the cards near the screen are drawn. Each grid of cards (a section, a
+   * floor in Panel) is cut into blocks of a few rows; a block far from the screen is replaced by
+   * an empty box of its height, so the page keeps its length and its scroll. Scrolling down draws
+   * the blocks that come near and lets go of those left far above; back up, the reverse. Their
+   * curves are read once, when first drawn.
+   */
+  protected readonly large = computed(() => this.visible().length > WINDOWED);
+  /** Columns of the grids (measured), for blocks of whole rows. */
+  private readonly cols = signal(this.platform.phone() ? 2 : 4);
+  /** Blocks drawn, by key; null until the page has been measured once (the first ones then). */
+  private readonly drawnKeys = signal<Set<string> | null>(null);
+  /** Height of each block when last drawn, for its empty box. */
+  private readonly heights = signal<Map<string, number>>(new Map());
+  /** A card that must stay drawn (coming back from its room: the transition lands in it). */
+  private readonly pinned = signal<number | null>(null);
+
+  /** The blocks of each grid of cards, by grid key. */
+  protected readonly blocks = computed(() => {
+    const size = this.large() ? this.cols() * BLOCK_ROWS : Infinity;
+    const m = new Map<string, Block[]>();
+    const add = (list: string, rooms: RoomSummary[]) => {
+      const blocks: Block[] = [];
+      for (let i = 0; i * size < rooms.length || (i === 0 && rooms.length === 0); i++) {
+        const part = Number.isFinite(size) ? rooms.slice(i * size, (i + 1) * size) : rooms;
+        blocks.push({ key: `${list}#${i}`, rooms: part, rows: Math.ceil(part.length / this.cols()) });
+        if (!Number.isFinite(size)) break;
+      }
+      m.set(list, blocks);
+    };
+    add('favorites', this.favorites());
+    for (const g of this.groups()) {
+      add(g.key, g.rooms);
+      for (const f of g.floors) add(g.key + '|' + f.key, f.rooms);
+    }
+    return m;
+  });
+
+  protected blocksOf(list: string): Block[] {
+    return this.blocks().get(list) ?? [];
+  }
+
+  /** Keys of the blocks drawn. Few rooms: all of them. */
+  private readonly drawn = computed(() => {
+    if (!this.large()) return null;
+    const keys = this.drawnKeys();
+    const pinned = this.pinned();
+    const out = new Set<string>();
+    let first = WINDOWED;
+    for (const [list, blocks] of this.blocks()) {
+      if (this.isFolded(list.split('|')[0])) continue;
+      for (const b of blocks) {
+        // Before any measure: the first cards of the page
+        const near = keys ? keys.has(b.key) : first > 0;
+        if (!keys) first -= b.rooms.length;
+        if (near || (pinned != null && b.rooms.some((r) => r.room.id === pinned))) out.add(b.key);
+      }
+    }
+    return out;
+  });
+
+  protected isDrawn(b: Block): boolean {
+    const d = this.drawn();
+    return !d || d.has(b.key);
+  }
+
+  /** Height of the empty box of a block: as last drawn, else estimated from the rows drawn. */
+  protected heightOf(b: Block): number {
+    const known = this.heights().get(b.key);
+    if (known != null) return known;
+    const row = this.rowHeight ?? (this.panel() ? 116 : 168) * this.prefs.cardSize();
+    return b.rows * row + Math.max(0, b.rows - 1) * this.rowGap;
+  }
+
+  private rowHeight: number | null = null;
+  private rowGap = 12;
+
+  /** Ids of the cards drawn. */
+  private readonly shownIds = computed(() => {
+    const ids = new Set<number>();
+    for (const [list, blocks] of this.blocks()) {
+      if (this.large() && this.isFolded(list.split('|')[0])) continue;
+      for (const b of blocks) if (this.isDrawn(b)) for (const r of b.rooms) ids.add(r.room.id);
+    }
+    return ids;
+  });
+
+  /**
+   * Measures the page (once per frame while it scrolls or is resized): the columns, the height of
+   * each block drawn, and which blocks are near the screen (within a screen) or still not far
+   * (within two and a half: kept, so going back and forth a little redraws nothing).
+   */
+  private measure(): void {
+    if (!this.large()) return;
+    const grids = [...this.host.querySelectorAll<HTMLElement>('[data-vgrid]')];
+    if (!grids.length) return;
+    const style = getComputedStyle(grids[0]);
+    const cols = style.gridTemplateColumns.split(' ').filter(Boolean).length || 1;
+    this.rowGap = parseFloat(style.rowGap) || 0;
+    if (cols !== this.cols()) {
+      // Other blocks (whole rows of the new width): their heights are measured again
+      this.cols.set(cols);
+      this.heights.set(new Map());
+      this.drawnKeys.set(null);
+      this.rowHeight = null;
+      requestAnimationFrame(() => this.measure());
+      return;
+    }
+    const near = innerHeight;
+    const keep = innerHeight * 2.5;
+    const before = this.drawn();
+    const keys = new Set<string>();
+    const heights = new Map(this.heights());
+    let changed = false;
+    for (const grid of grids) {
+      // The items of the grid in order: the cards of the blocks drawn, the boxes of the others
+      const spans = new Map<string, { top: number; bottom: number; drawn: boolean }>();
+      for (const el of grid.querySelectorAll<HTMLElement>(':scope > [data-b]')) {
+        const key = el.dataset['b']!;
+        const box = (el.classList.contains('tb-vph') ? el : (el.firstElementChild as HTMLElement | null))?.getBoundingClientRect();
+        if (!box) continue;
+        const s = spans.get(key);
+        if (s) {
+          s.top = Math.min(s.top, box.top);
+          s.bottom = Math.max(s.bottom, box.bottom);
+        } else spans.set(key, { top: box.top, bottom: box.bottom, drawn: !el.classList.contains('tb-vph') });
+      }
+      for (const [key, s] of spans) {
+        if (s.drawn) {
+          const h = Math.round(s.bottom - s.top);
+          if (Math.abs((heights.get(key) ?? -1) - h) > 1) {
+            heights.set(key, h);
+            changed = true;
+          }
+        }
+        const distance = s.bottom < 0 ? -s.bottom : s.top > innerHeight ? s.top - innerHeight : 0;
+        if (distance <= near || (s.drawn && before?.has(key) && distance <= keep)) keys.add(key);
+      }
+    }
+    if (changed) {
+      this.heights.set(heights);
+      // A row as drawn, for the blocks never drawn yet
+      const block = [...this.blocks().values()].flat().find((b) => heights.has(b.key) && b.rows > 0);
+      if (block) this.rowHeight = (heights.get(block.key)! - (block.rows - 1) * this.rowGap) / block.rows;
+    }
+    const old = this.drawnKeys();
+    if (!old || old.size !== keys.size || [...keys].some((k) => !old.has(k))) this.drawnKeys.set(keys);
+  }
 
   protected readonly favorites = computed(() => this.visible().filter((r) => r.room.favorite));
 
@@ -465,15 +662,19 @@ export class DashboardPage implements OnInit, OnDestroy {
 
   async ngOnInit(): Promise<void> {
     try {
-      await this.store.load(this.store.tree() != null);
+      await this.store.ensure();
     } catch (e) {
       this.toasts.error('Impossible de charger les salles', errorMessage(e));
     }
     // The curves come in a second request, so the page shows without waiting for them; kept
     // ones are already there (and don't draw themselves again)
     const kept = this.trends();
+    this.started = true;
     void this.loadTrends(false).then(() => this.newCurves.set(this.trends() !== kept));
-    this.timer = setInterval(() => void this.reload(true), POLL);
+    // Not while the page is hidden (another tab, the app in the background): no data for no one
+    this.timer = setInterval(() => {
+      if (!document.hidden) void this.reload(true);
+    }, POLL);
   }
 
   ngOnDestroy(): void {
@@ -496,31 +697,38 @@ export class DashboardPage implements OnInit, OnDestroy {
     }
   }
 
-  /** Average curve of each room over the last 24 h: read again every few minutes, not on every poll. */
-  private async loadTrends(quiet: boolean): Promise<void> {
-    const rooms = this.store.rooms();
+  /**
+   * Average curve over the last 24 h of the rooms whose card is drawn ([ids]: those, all of them
+   * by default); read again every few minutes, not on every poll. [all]: those already known too.
+   */
+  private async loadTrends(quiet: boolean, ids?: number[], all = true): Promise<void> {
+    const drawn = ids ?? [...this.shownIds()];
     const known = this.trends();
-    const allKnown = !!known && rooms.every((s) => known.has(s.id));
-    if (allKnown && Date.now() - this.trendsComputedAt < TREND_VALIDITY) {
-      return;
-    }
+    const stale = Date.now() - this.trendsComputedAt >= TREND_VALIDITY;
+    // Not those already on their way (the first ones are asked twice: by the page, by the window)
+    const wanted = drawn.filter((id) => (!known?.has(id) || (all && stale)) && !this.trendsAsked.has(id));
+    if (!wanted.length) return;
+    for (const id of wanted) this.trendsAsked.add(id);
     const end = new Date();
     const start = new Date(end.getTime() - TREND_PERIOD);
-    const m = new Map<number, Sparkline | null>();
+    const byId = this.store.byId();
     try {
-      // At most 200 elements per request (server limit)
-      for (let i = 0; i < rooms.length; i += 200) {
-        const batch = rooms.slice(i, i + 200);
-        const r = await firstValueFrom(this.climate.averages(batch.map((s) => s.id), start, end, quiet));
-        for (const s of batch) m.set(s.id, sparkline(points(r[String(s.id)] ?? []), start.getTime(), end.getTime(), s.setpoint?.value ?? null));
-      }
+      // A few points per curve (the server picks them among the real measures)
+      const r = await firstValueFrom(this.climate.averages(wanted, start, end, quiet, SPARKLINE_POINTS));
+      const m = new Map(this.trends() ?? []);
+      for (const id of wanted) m.set(id, sparkline(points(r[String(id)] ?? []), start.getTime(), end.getTime(), byId.get(id)?.setpoint?.value ?? null));
       this.trends.set(m);
-      this.trendsComputedAt = Date.now();
+      if (all) this.trendsComputedAt = Date.now();
       this.cache.write(TRENDS_KEY, m);
     } catch {
-      if (!this.trends()) this.trends.set(new Map(rooms.map((s) => [s.id, null])));
+      if (!this.trends()) this.trends.set(new Map(wanted.map((id) => [id, null])));
+    } finally {
+      for (const id of wanted) this.trendsAsked.delete(id);
     }
   }
+
+  /** Curves on their way. */
+  private readonly trendsAsked = new Set<number>();
 
   protected async toggleFavorite(id: number): Promise<void> {
     const n = this.store.byId().get(id);

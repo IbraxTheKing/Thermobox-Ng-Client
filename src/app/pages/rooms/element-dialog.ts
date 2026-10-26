@@ -24,7 +24,7 @@ export interface ElementEdit {
   imports: [TbSheet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <tb-sheet [open]="editing() != null" (ouvertChange)="!$event && editing.set(null)" [title]="editing()?.element ? 'Modifier' : 'Ajouter'">
+    <tb-sheet [open]="editing() != null" (openChange)="!$event && editing.set(null)" [title]="editing()?.element ? 'Modifier' : 'Ajouter'">
       @if (editing(); as e) {
         <form (submit)="save($event)" novalidate>
           <div class="tb-field">
