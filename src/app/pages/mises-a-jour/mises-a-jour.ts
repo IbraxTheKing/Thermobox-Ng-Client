@@ -63,7 +63,7 @@ export class MisesAJourPage implements OnInit, OnDestroy {
     const toutes = e ? [...e.available, ...e.olderVersions] : [];
     const parCle = new Map<string, number>();
     for (const v of toutes) parCle.set(cle(v), (parCle.get(cle(v)) ?? 0) + 1);
-    const ordre = ['rc', 'beta', 'nightly', 'stable'];
+    const ordre = ['alpha', 'beta', 'rc', 'nightly', 'stable'];
     return [...ordre, ...[...parCle.keys()].filter((k) => !ordre.includes(k)).sort()]
       .filter((k) => parCle.has(k))
       .map((k) => ({ cle: k, libelle: libelle(k), nombre: parCle.get(k)!, couleur: couleur(k) }));
@@ -184,9 +184,15 @@ function cle(v: VersionDisponible): string {
   return v.prerelease ? v.channel || 'test' : 'stable';
 }
 
-/** Colour of a version: stable (green), test for beta / rc (orange), nightly (violet). */
+/** Colour of a version: stable (green), alpha (blue), beta / rc (orange), nightly (violet). */
 function couleur(c: string): string {
-  return c === 'stable' ? 'stable' : c === 'nightly' ? 'nightly' : 'test';
+  return c === 'stable'
+    ? 'stable'
+    : c === 'alpha'
+      ? 'alpha'
+      : c === 'nightly'
+        ? 'nightly'
+        : 'test';
 }
 
 function libelle(c: string): string {
