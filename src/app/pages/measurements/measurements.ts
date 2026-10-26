@@ -55,6 +55,10 @@ interface Curves {
 /** Lines of a page of the raw history. */
 const RAW_PAGE = 20;
 
+/** Rooms per request of curves, and requests at a time. */
+const BATCH = 6;
+const PARALLEL = 4;
+
 /** Rows shown (and curves read) at a time. */
 const ROWS = 24;
 
@@ -203,7 +207,7 @@ export class MeasurementsPage implements OnInit {
     // Rows shown without their curve: read (a little later, the table may still grow)
     effect((onCleanup) => {
       const fresh = this.curves().fresh;
-      const missing = this.shownRows().filter((l) => !fresh.has(l.element.id)).map((l) => l.element.id);
+      const missing = this.shownRows().filter((l) => !fresh.has(l.element.id) && !this.asked.has(l.element.id)).map((l) => l.element.id);
       if (!missing.length || !this.started()) return;
       const t = setTimeout(() => void untracked(() => this.read(missing)), 120);
       onCleanup(() => clearTimeout(t));
@@ -215,7 +219,7 @@ export class MeasurementsPage implements OnInit {
 
   async ngOnInit(): Promise<void> {
     try {
-      await this.store.load(this.store.tree() != null);
+      await this.store.ensure();
     } catch (e) {
       this.toasts.error('Impossible de charger les salles', errorMessage(e));
     }
@@ -232,40 +236,65 @@ export class MeasurementsPage implements OnInit {
     const kept = this.cache.read<Curves>(key);
     this.shown.reset();
     if (kept && !force && kept.age < freshness(this.periodHours())) {
+      this.asked = new Set();
       this.curves.set(kept.value);
       return;
     }
+    this.asked = new Set();
     this.curves.set(emptyCurves(key, this.periodHours(), kept?.value));
   }
 
-  /** Reads the curves of [ids] for the current choice, a few hundred points each. */
+  /**
+   * Reads the curves of [ids] for the current choice: one point per slot of the chart (the server
+   * picks them among the real measures), in requests of a few rooms each, [PARALLEL] at a time,
+   * each shown as it comes (the server computes them one after the other: smaller requests
+   * answer sooner, and side by side).
+   */
   private async read(ids: number[]): Promise<void> {
     const c = this.curves();
     if (c.key !== this.choice()) return;
+    const batches: number[][] = [];
+    for (let i = 0; i < ids.length; i += BATCH) batches.push(ids.slice(i, i + BATCH));
     this.loading.set(true);
-    try {
-      const p = step(c.start, c.end);
-      const averages = await firstValueFrom(this.climate.averages(ids, new Date(c.start), new Date(c.end), true, 2 * c.instants.length));
-      // The choices changed meanwhile: these curves are not the ones asked for any more
-      if (this.curves().key !== c.key) return;
-      const byId = new Map(this.curves().byId);
-      const fresh = new Set(this.curves().fresh);
-      // A curve kept from before was on its own time axis: all of them on the new one
-      if (!fresh.size) byId.clear();
-      for (const id of ids) {
-        fresh.add(id);
-        const points = (averages[String(id)] ?? []).filter((x) => x.value != null).map((x) => ({ t: time(x.date), v: x.value! }));
-        byId.set(id, curve(points, c.start, c.end, p));
+    // The rows asked for: not asked again while they come
+    this.asked = new Set([...this.asked, ...ids]);
+    let failed = false;
+    const p = step(c.start, c.end);
+    const points = Math.max(3, instants(c.start, c.end, p).length);
+    const worker = async () => {
+      for (let batch = batches.shift(); batch; batch = batches.shift()) {
+        try {
+          const averages = await firstValueFrom(this.climate.averages(batch, new Date(c.start), new Date(c.end), true, points));
+          // The choices changed meanwhile: these curves are not the ones asked for any more
+          if (this.curves().key !== c.key) return;
+          const now = this.curves();
+          // A curve kept from before was on its own time axis: all of them on the new one
+          const byId = new Map(now.fresh.size ? now.byId : new Map<number, Curve>());
+          const fresh = new Set(now.fresh);
+          for (const id of batch) {
+            fresh.add(id);
+            const pts = (averages[String(id)] ?? []).filter((x) => x.value != null).map((x) => ({ t: time(x.date), v: x.value! }));
+            byId.set(id, curve(pts, c.start, c.end, p));
+          }
+          const next = { ...now, byId, fresh, instants: instants(c.start, c.end, p) };
+          this.curves.set(next);
+          this.cache.write(c.key, next);
+        } catch (e) {
+          if (!failed) this.toasts.error('Impossible de charger les courbes', errorMessage(e));
+          failed = true;
+          for (const id of batch) this.asked.delete(id);
+        }
       }
-      const next = { ...this.curves(), byId, fresh, instants: instants(c.start, c.end, p) };
-      this.curves.set(next);
-      this.cache.write(c.key, next);
-    } catch (e) {
-      this.toasts.error('Impossible de charger les courbes', errorMessage(e));
+    };
+    try {
+      await Promise.all(Array.from({ length: Math.min(PARALLEL, batches.length) }, worker));
     } finally {
       this.loading.set(false);
     }
   }
+
+  /** Rows whose curve is on its way. */
+  private asked = new Set<number>();
 
   protected async refresh(): Promise<void> {
     await this.store.load(true).catch(() => undefined);
@@ -331,7 +360,10 @@ export class MeasurementsPage implements OnInit {
     // Every row, not only those shown: their curves first
     const fresh = this.curves().fresh;
     const missing = this.rows().filter((l) => !fresh.has(l.element.id)).map((l) => l.element.id);
-    if (missing.length) await this.read(missing);
+    if (missing.length) {
+      this.asked = new Set([...this.asked].filter((id) => fresh.has(id)));
+      await this.read(missing);
+    }
     const rowsOut = this.rows().filter((l) => l.curve);
     const symbol = this.unit.symbol();
     const cell = (t: string) => `"${t.replace(/"/g, '""')}"`;

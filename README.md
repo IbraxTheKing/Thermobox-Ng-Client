@@ -88,10 +88,12 @@ one, `--api old` an older one (French API only), to try the client against each.
 
 ## Large installations
 
-Hundreds of rooms, devices or accounts are drawn a part at a time: the overview, the room lists,
-the measurements table, the users and the management lists show the first ones, then the next
-ones as the end of the page comes near (or with « Afficher la suite »); a search looks through
-all of them. Only what is drawn costs anything: the 24 h curves of the overview cards, the
+On the overview, only the cards near the screen are drawn: blocks of a few rows far above or
+below are replaced by empty boxes of their height, and drawn again when the page comes back to
+them (the scroll and the page length do not move). Elsewhere, hundreds of rooms, devices or
+accounts are drawn a part at a time: the room lists, the measurements table, the users and the
+management lists show the first ones, then the next ones as the end of the page comes near (or
+with « Afficher la suite »); a search looks through all of them. Only what is drawn costs anything: the 24 h curves of the overview cards, the
 curves of the measurements page and the accesses of the users are read for the rows shown.
 
 The curves ask the server for a few hundred points each (`?points=`, 26.12), picked among the

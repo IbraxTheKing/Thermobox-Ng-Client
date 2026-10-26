@@ -1,5 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, computed, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, computed, inject, signal, viewChild, effect, untracked } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
@@ -75,13 +75,20 @@ export class RoomsPage implements OnInit, OnDestroy {
     return d ? [...this.store.path(d.id), d] : [];
   });
 
+  constructor() {
+    // Folded before the tree is first drawn, not after (a large structure drew every element
+    // once, then folded them): effects run before the page is drawn
+    effect(() => {
+      if (this.store.tree()) untracked(() => this.initFolded());
+    });
+  }
+
   async ngOnInit(): Promise<void> {
     try {
-      await this.store.load(this.store.tree() != null);
+      await this.store.ensure();
     } catch (e) {
       this.toasts.error('Impossible de charger les bâtiments et salles', errorMessage(e));
     }
-    this.initFolded();
     this.timer = setInterval(() => !document.hidden && void this.store.load(true).catch(() => undefined), 30_000);
   }
 

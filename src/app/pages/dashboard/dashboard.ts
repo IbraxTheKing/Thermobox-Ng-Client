@@ -9,7 +9,6 @@ import { PointT, Sparkline, sparkline } from '../../core/curves';
 import { clockTime, time } from '../../core/dates';
 import { STATES, RoomState, STATE_ORDER, countLabel, stateOf } from '../../core/state';
 import { ToastService } from '../../core/messages';
-import { ShownCount, TbMore } from '../../ui/more';
 import { FlipService } from '../../core/flip';
 import { PlatformService } from '../../core/platform';
 import { PreferencesService } from '../../core/preferences';
@@ -45,8 +44,17 @@ const TREND_PERIOD = 24 * 3_600_000;
 const TREND_VALIDITY = 5 * 60_000;
 const TRENDS_KEY = 'overview';
 const POLL = 30_000;
-/** Cards drawn at first, and added each time the end of the page comes near. */
-const CARDS = 48;
+/** Beyond this many rooms, only the cards near the screen are drawn. */
+const WINDOWED = 48;
+/** Rows of cards per block (drawn or let go together). */
+const BLOCK_ROWS = 3;
+
+/** A few rows of cards of one grid, drawn or replaced by an empty box of their height. */
+interface Block {
+  key: string;
+  rooms: RoomSummary[];
+  rows: number;
+}
 
 /**
  * Overview (dashboard.xhtml): every room the user may see, as a card with its temperature, state,
@@ -55,7 +63,7 @@ const CARDS = 48;
  */
 @Component({
   selector: 'tb-dashboard',
-  imports: [RouterLink, TbRoomCard, TbRoomOverview, TbMore],
+  imports: [RouterLink, TbRoomCard, TbRoomOverview],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './dashboard.html',
   // Computers: the size of the cards (the slider of the header)
@@ -86,15 +94,30 @@ export class DashboardPage implements OnInit, OnDestroy {
     // The page takes the colour of the state picked (« Couleurs selon l'état »)
     effect(() => this.transitions.setTone(this.stateFilter()?.tone ?? null));
     inject(DestroyRef).onDestroy(() => this.transitions.setTone(null));
-    // Another search or filter: from the top again
-    effect(() => {
-      this.search();
-      this.stateFilter();
-      this.buildingId();
-      this.range.bottom();
-      this.range.top();
-      untracked(() => this.shownCount.reset());
+    // The window on the page follows the scroll (one measure per frame at most)
+    let frame = 0;
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(() => ((frame = 0), this.measure()));
+    };
+    addEventListener('scroll', schedule, { passive: true });
+    addEventListener('resize', schedule);
+    inject(DestroyRef).onDestroy(() => {
+      removeEventListener('scroll', schedule);
+      removeEventListener('resize', schedule);
+      cancelAnimationFrame(frame);
     });
+    // Other cards (a search, a filter, a poll, a section folded): measured again once drawn
+    effect(() => {
+      this.blocks();
+      this.folded();
+      afterNextRender(schedule, { injector: this.injector });
+    });
+    // Back from a room: its card is drawn, wherever it is, for the transition to land in it
+    const back = this.transitions.lastCardId();
+    if (back != null) {
+      this.pinned.set(back);
+      setTimeout(() => this.pinned.set(null), 2000);
+    }
     // The curves of the cards drawn, as they come (not those of hundreds of rooms never seen)
     let pending: ReturnType<typeof setTimeout> | undefined;
     effect((onCleanup) => {
@@ -216,64 +239,156 @@ export class DashboardPage implements OnInit, OnDestroy {
   });
   protected readonly visibleCount = computed(() => this.visible().length);
 
-  // ---------------------------------------------------------------- many rooms: a part at a time
+  // ---------------------------------------------------------------- many rooms: a window on the page
 
   /**
-   * Cards drawn: the first [CARDS] in the order of the page, [CARDS] more as the end comes near.
-   * Hundreds of rooms are not all drawn (nor their curves read) at once; a search or a filter
-   * looks through all of them and starts again from the top.
+   * Hundreds of rooms: only the cards near the screen are drawn. Each grid of cards (a section, a
+   * floor in Panel) is cut into blocks of a few rows; a block far from the screen is replaced by
+   * an empty box of its height, so the page keeps its length and its scroll. Scrolling down draws
+   * the blocks that come near and lets go of those left far above; back up, the reverse. Their
+   * curves are read once, when first drawn.
    */
-  protected readonly shownCount = new ShownCount(CARDS);
-  /** Few rooms: everything is drawn, folded sections included (they fold with their cards). */
-  protected readonly large = computed(() => this.visible().length > CARDS);
+  protected readonly large = computed(() => this.visible().length > WINDOWED);
+  /** Columns of the grids (measured), for blocks of whole rows. */
+  private readonly cols = signal(this.platform.phone() ? 2 : 4);
+  /** Blocks drawn, by key; null until the page has been measured once (the first ones then). */
+  private readonly drawnKeys = signal<Set<string> | null>(null);
+  /** Height of each block when last drawn, for its empty box. */
+  private readonly heights = signal<Map<string, number>>(new Map());
+  /** A card that must stay drawn (coming back from its room: the transition lands in it). */
+  private readonly pinned = signal<number | null>(null);
+
+  /** The blocks of each grid of cards, by grid key. */
+  protected readonly blocks = computed(() => {
+    const size = this.large() ? this.cols() * BLOCK_ROWS : Infinity;
+    const m = new Map<string, Block[]>();
+    const add = (list: string, rooms: RoomSummary[]) => {
+      const blocks: Block[] = [];
+      for (let i = 0; i * size < rooms.length || (i === 0 && rooms.length === 0); i++) {
+        const part = Number.isFinite(size) ? rooms.slice(i * size, (i + 1) * size) : rooms;
+        blocks.push({ key: `${list}#${i}`, rooms: part, rows: Math.ceil(part.length / this.cols()) });
+        if (!Number.isFinite(size)) break;
+      }
+      m.set(list, blocks);
+    };
+    add('favorites', this.favorites());
+    for (const g of this.groups()) {
+      add(g.key, g.rooms);
+      for (const f of g.floors) add(g.key + '|' + f.key, f.rooms);
+    }
+    return m;
+  });
+
+  protected blocksOf(list: string): Block[] {
+    return this.blocks().get(list) ?? [];
+  }
+
+  /** Keys of the blocks drawn. Few rooms: all of them. */
+  private readonly drawn = computed(() => {
+    if (!this.large()) return null;
+    const keys = this.drawnKeys();
+    const pinned = this.pinned();
+    const out = new Set<string>();
+    let first = WINDOWED;
+    for (const [list, blocks] of this.blocks()) {
+      if (this.isFolded(list.split('|')[0])) continue;
+      for (const b of blocks) {
+        // Before any measure: the first cards of the page
+        const near = keys ? keys.has(b.key) : first > 0;
+        if (!keys) first -= b.rooms.length;
+        if (near || (pinned != null && b.rooms.some((r) => r.room.id === pinned))) out.add(b.key);
+      }
+    }
+    return out;
+  });
+
+  protected isDrawn(b: Block): boolean {
+    const d = this.drawn();
+    return !d || d.has(b.key);
+  }
+
+  /** Height of the empty box of a block: as last drawn, else estimated from the rows drawn. */
+  protected heightOf(b: Block): number {
+    const known = this.heights().get(b.key);
+    if (known != null) return known;
+    const row = this.rowHeight ?? (this.panel() ? 116 : 168) * this.prefs.cardSize();
+    return b.rows * row + Math.max(0, b.rows - 1) * this.rowGap;
+  }
+
+  private rowHeight: number | null = null;
+  private rowGap = 12;
 
   /** Ids of the cards drawn. */
   private readonly shownIds = computed(() => {
     const ids = new Set<number>();
-    let left = this.shownCount.count();
-    const take = (rooms: RoomSummary[]) => {
-      for (const r of rooms) {
-        if (left <= 0) return;
-        ids.add(r.room.id);
-        left--;
-      }
-    };
-    if (!this.isFolded('favorites')) take(this.favorites());
-    for (const g of this.groups()) if (!this.isFolded(g.key)) take(this.panel() ? g.floors.flatMap((f) => f.rooms) : g.rooms);
+    for (const [list, blocks] of this.blocks()) {
+      if (this.large() && this.isFolded(list.split('|')[0])) continue;
+      for (const b of blocks) if (this.isDrawn(b)) for (const r of b.rooms) ids.add(r.room.id);
+    }
     return ids;
-  });
-  /** Cards of open sections not drawn yet. */
-  protected readonly openTotal = computed(
-    () =>
-      (this.isFolded('favorites') ? 0 : this.favorites().length) +
-      this.groups().reduce((n, g) => n + (this.isFolded(g.key) ? 0 : g.rooms.length), 0),
-  );
-
-  protected readonly shownFavorites = computed(() => {
-    if (!this.large()) return this.favorites();
-    const ids = this.shownIds();
-    return this.favorites().filter((r) => ids.has(r.room.id));
   });
 
   /**
-   * The sections drawn, with their cards drawn: up to the one where the cards stop (the next
-   * ones come with the next part). A folded section keeps its title only.
+   * Measures the page (once per frame while it scrolls or is resized): the columns, the height of
+   * each block drawn, and which blocks are near the screen (within a screen) or still not far
+   * (within two and a half: kept, so going back and forth a little redraws nothing).
    */
-  protected readonly shownGroups = computed(() => {
-    const groups = this.groups();
-    if (!this.large()) return groups.map((g) => ({ ...g, shownRooms: g.rooms, shownFloors: g.floors }));
-    const ids = this.shownIds();
-    const out: (BuildingGroup & { shownRooms: RoomSummary[]; shownFloors: BuildingGroup['floors'] })[] = [];
-    for (const g of groups) {
-      const folded = this.isFolded(g.key);
-      const shownRooms = folded ? [] : g.rooms.filter((r) => ids.has(r.room.id));
-      const shownFloors = folded ? [] : g.floors.map((f) => ({ ...f, rooms: f.rooms.filter((r) => ids.has(r.room.id)) })).filter((f) => f.rooms.length);
-      if (!folded && !shownRooms.length && g.rooms.length) break;
-      out.push({ ...g, shownRooms, shownFloors });
-      if (!folded && shownRooms.length < g.rooms.length) break;
+  private measure(): void {
+    if (!this.large()) return;
+    const grids = [...this.host.querySelectorAll<HTMLElement>('[data-vgrid]')];
+    if (!grids.length) return;
+    const style = getComputedStyle(grids[0]);
+    const cols = style.gridTemplateColumns.split(' ').filter(Boolean).length || 1;
+    this.rowGap = parseFloat(style.rowGap) || 0;
+    if (cols !== this.cols()) {
+      // Other blocks (whole rows of the new width): their heights are measured again
+      this.cols.set(cols);
+      this.heights.set(new Map());
+      this.drawnKeys.set(null);
+      this.rowHeight = null;
+      requestAnimationFrame(() => this.measure());
+      return;
     }
-    return out;
-  });
+    const near = innerHeight;
+    const keep = innerHeight * 2.5;
+    const before = this.drawn();
+    const keys = new Set<string>();
+    const heights = new Map(this.heights());
+    let changed = false;
+    for (const grid of grids) {
+      // The items of the grid in order: the cards of the blocks drawn, the boxes of the others
+      const spans = new Map<string, { top: number; bottom: number; drawn: boolean }>();
+      for (const el of grid.querySelectorAll<HTMLElement>(':scope > [data-b]')) {
+        const key = el.dataset['b']!;
+        const box = (el.classList.contains('tb-vph') ? el : (el.firstElementChild as HTMLElement | null))?.getBoundingClientRect();
+        if (!box) continue;
+        const s = spans.get(key);
+        if (s) {
+          s.top = Math.min(s.top, box.top);
+          s.bottom = Math.max(s.bottom, box.bottom);
+        } else spans.set(key, { top: box.top, bottom: box.bottom, drawn: !el.classList.contains('tb-vph') });
+      }
+      for (const [key, s] of spans) {
+        if (s.drawn) {
+          const h = Math.round(s.bottom - s.top);
+          if (Math.abs((heights.get(key) ?? -1) - h) > 1) {
+            heights.set(key, h);
+            changed = true;
+          }
+        }
+        const distance = s.bottom < 0 ? -s.bottom : s.top > innerHeight ? s.top - innerHeight : 0;
+        if (distance <= near || (s.drawn && before?.has(key) && distance <= keep)) keys.add(key);
+      }
+    }
+    if (changed) {
+      this.heights.set(heights);
+      // A row as drawn, for the blocks never drawn yet
+      const block = [...this.blocks().values()].flat().find((b) => heights.has(b.key) && b.rows > 0);
+      if (block) this.rowHeight = (heights.get(block.key)! - (block.rows - 1) * this.rowGap) / block.rows;
+    }
+    const old = this.drawnKeys();
+    if (!old || old.size !== keys.size || [...keys].some((k) => !old.has(k))) this.drawnKeys.set(keys);
+  }
 
   protected readonly favorites = computed(() => this.visible().filter((r) => r.room.favorite));
 
@@ -547,7 +662,7 @@ export class DashboardPage implements OnInit, OnDestroy {
 
   async ngOnInit(): Promise<void> {
     try {
-      await this.store.load(this.store.tree() != null);
+      await this.store.ensure();
     } catch (e) {
       this.toasts.error('Impossible de charger les salles', errorMessage(e));
     }
@@ -590,8 +705,10 @@ export class DashboardPage implements OnInit, OnDestroy {
     const drawn = ids ?? [...this.shownIds()];
     const known = this.trends();
     const stale = Date.now() - this.trendsComputedAt >= TREND_VALIDITY;
-    const wanted = drawn.filter((id) => !known?.has(id) || (all && stale));
+    // Not those already on their way (the first ones are asked twice: by the page, by the window)
+    const wanted = drawn.filter((id) => (!known?.has(id) || (all && stale)) && !this.trendsAsked.has(id));
     if (!wanted.length) return;
+    for (const id of wanted) this.trendsAsked.add(id);
     const end = new Date();
     const start = new Date(end.getTime() - TREND_PERIOD);
     const byId = this.store.byId();
@@ -605,8 +722,13 @@ export class DashboardPage implements OnInit, OnDestroy {
       this.cache.write(TRENDS_KEY, m);
     } catch {
       if (!this.trends()) this.trends.set(new Map(wanted.map((id) => [id, null])));
+    } finally {
+      for (const id of wanted) this.trendsAsked.delete(id);
     }
   }
+
+  /** Curves on their way. */
+  private readonly trendsAsked = new Set<number>();
 
   protected async toggleFavorite(id: number): Promise<void> {
     const n = this.store.byId().get(id);

@@ -37,6 +37,9 @@ declare module 'chart.js' {
   }
 }
 
+/** Beyond this many curves, the chart is drawn without animation. */
+const MAX_ANIMATED = 8;
+
 Chart.register(LineController, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend);
 
 /** One curve. Values in Celsius (shown in the unit of the Preferences page). */
@@ -329,7 +332,10 @@ export class TbChart implements OnDestroy {
       maintainAspectRatio: false,
       layout: { padding: { top: mobile ? 8 : 4, right: mobile ? 0 : 4, bottom: 0, left: 0 } },
       // Phones: shorter (each frame of it redraws the whole chart, during the page transition)
-      animation: animate ? { duration: mobile ? 450 : 900, easing: 'easeOutQuart' } : false,
+      // Many curves (the measurements page): drawn at once, an animation of each would cost more
+      // than it shows
+      animation: animate && n <= MAX_ANIMATED ? { duration: mobile ? 450 : 900, easing: 'easeOutQuart' } : false,
+      normalized: true,
       interaction: { mode: 'index', intersect: false },
       // Phones: the values under the finger go to the reading strip; lifted, back to the last ones
       onHover: mobile

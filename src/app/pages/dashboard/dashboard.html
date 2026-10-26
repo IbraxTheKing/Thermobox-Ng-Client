@@ -171,16 +171,24 @@
       </button>
     </h2>
     <div class="tb-section-body">
-      <div [class]="panel() ? 'tb-cells' : 'tb-room-tiles'">
-        @for (r of shownFavorites(); track r.room.id) {
-          <tb-room-card [r]="r" [fresh]="newCurves()" (favorite)="toggleFavorite($event)" (overview)="openOverview($event)" />
-        }
-      </div>
+      @if (!large() || !isFolded('favorites')) {
+        <div [class]="panel() ? 'tb-cells' : 'tb-room-tiles'" data-vgrid="favorites">
+          @for (b of blocksOf('favorites'); track b.key) {
+            @if (isDrawn(b)) {
+              @for (r of b.rooms; track r.room.id) {
+                <tb-room-card [r]="r" [fresh]="newCurves()" [attr.data-b]="b.key" (favorite)="toggleFavorite($event)" (overview)="openOverview($event)" />
+              }
+            } @else {
+              <div class="tb-vph" [attr.data-b]="b.key" [style.height.px]="heightOf(b)" aria-hidden="true"></div>
+            }
+          }
+        </div>
+      }
     </div>
   </section>
 }
 
-@for (g of shownGroups(); track g.key) {
+@for (g of groups(); track g.key) {
   <section class="tb-section" [class.tb-collapsed]="isFolded(g.key)" [class.tb-dragged]="dragged() === g.key" [attr.data-section]="g.key" [attr.data-group]="g.key">
     @if (panel() || severalBuildings() || favorites().length) {
       <h2 class="tb-section-title" [attr.data-flip]="'section-' + g.key">
@@ -206,36 +214,45 @@
       </h2>
     }
     <div class="tb-section-body">
-      @if (panel()) {
+      @if (large() && isFolded(g.key)) {
+        <!-- Folded, in a large page: nothing drawn until it opens -->
+      } @else if (panel()) {
         <!-- One row of squares per floor, its name on its edge (one child: the section folds whole) -->
         <div class="tb-floors">
-          @for (e of g.shownFloors; track e.key) {
+          @for (e of g.floors; track e.key) {
             <div class="tb-floor" [attr.data-flip]="g.key + e.key">
               @if (e.name) {
                 <span class="tb-floor-name">{{ e.name }}</span>
               }
-              <div class="tb-cells">
-                @for (r of e.rooms; track r.room.id) {
-                  <tb-room-card [r]="r" [fresh]="newCurves()" (favorite)="toggleFavorite($event)" (overview)="openOverview($event)" />
+              <div class="tb-cells" [attr.data-vgrid]="g.key + '|' + e.key">
+                @for (b of blocksOf(g.key + '|' + e.key); track b.key) {
+                  @if (isDrawn(b)) {
+                    @for (r of b.rooms; track r.room.id) {
+                      <tb-room-card [r]="r" [fresh]="newCurves()" [attr.data-b]="b.key" (favorite)="toggleFavorite($event)" (overview)="openOverview($event)" />
+                    }
+                  } @else {
+                    <div class="tb-vph" [attr.data-b]="b.key" [style.height.px]="heightOf(b)" aria-hidden="true"></div>
+                  }
                 }
               </div>
             </div>
           }
         </div>
       } @else {
-        <div class="tb-room-tiles">
-          @for (r of g.shownRooms; track r.room.id) {
-            <tb-room-card [r]="r" [fresh]="newCurves()" (favorite)="toggleFavorite($event)" (overview)="openOverview($event)" />
+        <div class="tb-room-tiles" [attr.data-vgrid]="g.key">
+          @for (b of blocksOf(g.key); track b.key) {
+            @if (isDrawn(b)) {
+              @for (r of b.rooms; track r.room.id) {
+                <tb-room-card [r]="r" [fresh]="newCurves()" [attr.data-b]="b.key" (favorite)="toggleFavorite($event)" (overview)="openOverview($event)" />
+              }
+            } @else {
+              <div class="tb-vph" [attr.data-b]="b.key" [style.height.px]="heightOf(b)" aria-hidden="true"></div>
+            }
           }
         </div>
       }
     </div>
   </section>
-}
-
-<!-- Many rooms: the next cards as the end of the page comes near -->
-@if (large()) {
-  <tb-more [total]="openTotal()" [shown]="shownCount.count()" (more)="shownCount.more()" label="Afficher d'autres salles" />
 }
 
 <!-- A card held down: its whole day and its details -->

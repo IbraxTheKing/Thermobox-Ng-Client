@@ -51,6 +51,13 @@
     </div>
   }
 
+  @if (!store.tree()) {
+    <div class="tb-skeleton" aria-busy="true" aria-label="Chargement des bâtiments et salles">
+    @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+      <div class="tb-skeleton-row" [style.--w]="[62, 48, 70, 55, 66, 44][i - 1] + '%'"><span></span><span></span></div>
+    }
+  </div>
+  }
   <ul class="tb-drill-list">
     @for (n of content().slice(0, shownContent.count()); track n.id) {
       <li class="tb-drill-item">
@@ -120,6 +127,13 @@
     >
       <i class="pi pi-link"></i> Premier niveau : déposer ici détache l'élément
     </div>
+  }
+  @if (!store.tree()) {
+    <div class="tb-skeleton" aria-busy="true" aria-label="Chargement des bâtiments et salles">
+    @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+      <div class="tb-skeleton-row" [style.--w]="[62, 48, 70, 55, 66, 44][i - 1] + '%'"><span></span><span></span></div>
+    }
+  </div>
   }
   <ng-container *ngTemplateOutlet="branch; context: { $implicit: shownChildren(-1, store.roots()), parent: -1, total: store.roots().length }" />
   @if (store.tree() && !store.roots().length) {

@@ -123,9 +123,16 @@
                   {{ unit.t(l.setpoint) }}
                   <span class="tb-gap">{{ unit.delta(l.delta) }}</span>
                 </td>
-                <td class="tb-col-num tb-col-opt">{{ unit.t(l.min) }}</td>
-                <td class="tb-col-num tb-col-opt">{{ unit.t(l.max) }}</td>
-                <td class="tb-col-num tb-col-opt">{{ unit.t(l.average) }}</td>
+                @if (l.curve) {
+                  <td class="tb-col-num tb-col-opt">{{ unit.t(l.min) }}</td>
+                  <td class="tb-col-num tb-col-opt">{{ unit.t(l.max) }}</td>
+                  <td class="tb-col-num tb-col-opt">{{ unit.t(l.average) }}</td>
+                } @else {
+                  <!-- Its curve is on its way -->
+                  <td class="tb-col-num tb-col-opt"><span class="tb-cell-wait"></span></td>
+                  <td class="tb-col-num tb-col-opt"><span class="tb-cell-wait"></span></td>
+                  <td class="tb-col-num tb-col-opt"><span class="tb-cell-wait"></span></td>
+                }
                 <td class="tb-col-target">
                   <span class="tb-label-sm">À la cible</span>
                   <span class="tb-on-target" title="Part de la période à moins d'un demi-degré de la consigne actuelle">

@@ -145,7 +145,7 @@ export class ManagementPage implements OnInit {
 
   async ngOnInit(): Promise<void> {
     try {
-      await this.store.load(this.store.tree() != null);
+      await this.store.ensure();
     } catch (e) {
       this.toasts.error('Impossible de charger les éléments', errorMessage(e));
     }
