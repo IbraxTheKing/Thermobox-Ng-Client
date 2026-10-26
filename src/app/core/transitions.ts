@@ -137,7 +137,7 @@ export class TransitionsService {
         this.name(id, false);
         // Nothing to morph into (room page not ready, card in a folded section): the card
         // would stay on its own in the middle of the new page, so no transition at all
-        if (!this.named.some((e) => e.style.getPropertyValue('view-transition-name') === `salle-card-${id}`)) {
+        if (!this.named.some((e) => e.style.getPropertyValue('view-transition-name') === `room-card-${id}`)) {
           this.unname();
           transition.skipTransition();
         }
@@ -229,14 +229,14 @@ export class TransitionsService {
       // Phones: the card alone, or the whole page of the room
       const page = card ?? (all.length ? this.doc.querySelector<HTMLElement>('.tb-main') : null);
       if (!page) return;
-      page.style.setProperty('view-transition-name', `salle-card-${id}`);
+      page.style.setProperty('view-transition-name', `room-card-${id}`);
       page.style.setProperty('view-transition-class', 'tb-card');
       page.dataset['vtFull'] = '';
       this.named.push(page);
       // The room page: its photo flies on its own, out of the card (flyPhoto)
       const photo = card ? null : all.find((e) => e.dataset['vt'] === 'room-photo' && !e.classList.contains('tb-photo-empty'));
       if (photo) {
-        photo.style.setProperty('view-transition-name', `salle-photo-${id}`);
+        photo.style.setProperty('view-transition-name', `room-photo-${id}`);
         photo.style.setProperty('view-transition-class', 'tb-vt-photo');
         photo.dataset['vtClass'] = '';
         this.named.push(photo);
@@ -262,7 +262,7 @@ export class TransitionsService {
 
   /** The photo of the room page, named for the transition, if the room has one. */
   private namedPhoto(id: string): HTMLElement | null {
-    const p = this.named.find((e) => e.style.getPropertyValue('view-transition-name') === `salle-photo-${id}`);
+    const p = this.named.find((e) => e.style.getPropertyValue('view-transition-name') === `room-photo-${id}`);
     return p && !p.classList.contains('tb-photo-empty') ? p : null;
   }
 
@@ -273,7 +273,7 @@ export class TransitionsService {
    * position, size, corners.
    */
   private flyPhoto(id: string, cardStart: Frame | null, backStart: Frame | null): void {
-    const pseudo = `::view-transition-group(salle-photo-${id})`;
+    const pseudo = `::view-transition-group(room-photo-${id})`;
     const options: KeyframeAnimationOptions = { duration: 520, easing: 'cubic-bezier(.2, .8, .2, 1)', fill: 'both', pseudoElement: pseudo };
     if (cardStart) {
       const photo = this.namedPhoto(id);
@@ -281,12 +281,12 @@ export class TransitionsService {
       this.root.classList.add('tb-vt-flight');
       this.root.animate(images(cardStart, frame(photo)), options);
     } else if (backStart) {
-      const card = this.named.find((e) => e.style.getPropertyValue('view-transition-name') === `salle-card-${id}` && e.classList.contains('tb-room'));
+      const card = this.named.find((e) => e.style.getPropertyValue('view-transition-name') === `room-card-${id}` && e.classList.contains('tb-room'));
       if (!card) return;
       this.root.classList.add('tb-vt-flight');
       this.root.animate(images(backStart, frame(card)), options);
       // It melts into the card at the end of the way
-      this.root.animate({ opacity: [1, 1, 0], offset: [0, 0.6, 1] }, { ...options, pseudoElement: `::view-transition-old(salle-photo-${id})` });
+      this.root.animate({ opacity: [1, 1, 0], offset: [0, 0.6, 1] }, { ...options, pseudoElement: `::view-transition-old(room-photo-${id})` });
     }
   }
 
@@ -341,7 +341,7 @@ function sheet(s: ActivatedRouteSnapshot): ActivatedRouteSnapshot {
   return r;
 }
 
-/** Path of the deepest route ("apercu", "salle/:id"…). */
+/** Path of the deepest route ("overview", "room/:id"…). */
 function path(s: ActivatedRouteSnapshot): string {
   return sheet(s).routeConfig?.path ?? '';
 }

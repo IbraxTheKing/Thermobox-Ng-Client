@@ -224,7 +224,7 @@ export class RoomPage implements OnDestroy {
     if (this.detail()?.element.id !== id) this.prime(id);
     this.missing.set(false);
     // The last 24 h of this room, if already read: there at once
-    this.history.set(isNaN(id) ? null : (this.cache.read<History>(`salle|${id}|24`)?.value ?? null));
+    this.history.set(isNaN(id) ? null : (this.cache.read<History>(`room|${id}|24`)?.value ?? null));
     this.newSetpoint.set(null);
     this.force.set(false);
     this.period(24, false);
@@ -358,7 +358,7 @@ export class RoomPage implements OnDestroy {
       this.force.set(false);
       await this.refresh(e.id, true);
       // The new setpoint is in the history: read again, for every period
-      this.cache.forget(`salle|${e.id}|`);
+      this.cache.forget(`room|${e.id}|`);
       void this.loadHistory();
     } catch (err) {
       this.toasts.error('Consigne refusée', errorMessage(err));
@@ -398,7 +398,7 @@ export class RoomPage implements OnDestroy {
     // A period of the shortcuts (24 h, 7 j, 30 j): kept in memory, shown at once when coming back;
     // read again only when it is no longer recent
     const hours = this.periodHours();
-    const key = hours != null ? `salle|${e.id}|${hours}` : null;
+    const key = hours != null ? `room|${e.id}|${hours}` : null;
     const kept = key ? this.cache.read<History>(key) : null;
     if (kept) {
       if (this.history() !== kept.value) this.setpointsPage.set(0);
