@@ -263,11 +263,12 @@ export class DashboardPage implements OnInit, OnDestroy {
     const size = this.large() ? this.cols() * BLOCK_ROWS : Infinity;
     const m = new Map<string, Block[]>();
     const add = (list: string, rooms: RoomSummary[]) => {
+      // Few rooms: one block with all of them (0 × Infinity is NaN: no loop for that case)
       const blocks: Block[] = [];
-      for (let i = 0; i * size < rooms.length || (i === 0 && rooms.length === 0); i++) {
+      const n = Number.isFinite(size) ? Math.max(1, Math.ceil(rooms.length / size)) : 1;
+      for (let i = 0; i < n; i++) {
         const part = Number.isFinite(size) ? rooms.slice(i * size, (i + 1) * size) : rooms;
         blocks.push({ key: `${list}#${i}`, rooms: part, rows: Math.ceil(part.length / this.cols()) });
-        if (!Number.isFinite(size)) break;
       }
       m.set(list, blocks);
     };
