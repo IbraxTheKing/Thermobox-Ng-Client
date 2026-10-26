@@ -2,7 +2,7 @@ name: Vérification
 
 # À chaque push et pull request sur main et dev : le client se construit (Node 24, comme les
 # versions publiées) et, s'il y a un dossier android/, l'application Android aussi, avec le plugin
-# natif (plugins/thermobox-natif). L'APK de debug est gardé une semaine dans les artefacts du run,
+# natif (plugins/thermobox-native). L'APK de debug est gardé une semaine dans les artefacts du run,
 # pour l'essayer sur un téléphone.
 # Remplace le modèle « NodeJS with Webpack » de GitHub (ce projet n'utilise pas webpack).
 

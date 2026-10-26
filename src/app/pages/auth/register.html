@@ -7,57 +7,57 @@
     </div>
     <section class="tb-panel tb-auth-card">
       <h1 class="tb-panel-title">Créer un compte</h1>
-      <form (submit)="creer($event)" novalidate>
-        @if (champServeur()) {
+      <form (submit)="create($event)" novalidate>
+        @if (serverField()) {
           <div class="tb-field">
             <label class="tb-label" for="serveur">Serveur ThermoBox</label>
             <input id="serveur" class="tb-input" type="url" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false"
-                   [placeholder]="serveur.defaut ? serveur.lisible() : 'thermobox.mon-organisation.fr'" [value]="adresse()" (input)="adresse.set($any($event.target).value)" />
+                   [placeholder]="server.defaultBase ? server.readable() : 'thermobox.mon-organisation.fr'" [value]="address()" (input)="address.set($any($event.target).value)" />
             <span class="tb-field-hint">
-              Le serveur où créer le compte, avec le port s'il y en a un.@if (serveur.defaut) { Vide : ce site.}
+              Le serveur où créer le compte, avec le port s'il y en a un.@if (server.defaultBase) { Vide : ce site.}
             </span>
           </div>
         } @else {
-          <p class="tb-auth-serveur">
-            <span><i class="pi pi-server" aria-hidden="true"></i> Sur <strong>{{ serveur.lisible() }}</strong></span>
-            <button type="button" class="tb-text-btn tb-serveur-btn" (click)="changerServeur.set(true)">Autre serveur</button>
+          <p class="tb-auth-server">
+            <span><i class="pi pi-server" aria-hidden="true"></i> Sur <strong>{{ server.readable() }}</strong></span>
+            <button type="button" class="tb-text-btn tb-server-btn" (click)="changeServer.set(true)">Autre serveur</button>
           </p>
         }
         <div class="tb-field">
           <label class="tb-label" for="username">Nom d'utilisateur</label>
           <input id="username" class="tb-input" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false"
-                 [value]="username()" (input)="username.set($any($event.target).value)" [class.tb-invalid]="envoye() && erreurNom()" />
-          @if (envoye() && erreurNom(); as e) {
+                 [value]="username()" (input)="username.set($any($event.target).value)" [class.tb-invalid]="sent() && nameError()" />
+          @if (sent() && nameError(); as e) {
             <span class="tb-field-error">{{ e }}</span>
           }
         </div>
         <div class="tb-field">
           <label class="tb-label" for="password">Mot de passe</label>
-          <tb-password inputId="password" [(valeur)]="password" autocomplete="new-password" [invalide]="!!(envoye() && erreurMdp())" />
+          <tb-password inputId="password" [(value)]="password" autocomplete="new-password" [invalid]="!!(sent() && passwordError())" />
           @if (password()) {
             <span class="tb-force">
-              <span class="tb-force-barre"><span [style.width.%]="(force() + 1) * 33.4" [style.background]="force() === 2 ? 'var(--tb-stable)' : force() === 1 ? 'var(--tb-chauffe)' : 'var(--md-error)'"></span></span>
+              <span class="tb-force-bar"><span [style.width.%]="(force() + 1) * 33.4" [style.background]="force() === 2 ? 'var(--tb-stable)' : force() === 1 ? 'var(--tb-heating)' : 'var(--md-error)'"></span></span>
               {{ force() === 2 ? 'Fort' : force() === 1 ? 'Moyen' : 'Faible' }}
             </span>
           } @else {
             <span class="tb-field-hint">Choisis un mot de passe (8 caractères au moins)</span>
           }
-          @if (envoye() && erreurMdp(); as e) {
+          @if (sent() && passwordError(); as e) {
             <span class="tb-field-error">{{ e }}</span>
           }
         </div>
         <div class="tb-field">
           <label class="tb-label" for="confirm">Confirmation</label>
-          <tb-password inputId="confirm" [(valeur)]="confirm" autocomplete="new-password" [invalide]="!!(envoye() && erreurConfirm())" />
-          @if (envoye() && erreurConfirm(); as e) {
+          <tb-password inputId="confirm" [(value)]="confirm" autocomplete="new-password" [invalid]="!!(sent() && confirmError())" />
+          @if (sent() && confirmError(); as e) {
             <span class="tb-field-error">{{ e }}</span>
           }
         </div>
-        @if (erreur(); as e) {
+        @if (error(); as e) {
           <div class="tb-message tb-message-error" role="alert"><i class="pi pi-times-circle"></i><div>{{ e }}</div></div>
         }
-        <button type="submit" class="tb-btn tb-full" [class.tb-busy]="enCours()" [disabled]="enCours()">
-          <i class="pi" [class.pi-user-plus]="!enCours()" [class.pi-spinner]="enCours()"></i>Créer mon compte
+        <button type="submit" class="tb-btn tb-full" [class.tb-busy]="inProgress()" [disabled]="inProgress()">
+          <i class="pi" [class.pi-user-plus]="!inProgress()" [class.pi-spinner]="inProgress()"></i>Créer mon compte
         </button>
       </form>
       <div class="tb-panel-footer">Déjà inscrit ? <a routerLink="/login">Se connecter</a></div>

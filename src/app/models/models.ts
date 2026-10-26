@@ -2,7 +2,7 @@
  * JSON of the ThermoBox REST API (RestServer, branch dev).
  *
  * Two kinds of dates come from the server:
- * - the entities (Temperature, Consigne…) carry a java.time.LocalDateTime, which Jackson writes
+ * - the entities (Temperature, Setpoint…) carry a java.time.LocalDateTime, which Jackson writes
  *   either as an array ([2026, 10, 21, 14, 5, 0]) or as a string, depending on its configuration;
  * - the DTOs (/api/hierarchie, /api/climat, /api/updates) carry ISO-8601 strings.
  * Both are read with parseDate (core/dates.ts), always as a local time of the server.
@@ -13,10 +13,10 @@ export type DateJson = string | number[] | null;
 
 // ---------------------------------------------------------------- users and authentication
 
-/** UserType: an ADMIN can do everything, a GESTIONNAIRE sets consignes, a VIEWER reads. */
-export type UserRole = 'ADMIN' | 'GESTIONNAIRE' | 'VIEWER';
+/** UserType: an ADMIN can do everything, a MANAGER sets setpoints, a VIEWER reads. */
+export type UserRole = 'ADMIN' | 'MANAGER' | 'VIEWER';
 
-export const ROLES: readonly UserRole[] = ['ADMIN', 'GESTIONNAIRE', 'VIEWER'];
+export const ROLES: readonly UserRole[] = ['ADMIN', 'MANAGER', 'VIEWER'];
 
 /** UserDto: the API never sends the password back. */
 export interface User {
@@ -41,35 +41,35 @@ export interface LoginResponse {
 }
 
 /** GET /api/users/{id}/acces. restricted false: sees everything. */
-export interface Acces {
+export interface Access {
   restricted: boolean;
-  elements: { id: number; name: string | null; kind: SalleKind }[];
+  elements: { id: number; name: string | null; kind: RoomKind }[];
 }
 
 // ---------------------------------------------------------------- groups
 
-export interface Groupe {
+export interface Group {
   id: number;
   name: string;
   description: string | null;
   members: { id: number; username: string | null }[];
-  elements: { id: number; name: string | null; kind: SalleKind }[];
+  elements: { id: number; name: string | null; kind: RoomKind }[];
 }
 
-export interface GroupeRequest {
+export interface GroupRequest {
   name: string;
   description?: string | null;
   members: number[];
   elements: number[];
 }
 
-// ---------------------------------------------------------------- bâtiments, étages, salles, boîtiers
+// ---------------------------------------------------------------- buildings, floors, rooms, devices
 
-/** Level in the tree, from the top: Bâtiment → (Étage) → Salle → Boîtier. */
-export type SalleKind = 'BATIMENT' | 'ETAGE' | 'SALLE' | 'BOITIER';
+/** Level in the tree, from the top: Building → (Floor) → Room → Device. */
+export type RoomKind = 'BUILDING' | 'FLOOR' | 'ROOM' | 'DEVICE';
 
-/** /api/salles: an element without its kind. Prefer /api/hierarchie. */
-export interface Salle {
+/** /api/rooms: an element without its kind. Prefer /api/hierarchie. */
+export interface Room {
   id?: number;
   name: string | null;
 }
@@ -78,49 +78,49 @@ export interface Salle {
 export interface Element {
   id: number;
   name: string | null;
-  kind: SalleKind;
+  kind: RoomKind;
   accessible: boolean;
 }
 
-/** The consigne that applies to an element: its own, or its nearest ancestor's (heritee). */
-export interface ConsigneEffective {
+/** The setpoint that applies to an element: its own, or its nearest ancestor's (heritee). */
+export interface EffectiveSetpoint {
   value: number | null;
   date: string | null;
-  heritee: boolean;
+  inherited: boolean;
   sourceId: number | null;
   sourceName: string | null;
 }
 
 /** One element of GET /api/hierarchie/arbre. */
-export interface Noeud {
+export interface Node {
   id: number;
   name: string | null;
-  kind: SalleKind;
-  /** null: a bâtiment, or an element not attached yet. */
+  kind: RoomKind;
+  /** null: a building, or an element not attached yet. */
   parentId: number | null;
-  rattache: boolean;
+  attached: boolean;
   /** false: an ancestor shown only to place what the user may see below it. */
   accessible: boolean;
   /** Celsius: last measure of a box, average of the boxes below otherwise. */
   temperature: number | null;
-  derniereMesure: string | null;
+  lastMeasurement: string | null;
   /** Boxes below (0 for a VIEWER). */
-  boitiers: number;
-  consigne: ConsigneEffective | null;
+  devices: number;
+  setpoint: EffectiveSetpoint | null;
   /** Version of the photo, null without photo. */
   image: number | null;
-  favori: boolean;
+  favorite: boolean;
 }
 
-export interface Arbre {
+export interface Tree {
   /** The user sees everything (no limited access). */
-  tout: boolean;
-  /** GESTIONNAIRE or ADMIN: the boxes are part of the tree. */
-  boitiersVisibles: boolean;
-  noeuds: Noeud[];
+  all: boolean;
+  /** MANAGER or ADMIN: the boxes are part of the tree. */
+  devicesVisible: boolean;
+  nodes: Node[];
 }
 
-export interface MesureBoitier {
+export interface DeviceMeasurement {
   id: number;
   name: string | null;
   value: number | null;
@@ -129,71 +129,71 @@ export interface MesureBoitier {
 
 /** GET /api/hierarchie/elements/{id} */
 export interface DetailElement {
-  element: Noeud;
-  ancetres: Element[];
-  enfants: Element[];
-  mesures: MesureBoitier[];
-  consignesPropres: ConsigneEffective[];
-  salles: Noeud[];
+  element: Node;
+  ancestors: Element[];
+  children: Element[];
+  measurements: DeviceMeasurement[];
+  ownSetpoints: EffectiveSetpoint[];
+  rooms: Node[];
 }
 
 export interface ElementRequest {
-  kind?: SalleKind;
+  kind?: RoomKind;
   name: string;
   parentId: number | null;
 }
 
 // ---------------------------------------------------------------- temperatures and climate
 
-export type TemperatureType = 'consigne' | 'mesurer';
+export type TemperatureType = 'setpoint' | 'measurement';
 
-/** Temperature, Consigne or Mesurer (the API doesn't say which: see TemperatureService.byType). */
+/** Temperature, Setpoint or Mesurer (the API doesn't say which: see TemperatureService.byType). */
 export interface Temperature {
   id?: number;
   value: number | null;
   date: DateJson;
 }
 
-export type Consigne = Temperature;
+export type Setpoint = Temperature;
 
 export interface Point {
   date: string | null;
   value: number | null;
 }
 
-export interface Serie {
+export interface Series {
   id: number;
   name: string | null;
   points: Point[];
 }
 
 /** GET /api/climat/{id}/historique */
-export interface Historique {
-  boitiers: Serie[];
-  salles: Serie[];
-  moyenne: Point[];
-  consignes: Point[];
+export interface History {
+  devices: Series[];
+  rooms: Series[];
+  average: Point[];
+  setpoints: Point[];
 }
 
 /** PUT /api/climat/{id}/consigne */
-export interface EnvoiConsigne {
-  conservees: ConsigneEffective[];
-  remplacees: Element[];
-  boitiers: Element[];
-  echecs: Element[];
+export interface SetpointSending {
+  kept: EffectiveSetpoint[];
+  replaced: Element[];
+  devices: Element[];
+  failures: Element[];
 }
 
-export interface SalleTempAttr {
+export interface RoomTempAttr {
   id?: number;
-  salle: Salle;
+  room: Room;
   temperature: Temperature;
 }
 
 // ---------------------------------------------------------------- updates (/api/updates)
 
-export interface VersionDisponible {
+export interface AvailableVersion {
   version: string;
-  /** CORRECTIVE or FONCTIONNELLE */
+  /** PATCH or FEATURE */
   type: string;
   typeLabel: string;
   recommended: boolean;
@@ -209,9 +209,9 @@ export interface VersionDisponible {
   incompatible: boolean;
 }
 
-export interface EtapeInstallation {
+export interface InstallationStep {
   title: string;
-  /** EN_ATTENTE, EN_COURS, OK, IGNOREE, ECHEC */
+  /** PENDING, RUNNING, OK, SKIPPED, FAILED */
   state: string;
   detail: string;
 }
@@ -224,15 +224,15 @@ export interface Installation {
   component: string;
   user: string;
   startedAt: string;
-  /** EN_COURS, REDEMARRAGE, TERMINEE, ECHEC */
+  /** RUNNING, RESTARTING, DONE, FAILED */
   state: string;
   message: string;
   backupFile: string | null;
   finishedAt: string | null;
-  steps: EtapeInstallation[];
+  steps: InstallationStep[];
 }
 
-export interface EtatMisesAJour {
+export interface UpdatesState {
   component: string | null;
   installedVersion: string | null;
   channel: string;
@@ -240,27 +240,27 @@ export interface EtatMisesAJour {
   lastCheck: string | null;
   error: string | null;
   updateAvailable: boolean;
-  latestPatch: VersionDisponible | null;
-  latestFeature: VersionDisponible | null;
-  available: VersionDisponible[];
-  olderVersions: VersionDisponible[];
+  latestPatch: AvailableVersion | null;
+  latestFeature: AvailableVersion | null;
+  available: AvailableVersion[];
+  olderVersions: AvailableVersion[];
   automaticInstall: boolean | null;
   installMode: string | null;
   installation: Installation | null;
 }
 
-export interface Controle {
-  /** OK, INFO, AVERTISSEMENT, BLOQUANT */
+export interface UpdateCheck {
+  /** OK, INFO, WARNING, BLOCKING */
   level: string;
   title: string;
   detail: string;
 }
 
 export interface Preparation {
-  version: VersionDisponible;
+  version: AvailableVersion;
   installedVersion: string | null;
   installable: boolean;
-  checks: Controle[];
+  checks: UpdateCheck[];
   backupRequired: boolean;
   simpleRollback: boolean;
   confirmationRequired: boolean;
@@ -269,9 +269,9 @@ export interface Preparation {
 // ---------------------------------------------------------------- settings
 
 /** Look of every client, chosen by an ADMIN. */
-export type StyleSite = 'verre' | 'panneau';
+export type StyleSite = 'glass' | 'panel';
 
-export interface Reglages {
+export interface Settings {
   style: StyleSite;
 }
 

@@ -6,35 +6,35 @@
       <span class="tb-auth-tagline">La température de chaque salle, en un coup d'œil.</span>
     </div>
 
-    @if (compteSupprime() === 'true') {
+    @if (deletedAccount() === 'true') {
       <div class="tb-message"><i class="pi pi-info-circle"></i><div><strong>Compte supprimé</strong>Ton compte a bien été supprimé.</div></div>
     }
-    @if (session() === 'expiree') {
+    @if (session() === 'expired') {
       <div class="tb-message tb-message-warn"><i class="pi pi-clock"></i><div><strong>Session terminée</strong>Reconnecte-toi pour continuer.</div></div>
     }
-    @if (inscrit() === 'true') {
+    @if (registered() === 'true') {
       <div class="tb-message"><i class="pi pi-check-circle"></i><div><strong>Compte créé</strong>Tu peux maintenant te connecter.</div></div>
     }
 
     <!-- Accounts saved on this device: one tap to open one -->
-    @if (comptes().length) {
-      <section class="tb-panel tb-auth-card tb-auth-comptes" aria-labelledby="titre-comptes">
+    @if (accounts().length) {
+      <section class="tb-panel tb-auth-card tb-auth-accounts" aria-labelledby="titre-comptes">
         <h2 class="tb-panel-title" id="titre-comptes">Comptes enregistrés</h2>
-        <ul class="tb-comptes">
-          @for (l of comptes(); track l.compte.cle) {
+        <ul class="tb-accounts">
+          @for (l of accounts(); track l.account.key) {
             <li>
-              <button type="button" class="tb-compte" [class.tb-compte-actif]="l.actuel" (click)="ouvrirCompte(l)">
-                <span class="tb-avatar" aria-hidden="true">{{ l.initiale }}</span>
-                <span class="tb-compte-texte">
-                  <strong>{{ l.compte.user.username }}</strong>
-                  <span class="tb-compte-adresse"><i class="pi pi-server" aria-hidden="true"></i>{{ l.adresse }}</span>
+              <button type="button" class="tb-account" [class.tb-account-active]="l.current" (click)="openAccount(l)">
+                <span class="tb-avatar" aria-hidden="true">{{ l.initial }}</span>
+                <span class="tb-account-text">
+                  <strong>{{ l.account.user.username }}</strong>
+                  <span class="tb-account-address"><i class="pi pi-server" aria-hidden="true"></i>{{ l.address }}</span>
                 </span>
-                @if (l.actuel) {
+                @if (l.current) {
                   <span class="tb-tag">Ouvert</span>
-                } @else if (!l.ouvrable) {
+                } @else if (!l.openable) {
                   <span class="tb-tag">Mot de passe</span>
                 } @else {
-                  <i class="pi pi-angle-right tb-liste-suite"></i>
+                  <i class="pi pi-angle-right tb-list-continuation"></i>
                 }
               </button>
             </li>
@@ -44,25 +44,25 @@
     }
 
     <section class="tb-panel tb-auth-card">
-      <h1 class="tb-panel-title">{{ choisi() ? 'Se reconnecter' : enAjout() || comptes().length ? 'Autre compte' : 'Connexion' }}</h1>
-      <form (submit)="connecter($event)" novalidate>
-        @if (choisi(); as c) {
-          <div class="tb-auth-compte-choisi">
-            <span class="tb-avatar" aria-hidden="true">{{ initialeChoisi() }}</span>
-            <span class="tb-compte-texte">
+      <h1 class="tb-panel-title">{{ chosen() ? 'Se reconnecter' : adding() || accounts().length ? 'Autre compte' : 'Connexion' }}</h1>
+      <form (submit)="logIn($event)" novalidate>
+        @if (chosen(); as c) {
+          <div class="tb-auth-account-chosen">
+            <span class="tb-avatar" aria-hidden="true">{{ chosenInitial() }}</span>
+            <span class="tb-account-text">
               <strong>{{ c.user.username }}</strong>
-              <span class="tb-compte-adresse"><i class="pi pi-server" aria-hidden="true"></i>{{ adresseChoisi() }}</span>
+              <span class="tb-account-address"><i class="pi pi-server" aria-hidden="true"></i>{{ chosenAddress() }}</span>
             </span>
-            <button type="button" class="tb-text-btn" (click)="choisir(null)">Autre compte</button>
+            <button type="button" class="tb-text-btn" (click)="choose(null)">Autre compte</button>
           </div>
         } @else {
-          @if (champServeur()) {
+          @if (serverField()) {
             <div class="tb-field">
               <label class="tb-label" for="serveur">Serveur ThermoBox</label>
               <input id="serveur" class="tb-input" type="url" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false"
-                     [placeholder]="serveur.defaut ? serveur.lisible() : 'thermobox.mon-organisation.fr'" [value]="adresse()" (input)="adresse.set($any($event.target).value)" />
+                     [placeholder]="server.defaultBase ? server.readable() : 'thermobox.mon-organisation.fr'" [value]="address()" (input)="address.set($any($event.target).value)" />
               <span class="tb-field-hint">
-                L'adresse donnée par ton administrateur, avec le port s'il y en a un.@if (serveur.defaut) { Vide : ce site.}
+                L'adresse donnée par ton administrateur, avec le port s'il y en a un.@if (server.defaultBase) { Vide : ce site.}
               </span>
             </div>
           }
@@ -70,35 +70,35 @@
             <label class="tb-label" for="username">Nom d'utilisateur</label>
             <input id="username" class="tb-input" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false"
                    [value]="username()" (input)="username.set($any($event.target).value)"
-                   [class.tb-invalid]="envoye() && !username().trim()" required />
-            @if (envoye() && !username().trim()) {
+                   [class.tb-invalid]="sent() && !username().trim()" required />
+            @if (sent() && !username().trim()) {
               <span class="tb-field-error">Nom d'utilisateur obligatoire</span>
             }
           </div>
         }
         <div class="tb-field">
           <label class="tb-label" for="password">Mot de passe</label>
-          <tb-password inputId="password" [(valeur)]="password" autocomplete="current-password" [invalide]="envoye() && !password()" requis />
-          @if (envoye() && !password()) {
+          <tb-password inputId="password" [(value)]="password" autocomplete="current-password" [invalid]="sent() && !password()" required />
+          @if (sent() && !password()) {
             <span class="tb-field-error">Mot de passe obligatoire</span>
           }
         </div>
-        @if (erreur(); as e) {
+        @if (error(); as e) {
           <div class="tb-message tb-message-error" role="alert"><i class="pi pi-times-circle"></i><div>{{ e }}</div></div>
         }
-        <button type="submit" class="tb-btn tb-full" [class.tb-busy]="enCours()" [disabled]="enCours()">
-          <i class="pi" [class.pi-sign-in]="!enCours()" [class.pi-spinner]="enCours()"></i>Se connecter
+        <button type="submit" class="tb-btn tb-full" [class.tb-busy]="inProgress()" [disabled]="inProgress()">
+          <i class="pi" [class.pi-sign-in]="!inProgress()" [class.pi-spinner]="inProgress()"></i>Se connecter
         </button>
       </form>
-      <div class="tb-panel-footer tb-auth-pied">
-        @if (enAjout()) {
-          <a routerLink="/app/apercu"><i class="pi pi-arrow-left"></i> Revenir à {{ auth.user()?.username }}</a>
+      <div class="tb-panel-footer tb-auth-foot">
+        @if (adding()) {
+          <a routerLink="/app/overview"><i class="pi pi-arrow-left"></i> Revenir à {{ auth.user()?.username }}</a>
         } @else {
           <span>Pas encore de compte ? <a routerLink="/register">Créer un compte</a></span>
         }
-        @if (!choisi() && !champServeur()) {
-          <button type="button" class="tb-text-btn tb-serveur-btn" (click)="changerServeur.set(true)">
-            <i class="pi pi-server"></i>{{ plateforme.natif ? 'Changer de serveur' : 'Autre serveur' }}
+        @if (!chosen() && !serverField()) {
+          <button type="button" class="tb-text-btn tb-server-btn" (click)="changeServer.set(true)">
+            <i class="pi pi-server"></i>{{ platform.native ? 'Changer de serveur' : 'Autre serveur' }}
           </button>
         }
       </div>

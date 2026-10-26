@@ -1,0 +1,350 @@
+@if (missing()) {
+  <div class="tb-empty">
+    <span class="tb-empty-icon"><i class="pi pi-question"></i></span>
+    <strong>Élément introuvable</strong>
+    <span>Cet élément n'existe pas ou a été supprimé.</span>
+    <a routerLink="/app/rooms" class="tb-btn tb-tonal"><i class="pi pi-arrow-left"></i>Retour aux bâtiments et salles</a>
+  </div>
+}
+
+@if (detail(); as d) {
+  @let e = d.element;
+  <header class="tb-page-head" data-flip="tete-salle">
+    <a href="/app/overview" class="tb-btn tb-icon tb-flat tb-back" title="Retour" aria-label="Retour" (click)="back($event)"><i class="pi pi-arrow-left"></i></a>
+    <div class="tb-page-title">
+      <!-- Breadcrumb: each building / floor opens its own page -->
+      <nav class="tb-crumbs" aria-label="Emplacement">
+        <span class="tb-crumb tb-crumb-kind">{{ labels[e.kind] }}</span>
+        @for (a of d.ancestors; track a.id) {
+          <i class="pi pi-angle-right"></i>
+          @if (a.accessible) {
+            <a [routerLink]="['/app/room', a.id]" class="tb-crumb">{{ a.name }}</a>
+          } @else {
+            <span class="tb-crumb tb-crumb-off">{{ a.name }}</span>
+          }
+        }
+      </nav>
+      <!-- Transition: receives the name of the dashboard card -->
+      <h1 data-vt="room-name" [attr.data-vt-id]="e.id">{{ e.name }}</h1>
+    </div>
+    <div class="tb-head-actions">
+      @if (isRoom()) {
+        <button type="button" class="tb-btn tb-icon tb-flat tb-fav" [class.tb-fav-on]="e.favorite" [attr.aria-pressed]="e.favorite"
+                [title]="e.favorite ? 'Retirer des favoris' : 'Ajouter aux favoris'" (click)="toggleFavorite()">
+          <i class="pi" [class.pi-star-fill]="e.favorite" [class.pi-star]="!e.favorite"></i>
+        </button>
+      }
+      <a routerLink="/app/rooms" class="tb-btn tb-tonal tb-hide-sm"><i class="pi pi-sitemap"></i>{{ panel() ? 'Bâtiments et salles' : 'Toutes les pièces' }}</a>
+    </div>
+  </header>
+
+  <!-- Floor / building: direct access to what it contains -->
+  @if (d.children.length) {
+    <div class="tb-chips">
+      <span class="tb-chips-label">Contient</span>
+      @for (c of d.children; track c.id) {
+        @if (c.accessible) {
+          <a [routerLink]="['/app/room', c.id]" class="tb-chip">{{ c.name }}</a>
+        } @else {
+          <span class="tb-chip">{{ c.name }}</span>
+        }
+      }
+    </div>
+  }
+
+  <ng-template #optionsSetpoint>
+    <!-- Floor / building: what keeps its own setpoint below, and the switch that forces the new one on it -->
+    @if (container() || d.ownSetpoints.length) {
+      <div class="tb-setpoint-options">
+        <span class="tb-setpoint-options-icon"><i class="pi pi-info-circle"></i></span>
+        <div class="tb-setpoint-options-text">
+          @if (d.ownSetpoints.length) {
+            <strong>{{ d.ownSetpoints.length }} élément(s) ont leur propre consigne</strong>
+            <span>{{ ownSetpointsLabel() }}</span>
+          } @else {
+            <strong>Toutes les salles suivent cette consigne</strong>
+            <span>Aucun étage ni aucune salle n'a de consigne propre ici.</span>
+          }
+        </div>
+        <div class="tb-switch-row">
+          <tb-switch [(checked)]="force" label="Forcer la consigne pour toutes les salles" />
+          <span class="tb-switch-text" (click)="force.set(!force())">Forcer la consigne pour toutes les salles</span>
+        </div>
+      </div>
+    }
+  </ng-template>
+
+  @if (panel()) {
+    <!-- Panel: the reading of the desk, the panel taking the colour of the state as a lamp; under it, the setting of the setpoint; the photo beside them -->
+    <div class="tb-hero tb-desk">
+      <div class="tb-desk-left">
+        <div class="tb-reading tb-tone-{{ state().tone }}" data-vt="room-card" [attr.data-vt-id]="e.id" style="view-transition-class: tb-card">
+          <div class="tb-reading-state">
+            <span>{{ state().label }}</span>
+            @if (delta() != null && state().tone !== 'stable') {
+              <span>{{ unit.delta(delta()) }} {{ delta()! > 0 ? 'au-dessus' : 'en dessous' }} de la consigne</span>
+            }
+          </div>
+          <div class="tb-reading-body">
+            <div>
+              <small>{{ device() ? 'Mesurée' : auth.seesDevices() ? 'Moyenne des boîtiers' : 'Mesurée' }}</small>
+              <span class="tb-temp-hero tb-reading-measurement" data-vt="room-temp" [attr.data-vt-id]="e.id" [tbWatch]="e.temperature">{{ unit.t(e.temperature) }}<span class="tb-deg">{{ unit.symbol() }}</span></span>
+            </div>
+            @if (!device()) {
+              <div>
+                <small>Consigne</small>
+                <span class="tb-temp-hero" [tbWatch]="e.setpoint?.value">{{ unit.t(e.setpoint?.value) }}<span class="tb-deg">{{ unit.symbol() }}</span></span>
+                @if (e.setpoint?.inherited) {
+                  <a [routerLink]="['/app/room', e.setpoint!.sourceId]" class="tb-reading-source">héritée de {{ e.setpoint!.sourceName }}</a>
+                }
+              </div>
+            }
+          </div>
+          <div class="tb-reading-foot">
+            @if (lastMeasurement()) {
+              Mesuré le {{ ddmmAtHHmm(lastMeasurement()) }}
+            } @else if (!device() && !e.devices && auth.seesDevices()) {
+              Aucun boîtier rattaché
+            } @else {
+              Pas encore de mesure
+            }
+            @if (!device() && e.setpoint?.date) {
+              <span>Consigne depuis le {{ ddmmAtHHmm(e.setpoint!.date) }}</span>
+            }
+          </div>
+        </div>
+        <!-- New setpoint (ADMIN / MANAGER): right under the reading -->
+        @if (auth.canSetSetpoint() && !device()) {
+          <div class="tb-adjusting">
+            <div class="tb-adjusting-row">
+              <span class="tb-adjusting-title" [title]="container() ? 'Les salles sans consigne propre la suivent, et leurs boîtiers la reçoivent.' : 'Enregistrée sur la salle et envoyée à chacun de ses boîtiers.'">Nouvelle consigne</span>
+              <tb-stepper [(value)]="newSetpoint" />
+              <button type="button" class="tb-btn" [class.tb-busy]="sending()" [disabled]="sending()" (click)="sendSetpoint()">
+                <i class="pi" [class.pi-send]="!sending()" [class.pi-spinner]="sending()"></i>Envoyer
+              </button>
+            </div>
+            <ng-container *ngTemplateOutlet="optionsSetpoint" />
+          </div>
+        }
+      </div>
+    <!-- Photo: changed by the administrators -->
+      <div class="tb-photo" [class.tb-photo-empty]="e.image == null" data-vt="room-photo" [attr.data-vt-id]="e.id">
+        @if (e.image != null) {
+          <tb-photo-img [roomId]="e.id" [version]="e.image" [alt]="'Photo de ' + e.name" />
+        } @else {
+          <span class="tb-photo-shape"><i class="pi pi-image"></i></span>
+          <span class="tb-photo-hint">Pas encore de photo</span>
+        }
+        @if (auth.admin()) {
+          <div class="tb-photo-actions">
+            <label class="tb-btn tb-upload" [class.tb-busy]="photoUploading()" [class.tb-tonal]="e.image == null">
+              <i class="pi" [class.pi-camera]="!photoUploading()" [class.pi-spinner]="photoUploading()"></i>{{ e.image == null ? 'Ajouter une photo' : 'Changer' }}
+              <input type="file" accept="image/jpeg,image/png,image/gif,image/bmp" (change)="upload($event)" [disabled]="photoUploading()" />
+            </label>
+            @if (e.image != null) {
+              <button type="button" class="tb-btn tb-icon tb-photo-remove" title="Retirer la photo" aria-label="Retirer la photo" (click)="removePhoto()"><i class="pi pi-trash"></i></button>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  } @else {
+    <!-- Home: a thermostat; the dial turns the setpoint, the page takes the colour of the temperature -->
+    <div class="tb-hero tb-thermostat">
+      <div class="tb-thermostat-zone" data-vt="room-card" [attr.data-vt-id]="e.id" style="view-transition-class: tb-card">
+        @if (homeSentence()) {
+          <p class="tb-thermostat-sentence">{{ homeSentence() }}</p>
+        }
+        @if (device()) {
+          <span class="tb-temp-hero tb-thermostat-only" data-vt="room-temp" [attr.data-vt-id]="e.id" [tbWatch]="e.temperature">{{ unit.t(e.temperature) }}<span class="tb-deg">°</span></span>
+        } @else {
+          <tb-dial [temperature]="e.temperature" [setpoint]="e.setpoint?.value" [(value)]="newSetpoint"
+                      [editable]="auth.canSetSetpoint()" [color]="homeColor()" [vtId]="e.id" />
+          @if (auth.canSetSetpoint()) {
+            <div class="tb-thermostat-action">
+              @if (setpointChanged()) {
+                <button type="button" class="tb-btn tb-btn-lg tb-thermostat-apply" animate.enter="tb-enter" animate.leave="tb-sort"
+                        [class.tb-busy]="sending()" [disabled]="sending()" (click)="sendSetpoint()">
+                  <i class="pi" [class.pi-check]="!sending()" [class.pi-spinner]="sending()"></i>Régler sur {{ unit.t(unit.inputToCelsius(newSetpoint()!)) }}°
+                </button>
+              }
+            </div>
+          }
+        }
+        <span class="tb-thermostat-meta">
+          @if (lastMeasurement()) { Mesuré le {{ ddmmAtHHmm(lastMeasurement()) }} } @else { Pas encore de mesure }
+          @if (e.setpoint?.inherited) {
+            · objectif de <a [routerLink]="['/app/room', e.setpoint!.sourceId]">{{ e.setpoint!.sourceName }}</a>
+          }
+        </span>
+      </div>
+    <!-- Photo: changed by the administrators -->
+      <div class="tb-photo" [class.tb-photo-empty]="e.image == null" data-vt="room-photo" [attr.data-vt-id]="e.id">
+        @if (e.image != null) {
+          <tb-photo-img [roomId]="e.id" [version]="e.image" [alt]="'Photo de ' + e.name" />
+        } @else {
+          <span class="tb-photo-shape"><i class="pi pi-image"></i></span>
+          <span class="tb-photo-hint">Pas encore de photo</span>
+        }
+        @if (auth.admin()) {
+          <div class="tb-photo-actions">
+            <label class="tb-btn tb-upload" [class.tb-busy]="photoUploading()" [class.tb-tonal]="e.image == null">
+              <i class="pi" [class.pi-camera]="!photoUploading()" [class.pi-spinner]="photoUploading()"></i>{{ e.image == null ? 'Ajouter une photo' : 'Changer' }}
+              <input type="file" accept="image/jpeg,image/png,image/gif,image/bmp" (change)="upload($event)" [disabled]="photoUploading()" />
+            </label>
+            @if (e.image != null) {
+              <button type="button" class="tb-btn tb-icon tb-photo-remove" title="Retirer la photo" aria-label="Retirer la photo" (click)="removePhoto()"><i class="pi pi-trash"></i></button>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- New consigne (ADMIN / MANAGER) -->
+  @if (auth.canSetSetpoint() && !device() && !panel() && (container() || d.ownSetpoints.length)) {
+    <div class="tb-card tb-setpoint-card" [class.tb-setpoint-options-only]="!panel()">
+      <div class="tb-card-head">
+        <span class="tb-section-icon"><i class="pi pi-sliders-h"></i></span>
+        <div>
+          <h2>Ce qui est dedans</h2>
+          <span class="tb-muted">
+            {{ container() ? 'Les salles sans consigne propre la suivent, et leurs boîtiers la reçoivent.' : 'Enregistrée sur la salle et envoyée à chacun de ses boîtiers.' }}
+          </span>
+        </div>
+      </div>
+      <ng-container *ngTemplateOutlet="optionsSetpoint" />
+    </div>
+  }
+
+  <!-- Temperature of each box, next to the average (not for VIEWERs) -->
+  @if (auth.seesDevices() && !device() && !container()) {
+    <section class="tb-section">
+      <h2 class="tb-section-title">
+        <span class="tb-section-icon"><i class="pi pi-wifi"></i></span>
+        Boîtiers
+        <span class="tb-section-meta">{{ d.measurements.length }}</span>
+      </h2>
+      @if (!d.measurements.length) {
+        <div class="tb-empty tb-empty-sm">Aucun boîtier rattaché. Rattache-les depuis « Bâtiments et salles ».</div>
+      }
+      <div class="tb-boxes">
+        @for (m of d.measurements; track m.id) {
+          <a [routerLink]="['/app/room', m.id]" class="tb-box">
+            <span class="tb-box-name"><i class="pi pi-wifi"></i>{{ m.name }}</span>
+            <span class="tb-temp-l" [tbWatch]="m.value">{{ unit.t(m.value) }}<span class="tb-deg">°</span></span>
+            <span class="tb-box-meta">
+              @if (deviceDelta(m.value); as ec) {
+                <span class="tb-delta">{{ ec }}</span>
+              }
+              {{ m.date ? ddmmHHmm(m.date) : 'Pas encore de mesure' }}
+            </span>
+          </a>
+        }
+      </div>
+    </section>
+  }
+
+  <!-- Floor / building: its rooms, with their average and setpoint -->
+  @if (container()) {
+    <section class="tb-section">
+      <h2 class="tb-section-title">
+        <span class="tb-section-icon"><i class="pi pi-home"></i></span>
+        Salles
+        <span class="tb-section-meta">{{ d.rooms.length }}</span>
+      </h2>
+      @if (!d.rooms.length) {
+        <div class="tb-empty tb-empty-sm">Aucune salle ici pour le moment.</div>
+      }
+      <div class="tb-boxes">
+        @for (s of d.rooms; track s.id) {
+          <a [routerLink]="['/app/room', s.id]" class="tb-box tb-room-mini tb-tone-{{ toneOf(s) }}">
+            <span class="tb-box-name"><i class="pi pi-home"></i>{{ s.name }}</span>
+            <span class="tb-temp-l" [tbWatch]="s.temperature">{{ unit.t(s.temperature) }}<span class="tb-deg">°</span></span>
+            <span class="tb-box-meta">
+              <span class="tb-state">{{ stateLabel(s) }}</span>
+              <span [title]="s.setpoint?.inherited ? 'Consigne héritée de « ' + s.setpoint?.sourceName + ' »' : 'Consigne de la salle'">
+                <i class="pi" [class.pi-sitemap]="s.setpoint?.inherited" [class.pi-sliders-h]="!s.setpoint?.inherited"></i>
+                {{ unit.t(s.setpoint?.value) }} {{ unit.symbol() }}
+              </span>
+            </span>
+          </a>
+        }
+      </div>
+    </section>
+  }
+
+  <!-- History -->
+  <div class="tb-card tb-history">
+    <div class="tb-card-head">
+      <span class="tb-section-icon"><i class="pi pi-chart-line"></i></span>
+      <h2>Historique</h2>
+      <span class="tb-spacer"></span>
+      <div class="tb-segmented" role="group" aria-label="Période">
+        <button type="button" [class.tb-seg-on]="periodHours() === 24" (click)="period(24)">24 h</button>
+        <button type="button" [class.tb-seg-on]="periodHours() === 168" (click)="period(168)">7 j</button>
+        <button type="button" [class.tb-seg-on]="periodHours() === 720" (click)="period(720)">30 j</button>
+        @if (phone()) {
+          <!-- Phones: the dates only when asked for -->
+          <button type="button" [class.tb-seg-on]="customRange()" (click)="customRange.set(!customRange())" aria-label="Autre période"><i class="pi pi-calendar"></i></button>
+        }
+      </div>
+    </div>
+
+    <div class="tb-range" [hidden]="phone() && !customRange()">
+      <div class="tb-field">
+        <label class="tb-label" for="debut">Du</label>
+        <input id="debut" class="tb-input" type="datetime-local" [value]="start()" (change)="start.set($any($event.target).value)" />
+      </div>
+      <div class="tb-field">
+        <label class="tb-label" for="fin">Au</label>
+        <input id="fin" class="tb-input" type="datetime-local" [value]="end()" (change)="end.set($any($event.target).value)" />
+      </div>
+      <button type="button" class="tb-btn tb-tonal" (click)="show()"><i class="pi pi-search"></i>Afficher</button>
+    </div>
+
+    <div class="tb-chart">
+      @if (chart(); as g) {
+        @if (g.series.length) {
+          <tb-chart-view [labels]="g.labels" [series]="g.series" [description]="'Historique de ' + e.name" />
+        } @else {
+          <div class="tb-empty tb-empty-sm tb-chart-empty">Aucune mesure sur la période</div>
+        }
+      } @else {
+        <div class="tb-spark-loading tb-chart-waiting"><span class="tb-muted">Chargement…</span></div>
+      }
+    </div>
+
+    <h3 class="tb-subtitle">Consignes de la période</h3>
+    <div class="tb-table tb-table-sm">
+      <table>
+        <thead>
+          <tr><th>Date</th><th>Consigne</th></tr>
+        </thead>
+        <tbody>
+          @for (c of periodSetpoints().slice(setpointsPage() * 10, setpointsPage() * 10 + 10); track $index) {
+            <tr>
+              <td>{{ full(c.date) }}</td>
+              <td>{{ unit.t(c.value) }} {{ unit.symbol() }}</td>
+            </tr>
+          } @empty {
+            <tr class="tb-empty-row"><td colspan="2">Aucune consigne sur la période</td></tr>
+          }
+        </tbody>
+      </table>
+      @if (setpointPages() > 1) {
+        <div class="tb-pagination">
+          <button type="button" [disabled]="setpointsPage() === 0" (click)="setpointsPage.set(setpointsPage() - 1)" aria-label="Page précédente"><i class="pi pi-angle-left"></i></button>
+          <span>{{ setpointsPage() + 1 }} / {{ setpointPages() }}</span>
+          <button type="button" [disabled]="setpointsPage() + 1 >= setpointPages()" (click)="setpointsPage.set(setpointsPage() + 1)" aria-label="Page suivante"><i class="pi pi-angle-right"></i></button>
+        </div>
+      }
+    </div>
+  </div>
+} @else if (!missing()) {
+  <div class="tb-page-head"><div class="tb-page-title"><span class="tb-eyebrow">Chargement…</span><h1 class="tb-waiting-title">&nbsp;</h1></div></div>
+  <div class="tb-hero">
+    <div class="tb-hero-reading tb-tone-unknown"><div class="tb-spark-loading" style="height: 100%"></div></div>
+    <div class="tb-photo tb-photo-empty"></div>
+  </div>
+}

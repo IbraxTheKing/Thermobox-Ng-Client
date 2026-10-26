@@ -1,14 +1,15 @@
 import { Routes } from '@angular/router';
 
-import { adminGuard, connecteGuard, gestionnaireGuard, publicGuard } from './core/http';
+import { adminGuard, loggedInGuard, managerGuard, publicGuard } from './core/http';
 
 /**
  * Pages of the JSF interface, same order:
- * login / register → aperçu (dashboard) · salles · salle/:id · mesures · gestion (GESTIONNAIRE,
- * ADMIN) · utilisateurs, mises à jour (ADMIN) · profil · préférences.
+ * login / register → overview (dashboard) · rooms · room/:id · measurements · management (MANAGER,
+ * ADMIN) · users, updates (ADMIN) · profile · preferences. The French addresses of earlier
+ * versions (apercu, salles…) redirect to them.
  */
 export const routes: Routes = [
-  { path: '', pathMatch: 'full', redirectTo: 'app/apercu' },
+  { path: '', pathMatch: 'full', redirectTo: 'app/overview' },
   {
     path: 'login',
     title: 'Connexion',
@@ -23,37 +24,42 @@ export const routes: Routes = [
   },
   {
     path: 'app',
-    canActivate: [connecteGuard],
+    canActivate: [loggedInGuard],
     loadComponent: () => import('./shell/shell').then((m) => m.Shell),
     children: [
-      { path: '', pathMatch: 'full', redirectTo: 'apercu' },
-      { path: 'apercu', title: 'Aperçu', loadComponent: () => import('./pages/dashboard/dashboard').then((m) => m.DashboardPage) },
-      { path: 'salles', title: 'Bâtiments et salles', loadComponent: () => import('./pages/salles/salles').then((m) => m.SallesPage) },
-      { path: 'salle/:id', title: 'Salle', loadComponent: () => import('./pages/salle/salle').then((m) => m.SallePage) },
-      { path: 'mesures', title: 'Températures', loadComponent: () => import('./pages/mesures/mesures').then((m) => m.MesuresPage) },
+      { path: '', pathMatch: 'full', redirectTo: 'overview' },
+      { path: 'overview', title: 'Aperçu', loadComponent: () => import('./pages/dashboard/dashboard').then((m) => m.DashboardPage) },
+      { path: 'rooms', title: 'Bâtiments et salles', loadComponent: () => import('./pages/rooms/rooms').then((m) => m.RoomsPage) },
+      { path: 'room/:id', title: 'Salle', loadComponent: () => import('./pages/room/room').then((m) => m.RoomPage) },
+      { path: 'measurements', title: 'Températures', loadComponent: () => import('./pages/measurements/measurements').then((m) => m.MeasurementsPage) },
       {
-        path: 'gestion',
+        path: 'management',
         title: 'Gestion des salles',
-        canActivate: [gestionnaireGuard],
-        loadComponent: () => import('./pages/gestion/gestion').then((m) => m.GestionPage),
+        canActivate: [managerGuard],
+        loadComponent: () => import('./pages/management/management').then((m) => m.ManagementPage),
       },
       {
-        path: 'utilisateurs',
+        path: 'users',
         title: 'Utilisateurs',
         canActivate: [adminGuard],
-        loadComponent: () => import('./pages/utilisateurs/utilisateurs').then((m) => m.UtilisateursPage),
+        loadComponent: () => import('./pages/users/users').then((m) => m.UsersPage),
       },
       {
-        path: 'mises-a-jour',
+        path: 'updates',
         title: 'Mises à jour',
         canActivate: [adminGuard],
-        loadComponent: () => import('./pages/mises-a-jour/mises-a-jour').then((m) => m.MisesAJourPage),
+        loadComponent: () => import('./pages/updates/updates').then((m) => m.UpdatesPage),
       },
-      { path: 'profil', title: 'Mon profil', loadComponent: () => import('./pages/profil/profil').then((m) => m.ProfilPage) },
-      { path: 'a-propos', title: 'À propos', loadComponent: () => import('./pages/a-propos/a-propos').then((m) => m.AProposPage) },
-      { path: 'plus', title: 'Plus', loadComponent: () => import('./pages/plus/plus').then((m) => m.PlusPage) },
+      { path: 'profile', title: 'Mon profil', loadComponent: () => import('./pages/profile/profile').then((m) => m.ProfilePage) },
+      { path: 'about', title: 'À propos', loadComponent: () => import('./pages/about/about').then((m) => m.AboutPage) },
+      { path: 'more', title: 'Plus', loadComponent: () => import('./pages/more/more').then((m) => m.MorePage) },
       { path: 'preferences', title: 'Préférences', loadComponent: () => import('./pages/preferences/preferences').then((m) => m.PreferencesPage) },
     ],
   },
-  { path: '**', redirectTo: 'app/apercu' },
+  // Addresses of the versions before 26.12 (bookmarks, shortcuts on a home screen)
+  ...Object.entries({ apercu: 'overview', salles: 'rooms', mesures: 'measurements', gestion: 'management', utilisateurs: 'users', 'mises-a-jour': 'updates', profil: 'profile', 'a-propos': 'about', plus: 'more' }).map(
+    ([old, path]) => ({ path: `app/${old}`, redirectTo: `app/${path}` }),
+  ),
+  { path: 'app/salle/:id', redirectTo: 'app/room/:id' },
+  { path: '**', redirectTo: 'app/overview' },
 ];

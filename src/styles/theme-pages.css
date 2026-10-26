@@ -1,0 +1,392 @@
+/*
+ * Pages built for the 2026-10 look (refonte.css): the dashboard (thermal map / tiles of a home)
+ * and the page of a room (control desk / thermostat).
+ */
+
+/* ============================== Aperçu ============================== */
+
+.tb-overview-under { margin: 6px 0 0; color: var(--md-on-surface-variant); font-size: .95rem; }
+/* Home: the house in one sentence, the names in bold */
+.tb-overview-sentence { max-width: 28ch; margin: 10px 0 0; font-size: clamp(1.25rem, 1.1rem + .6vw, 1.55rem); font-weight: 300; line-height: 1.3; color: var(--md-on-surface); }
+.tb-overview-sentence b { font-weight: 600; }
+
+/* Panel: the lamps of the desk, one cell per state */
+.tb-lights { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); margin: 0 0 16px; border: 1px solid var(--md-outline-variant); border-radius: var(--tb-shape-lg); background: var(--tb-glass); overflow: hidden; }
+.tb-light { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-width: 0; padding: 10px 14px 12px; border: 0; border-left: 1px solid var(--md-outline-variant); background: none; color: var(--md-on-surface); font: inherit; text-align: left; cursor: pointer; }
+.tb-light:first-child { border-left: 0; }
+.tb-light b { font-size: 1.9rem; line-height: 1; }
+.tb-light span { display: flex; align-items: center; gap: 7px; color: var(--md-on-surface-variant); font-size: .85rem; white-space: nowrap; }
+.tb-lamp { flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--tone); box-shadow: 0 0 0 2px color-mix(in srgb, var(--tone) 24%, transparent); }
+.tb-light:hover:not(:disabled) { background: var(--md-surface-container-low); }
+.tb-light.tb-light-on { background: var(--md-surface-container-high); box-shadow: inset 0 -3px 0 var(--tone); }
+.tb-light:disabled { cursor: default; }
+.tb-light:disabled b { color: var(--md-on-surface-variant); }
+
+/* Panel: the colour scale, legend of the squares, with its handles (a range of gaps) */
+.tb-scale { margin: 4px 0 12px; color: var(--md-on-surface-variant); font-size: .8rem; }
+.tb-scale-bar { position: relative; height: 26px; }
+.tb-scale-gradient { position: absolute; left: 0; right: 0; top: 9px; height: 8px; border-radius: 4px; background: linear-gradient(90deg, #2f5fae, #a9c1e2 26%, #b7dbc1 40%, #acd5b7 50%, #b7dbc1 60%, #f0b48f 74%, #c94a35); }
+:root[data-theme="dark"] .tb-scale-gradient { background: linear-gradient(90deg, #4673c4, #2b4467 26%, #224834 40%, #215037 50%, #224834 60%, #6e402a 74%, #c8523c); }
+/* What is left out of the range: the bar greyed under it */
+.tb-scale-excluded { position: absolute; top: 7px; height: 12px; background: color-mix(in srgb, var(--tb-background) 78%, transparent); pointer-events: none; transition: left .12s, width .12s; }
+/* One tick per salle */
+.tb-scale-mark { position: absolute; top: 4px; width: 2px; height: 18px; margin-left: -1px; border-radius: 1px; background: var(--md-on-surface); opacity: .7; pointer-events: none; transition: left .4s var(--tb-ease), opacity .2s; }
+.tb-scale-mark.tb-scale-mark-out { opacity: .2; }
+/* Two native sliders on top of each other: only their handles take the pointer */
+.tb-scale-handle { position: absolute; inset: 0; width: 100%; height: 26px; margin: 0; background: none; pointer-events: none; -webkit-appearance: none; appearance: none; }
+.tb-scale-handle::-webkit-slider-runnable-track { height: 26px; background: none; }
+.tb-scale-handle::-moz-range-track { height: 26px; background: none; }
+.tb-scale-handle::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 14px; height: 26px; border: 2px solid var(--md-on-surface); border-radius: 3px;
+    background: var(--tb-background); cursor: ew-resize; pointer-events: auto;
+}
+.tb-scale-handle::-moz-range-thumb { width: 10px; height: 22px; border: 2px solid var(--md-on-surface); border-radius: 3px; background: var(--tb-background); cursor: ew-resize; pointer-events: auto; }
+.tb-scale-handle:focus-visible { outline: none; }
+.tb-scale-handle:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px color-mix(in srgb, var(--md-primary) 35%, transparent); }
+.tb-scale-legend { display: grid; grid-template-columns: 1fr 1fr 1fr; margin-top: 2px; }
+.tb-scale-legend small { margin: 0 4px; font-size: .78rem; opacity: .8; }
+.tb-scale-legend span:nth-child(2) { text-align: center; }
+.tb-scale-legend span:nth-child(3) { text-align: right; }
+.tb-scale-tools { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 16px; min-height: 34px; margin-top: 6px; }
+.tb-scale-filter { display: flex; align-items: center; gap: 8px; color: var(--md-on-surface); }
+.tb-scale-filter b { font-weight: 600; }
+.tb-scale-help { opacity: .8; }
+.tb-btn.tb-btn-sm { min-height: 30px; padding: 0 10px; font-size: .82rem; }
+.tb-tolerance { display: flex; align-items: center; gap: 8px; color: var(--md-on-surface); }
+.tb-tolerance input { width: 120px; accent-color: var(--md-on-surface); }
+.tb-tolerance output { min-width: 3.4em; font-weight: 500; }
+@media (hover: none) {
+    .tb-scale-help { display: none; }
+}
+
+/* Computers: the size of the cards, beside the refresh button */
+.tb-size-cards { display: flex; align-items: center; gap: 8px; margin-left: auto; margin-right: 8px; color: var(--md-on-surface-variant); }
+.tb-size-cards .pi:first-child { font-size: .75rem; }
+.tb-size-cards .pi:last-child { font-size: 1.05rem; }
+.tb-size-cards input { width: 110px; accent-color: var(--md-on-surface); }
+@media (max-width: 840px), (hover: none) {
+    .tb-size-cards { display: none; }
+    tb-dashboard { --z: 1 !important; }
+}
+
+/* Panel: a row of squares per floor, its name written up its edge */
+.tb-floor { display: grid; grid-template-columns: 22px 1fr; gap: 8px; margin-bottom: 8px; }
+.tb-floor-name { writing-mode: vertical-rl; transform: rotate(180deg); align-self: center; color: var(--md-on-surface-variant); font-size: .78rem; font-weight: 500; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-height: 100%; }
+.tb-floor:not(:has(.tb-floor-name)) { grid-template-columns: 1fr; }
+.tb-cells { display: grid; grid-template-columns: repeat(auto-fill, minmax(calc(150px * var(--z, 1)), 1fr)); gap: 5px; }
+
+/* A square of the thermal map */
+:root .tb-room.tb-cell {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: calc(116px * var(--z, 1));
+    padding: 10px 12px 10px;
+    border: 0;
+    border-radius: var(--tb-shape-sm);
+    background: var(--c);
+    color: var(--t);
+    overflow: hidden;
+    box-shadow: none;
+    transition: transform var(--tb-fast) var(--tb-ease);
+}
+.tb-room.tb-cell:hover { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--t) 40%, transparent); }
+.tb-room.tb-cell:has(.tb-stretched:active) { transform: scale(.98); }
+.tb-cell-name { position: relative; z-index: 1; font-size: .9rem; font-weight: 500; line-height: 1.2; overflow-wrap: anywhere; }
+.tb-cell-bottom { position: relative; z-index: 1; display: flex; align-items: baseline; justify-content: space-between; gap: 6px; }
+.tb-cell-bottom b { font-size: calc(2.05rem * var(--z, 1)); line-height: 1; letter-spacing: -.02em; }
+.tb-cell-bottom small { color: var(--d); font-family: var(--tb-font-figures); font-size: .85rem; font-weight: 500; white-space: nowrap; }
+.tb-cell-curve { position: absolute; left: 0; right: 0; bottom: 34px; width: 100%; height: 38px; opacity: .45; }
+.tb-cell-curve path { fill: none; stroke: var(--t); stroke-width: 1.4; vector-effect: non-scaling-stroke; }
+.tb-cell-favorite { position: absolute; top: 10px; right: 10px; color: var(--t); font-size: .75rem; opacity: .7; }
+.tb-cell.tb-waiting, .tb-room-tile.tb-waiting { background: var(--md-surface-container-high); animation: tb-waiting-pulse 1.4s ease-in-out infinite; }
+
+/* Home: soft tiles tinted by the temperature */
+.tb-room-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(calc(200px * var(--z, 1)), 1fr)); gap: 12px; }
+:root .tb-room.tb-room-tile {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: calc(168px * var(--z, 1));
+    padding: 16px 18px 14px;
+    border: 0;
+    border-radius: var(--tb-shape-xxl);
+    background: var(--c);
+    color: var(--md-on-surface);
+    overflow: hidden;
+    box-shadow: none;
+    transition: transform var(--tb-fast) var(--tb-ease);
+}
+.tb-room.tb-room-tile:has(.tb-stretched:active) { transform: scale(.98); }
+.tb-room-tile-nom { position: relative; z-index: 1; font-size: 1.02rem; padding-right: 30px; }
+.tb-room-tile-t { position: relative; z-index: 1; margin-top: 6px; font-size: calc(3.4rem * var(--z, 1)); line-height: 1; letter-spacing: -.045em; }
+.tb-room-tile-t span { font-size: 1.5rem; vertical-align: 1.3rem; margin-left: 2px; font-weight: 300; }
+.tb-room-tile-etat { position: relative; z-index: 1; margin-top: 4px; color: var(--md-on-surface-variant); font-size: .85rem; }
+.tb-room-tile-etat b { color: var(--f); font-weight: 600; }
+.tb-room-tile-courbe { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 46px; }
+.tb-room-tile-aire { fill: color-mix(in srgb, var(--f) 14%, transparent); }
+.tb-room-tile-ligne { fill: none; stroke: color-mix(in srgb, var(--f) 60%, transparent); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+.tb-room-tile-favori { position: absolute; top: 10px; right: 10px; z-index: 2; display: grid; place-items: center; width: 34px; height: 34px; border: 0; border-radius: 50%; background: none; color: var(--md-on-surface-variant); cursor: pointer; opacity: .55; }
+.tb-room-tile-favori.tb-fav-on { color: var(--tb-star); opacity: 1; }
+.tb-room-tile-favori:hover { background: color-mix(in srgb, var(--md-on-surface) 8%, transparent); opacity: 1; }
+
+@media (max-width: 640px) {
+    .tb-cells { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
+    .tb-room.tb-cell { min-height: 0; aspect-ratio: 1 / .95; padding: 8px 9px; }
+    .tb-cell-name { font-size: .8rem; }
+    .tb-cell-bottom { flex-direction: column; align-items: flex-start; gap: 0; }
+    .tb-cell-bottom b { font-size: 1.7rem; }
+    .tb-cell-bottom small { font-size: .74rem; }
+    .tb-cell-curve { display: none; }
+    .tb-room-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .tb-room.tb-room-tile { min-height: 158px; padding: 14px 15px 12px; border-radius: var(--tb-shape-xl); }
+    .tb-room-tile-t { font-size: 3rem; }
+    .tb-light { padding: 9px 11px 10px; }
+    .tb-light b { font-size: 1.6rem; }
+    .tb-light span { font-size: .78rem; }
+}
+
+/* Entrance: the squares and tiles rise in turn, once */
+.tb-entering :is(.tb-cells, .tb-room-tiles) > * { animation: tb-rise .45s var(--tb-ease) both; animation-delay: calc(.08s + var(--i, 0) * 30ms); }
+:is(.tb-cells, .tb-room-tiles) > :nth-child(2) { --i: 1; } :is(.tb-cells, .tb-room-tiles) > :nth-child(3) { --i: 2; }
+:is(.tb-cells, .tb-room-tiles) > :nth-child(4) { --i: 3; } :is(.tb-cells, .tb-room-tiles) > :nth-child(5) { --i: 4; }
+:is(.tb-cells, .tb-room-tiles) > :nth-child(6) { --i: 5; } :is(.tb-cells, .tb-room-tiles) > :nth-child(n + 7) { --i: 6; }
+/* Not the stripe of the old cards */
+.tb-room.tb-cell::before, .tb-room.tb-room-tile::before { display: none; }
+
+/* ============================== Page of a room ============================== */
+
+/* Breadcrumb: a path, not buttons */
+.tb-crumb { padding: 0; background: none; font-weight: 500; }
+a.tb-crumb:hover { background: none; text-decoration: underline; }
+.tb-crumb-kind { padding: 2px 8px; border-radius: var(--tb-shape-full); background: var(--md-surface-container-high); color: var(--md-on-surface); font-size: .78rem; font-weight: 600; letter-spacing: 0; text-transform: none; }
+:root[data-style="panel"] .tb-crumb-kind { border-radius: var(--tb-shape-xs); }
+
+/* Panel: the reading of the desk */
+.tb-hero.tb-desk { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); align-items: start; }
+.tb-reading { overflow: hidden; border: 1px solid color-mix(in srgb, var(--tone) 50%, var(--md-outline-variant)); border-radius: var(--tb-shape-xl); background: var(--tb-glass); }
+.tb-reading-state { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding: 9px 16px; background: var(--tone); color: #fff; font-weight: 600; font-size: .95rem; }
+.tb-tone-unknown .tb-reading-state, .tb-reading.tb-tone-unknown .tb-reading-state { color: var(--md-surface-container-lowest); }
+:root[data-theme="dark"] .tb-reading-state { color: #121514; }
+.tb-reading-body { display: grid; grid-template-columns: 1fr 1fr; }
+.tb-reading-body > div { display: flex; flex-direction: column; gap: 6px; min-width: 0; padding: 16px 18px 18px; }
+.tb-reading-body > div + div { border-left: 1px solid var(--md-outline-variant); }
+.tb-reading-body small { color: var(--md-on-surface-variant); font-size: .85rem; }
+.tb-reading .tb-temp-hero { font-size: clamp(3.2rem, 2.4rem + 3vw, 5rem); line-height: .95; }
+.tb-reading .tb-temp-hero .tb-deg { font-size: .38em; margin: .18em 0 0 .08em; color: var(--md-on-surface-variant); }
+.tb-reading-measurement { color: var(--tone); }
+.tb-reading.tb-tone-stable .tb-reading-measurement, .tb-reading.tb-tone-unknown .tb-reading-measurement { color: var(--md-on-surface); }
+.tb-reading-source { color: var(--md-on-surface-variant); font-size: .85rem; }
+.tb-reading-foot { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px 16px; padding: 10px 18px; border-top: 1px solid var(--md-outline-variant); color: var(--md-on-surface-variant); font-size: .85rem; }
+
+/* Home: a thermostat */
+.tb-hero.tb-thermostat { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+/* The photo at the height of the dial, not at the top of the row */
+.tb-hero.tb-thermostat > .tb-photo { align-self: center; }
+.tb-thermostat-zone { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 8px 0 12px; border-radius: var(--tb-shape-xxl); }
+.tb-thermostat-sentence { align-self: stretch; margin: 0 0 4px; font-size: clamp(1.2rem, 1.05rem + .6vw, 1.5rem); font-weight: 300; line-height: 1.3; }
+.tb-thermostat-only { margin: 24px 0; font-size: 6rem; }
+/* Its place is kept: the button slides in and out without moving what is below */
+.tb-thermostat-action { display: grid; place-items: center; min-height: 56px; margin-top: 6px; }
+.tb-thermostat-apply { transform-origin: center top; }
+.tb-enter { animation: tb-button-enter .32s cubic-bezier(.3, 1.4, .5, 1) both; }
+.tb-sort { animation: tb-button-sort .18s ease-in both; }
+@keyframes tb-button-enter { from { opacity: 0; transform: translateY(-6px) scale(.9); } }
+@keyframes tb-button-sort { to { opacity: 0; transform: translateY(-4px) scale(.94); } }
+.tb-thermostat-meta { margin-top: 4px; color: var(--md-on-surface-variant); font-size: .85rem; text-align: center; }
+.tb-thermostat-meta a { color: inherit; }
+/* The options for an floor or a building, without the form (the dial is the form) */
+.tb-setpoint-options-only .tb-setpoint-options { margin-top: 0; }
+
+/* The dial */
+tb-dial { display: flex; flex-direction: column; align-items: center; }
+.tb-dial { position: relative; width: min(300px, 78vw); aspect-ratio: 1; }
+/* The page scrolls over the dial: only the knob takes the finger */
+.tb-dial svg { width: 100%; height: 100%; overflow: visible; touch-action: pan-y; -webkit-user-select: none; user-select: none; }
+.tb-dial-track { fill: none; stroke: color-mix(in srgb, var(--md-on-surface) 10%, transparent); stroke-width: 22; stroke-linecap: round; }
+.tb-dial-arc { fill: none; stroke: var(--m); stroke-width: 22; stroke-linecap: round; transition: stroke-dasharray .35s var(--tb-ease-out, cubic-bezier(.2, .8, .2, 1)), stroke .6s ease; }
+.tb-dial-handle { transform-box: view-box; transform-origin: 150px 150px; transition: transform .35s var(--tb-ease-out, cubic-bezier(.2, .8, .2, 1)); }
+/* Held: the knob is under the finger, no easing behind it */
+.tb-dial-grabbing :is(.tb-dial-arc, .tb-dial-handle) { transition-duration: 0s, .6s; }
+.tb-dial-grabbing .tb-dial-handle { transition: none; }
+.tb-dial-grip { fill: transparent; cursor: grab; touch-action: none; }
+.tb-dial-button { fill: var(--md-surface-container-lowest); stroke: var(--m); stroke-width: 3; cursor: grab; touch-action: none; filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .18)); transition: stroke .6s ease, r .2s ease; }
+.tb-dial-grabbing .tb-dial-button { r: 19; cursor: grabbing; }
+.tb-dial-button:focus-visible { outline: none; stroke-width: 6; }
+.tb-dial-center { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; pointer-events: none; }
+.tb-dial-center small { color: var(--md-on-surface-variant); font-size: .9rem; }
+.tb-dial-center b { font-size: clamp(4.4rem, 3.6rem + 3vw, 5.6rem); line-height: 1; letter-spacing: -.05em; }
+.tb-dial-center b span { font-size: .4em; vertical-align: .9em; margin-left: .04em; font-weight: 300; }
+.tb-dial-center em { font-style: normal; font-size: .95rem; }
+.tb-dial-center em.tb-dial-new { color: var(--m); font-weight: 600; animation: tb-goal .28s cubic-bezier(.3, 1.5, .5, 1); }
+@keyframes tb-goal { from { transform: translateY(3px) scale(.92); opacity: .4; } }
+.tb-dial-step { display: flex; gap: 72px; margin-top: -14px; }
+.tb-dial-step button {
+    display: grid; place-items: center; width: 52px; height: 52px; border: 0; border-radius: 50%;
+    background: var(--tb-field); color: var(--md-on-surface); font-size: 1.05rem; cursor: pointer;
+    touch-action: manipulation; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+    transition: transform .15s ease, background-color .2s ease, color .2s ease;
+}
+.tb-dial-step button:hover { background: var(--tb-field-hover); }
+.tb-dial-step button:active { transform: scale(.94); }
+/* Held down: the button fills with the colour of the dial and breathes while it repeats */
+.tb-dial-step button.tb-held { background: var(--m); color: var(--tb-background); animation: tb-held .5s ease-in-out infinite alternate; }
+@keyframes tb-held { from { transform: scale(.94); } to { transform: scale(1.06); } }
+@media (prefers-reduced-motion: reduce) {
+    .tb-dial-arc, .tb-dial-handle { transition: none; }
+    .tb-dial-step button.tb-held, .tb-dial-center em.tb-dial-new { animation: none; }
+}
+
+@media (max-width: 840px) {
+    .tb-hero.tb-desk, .tb-hero.tb-thermostat { grid-template-columns: 1fr; }
+    .tb-thermostat-sentence { text-align: left; }
+    .tb-reading-body > div { padding: 12px 14px 14px; }
+}
+
+/* The words of a square or tile sit above its curve, but a tap on them still opens the room */
+:is(.tb-cell-name, .tb-cell-bottom, .tb-room-tile-nom, .tb-room-tile-t, .tb-room-tile-etat, .tb-cell-curve, .tb-room-tile-courbe) { pointer-events: none; }
+
+/* ============================== Photos on the dashboard ============================== */
+
+/* The photo lies behind the whole card, under its colour: the words stay on the colour */
+.tb-cell-photo, .tb-room-tile-photo { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; border-radius: inherit; }
+.tb-cell-photo img, .tb-room-tile-photo img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.tb-cell-photo::after, .tb-room-tile-photo::after { content: ""; position: absolute; inset: 0; }
+
+/* Panel: the photo in greys, as a texture under the colour of the gap */
+.tb-cell-photo img { filter: grayscale(1) contrast(.9) brightness(1.05); }
+.tb-cell-photo::after { background: color-mix(in srgb, var(--c) 80%, transparent); }
+
+/* Home: the photo shows through at the top, the colour of the room thickens towards the words */
+.tb-room-tile-photo img { filter: saturate(.85); }
+.tb-room-tile-photo::after { background: linear-gradient(180deg, color-mix(in srgb, var(--c) 38%, transparent) 0%, color-mix(in srgb, var(--c) 80%, transparent) 50%, color-mix(in srgb, var(--c) 94%, transparent) 100%); }
+.tb-room.tb-room-tile.tb-with-photo .tb-room-tile-favori { background: color-mix(in srgb, var(--c) 70%, transparent); opacity: 1; }
+.tb-room.tb-room-tile.tb-with-photo .tb-room-tile-favori:not(.tb-fav-on) { color: var(--md-on-surface); }
+
+
+/* ============================== A card held down ============================== */
+
+/* No menu of the system, no text picked: the press is ours */
+.tb-room.tb-cell, .tb-room.tb-room-tile { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+/* Held: the card sinks slowly, the overview opens when it is all the way down */
+:root .tb-room.tb-cell.tb-press, :root .tb-room.tb-room-tile.tb-press { transform: scale(.95); transition: transform .33s cubic-bezier(.3, 0, .5, 1); }
+
+.tb-overview-room { display: flex; flex-direction: column; gap: 16px; }
+.tb-overview-room-path { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: -4px 0 0; color: var(--md-on-surface-variant); font-size: .9rem; }
+.tb-overview-room-state { display: inline-flex; align-items: center; gap: 7px; background: color-mix(in srgb, var(--tone) 14%, transparent); color: var(--md-on-surface); }
+.tb-overview-room-figures, .tb-overview-room-day { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; margin: 0; border-radius: var(--tb-shape-lg); background: var(--md-outline-variant); overflow: hidden; }
+.tb-overview-room-figures > div, .tb-overview-room-day > div { padding: 10px 14px 12px; background: color-mix(in srgb, var(--md-on-surface) 3%, var(--md-surface-container-lowest)); }
+.tb-overview-room dt { color: var(--md-on-surface-variant); font-size: .8rem; }
+.tb-overview-room dd { margin: 2px 0 0; font-size: 1.35rem; line-height: 1.15; }
+.tb-overview-room-day dd { font-size: 1.05rem; }
+:root[data-style="panel"] :is(.tb-overview-room-figures, .tb-overview-room-day) { border: 1px solid var(--md-outline-variant); border-radius: var(--tb-shape-sm); }
+.tb-chart.tb-overview-room-curve { height: 280px; }
+.tb-overview-room-waiting { display: flex; align-items: center; justify-content: center; gap: 10px; height: 100%; min-height: 240px; border-radius: var(--tb-shape-lg); background: var(--tb-field); color: var(--md-on-surface-variant); }
+.tb-overview-room-foot { margin: 0; color: var(--md-on-surface-variant); font-size: .88rem; }
+.tb-overview-room-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+@media (max-width: 640px) {
+    .tb-overview-room-figures, .tb-overview-room-day { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .tb-chart.tb-overview-room-curve { height: auto; }
+    .tb-overview-room-curve .tb-chart-zone { height: 240px; }
+    .tb-overview-room-actions .tb-btn { flex: 1; justify-content: center; }
+}
+
+/* ============================== Arranging the buildings ============================== */
+
+/* The handle at the end of a title: on a computer when the title is pointed at, always on a phone */
+.tb-section-title:has(.tb-section-handle) { flex-wrap: nowrap; }
+.tb-section-title:has(.tb-section-handle) .tb-section-toggle { flex: 1 1 auto; width: auto; min-width: 0; }
+.tb-section-handle {
+    display: grid; place-items: center; flex: none; width: 36px; height: 36px; padding: 0; border: 0; border-radius: var(--tb-shape-md);
+    background: none; color: var(--md-on-surface-variant); cursor: grab; touch-action: none;
+    opacity: 0; transition: opacity var(--tb-fast) linear, background-color var(--tb-fast) linear;
+}
+.tb-section-handle .pi { font-size: .95rem; }
+.tb-section:hover .tb-section-handle, .tb-section-handle:focus-visible, .tb-reorg .tb-section-handle { opacity: 1; }
+.tb-section-handle:hover { background: color-mix(in srgb, var(--md-on-surface) 7%, transparent); }
+.tb-section-handle:focus-visible { outline: 2px solid var(--md-primary); outline-offset: 2px; }
+@media (hover: none) { .tb-section-handle { opacity: .75; } }
+
+/* Dragging: every section folds to its title; the one held floats above the others */
+/* (folded as a closed section is: the cards shrink away with the fold, then come back) */
+.tb-reorg .tb-section .tb-section-body { grid-template-rows: 0fr; opacity: 0; }
+.tb-reorg .tb-section .tb-section-body > * { overflow: hidden; visibility: hidden; transition: visibility 0s var(--tb-fold); }
+.tb-reorg .tb-section .tb-section-title { margin-bottom: 0; }
+.tb-section[data-group] { border-radius: var(--tb-shape-lg); transition: background-color .3s ease, padding .3s var(--tb-ease), margin .3s var(--tb-ease); }
+.tb-reorg .tb-section[data-group] { margin-bottom: 8px; padding: 6px 8px 6px 14px; background: color-mix(in srgb, var(--md-on-surface) 5%, var(--tb-background)); transition: transform .22s var(--tb-ease), background-color .3s ease, padding .3s var(--tb-ease), margin .3s var(--tb-ease); }
+.tb-reorg .tb-section.tb-dragged { position: relative; z-index: 5; transition: none; box-shadow: 0 14px 36px rgba(0, 0, 0, .18); cursor: grabbing; }
+.tb-reorg .tb-section.tb-dragged .tb-section-handle { cursor: grabbing; }
+:root[data-style="panel"] .tb-reorg .tb-section[data-group] { border: 1px solid var(--md-outline-variant); border-radius: var(--tb-shape-sm); }
+
+/* ============================== Card ↔ room: the layers ============================== */
+
+/*
+ * The photo of the room page has no twin on a card (the card's photo is part of the card): it
+ * stays under the card and its words while it fades, never above them.
+ */
+::view-transition-group(*.tb-vt-photo) { z-index: 1; }
+::view-transition-group(*.tb-card), ::view-transition-group(*.tb-vt-text) { z-index: 2; }
+::view-transition-old(*.tb-vt-photo):only-child { animation: tb-fade-out .22s ease both; }
+::view-transition-new(*.tb-vt-photo):only-child { animation: tb-fade-in .3s .15s ease both; }
+
+/* ============================== The page of a room: the photo beside the reading ============================== */
+
+/*
+ * Phones and tablets: the photo keeps the proportions of a photo beside the dial (never stretched
+ * to its height). Computers keep the photo as tall as the reading beside it.
+ */
+@media (hover: none) and (pointer: coarse) {
+    .tb-hero.tb-thermostat > .tb-photo, .tb-hero.tb-desk > .tb-photo { align-self: center; min-height: 0; aspect-ratio: 4 / 3; }
+    .tb-hero.tb-thermostat > .tb-photo.tb-photo-empty, .tb-hero.tb-desk > .tb-photo.tb-photo-empty { aspect-ratio: auto; min-height: 220px; }
+}
+
+/*
+ * Phone held sideways (and small tablets): the dial and the photo side by side, both within the
+ * height of the screen, rather than a dial then a photo as wide as the screen under it.
+ */
+@media (orientation: landscape) and (max-height: 520px) {
+    .tb-hero.tb-thermostat, .tb-hero.tb-desk { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; }
+    .tb-dial { width: min(250px, 62vh); }
+    .tb-dial-center b { font-size: clamp(3.4rem, 14vh, 4.6rem); }
+    .tb-hero.tb-thermostat > .tb-photo, .tb-hero.tb-desk > .tb-photo { max-height: 78vh; }
+}
+
+/* ============================== Card → room: the photo flies out of the card ============================== */
+
+/*
+ * TransitionsService (flyPhoto): the photo of the room page leaves the card it was in (and
+ * goes back into it), above the card, cut to its own frame while it changes size.
+ */
+:root.tb-vt-flight::view-transition-group(*.tb-vt-photo) { z-index: 3; overflow: hidden; }
+:root.tb-vt-flight::view-transition-group(*.tb-vt-text) { z-index: 4; }
+:root.tb-vt-flight::view-transition-image-pair(*.tb-vt-photo) { position: absolute; inset: 0; }
+:root.tb-vt-flight::view-transition-old(*.tb-vt-photo),
+:root.tb-vt-flight::view-transition-new(*.tb-vt-photo) { width: 100%; height: 100%; object-fit: cover; }
+:root.tb-vt-flight::view-transition-new(*.tb-vt-photo):only-child { animation: tb-fade-in .12s ease both; }
+:root.tb-vt-flight::view-transition-old(*.tb-vt-photo):only-child { animation: none; }
+
+/* ============================== The dial: consigne being set, temperature now ============================== */
+
+/* The line across the track: where the temperature is now */
+.tb-dial-marker { transform-box: view-box; transform-origin: 150px 150px; transition: transform .6s var(--tb-ease); pointer-events: none; }
+.tb-dial-marker line { stroke: var(--md-on-surface); stroke-width: 3.5; stroke-linecap: round; opacity: .85; }
+/* Being set: the setpoint is the big figure, in the colour of the dial; it pops at each step */
+.tb-dial-target { color: var(--m); }
+.tb-dial-adjusting .tb-dial-target { animation: tb-goal .24s cubic-bezier(.3, 1.5, .5, 1); }
+.tb-dial-adjusting em { color: var(--md-on-surface-variant); }
+@media (prefers-reduced-motion: reduce) { .tb-dial-adjusting .tb-dial-target { animation: none; } .tb-dial-marker { transition: none; } }
+
+/* ============================== Panel: the setting of the setpoint under the reading ============================== */
+
+.tb-desk-left { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.tb-adjusting { display: flex; flex-direction: column; gap: 10px; padding: 12px 14px; border: 1px solid var(--md-outline-variant); border-radius: var(--tb-shape-md); background: var(--tb-glass); }
+.tb-adjusting-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+.tb-adjusting-title { margin-right: auto; font-weight: 600; }
+.tb-adjusting .tb-setpoint-options { margin: 0; padding: 10px 0 0; border: 0; border-top: 1px solid var(--md-outline-variant); border-radius: 0; background: none; }
+/* The photo as tall as the reading and its setting together (computers) */
+.tb-hero.tb-desk { align-items: stretch; }
+
+/* − / + held down: the button holds its pressed look while it repeats */
+.tb-stepper button.tb-held { background: var(--md-on-surface); color: var(--tb-background); }
+.tb-stepper button { touch-action: manipulation; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }

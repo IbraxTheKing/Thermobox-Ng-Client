@@ -2,16 +2,16 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
-import { ServeurService } from '../core/api.config';
-import { Acces, User, UserChanges } from '../models/models';
+import { ServerService } from '../core/api.config';
+import { Access, User, UserChanges } from '../models/models';
 
 /** Client Angular de UserResource — /api/users */
 @Injectable({ providedIn: 'root' })
 export class UserService {
   private readonly http = inject(HttpClient);
-  private readonly serveur = inject(ServeurService);
-  private url(chemin = ''): string {
-    return this.serveur.url(`/users${chemin}`);
+  private readonly server = inject(ServerService);
+  private url(path = ''): string {
+    return this.server.url(`/users${path}`);
   }
 
   /** ADMIN */
@@ -19,7 +19,7 @@ export class UserService {
     return this.http.get<User[]>(this.url());
   }
 
-  /** ADMIN ou propriétaire du compte */
+  /** ADMIN or owner of the account */
   getById(id: number): Observable<User | null> {
     return this.http.get<User | null>(this.url(`/${id}`));
   }
@@ -30,30 +30,30 @@ export class UserService {
   }
 
   /**
-   * Inscription publique (toujours VIEWER) — 201 si créé, 409 si le nom est pris. [base] : un autre
-   * serveur que celui de l'application (page d'inscription).
+   * Public registration (always VIEWER) — 201 when created, 409 when the name is taken. [base]: a
+   * server other than the app's (registration page).
    */
   add(user: { username: string; password: string }, base?: string): Observable<void> {
     return this.http.post<void>(base ? `${base}/users` : this.url(), user);
   }
 
-  /** ADMIN ou propriétaire : seuls les champs renseignés changent ; le rôle, ADMIN seulement. */
+  /** ADMIN or owner: only the fields given change; the role, ADMIN only. */
   update(id: number, changes: UserChanges): Observable<User> {
     return this.http.put<User>(this.url(`/${id}`), changes);
   }
 
-  /** ADMIN ou propriétaire du compte */
+  /** ADMIN or owner of the account */
   remove(id: number): Observable<void> {
     return this.http.delete<void>(this.url(`/${id}`));
   }
 
-  /** ADMIN ou propriétaire : tout, ou seulement certains bâtiments / étages / salles. */
-  getAcces(id: number): Observable<Acces> {
-    return this.http.get<Acces>(this.url(`/${id}/acces`));
+  /** ADMIN or owner: everything, or only some buildings / floors / rooms. */
+  getAccess(id: number): Observable<Access> {
+    return this.http.get<Access>(this.url(`/${id}/acces`));
   }
 
-  /** ADMIN — un compte ADMIN ne peut pas être limité. */
-  setAcces(id: number, restricted: boolean, elements: number[]): Observable<Acces> {
-    return this.http.put<Acces>(this.url(`/${id}/acces`), { restricted, elements });
+  /** ADMIN — an ADMIN account cannot be restricted. */
+  setAccess(id: number, restricted: boolean, elements: number[]): Observable<Access> {
+    return this.http.put<Access>(this.url(`/${id}/acces`), { restricted, elements });
   }
 }

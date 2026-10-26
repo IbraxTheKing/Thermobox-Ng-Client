@@ -15,11 +15,11 @@
           <strong>Thème</strong>
           <span class="tb-muted">« Système » suit le réglage clair ou sombre de l'appareil, aussi quand il change le soir.</span>
         </div>
-        <div class="tb-segmented tb-theme-choix" role="radiogroup" aria-label="Thème">
+        <div class="tb-segmented tb-theme-choice" role="radiogroup" aria-label="Thème">
           @for (c of themes; track c.id) {
-            <button type="button" role="radio" [attr.aria-checked]="prefs.choixTheme() === c.id" [class.tb-seg-on]="prefs.choixTheme() === c.id"
-                    (click)="prefs.changerTheme(c.id, $any($event.currentTarget))">
-              <i class="pi" [class]="c.icone"></i>{{ c.label }}
+            <button type="button" role="radio" [attr.aria-checked]="prefs.themeChoice() === c.id" [class.tb-seg-on]="prefs.themeChoice() === c.id"
+                    (click)="prefs.changeTheme(c.id, $any($event.currentTarget))">
+              <i class="pi" [class]="c.icon"></i>{{ c.label }}
             </button>
           }
         </div>
@@ -33,9 +33,9 @@
             Désactivées, les couleurs restent les mêmes partout.
           </span>
         </div>
-        <tb-switch [checked]="prefs.teinte()" (checkedChange)="prefs.teinte.set($event)" label="Couleurs selon l'état" />
+        <tb-switch [checked]="prefs.tint()" (checkedChange)="prefs.tint.set($event)" label="Couleurs selon l'état" />
       </div>
-      @if (!panneau()) {
+      @if (!panel()) {
         <div class="tb-pref">
           <span class="tb-section-icon"><i class="pi pi-sliders-h"></i></span>
           <div class="tb-pref-text">
@@ -46,8 +46,8 @@
             </span>
           </div>
           <div class="tb-segmented" role="radiogroup" aria-label="Couleur des pièces">
-            <button type="button" role="radio" [attr.aria-checked]="prefs.couleursMaison() === 'ecart'" [class.tb-seg-on]="prefs.couleursMaison() === 'ecart'" (click)="prefs.couleursMaison.set('ecart')">Écart</button>
-            <button type="button" role="radio" [attr.aria-checked]="prefs.couleursMaison() === 'temperature'" [class.tb-seg-on]="prefs.couleursMaison() === 'temperature'" (click)="prefs.couleursMaison.set('temperature')">Température</button>
+            <button type="button" role="radio" [attr.aria-checked]="prefs.homeColors() === 'delta'" [class.tb-seg-on]="prefs.homeColors() === 'delta'" (click)="prefs.homeColors.set('delta')">Écart</button>
+            <button type="button" role="radio" [attr.aria-checked]="prefs.homeColors() === 'temperature'" [class.tb-seg-on]="prefs.homeColors() === 'temperature'" (click)="prefs.homeColors.set('temperature')">Température</button>
           </div>
         </div>
       }
@@ -60,31 +60,31 @@
             leur unité.
           </span>
         </div>
-        <div class="tb-segmented tb-unite" role="radiogroup" aria-label="Unité des températures">
-          <button type="button" role="radio" [attr.aria-checked]="!prefs.fahrenheit()" [class.tb-seg-on]="!prefs.fahrenheit()" (click)="prefs.unite.set('C')">°C</button>
-          <button type="button" role="radio" [attr.aria-checked]="prefs.fahrenheit()" [class.tb-seg-on]="prefs.fahrenheit()" (click)="prefs.unite.set('F')">°F</button>
+        <div class="tb-segmented tb-unit" role="radiogroup" aria-label="Unité des températures">
+          <button type="button" role="radio" [attr.aria-checked]="!prefs.fahrenheit()" [class.tb-seg-on]="!prefs.fahrenheit()" (click)="prefs.unit.set('C')">°C</button>
+          <button type="button" role="radio" [attr.aria-checked]="prefs.fahrenheit()" [class.tb-seg-on]="prefs.fahrenheit()" (click)="prefs.unit.set('F')">°F</button>
         </div>
       </div>
-      @if (avecBarre) {
-        <div class="tb-pref tb-pref-barre">
+      @if (hasSidebar) {
+        <div class="tb-pref tb-pref-bar">
           <span class="tb-section-icon"><i class="pi pi-bars"></i></span>
           <div class="tb-pref-text">
             <strong>Barre de navigation</strong>
             <span class="tb-muted">Sur un grand écran : le nom des pages à côté de leur icône, ou les icônes seules pour laisser plus de place. La flèche en haut de la barre fait la même chose.</span>
           </div>
           <div class="tb-segmented" role="radiogroup" aria-label="Barre de navigation">
-            <button type="button" role="radio" [attr.aria-checked]="!prefs.barreReduite()" [class.tb-seg-on]="!prefs.barreReduite()" (click)="prefs.barreReduite.set(false)">Complète</button>
-            <button type="button" role="radio" [attr.aria-checked]="prefs.barreReduite()" [class.tb-seg-on]="prefs.barreReduite()" (click)="prefs.barreReduite.set(true)">Icônes</button>
+            <button type="button" role="radio" [attr.aria-checked]="!prefs.sidebarCollapsed()" [class.tb-seg-on]="!prefs.sidebarCollapsed()" (click)="prefs.sidebarCollapsed.set(false)">Complète</button>
+            <button type="button" role="radio" [attr.aria-checked]="prefs.sidebarCollapsed()" [class.tb-seg-on]="prefs.sidebarCollapsed()" (click)="prefs.sidebarCollapsed.set(true)">Icônes</button>
           </div>
         </div>
       }
     </div>
-    <p class="tb-muted tb-pref-portee">Enregistré sur cet appareil uniquement. Interface : {{ nomPlateforme }}.</p>
+    <p class="tb-muted tb-pref-scope">Enregistré sur cet appareil uniquement. Interface : {{ platformName }}.</p>
   </section>
 
-  <!-- Keyboard shortcuts: the list comes from ClavierService, the only place they are defined -->
-  @if (avecClavier) {
-    <section class="tb-panel tb-pref-admin tb-pref-clavier">
+  <!-- Keyboard shortcuts: the list comes from KeyboardService, the only place they are defined -->
+  @if (hasKeyboard) {
+    <section class="tb-panel tb-pref-admin tb-pref-keyboard">
       <div class="tb-prefs">
         <div class="tb-pref">
           <span class="tb-section-icon"><i class="pi pi-desktop"></i></span>
@@ -92,22 +92,22 @@
             <strong>Raccourcis clavier</strong>
             <span class="tb-muted">Sur ordinateur : naviguer, chercher, revenir à l'aperçu… sans la souris. <kbd>?</kbd> affiche cette liste depuis n'importe quelle page.</span>
           </div>
-          <tb-switch [checked]="prefs.clavier()" (checkedChange)="prefs.clavier.set($event)" label="Raccourcis clavier" />
+          <tb-switch [checked]="prefs.keyboard()" (checkedChange)="prefs.keyboard.set($event)" label="Raccourcis clavier" />
         </div>
       </div>
-      <div class="tb-raccourcis">
-        @for (g of clavier.groupes(); track g.groupe) {
-          <section class="tb-raccourcis-groupe">
-            <h3>{{ g.groupe }}</h3>
+      <div class="tb-shortcuts">
+        @for (g of keyboard.groups(); track g.group) {
+          <section class="tb-shortcuts-group">
+            <h3>{{ g.group }}</h3>
             <dl>
-              @for (r of g.raccourcis; track r.texte) {
-                <div class="tb-raccourci">
+              @for (r of g.shortcuts; track r.text) {
+                <div class="tb-shortcut">
                   <dt>
-                    @for (t of r.touches; track $index) {
+                    @for (t of r.keys; track $index) {
                       @if (t === '…') { … } @else { <kbd>{{ t }}</kbd> }
                     }
                   </dt>
-                  <dd>{{ r.texte }}</dd>
+                  <dd>{{ r.text }}</dd>
                 </div>
               }
             </dl>
@@ -130,18 +130,18 @@
               ou sombre de chacun est conservé.
             </span>
           </div>
-          <tb-switch [checked]="panneau()" [disabled]="enregistrementStyle()" (checkedChange)="changerStyle($event)" label="Style panneau de configuration" />
+          <tb-switch [checked]="panel()" [disabled]="styleSaving()" (checkedChange)="changeStyle($event)" label="Style panneau de configuration" />
         </div>
       </div>
-      <p class="tb-muted tb-pref-portee"><i class="pi pi-shield"></i> Réglage administrateur : s'applique à tout le monde, sur tous les appareils.</p>
+      <p class="tb-muted tb-pref-scope"><i class="pi pi-shield"></i> Réglage administrateur : s'applique à tout le monde, sur tous les appareils.</p>
     </section>
   }
   <!-- Versions, repositories and credits (also behind « Plus » on phones) -->
-  <a routerLink="/app/a-propos" class="tb-liste-groupe tb-pref-apropos">
-    <span class="tb-liste-ligne">
-      <span class="tb-liste-icone"><i class="pi pi-info-circle"></i></span>
-      <span class="tb-liste-texte"><strong>À propos de Thermobox</strong><span class="tb-muted">Versions du client et du serveur, code source, crédits</span></span>
-      <i class="pi pi-angle-right tb-liste-suite"></i>
+  <a routerLink="/app/about" class="tb-list-group tb-pref-apropos">
+    <span class="tb-list-row">
+      <span class="tb-list-icon"><i class="pi pi-info-circle"></i></span>
+      <span class="tb-list-text"><strong>À propos de Thermobox</strong><span class="tb-muted">Versions du client et du serveur, code source, crédits</span></span>
+      <i class="pi pi-angle-right tb-list-continuation"></i>
     </span>
   </a>
 </div>

@@ -1,0 +1,40 @@
+// Local plugin of Thermobox (plugins/thermobox-native), included by "npx cap sync android".
+// The Android Gradle plugin comes from the project of the app (android/build.gradle).
+ext {
+    androidxAppCompatVersion = project.hasProperty('androidxAppCompatVersion') ? rootProject.ext.androidxAppCompatVersion : '1.7.1'
+    androidxActivityVersion = project.hasProperty('androidxActivityVersion') ? rootProject.ext.androidxActivityVersion : '1.10.1'
+    materialVersion = project.hasProperty('materialVersion') ? rootProject.ext.materialVersion : '1.12.0'
+}
+
+apply plugin: 'com.android.library'
+
+android {
+    namespace = "ax.ibr.thermobox.plugin"
+    compileSdk = project.hasProperty('compileSdkVersion') ? rootProject.ext.compileSdkVersion : 36
+    defaultConfig {
+        minSdkVersion project.hasProperty('minSdkVersion') ? rootProject.ext.minSdkVersion : 24
+        targetSdkVersion project.hasProperty('targetSdkVersion') ? rootProject.ext.targetSdkVersion : 36
+    }
+    lintOptions {
+        abortOnError = false
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
+    }
+}
+
+repositories {
+    google()
+    mavenCentral()
+}
+
+dependencies {
+    implementation project(':capacitor-android')
+    implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
+    // Predictive back (OnBackPressedCallback with BackEventCompat)
+    implementation "androidx.activity:activity:$androidxActivityVersion"
+    // Material Components: NavigationBar (BottomNavigationView, NavigationRailView),
+    // ExtendedFloatingActionButton, Snackbar, MaterialAlertDialogBuilder, in Material 3
+    implementation "com.google.android.material:material:$materialVersion"
+}

@@ -3,10 +3,10 @@ import { RouterOutlet } from '@angular/router';
 
 import { AnimationsService } from './core/animations';
 import { AuthService } from './core/auth';
-import { ClavierService } from './core/clavier';
-import { PlateformeService } from './core/plateforme';
+import { KeyboardService } from './core/keyboard';
+import { PlatformService } from './core/platform';
 import { PreferencesService } from './core/preferences';
-import { TbConfirm, TbToasts } from './ui/hotes';
+import { TbConfirm, TbToasts } from './ui/hosts';
 
 @Component({
   selector: 'app-root',
@@ -22,14 +22,14 @@ export class App {
   constructor() {
     // Theme, platform and shortcuts apply from the first page on
     inject(PreferencesService);
-    inject(PlateformeService);
-    inject(ClavierService);
+    inject(PlatformService);
+    inject(KeyboardService);
     inject(AnimationsService);
     const auth = inject(AuthService);
     const body = inject(DOCUMENT).body;
     effect(() => {
-      body.classList.toggle('tb-app', auth.connecte());
-      body.classList.toggle('tb-public', !auth.connecte());
+      body.classList.toggle('tb-app', auth.loggedIn());
+      body.classList.toggle('tb-public', !auth.loggedIn());
     });
   }
 }

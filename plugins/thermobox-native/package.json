@@ -1,0 +1,11 @@
+{
+  "name": "thermobox-native",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Native components of Thermobox for the Android app: Material 3 navigation bar and action button, snackbars, dialogs.",
+  "capacitor": {
+    "android": {
+      "src": "android"
+    }
+  }
+}

@@ -1,0 +1,361 @@
+/*
+ * ThermoBox look (2026-10): two identities over the same pages, chosen by an ADMIN.
+ *
+ * - « Maison » (default): soft tiles, large light figures, pills, no lines.
+ * - « Panneau de configuration » (data-style="panneau"): enamel panels with clean edges, signal
+ *   lamps, condensed figures, square-ish corners, rules between rows.
+ *
+ * Loaded last: it takes over the shapes and materials of the components (controls.css, jsf.css,
+ * pages.css…), which keep their structure. No glass, no gradients, no glowing shadows in the
+ * pages; the iOS layer keeps Liquid Glass for the navigation only (shell-ios.css).
+ */
+
+/* ============================== Base ============================== */
+
+:root body { font-family: var(--tb-font); font-feature-settings: "tnum" 0; }
+/* The page colour is on <html>: <body> stays clear, so the tint of a room (BackgroundService) shows */
+:root body { background: transparent; }
+h1, h2, h3 { font-weight: var(--tb-title-weight); letter-spacing: var(--tb-title-space); }
+/* Figures: the heart of the app */
+.tb-figures, .tb-temp-xl, .tb-temp-hero, .tb-temp-l {
+    font-family: var(--tb-font-figures);
+    font-weight: var(--tb-figure-weight);
+    font-variant-numeric: tabular-nums lining-nums;
+}
+:root[data-style="panel"] :is(.tb-temp-xl, .tb-temp-hero, .tb-temp-l) { letter-spacing: -.02em; }
+
+/* No label above every title: the title says it */
+.tb-eyebrow { display: none; }
+.tb-page-head { margin: 4px 0 22px; }
+.tb-page-title h1 { font-size: clamp(2rem, 1.6rem + 1.4vw, 2.6rem); font-weight: var(--tb-title-weight); letter-spacing: -.025em; line-height: 1.05; }
+:root[data-style="panel"] .tb-page-title h1 { font-family: var(--tb-font-figures); font-size: clamp(1.9rem, 1.6rem + 1vw, 2.3rem); letter-spacing: -.01em; }
+.tb-lead { font-size: 1rem; }
+
+/* ============================== Surfaces ============================== */
+
+/* One material per look: Home, soft tiles without lines; Panel, enamel panels with an edge */
+.tb-glass, .tb-card, .tb-room, .tb-box, .tb-empty, .tb-stat, .tb-hero-reading, .tb-photo, .tb-panel,
+.tb-list-group, .tb-list-mgmt, .tb-table, .tb-banner {
+    border: 0;
+    background: var(--tb-tile);
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+}
+:root[data-style="panel"] :is(.tb-glass, .tb-card, .tb-room, .tb-box, .tb-empty, .tb-stat, .tb-hero-reading, .tb-photo, .tb-panel,
+.tb-list-group, .tb-list-mgmt, .tb-table, .tb-banner) {
+    border: 1px solid var(--md-outline-variant);
+    background: var(--tb-glass);
+}
+.tb-panel { border-radius: var(--tb-shape-xl); }
+.tb-card:hover, .tb-room:hover { box-shadow: none; }
+
+/* Icons on their own, not in tinted squares */
+.tb-tile, .tb-section-icon, .tb-tree-icon, .tb-empty-icon, .tb-photo-shape {
+    border: 0;
+    background: none;
+    box-shadow: none;
+    color: var(--md-on-surface-variant);
+}
+.tb-section-icon { width: auto; height: auto; }
+.tb-section-icon-fav { color: var(--tb-star); }
+.tb-empty-icon { font-size: 1.8rem; }
+.tb-empty-icon, .tb-auth .tb-logo-xl { animation: none !important; }
+
+/* Section titles: plain text, the count beside it */
+.tb-section { margin-top: 30px; }
+.tb-section-title { font-size: 1.15rem; }
+.tb-section-toggle { gap: 10px; }
+.tb-section-meta { font-size: .9rem; font-weight: 400; }
+:root[data-style="panel"] .tb-section-title { font-size: 1rem; }
+
+/* ============================== Buttons ============================== */
+
+.tb-btn {
+    background: var(--md-primary);
+    box-shadow: none;
+    border-radius: var(--tb-shape-full);
+    font-weight: 600;
+    transition: background-color var(--tb-fast) linear, color var(--tb-fast) linear, transform var(--tb-fast) var(--tb-ease);
+}
+.tb-btn:hover { background: color-mix(in srgb, var(--md-primary) 88%, var(--md-on-surface)); box-shadow: none; }
+.tb-btn.tb-btn-lg { border-radius: var(--tb-shape-full); }
+.tb-btn.tb-tonal { background: var(--tb-field); color: var(--md-on-surface); box-shadow: none; border: 0; }
+.tb-btn.tb-tonal:hover { background: var(--tb-field-hover); box-shadow: none; }
+.tb-btn.tb-flat:hover { background: color-mix(in srgb, var(--md-on-surface) 7%, transparent); }
+.tb-btn.tb-btn-danger { background: var(--md-error); }
+:root[data-style="panel"] .tb-btn { border-radius: var(--tb-shape-sm); }
+:root[data-style="panel"] .tb-btn.tb-tonal { border: 1px solid var(--tb-field-line); background: var(--tb-field); }
+:root[data-style="panel"] .tb-btn.tb-icon { border-radius: var(--tb-shape-sm); }
+
+/* ============================== Fields ============================== */
+
+.tb-input, .tb-select {
+    border-color: transparent;
+    background-color: var(--tb-field);
+    box-shadow: none;
+    border-radius: var(--tb-shape-md);
+}
+.tb-input:hover, .tb-select:hover { background-color: var(--tb-field-hover); border-color: transparent; }
+.tb-input:focus, .tb-select:focus { border-color: var(--md-primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--md-primary) 18%, transparent); }
+.tb-search > .tb-input, .tb-select.tb-filter { border-radius: var(--tb-shape-full); }
+:root[data-style="panel"] :is(.tb-input, .tb-select) { border-color: var(--tb-field-line); border-radius: var(--tb-shape-sm); }
+:root[data-style="panel"] :is(.tb-search > .tb-input, .tb-select.tb-filter) { border-radius: var(--tb-shape-sm); height: 44px; }
+
+/* ============================== Chips, tags, segmented ============================== */
+
+.tb-summary-chip {
+    border: 0;
+    background: var(--tb-tile);
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+}
+.tb-summary-chip.tb-chip-on { background: var(--md-on-surface); color: var(--tb-background); }
+:root[data-style="panel"] .tb-summary-chip { border: 1px solid var(--md-outline-variant); border-radius: var(--tb-shape-sm); background: var(--tb-glass); }
+:root[data-style="panel"] .tb-summary-chip.tb-chip-on { border-color: var(--md-on-surface); }
+
+.tb-tag { border-radius: var(--tb-shape-full); font-weight: 600; }
+:root[data-style="panel"] .tb-tag { border-radius: var(--tb-shape-xs); }
+
+.tb-segmented { border: 0; background: var(--tb-tile); box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.tb-segmented > button.tb-seg-on { background: var(--md-surface-container-lowest); color: var(--md-on-surface); box-shadow: var(--tb-raised-1); }
+:root[data-style="panel"] .tb-segmented { border: 1px solid var(--md-outline-variant); border-radius: var(--tb-shape-sm); background: var(--tb-glass); padding: 3px; }
+:root[data-style="panel"] .tb-segmented > button { border-radius: var(--tb-shape-xs); }
+:root[data-style="panel"] .tb-segmented > button.tb-seg-on { background: var(--md-on-surface); color: var(--tb-background); box-shadow: none; }
+
+/* ============================== Banners, tables, sheets ============================== */
+
+.tb-banner { border-radius: var(--tb-shape-lg); }
+:root .tb-banner .tb-banner-icon { background: none; box-shadow: none; color: inherit; width: auto; height: auto; }
+.tb-banner.tb-banner-info { background: var(--md-primary-container); color: var(--md-on-primary-container); }
+:root[data-style="panel"] .tb-banner { border-left: 4px solid var(--tb-heating); border-radius: var(--tb-shape-sm); }
+:root[data-style="panel"] .tb-banner.tb-banner-info { border-left-color: var(--md-primary); background: var(--tb-glass); color: var(--md-on-surface); }
+
+.tb-table { border-radius: var(--tb-shape-xl); }
+.tb-table th { background: transparent; font-weight: 600; letter-spacing: 0; text-transform: none; }
+:root[data-style="panel"] .tb-table th { background: var(--md-surface-container-high); }
+
+.tb-dialog {
+    border: 0;
+    background: var(--md-surface-container-low);
+    box-shadow: var(--tb-raised-3);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+}
+:root[data-style="panel"] .tb-dialog { border: 1px solid var(--md-outline-variant); }
+
+/* Lists of phones (Plus, Gestion…) */
+.tb-list-icon { background: none; color: var(--md-on-surface-variant); }
+
+/* ============================== Brand ============================== */
+
+/* The mark alone, in ink: a thermometer, no tile, no gradient */
+.tb-logo { background: none; box-shadow: none; border-radius: 0; }
+.tb-logo::after { inset: 0; background: var(--md-on-surface); }
+a:hover > .tb-logo { transform: none; }
+.tb-brand { font-weight: 600; letter-spacing: -.02em; }
+:root[data-style="panel"] .tb-brand { font-family: var(--tb-font-figures); }
+.tb-auth-name { background: none; color: var(--md-on-surface); -webkit-text-fill-color: currentColor; font-weight: 600; letter-spacing: -.04em; }
+:root[data-style="panel"] .tb-auth-name { font-family: var(--tb-font-figures); letter-spacing: -.02em; }
+.tb-avatar { background: var(--md-on-surface); color: var(--tb-background); box-shadow: none; font-weight: 600; }
+
+.tb-busy-bar { background: linear-gradient(90deg, transparent, var(--md-primary), transparent); background-size: 40% 100%; background-repeat: no-repeat; }
+
+/* ============================== Navigation (web) ============================== */
+
+/*
+ * Wide screens (web, desktop app): a side bar with the names of the pages, the account at its
+ * foot. Between phone and desktop widths, a narrow rail of icons. iOS and Android keep their own
+ * navigation (shell-ios.css, the native bar).
+ */
+.tb-rail {
+    border: 0;
+    border-radius: var(--tb-shape-xxl);
+    background: var(--tb-tile);
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+}
+:root[data-style="panel"] .tb-rail { border: 1px solid var(--md-outline-variant); background: var(--tb-glass); border-radius: var(--tb-shape-xl); }
+.tb-dest.tb-dest-on .tb-dest-icon { background: var(--md-on-surface); color: var(--tb-background); box-shadow: none; animation: none; }
+.tb-dest.tb-dest-on { color: var(--md-on-surface); }
+.tb-dest-badge { box-shadow: 0 0 0 2px var(--md-surface-container-low); }
+/* The account at the foot of the rail: its avatar (and, in the side bar, its name and server) */
+.tb-rail-account-zone { position: relative; }
+.tb-rail-account { display: flex; align-items: center; gap: 10px; padding: 0; border: 0; border-radius: var(--tb-shape-full); background: none; color: var(--md-on-surface); font: inherit; cursor: pointer; }
+.tb-rail-account-text { display: none; }
+.tb-rail-account-arrow { display: none; margin-left: auto; color: var(--md-on-surface-variant); font-size: .75rem; transition: transform var(--tb-medium) var(--tb-ease); }
+.tb-rail-account[aria-expanded="true"] .tb-rail-account-arrow { transform: rotate(180deg); }
+.tb-rail-account:focus-visible { outline: 2px solid var(--md-primary); outline-offset: 2px; }
+
+/* The menu of the saved accounts (TbAccounts mode="menu"): beside the rail of icons */
+.tb-accounts-menu {
+    position: absolute;
+    z-index: 70;
+    left: calc(100% + 16px);
+    bottom: -6px;
+    width: 320px;
+    padding: 8px;
+    border: 1px solid var(--md-outline-variant);
+    border-radius: var(--tb-shape-xl);
+    background: var(--md-surface-container-lowest);
+    color: var(--md-on-surface);
+    box-shadow: 0 18px 48px rgba(0, 0, 0, .16), 0 2px 6px rgba(0, 0, 0, .06);
+    transform-origin: 0 100%;
+    text-align: left;
+}
+:root[data-theme="dark"] .tb-accounts-menu { background: var(--md-surface-container-high); box-shadow: 0 18px 48px rgba(0, 0, 0, .5); }
+:root[data-style="panel"] .tb-accounts-menu { border-radius: var(--tb-shape-md); }
+.tb-accounts-menu .tb-accounts { max-height: min(50vh, 420px); margin: 0; overflow-y: auto; }
+.tb-accounts-menu-foot { display: flex; flex-direction: column; margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--md-outline-variant); }
+.tb-accounts-menu-foot .tb-sheet-item { min-height: 44px; text-decoration: none; }
+.tb-menu-enter { animation: tb-menu-enter .22s cubic-bezier(.2, .9, .3, 1.15) both; }
+.tb-menu-sort { animation: tb-menu-sort .14s ease-in both; }
+@keyframes tb-menu-enter { from { opacity: 0; transform: translateY(6px) scale(.96); } }
+@keyframes tb-menu-sort { to { opacity: 0; transform: translateY(4px) scale(.98); } }
+@media (prefers-reduced-motion: reduce) { .tb-menu-enter, .tb-menu-sort { animation-duration: 1ms; } }
+
+/*
+ * The side bar can be folded back into the rail of icons (the arrow at its top, or the
+ * Preferences page): html[data-sidebar="collapsed"]. :where() keeps the specificity of each rule.
+ */
+@media (min-width: 1200px) and (not ((orientation: landscape) and (max-height: 520px))) {
+    :root:not([data-sidebar="collapsed"]):not([data-platform="android"]) { --tb-rail: 268px; }
+    :where(:root:not([data-sidebar="collapsed"]):not([data-platform="android"])) {
+        .tb-rail {
+            inset: 0 auto 0 0;
+            width: calc(var(--tb-rail) - 24px);
+            margin: 14px 0 14px 14px;
+            padding: 22px 12px 14px;
+            align-items: stretch;
+            gap: 4px;
+        }
+        .tb-rail-brand { display: flex; align-items: center; justify-content: flex-start; gap: 10px; margin: 0 8px 26px; color: var(--md-on-surface); font-size: 1.25rem; font-weight: 600; letter-spacing: -.02em; }
+        .tb-rail-brand .tb-logo { width: 28px; height: 28px; }
+        .tb-rail-brand-name { display: inline; }
+        &[data-style="panel"] .tb-rail-brand { font-family: var(--tb-font-figures); }
+        .tb-dests { align-items: stretch; gap: 6px; }
+        .tb-dest {
+            flex-direction: row;
+            gap: 14px;
+            width: auto;
+            min-height: 46px;
+            padding: 0 14px;
+            border-radius: var(--tb-shape-full);
+            font-size: .98rem;
+            font-weight: 500;
+        }
+        .tb-dest-icon { width: 22px; height: 22px; border-radius: 0; }
+        .tb-dest-icon .pi { font-size: 1.1rem; }
+        .tb-dest-badge { top: -2px; right: -4px; }
+        .tb-dest.tb-dest-on { background: var(--md-on-surface); color: var(--tb-background); }
+        .tb-dest.tb-dest-on .tb-dest-icon { background: none; color: inherit; }
+        .tb-dest:hover:not(.tb-dest-on) { background: color-mix(in srgb, var(--md-on-surface) 6%, transparent); }
+        &[data-style="panel"] .tb-dest { border-radius: var(--tb-shape-sm); }
+        /* Panel: the page shown, a lamp on its edge rather than a filled block */
+        &[data-style="panel"] .tb-dest.tb-dest-on { background: var(--md-surface-container-high); color: var(--md-on-surface); box-shadow: inset 4px 0 0 var(--md-on-surface); }
+
+        /* The account at the foot: who, on which server; then the three actions */
+        .tb-rail-end { flex-direction: column; align-items: stretch; gap: 6px; padding-top: 12px; border-top: 1px solid var(--md-outline-variant); }
+        .tb-rail-account { width: 100%; padding: 6px 10px 6px 8px; border-radius: var(--tb-shape-lg); text-align: left; }
+        .tb-rail-account:hover, .tb-rail-account[aria-expanded="true"] { background: color-mix(in srgb, var(--md-on-surface) 6%, transparent); }
+        &[data-style="panel"] .tb-rail-account { border-radius: var(--tb-shape-sm); }
+        .tb-rail-account-text { display: flex; flex: 1 1 auto; flex-direction: column; min-width: 0; line-height: 1.25; }
+        .tb-rail-account strong { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .tb-rail-account small { color: var(--md-on-surface-variant); font-size: .8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .tb-rail-account-arrow { display: inline-block; }
+        /* The menu of the accounts drops above the account, as wide as the bar */
+        .tb-accounts-menu { left: 0; bottom: calc(100% + 8px); width: max(100%, 300px); transform-origin: 50% 100%; }
+        .tb-rail-actions { display: flex; gap: 4px; }
+        .tb-rail-actions .tb-icon-btn { flex: 1; width: auto; height: 38px; }
+        /* The arrow that folds the bar, at the end of the brand */
+        .tb-rail-fold { position: absolute; top: 24px; right: 12px; }
+    }
+    /* Folded: the arrow under the logo, pointing the other way */
+    :root[data-sidebar="collapsed"] .tb-rail-fold { margin: -10px 0 8px; }
+    :root[data-sidebar="collapsed"] .tb-rail-fold .pi { transform: rotate(180deg); }
+    :root[data-sidebar="collapsed"] :is(.tb-rail-brand-name, .tb-rail-actions-text) { display: none; }
+    :root[data-sidebar="collapsed"] .tb-rail-actions { display: contents; }
+    :root[data-sidebar="collapsed"] .tb-dests { gap: 10px; }
+}
+@media (max-width: 1199px), (orientation: landscape) and (max-height: 520px) {
+    .tb-rail-brand-name, .tb-rail-actions-text { display: none; }
+    .tb-rail-actions { display: contents; }
+    .tb-rail-fold { display: none; }
+    /* The rail of icons: a little more air between them */
+    .tb-dests { gap: 10px; }
+}
+.tb-rail-fold {
+    display: grid; place-items: center; flex: none; width: 32px; height: 32px; padding: 0; border: 0; border-radius: var(--tb-shape-full);
+    background: none; color: var(--md-on-surface-variant); cursor: pointer;
+    transition: background-color var(--tb-fast) linear, color var(--tb-fast) linear;
+}
+.tb-rail-fold:hover { background: color-mix(in srgb, var(--md-on-surface) 7%, transparent); color: var(--md-on-surface); }
+.tb-rail-fold .pi { font-size: .9rem; transition: transform var(--tb-medium) var(--tb-ease); }
+/* Only the web on a computer has the side bar */
+:root:not([data-platform="web"]) .tb-rail-fold { display: none; }
+
+/* Phones on the web (not iOS, not the Android app): flat bars */
+@media (max-width: 840px) {
+    :root[data-platform="web"] .tb-topbar { border-bottom: 1px solid var(--md-outline-variant); background: var(--tb-background); -webkit-backdrop-filter: none; backdrop-filter: none; }
+    :root[data-platform="web"] .tb-rail { border-radius: 0; border-width: 1px 0 0; border-top: 1px solid var(--md-outline-variant); background: var(--tb-background); box-shadow: none; margin: 0; }
+}
+
+/* ============================== Corrections of the review ============================== */
+
+/* Labels in sentence case: no tracked-out capitals anywhere */
+:is(.tb-stat-label, .tb-hero-label, .tb-crumb-kind, .tb-spark-caption, .tb-table th, .tb-shortcuts-group h3, .tb-list-title, .tb-role-tag, .tb-compare-table .tb-label-sm) {
+    letter-spacing: 0;
+    text-transform: none;
+}
+.tb-stat-label, .tb-table th, .tb-shortcuts-group h3, .tb-list-title { font-weight: 600; }
+.tb-table th { font-size: .82rem; }
+
+/* The chevron of a list, once (a background shorthand elsewhere must not repeat it) */
+:root :is(.tb-select, .tb-select:hover, .tb-select:focus) { background-repeat: no-repeat; background-position: right 14px center; background-size: 16px; }
+
+/* The chip that filters: plain ink, in both styles */
+:root .tb-summary-chip.tb-chip-on,
+:root[data-style="panel"] .tb-summary-chip.tb-chip-on { border-color: var(--md-on-surface); background: var(--md-on-surface); color: var(--tb-background); }
+:root .tb-summary:has(.tb-chip-on) .tb-summary-chip:not(.tb-chip-on) { opacity: .7; }
+
+/* Gestion: the kind of an element as a plain glyph, not a tinted square */
+:root .tb-mgmt-icon { background: transparent; color: var(--md-on-surface-variant); border-radius: 0; width: 28px; }
+:root .tb-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 6l4 4 4-4' fill='none' stroke='%235a6660' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+:root[data-theme="dark"] .tb-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 6l4 4 4-4' fill='none' stroke='%23a7b0ab' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+
+/* ============================== Android: the native bar in the colours of the page ============================== */
+
+/*
+ * The bar (and the rail) are a shade of the page behind them, not a tint of the brand: in
+ * « Maison », a room coloured by its temperature colours the bar too (BackgroundService, AndroidNativeService).
+ */
+:root[data-platform="android"][data-theme] {
+    --tb-m3-surface: color-mix(in srgb, var(--md-on-surface) 3%, var(--tb-background));
+    --tb-m3-container: color-mix(in srgb, var(--md-on-surface) 6%, var(--tb-background));
+    --tb-m3-container-high: color-mix(in srgb, var(--md-on-surface) 9%, var(--tb-background));
+    --tb-m3-indicator: color-mix(in srgb, var(--md-on-surface) 14%, var(--tb-background));
+    --tb-m3-on-indicator: var(--md-on-surface);
+}
+:root[data-platform="android"][data-theme][data-tint="on"][data-background]:not([data-style="panel"]) {
+    --tb-m3-surface: color-mix(in srgb, var(--md-on-surface) 3%, var(--tb-tint-page));
+    --tb-m3-container: color-mix(in srgb, var(--md-on-surface) 6%, var(--tb-tint-page));
+    --tb-m3-indicator: color-mix(in srgb, var(--md-on-surface) 14%, var(--tb-tint-page));
+}
+/* The setting of the side bar only means something where the side bar is */
+@media (max-width: 1199px) { .tb-pref-bar { display: none; } }
+
+/* ============================== Preferences: controls never cut ============================== */
+
+/*
+ * A choice keeps all its buttons: when the row is too narrow for the text and the control side by
+ * side (tablets, the Android buttons with their check mark), the control goes under the text.
+ */
+.tb-pref { flex-wrap: wrap; }
+.tb-pref-text { flex: 1 1 260px; }
+.tb-pref > :is(.tb-segmented, tb-switch) { flex: none; max-width: 100%; margin-left: auto; }
+.tb-segmented > button { flex-shrink: 0; white-space: nowrap; }
+/* A switch is small: it stays beside its text */
+.tb-pref:has(> tb-switch) { flex-wrap: nowrap; }
+.tb-pref:has(> tb-switch) .tb-pref-text { flex-basis: auto; }

@@ -1,0 +1,226 @@
+<header class="tb-page-head">
+  <div class="tb-page-title">
+    <span class="tb-eyebrow">Organisation</span>
+    <h1>{{ home() ? 'Pièces' : 'Bâtiments et salles' }}</h1>
+  </div>
+  @if (auth.manager()) {
+    <a routerLink="/app/management" class="tb-btn tb-tonal tb-hide-sm"><i class="pi pi-table"></i>Gérer en tableau</a>
+  }
+  @if (auth.admin()) {
+    <button type="button" class="tb-btn tb-btn-lg tb-fab" (click)="create('BUILDING', null)"><i class="pi pi-plus"></i>Nouveau bâtiment</button>
+  }
+</header>
+
+<p class="tb-lead">
+  @if (auth.seesDevices()) {
+    Un bâtiment contient des étages ou directement des salles, une salle contient des boîtiers. La température d'une salle est la
+    moyenne de ses boîtiers. Les boîtiers apparaissent ici d'eux-mêmes dès qu'ils se connectent.
+  } @else {
+    Un bâtiment contient des étages ou directement des salles. Touche un élément pour voir sa température.
+  }
+  @if (auth.admin()) {
+    <span class="tb-hide-sm"> Glisse un élément sur un autre pour l'y ranger, ou sur « Premier niveau » pour le détacher.</span>
+    <span class="tb-show-sm"> Touche un bâtiment ou un étage pour l'ouvrir, ⋮ pour ajouter, modifier, déplacer ou supprimer.</span>
+  }
+</p>
+
+<!-- Phones: one level at a time, like a file browser (the tree is too wide and too deep) -->
+<div class="tb-drill">
+  <nav class="tb-drill-path" aria-label="Emplacement">
+    <button type="button" class="tb-drill-crumb" [class.tb-drill-crumb-on]="folderId() == null" (click)="open(null)"><i class="pi pi-sitemap"></i>Tout</button>
+    @for (c of path(); track c.id) {
+      <i class="pi pi-angle-right tb-drill-sep"></i>
+      <button type="button" class="tb-drill-crumb" [class.tb-drill-crumb-on]="c.id === folderId()" (click)="open(c.id)">{{ c.name }}</button>
+    }
+  </nav>
+
+  <!-- Opened folder: back, its temperature, its page and its actions -->
+  @if (folder(); as d) {
+    <div class="tb-drill-head">
+      <button type="button" class="tb-btn tb-icon tb-flat tb-drill-back" title="Remonter" aria-label="Remonter" (click)="goUp()"><i class="pi pi-arrow-left"></i></button>
+      <div class="tb-drill-head-text">
+        <strong>{{ d.name }}</strong>
+        <span class="tb-muted">{{ label(d) }}@if (d.temperature != null) { · {{ unit.t(d.temperature) }} {{ unit.symbol() }} }</span>
+      </div>
+      @if (d.accessible) {
+        <a [routerLink]="['/app/room', d.id]" class="tb-btn tb-icon tb-flat" title="Voir le détail" aria-label="Voir le détail"><i class="pi pi-chart-line"></i></a>
+      }
+      @if (auth.admin()) {
+        <button type="button" class="tb-btn tb-icon tb-flat" title="Actions" aria-label="Actions" (click)="choose(d)"><i class="pi pi-ellipsis-v"></i></button>
+      }
+    </div>
+  }
+
+  <ul class="tb-drill-list">
+    @for (n of content(); track n.id) {
+      <li class="tb-drill-item">
+        @if (isFolder(n)) {
+          <button type="button" class="tb-drill-main" (click)="open(n.id)">
+            <ng-container *ngTemplateOutlet="rowDrill; context: { $implicit: n }" />
+          </button>
+        } @else {
+          <a class="tb-drill-main" [routerLink]="n.accessible ? ['/app/room', n.id] : null">
+            <ng-container *ngTemplateOutlet="rowDrill; context: { $implicit: n }" />
+          </a>
+        }
+        @if (auth.admin()) {
+          <button type="button" class="tb-btn tb-icon tb-flat tb-drill-more" title="Actions" aria-label="Actions" (click)="choose(n)"><i class="pi pi-ellipsis-v"></i></button>
+        }
+      </li>
+    }
+  </ul>
+
+  @if (store.tree() && !content().length) {
+    <div class="tb-empty tb-empty-sm">{{ folderId() == null ? 'Aucun bâtiment pour le moment.' : 'Rien ici pour le moment.' }}</div>
+  }
+
+  @if (auth.admin() && folder(); as d) {
+    @if (childrenOf(d).length) {
+      <button type="button" class="tb-btn tb-tonal tb-drill-add" (click)="create(childrenOf(d)[0], d)">
+        <i class="pi pi-plus"></i>Ajouter dans « {{ d.name }} »
+      </button>
+    }
+  }
+</div>
+
+<ng-template #rowDrill let-n>
+  <i class="pi tb-tree-icon" [class]="icon(n)"></i>
+  <span class="tb-drill-text">
+    <span class="tb-drill-name">{{ n.name }}</span>
+    <span class="tb-drill-meta">
+      {{ label(n) }}
+      @if (isFolder(n)) { · {{ children(n.id).length }} élément(s) }
+      @if (auth.seesDevices() && n.kind === 'ROOM' && n.devices > 0) { · {{ n.devices }} boîtier(s) }
+      @if (!n.attached) {
+        <span class="tb-tag tb-tag-warning">Non rattaché</span>
+      }
+    </span>
+  </span>
+  <span class="tb-drill-temp">
+    @if (n.temperature != null) {
+      {{ unit.t(n.temperature) }}°
+    } @else if (n.accessible) {
+      —
+    }
+  </span>
+  <i class="pi tb-drill-go" [class.pi-angle-right]="isFolder(n)" [class.pi-arrow-up-right]="!isFolder(n)"></i>
+</ng-template>
+
+<!-- Wide screens: the whole tree -->
+<div class="tb-tree-rooms" role="tree" aria-label="Bâtiments et salles">
+  @if (auth.admin()) {
+    <div
+      class="tb-tree-root"
+      [class.tb-hover]="hover() === 'racine'"
+      [class.tb-visible]="slide() != null"
+      (dragover)="onHover($event, 'racine')"
+      (dragleave)="hover.set(null)"
+      (drop)="drop($event, null)"
+    >
+      <i class="pi pi-link"></i> Premier niveau : déposer ici détache l'élément
+    </div>
+  }
+  <ng-container *ngTemplateOutlet="branch; context: { $implicit: store.roots() }" />
+  @if (store.tree() && !store.roots().length) {
+    <div class="tb-empty tb-empty-sm">Aucun bâtiment pour le moment.</div>
+  }
+</div>
+
+<ng-template #branch let-nodes>
+  <ul role="group">
+    @for (n of nodes; track n.id) {
+      <li role="treeitem" [attr.aria-expanded]="children(n.id).length ? !isFolded(n.id) : null">
+        <div
+          class="tb-node-row"
+          [class.tb-hover]="hover() === n.id"
+          [class.tb-slide]="slide() === n.id"
+          [attr.draggable]="auth.admin()"
+          (dragstart)="slideStart($event, n)"
+          (dragend)="slideEnd()"
+          (dragover)="onHover($event, n)"
+          (dragleave)="hover() === n.id && hover.set(null)"
+          (drop)="drop($event, n)"
+          (click)="children(n.id).length && toggle(n.id)"
+        >
+          @if (children(n.id).length) {
+            <button type="button" class="tb-tree-toggler" [class.tb-open]="!isFolded(n.id)" [attr.aria-label]="(isFolded(n.id) ? 'Déplier ' : 'Replier ') + n.name" (click)="$event.stopPropagation(); toggle(n.id)">
+              <i class="pi pi-chevron-right"></i>
+            </button>
+          } @else {
+            <span class="tb-tree-toggler tb-tree-sheet"></span>
+          }
+          <span class="tb-node">
+            <span class="tb-node-main">
+              <i class="pi tb-tree-icon" [class]="icon(n)"></i>
+              <span class="tb-node-name">{{ n.name }}</span>
+              <span class="tb-muted">{{ label(n) }}</span>
+              @if (!n.attached) {
+                <span class="tb-tag tb-tag-warning">Non rattaché</span>
+              }
+            </span>
+            <span class="tb-node-temp">
+              @if (n.temperature != null) {
+                {{ unit.t(n.temperature) }} {{ unit.symbol() }}
+              } @else if (n.accessible) {
+                —
+              }
+              @if (auth.seesDevices() && n.kind !== 'DEVICE' && n.devices > 0) {
+                <span class="tb-muted">{{ n.devices }} boîtier(s)</span>
+              }
+            </span>
+            <span class="tb-node-actions" (click)="$event.stopPropagation()">
+              @if (n.accessible) {
+                <a [routerLink]="['/app/room', n.id]" class="tb-btn tb-icon tb-flat tb-node-keep" title="Voir" aria-label="Voir"><i class="pi pi-eye"></i></a>
+              }
+              @if (auth.admin()) {
+                @if (childrenOf(n).length) {
+                  <button type="button" class="tb-btn tb-icon tb-flat" [title]="'Ajouter dans « ' + n.name + ' »'" (click)="create(childrenOf(n)[0], n)"><i class="pi pi-plus"></i></button>
+                }
+                <button type="button" class="tb-btn tb-icon tb-flat" title="Modifier / déplacer" (click)="edit(n)"><i class="pi pi-pencil"></i></button>
+                @if (n.attached && n.kind !== 'BUILDING') {
+                  <button type="button" class="tb-btn tb-icon tb-flat" title="Détacher" (click)="detach(n)"><i class="pi pi-link"></i></button>
+                }
+                <button type="button" class="tb-btn tb-icon tb-flat tb-btn-danger" title="Supprimer" (click)="remove(n)"><i class="pi pi-trash"></i></button>
+              }
+            </span>
+          </span>
+        </div>
+        @if (children(n.id).length) {
+          <div class="tb-tree-children" [class.tb-folded]="isFolded(n.id)">
+            <div>
+              <ng-container *ngTemplateOutlet="branch; context: { $implicit: children(n.id) }" />
+            </div>
+          </div>
+        }
+      </li>
+    }
+  </ul>
+</ng-template>
+
+<!-- Phones: actions on the element picked with ⋮ -->
+<tb-sheet [open]="selection() != null" (ouvertChange)="!$event && selection.set(null)" title="" noHeader nativeMenu [width]="560">
+  @if (selection(); as s) {
+    <div class="tb-sheet-head">
+      <i class="pi tb-tree-icon" [class]="icon(s)"></i>
+      <div>
+        <strong>{{ s.name }}</strong>
+        <span class="tb-muted">{{ label(s) }}@if (s.temperature != null) { · {{ unit.t(s.temperature) }} {{ unit.symbol() }} }</span>
+      </div>
+    </div>
+    <nav class="tb-sheet-list">
+      @if (s.accessible) {
+        <a [routerLink]="['/app/room', s.id]" class="tb-sheet-item" (click)="selection.set(null)"><i class="pi pi-eye"></i>Voir le détail</a>
+      }
+      @if (childrenOf(s).length) {
+        <button type="button" class="tb-sheet-item" (click)="create(childrenOf(s)[0], s)"><i class="pi pi-plus"></i>Ajouter dedans</button>
+      }
+      <button type="button" class="tb-sheet-item" (click)="edit(s)"><i class="pi pi-pencil"></i>Modifier ou déplacer</button>
+      @if (s.attached && s.kind !== 'BUILDING') {
+        <button type="button" class="tb-sheet-item" (click)="detach(s)"><i class="pi pi-link"></i>Détacher</button>
+      }
+      <button type="button" class="tb-sheet-item tb-sheet-danger" (click)="remove(s)"><i class="pi pi-trash"></i>Supprimer</button>
+    </nav>
+  }
+</tb-sheet>
+
+<tb-element-dialog [hasDevices]="auth.seesDevices()" (saved)="afterSave()" />

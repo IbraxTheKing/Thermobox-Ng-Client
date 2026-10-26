@@ -1,5 +1,5 @@
 /*
- * iOS: Liquid Glass ([data-plateforme="ios"]).
+ * iOS: Liquid Glass ([data-platform="ios"]).
  *
  * What changes is the material and the shape of the chrome, as in iOS 26: a tab bar that floats
  * as a capsule of glass above the content, with a lens that slides to the selected tab and that
@@ -8,78 +8,78 @@
  * sheets with concentric corners. Colours, logo and type stay ThermoBox's.
  */
 
-:root[data-plateforme="ios"] {
+:root[data-platform="ios"] {
     /* Material: very clear glass, strongly blurred and saturated, with a bright rim */
-    --tb-lg-fond: rgba(250, 252, 255, .52);
-    --tb-lg-fond-fort: rgba(250, 252, 255, .72);
-    --tb-lg-flou: blur(18px) saturate(190%) brightness(1.06);
-    --tb-lg-bord: rgba(255, 255, 255, .7);
-    --tb-lg-reflet: inset 0 1px 0 rgba(255, 255, 255, .85), inset 0 -1px 0 rgba(255, 255, 255, .25), inset 1px 0 0 rgba(255, 255, 255, .35), inset -1px 0 0 rgba(255, 255, 255, .35);
-    --tb-lg-ombre: 0 12px 34px rgba(25, 40, 65, .18), 0 2px 8px rgba(25, 40, 65, .08);
-    --tb-lg-lentille: rgba(255, 255, 255, .62);
-    --tb-ios-ressort: cubic-bezier(.25, 1.35, .4, 1);
+    --tb-lg-background: rgba(250, 252, 255, .52);
+    --tb-lg-background-strong: rgba(250, 252, 255, .72);
+    --tb-lg-blur: blur(18px) saturate(190%) brightness(1.06);
+    --tb-lg-edge: rgba(255, 255, 255, .7);
+    --tb-lg-highlight: inset 0 1px 0 rgba(255, 255, 255, .85), inset 0 -1px 0 rgba(255, 255, 255, .25), inset 1px 0 0 rgba(255, 255, 255, .35), inset -1px 0 0 rgba(255, 255, 255, .35);
+    --tb-lg-shadow: 0 12px 34px rgba(25, 40, 65, .18), 0 2px 8px rgba(25, 40, 65, .08);
+    --tb-lg-lens: rgba(255, 255, 255, .62);
+    --tb-ios-spring: cubic-bezier(.25, 1.35, .4, 1);
 }
-:root[data-plateforme="ios"][data-theme="dark"] {
-    --tb-lg-fond: rgba(38, 44, 56, .5);
-    --tb-lg-fond-fort: rgba(38, 44, 56, .72);
-    --tb-lg-flou: blur(18px) saturate(170%) brightness(.92);
-    --tb-lg-bord: rgba(255, 255, 255, .16);
-    --tb-lg-reflet: inset 0 1px 0 rgba(255, 255, 255, .22), inset 0 -1px 0 rgba(255, 255, 255, .06), inset 1px 0 0 rgba(255, 255, 255, .08), inset -1px 0 0 rgba(255, 255, 255, .08);
-    --tb-lg-ombre: 0 12px 34px rgba(0, 0, 0, .45), 0 2px 8px rgba(0, 0, 0, .25);
-    --tb-lg-lentille: rgba(255, 255, 255, .14);
+:root[data-platform="ios"][data-theme="dark"] {
+    --tb-lg-background: rgba(38, 44, 56, .5);
+    --tb-lg-background-strong: rgba(38, 44, 56, .72);
+    --tb-lg-blur: blur(18px) saturate(170%) brightness(.92);
+    --tb-lg-edge: rgba(255, 255, 255, .16);
+    --tb-lg-highlight: inset 0 1px 0 rgba(255, 255, 255, .22), inset 0 -1px 0 rgba(255, 255, 255, .06), inset 1px 0 0 rgba(255, 255, 255, .08), inset -1px 0 0 rgba(255, 255, 255, .08);
+    --tb-lg-shadow: 0 12px 34px rgba(0, 0, 0, .45), 0 2px 8px rgba(0, 0, 0, .25);
+    --tb-lg-lens: rgba(255, 255, 255, .14);
 }
 /* Admin "panneau" look: same shapes, solid surfaces */
-:root[data-plateforme="ios"][data-style="panneau"] { --tb-lg-fond: var(--tb-glass-solid); --tb-lg-fond-fort: var(--tb-glass-solid); --tb-lg-reflet: 0 0 0 transparent; }
+:root[data-platform="ios"][data-style="panel"] { --tb-lg-background: var(--tb-glass-solid); --tb-lg-background-strong: var(--tb-glass-solid); --tb-lg-highlight: 0 0 0 transparent; }
 
 /* ============================== Wide screens (iPad): floating glass sidebar ============================== */
 
-:root[data-plateforme="ios"] .tb-rail {
-    border: .5px solid var(--tb-lg-bord);
+:root[data-platform="ios"] .tb-rail {
+    border: .5px solid var(--tb-lg-edge);
     border-radius: 28px;
-    background: var(--tb-lg-fond);
-    box-shadow: var(--tb-lg-ombre), var(--tb-lg-reflet);
-    -webkit-backdrop-filter: var(--tb-lg-flou);
-    backdrop-filter: var(--tb-lg-flou);
+    background: var(--tb-lg-background);
+    box-shadow: var(--tb-lg-shadow), var(--tb-lg-highlight);
+    -webkit-backdrop-filter: var(--tb-lg-blur);
+    backdrop-filter: var(--tb-lg-blur);
 }
-:root[data-plateforme="ios"] .tb-dest { border-radius: 18px; }
-:root[data-plateforme="ios"] .tb-dest:hover { background: color-mix(in srgb, var(--md-on-surface) 6%, transparent); }
-:root[data-plateforme="ios"] .tb-dest.tb-dest-on .tb-dest-icon {
+:root[data-platform="ios"] .tb-dest { border-radius: 18px; }
+:root[data-platform="ios"] .tb-dest:hover { background: color-mix(in srgb, var(--md-on-surface) 6%, transparent); }
+:root[data-platform="ios"] .tb-dest.tb-dest-on .tb-dest-icon {
     background: none;
     color: var(--md-primary);
     box-shadow: none;
     animation: none;
 }
-:root[data-plateforme="ios"] .tb-dest.tb-dest-on .tb-dest-icon .pi { transform: scale(1.08); transition: transform .4s var(--tb-ios-ressort); }
+:root[data-platform="ios"] .tb-dest.tb-dest-on .tb-dest-icon .pi { transform: scale(1.08); transition: transform .4s var(--tb-ios-spring); }
 
 /* The lens: a drop of glass under the selected destination, that slides from one to the next */
-:root[data-plateforme="ios"] .tb-lentille {
+:root[data-platform="ios"] .tb-lens {
     position: absolute;
     z-index: 0;
     display: block;
     border-radius: 18px;
-    background: var(--tb-lg-lentille);
+    background: var(--tb-lg-lens);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7), inset 0 -1px 1px rgba(255, 255, 255, .2), 0 2px 10px rgba(25, 40, 65, .12);
     pointer-events: none;
-    transition: transform .5s var(--tb-ios-ressort), width .5s var(--tb-ios-ressort), height .5s var(--tb-ios-ressort), opacity .2s ease;
+    transition: transform .5s var(--tb-ios-spring), width .5s var(--tb-ios-spring), height .5s var(--tb-ios-spring), opacity .2s ease;
 }
-:root[data-plateforme="ios"][data-theme="dark"] .tb-lentille { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .2), 0 2px 10px rgba(0, 0, 0, .3); }
+:root[data-platform="ios"][data-theme="dark"] .tb-lens { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .2), 0 2px 10px rgba(0, 0, 0, .3); }
 /* Position and size of the selected destination, measured by the shell */
-:root[data-plateforme="ios"] .tb-lentille {
+:root[data-platform="ios"] .tb-lens {
     top: 0;
     left: 0;
     width: var(--tb-l-w, 0px);
     height: var(--tb-l-h, 0px);
     transform: translate(var(--tb-l-x, 0px), var(--tb-l-y, 0px));
 }
-:root[data-plateforme="ios"] .tb-dests:not(.tb-a-actif) .tb-lentille { opacity: 0; }
+:root[data-platform="ios"] .tb-dests:not(.tb-a-active) .tb-lens { opacity: 0; }
 
 /* ============================== Phones ============================== */
 
 @media (max-width: 840px) {
-    :root[data-plateforme="ios"] {
+    :root[data-platform="ios"] {
         --tb-topbar-h: calc(52px + env(safe-area-inset-top));
         /* The bar floats: the content scrolls under it and below it */
-        --tb-nav-bas: calc(64px + max(env(safe-area-inset-bottom), 14px) + 10px);
+        --tb-nav-bottom: calc(64px + max(env(safe-area-inset-bottom), 14px) + 10px);
     }
 
     /*
@@ -87,7 +87,7 @@
      * scrolls under it, a soft edge of blurred glass that fades into the content (no hard line),
      * with the title of the page in its centre when the large title has gone under it. No buttons.
      */
-    :root[data-plateforme="ios"] .tb-topbar {
+    :root[data-platform="ios"] .tb-topbar {
         padding: env(safe-area-inset-top) calc(16px + env(safe-area-inset-right)) 0 calc(18px + env(safe-area-inset-left));
         border: 0;
         background: none;
@@ -95,8 +95,8 @@
         backdrop-filter: none;
         pointer-events: none;
     }
-    :root[data-plateforme="ios"] .tb-topbar > * { pointer-events: auto; }
-    :root[data-plateforme="ios"] .tb-topbar::before {
+    :root[data-platform="ios"] .tb-topbar > * { pointer-events: auto; }
+    :root[data-platform="ios"] .tb-topbar::before {
         content: "";
         position: absolute;
         inset: 0 0 -22px;
@@ -110,31 +110,31 @@
         transition: opacity .3s ease;
         pointer-events: none;
     }
-    :root[data-plateforme="ios"] .tb-defile .tb-topbar::before { opacity: 1; }
-    :root[data-plateforme="ios"] .tb-brand { gap: 9px; font-size: 1.12rem; font-weight: 750; }
-    :root[data-plateforme="ios"] .tb-brand .tb-logo { width: 28px; height: 28px; border-radius: 28%; }
-    :root[data-plateforme="ios"] .tb-topbar-titre { height: 52px; max-width: 64%; font-size: 1.02rem; font-weight: 700; letter-spacing: -.01em; }
+    :root[data-platform="ios"] .tb-scrolled .tb-topbar::before { opacity: 1; }
+    :root[data-platform="ios"] .tb-brand { gap: 9px; font-size: 1.12rem; font-weight: 750; }
+    :root[data-platform="ios"] .tb-brand .tb-logo { width: 28px; height: 28px; border-radius: 28%; }
+    :root[data-platform="ios"] .tb-topbar-title { height: 52px; max-width: 64%; font-size: 1.02rem; font-weight: 700; letter-spacing: -.01em; }
 
     /* Tab bar: a capsule of glass floating above the home indicator */
-    :root[data-plateforme="ios"] .tb-rail {
+    :root[data-platform="ios"] .tb-rail {
         inset: auto calc(14px + env(safe-area-inset-right)) max(env(safe-area-inset-bottom), 14px) calc(14px + env(safe-area-inset-left));
         width: auto;
         height: 64px;
         padding: 4px;
-        border: .5px solid var(--tb-lg-bord);
+        border: .5px solid var(--tb-lg-edge);
         border-radius: 999px;
-        background: var(--tb-lg-fond);
-        box-shadow: var(--tb-lg-ombre), var(--tb-lg-reflet);
-        -webkit-backdrop-filter: var(--tb-lg-flou);
-        backdrop-filter: var(--tb-lg-flou);
+        background: var(--tb-lg-background);
+        box-shadow: var(--tb-lg-shadow), var(--tb-lg-highlight);
+        -webkit-backdrop-filter: var(--tb-lg-blur);
+        backdrop-filter: var(--tb-lg-blur);
         transform-origin: 50% 100%;
         /* Only transform moves (shrinking while scrolling): the compositor does it, the glass is
            not laid out and blurred again on every frame */
-        transition: transform .5s var(--tb-ios-ressort);
+        transition: transform .5s var(--tb-ios-spring);
         will-change: transform;
     }
-    :root[data-plateforme="ios"] .tb-dests { max-width: none; height: 100%; align-items: stretch; }
-    :root[data-plateforme="ios"] .tb-dest {
+    :root[data-platform="ios"] .tb-dests { max-width: none; height: 100%; align-items: stretch; }
+    :root[data-platform="ios"] .tb-dest {
         justify-content: center;
         gap: 1px;
         padding: 0;
@@ -144,110 +144,110 @@
         letter-spacing: .01em;
         color: color-mix(in srgb, var(--md-on-surface) 78%, transparent);
     }
-    :root[data-plateforme="ios"] .tb-dest:hover { background: none; }
-    :root[data-plateforme="ios"] .tb-dest .tb-dest-icon { width: auto; height: 28px; }
-    :root[data-plateforme="ios"] .tb-dest .tb-dest-icon .pi { font-size: 1.28rem; }
-    :root[data-plateforme="ios"] .tb-dest.tb-dest-on { color: var(--md-primary); }
-    :root[data-plateforme="ios"] .tb-dest:active .tb-dest-icon { transform: scale(.88); transition: transform .15s ease; }
-    :root[data-plateforme="ios"] .tb-dest-badge { top: 1px; right: -6px; box-shadow: 0 0 0 2px var(--tb-lg-fond-fort); }
-    :root[data-plateforme="ios"] .tb-lentille { border-radius: 999px; }
+    :root[data-platform="ios"] .tb-dest:hover { background: none; }
+    :root[data-platform="ios"] .tb-dest .tb-dest-icon { width: auto; height: 28px; }
+    :root[data-platform="ios"] .tb-dest .tb-dest-icon .pi { font-size: 1.28rem; }
+    :root[data-platform="ios"] .tb-dest.tb-dest-on { color: var(--md-primary); }
+    :root[data-platform="ios"] .tb-dest:active .tb-dest-icon { transform: scale(.88); transition: transform .15s ease; }
+    :root[data-platform="ios"] .tb-dest-badge { top: 1px; right: -6px; box-shadow: 0 0 0 2px var(--tb-lg-background-strong); }
+    :root[data-platform="ios"] .tb-lens { border-radius: 999px; }
 
     /* Scrolling down: the bar shrinks to its icons and lets more of the content show */
-    :root[data-plateforme="ios"] .tb-compact .tb-rail { transform: translateY(6px) scale(.84); }
-    :root[data-plateforme="ios"] .tb-compact .tb-dest-label { opacity: 0; }
-    :root[data-plateforme="ios"] .tb-compact .tb-dest-icon { transform: translateY(7px) scale(1.12); }
-    :root[data-plateforme="ios"] .tb-dest-label { transition: opacity .2s ease; }
+    :root[data-platform="ios"] .tb-compact .tb-rail { transform: translateY(6px) scale(.84); }
+    :root[data-platform="ios"] .tb-compact .tb-dest-label { opacity: 0; }
+    :root[data-platform="ios"] .tb-compact .tb-dest-icon { transform: translateY(7px) scale(1.12); }
+    :root[data-platform="ios"] .tb-dest-label { transition: opacity .2s ease; }
 
     /* Main action: a round glass button above the bar, in the brand colour */
-    :root[data-plateforme="ios"] .tb-page-head > .tb-btn.tb-fab {
+    :root[data-platform="ios"] .tb-page-head > .tb-btn.tb-fab {
         right: calc(18px + env(safe-area-inset-right));
-        bottom: calc(var(--tb-nav-bas) + 10px);
+        bottom: calc(var(--tb-nav-bottom) + 10px);
         min-height: 54px;
         padding: 0 20px;
         border: .5px solid rgba(255, 255, 255, .45);
         border-radius: 999px;
         background: color-mix(in srgb, var(--md-primary) 82%, transparent);
-        box-shadow: var(--tb-lg-ombre), inset 0 1px 0 rgba(255, 255, 255, .45);
-        -webkit-backdrop-filter: var(--tb-lg-flou);
-        backdrop-filter: var(--tb-lg-flou);
+        box-shadow: var(--tb-lg-shadow), inset 0 1px 0 rgba(255, 255, 255, .45);
+        -webkit-backdrop-filter: var(--tb-lg-blur);
+        backdrop-filter: var(--tb-lg-blur);
     }
 
     /* Actions of the ticked rows (Gestion): glass too */
-    :root[data-plateforme="ios"] .tb-barre {
-        bottom: calc(var(--tb-nav-bas) + 8px);
-        border: .5px solid var(--tb-lg-bord);
+    :root[data-platform="ios"] .tb-bar {
+        bottom: calc(var(--tb-nav-bottom) + 8px);
+        border: .5px solid var(--tb-lg-edge);
         border-radius: 26px;
-        background: var(--tb-lg-fond-fort);
-        box-shadow: var(--tb-lg-ombre), var(--tb-lg-reflet);
-        -webkit-backdrop-filter: var(--tb-lg-flou);
-        backdrop-filter: var(--tb-lg-flou);
+        background: var(--tb-lg-background-strong);
+        box-shadow: var(--tb-lg-shadow), var(--tb-lg-highlight);
+        -webkit-backdrop-filter: var(--tb-lg-blur);
+        backdrop-filter: var(--tb-lg-blur);
     }
 }
 
 /* Sideways: the slim rail stays a column of glass */
 @media (orientation: landscape) and (max-height: 520px) {
-    :root[data-plateforme="ios"] .tb-rail { inset: 8px auto 8px calc(8px + env(safe-area-inset-left)); height: auto; border-radius: 28px; }
-    :root[data-plateforme="ios"] .tb-lentille { display: none; }
-    :root[data-plateforme="ios"] .tb-dest.tb-dest-on .tb-dest-icon { background: var(--tb-lg-lentille); border-radius: 14px; }
+    :root[data-platform="ios"] .tb-rail { inset: 8px auto 8px calc(8px + env(safe-area-inset-left)); height: auto; border-radius: 28px; }
+    :root[data-platform="ios"] .tb-lens { display: none; }
+    :root[data-platform="ios"] .tb-dest.tb-dest-on .tb-dest-icon { background: var(--tb-lg-lens); border-radius: 14px; }
 }
 
 /* ============================== Sheets, dialogs, toasts, controls ============================== */
 
-:root[data-plateforme="ios"] .tb-dialog {
-    border: .5px solid var(--tb-lg-bord);
+:root[data-platform="ios"] .tb-dialog {
+    border: .5px solid var(--tb-lg-edge);
     border-radius: 30px;
-    background: var(--tb-lg-fond-fort);
-    box-shadow: var(--tb-lg-ombre), var(--tb-lg-reflet);
-    -webkit-backdrop-filter: var(--tb-lg-flou);
-    backdrop-filter: var(--tb-lg-flou);
+    background: var(--tb-lg-background-strong);
+    box-shadow: var(--tb-lg-shadow), var(--tb-lg-highlight);
+    -webkit-backdrop-filter: var(--tb-lg-blur);
+    backdrop-filter: var(--tb-lg-blur);
 }
 @media (max-width: 640px) {
     /* A sheet floats with corners concentric to the screen's, as in iOS 26 */
-    :root[data-plateforme="ios"] .tb-scrim { padding: 0 8px max(8px, env(safe-area-inset-bottom)); }
-    :root[data-plateforme="ios"] .tb-dialog { border-width: .5px; border-radius: 38px; }
-    :root[data-plateforme="ios"] .tb-dialog-body { padding-bottom: 24px; }
-    :root[data-plateforme="ios"] .tb-dialog-body .tb-actions { bottom: -24px; margin-bottom: -24px; padding-bottom: 22px; border-radius: 0 0 38px 38px; }
-    :root[data-plateforme="ios"] .tb-dialog-head h2 { font-size: 1.15rem; text-align: center; }
+    :root[data-platform="ios"] .tb-scrim { padding: 0 8px max(8px, env(safe-area-inset-bottom)); }
+    :root[data-platform="ios"] .tb-dialog { border-width: .5px; border-radius: 38px; }
+    :root[data-platform="ios"] .tb-dialog-body { padding-bottom: 24px; }
+    :root[data-platform="ios"] .tb-dialog-body .tb-actions { bottom: -24px; margin-bottom: -24px; padding-bottom: 22px; border-radius: 0 0 38px 38px; }
+    :root[data-platform="ios"] .tb-dialog-head h2 { font-size: 1.15rem; text-align: center; }
 }
-:root[data-plateforme="ios"] .tb-scrim { background: rgba(0, 0, 0, .22); }
+:root[data-platform="ios"] .tb-scrim { background: rgba(0, 0, 0, .22); }
 
 /* Notifications drop from the top of the screen, as a glass capsule */
-:root[data-plateforme="ios"] .tb-toasts {
+:root[data-platform="ios"] .tb-toasts {
     top: calc(8px + env(safe-area-inset-top));
     left: 50%;
     right: auto;
     width: min(420px, calc(100vw - 24px));
     transform: translateX(-50%);
 }
-:root[data-plateforme="ios"] .tb-toast {
-    border: .5px solid var(--tb-lg-bord);
+:root[data-platform="ios"] .tb-toast {
+    border: .5px solid var(--tb-lg-edge);
     border-radius: 24px;
-    background: var(--tb-lg-fond-fort);
+    background: var(--tb-lg-background-strong);
     color: var(--md-on-surface);
-    box-shadow: var(--tb-lg-ombre), var(--tb-lg-reflet);
-    -webkit-backdrop-filter: var(--tb-lg-flou);
-    backdrop-filter: var(--tb-lg-flou);
-    animation: tb-ios-chute .55s var(--tb-ios-ressort);
+    box-shadow: var(--tb-lg-shadow), var(--tb-lg-highlight);
+    -webkit-backdrop-filter: var(--tb-lg-blur);
+    backdrop-filter: var(--tb-lg-blur);
+    animation: tb-ios-drop .55s var(--tb-ios-spring);
 }
-:root[data-plateforme="ios"] .tb-toast > .pi { color: var(--md-primary); }
-:root[data-plateforme="ios"] .tb-toast-warn > .pi { color: var(--tb-chauffe); }
-:root[data-plateforme="ios"] .tb-toast-error > .pi { color: var(--md-error); }
-:root[data-plateforme="ios"] .tb-toast > button:hover { background: color-mix(in srgb, var(--md-on-surface) 8%, transparent); }
-@keyframes tb-ios-chute { from { transform: translateY(-120%) scale(.9); opacity: 0; } }
+:root[data-platform="ios"] .tb-toast > .pi { color: var(--md-primary); }
+:root[data-platform="ios"] .tb-toast-warn > .pi { color: var(--tb-heating); }
+:root[data-platform="ios"] .tb-toast-error > .pi { color: var(--md-error); }
+:root[data-platform="ios"] .tb-toast > button:hover { background: color-mix(in srgb, var(--md-on-surface) 8%, transparent); }
+@keyframes tb-ios-drop { from { transform: translateY(-120%) scale(.9); opacity: 0; } }
 
 /* Switch: iOS proportions, in the ThermoBox blue */
-:root[data-plateforme="ios"] .tb-switch { width: 51px; height: 31px; border: 0; background: color-mix(in srgb, var(--md-on-surface) 16%, transparent); box-shadow: none; }
-:root[data-plateforme="ios"] .tb-switch::before { top: 2px; left: 2px; width: 27px; height: 27px; box-shadow: 0 3px 8px rgba(0, 0, 0, .15), 0 1px 1px rgba(0, 0, 0, .16); }
-:root[data-plateforme="ios"] .tb-switch:active::before { width: 33px; }
-:root[data-plateforme="ios"] .tb-switch[aria-checked="true"]::before { transform: translateX(20px); }
-:root[data-plateforme="ios"] .tb-switch[aria-checked="true"]:active::before { transform: translateX(14px); }
+:root[data-platform="ios"] .tb-switch { width: 51px; height: 31px; border: 0; background: color-mix(in srgb, var(--md-on-surface) 16%, transparent); box-shadow: none; }
+:root[data-platform="ios"] .tb-switch::before { top: 2px; left: 2px; width: 27px; height: 27px; box-shadow: 0 3px 8px rgba(0, 0, 0, .15), 0 1px 1px rgba(0, 0, 0, .16); }
+:root[data-platform="ios"] .tb-switch:active::before { width: 33px; }
+:root[data-platform="ios"] .tb-switch[aria-checked="true"]::before { transform: translateX(20px); }
+:root[data-platform="ios"] .tb-switch[aria-checked="true"]:active::before { transform: translateX(14px); }
 
 /* Segmented control: a glass track, a white thumb */
-:root[data-plateforme="ios"] .tb-segmented { border-radius: 999px; padding: 3px; }
-:root[data-plateforme="ios"] .tb-segmented > button { border-radius: 999px; }
+:root[data-platform="ios"] .tb-segmented { border-radius: 999px; padding: 3px; }
+:root[data-platform="ios"] .tb-segmented > button { border-radius: 999px; }
 
 /* Buttons: capsules */
-:root[data-plateforme="ios"] .tb-btn { border-radius: 999px; }
-:root[data-plateforme="ios"] .tb-btn.tb-icon { border-radius: 50%; }
-:root[data-plateforme="ios"] .tb-btn:active { transform: scale(.95); opacity: .85; }
-:root[data-plateforme="ios"] .tb-switch[aria-checked="true"] { background: var(--md-primary); }
+:root[data-platform="ios"] .tb-btn { border-radius: 999px; }
+:root[data-platform="ios"] .tb-btn.tb-icon { border-radius: 50%; }
+:root[data-platform="ios"] .tb-btn:active { transform: scale(.95); opacity: .85; }
+:root[data-platform="ios"] .tb-switch[aria-checked="true"] { background: var(--md-primary); }

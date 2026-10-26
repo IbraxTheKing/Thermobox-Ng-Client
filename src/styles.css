@@ -4,7 +4,7 @@
  * tokens.css     colours, shapes, motion (identical to the JSF interface)
  * controls.css   buttons, fields, switches, tables, sheets, toasts
  * jsf.css        page components ported from the JSF interface (cards, detail, tree, gestion…)
- * pages.css      what only exists here (salles tree, photo picker, server field…)
+ * pages.css      what only exists here (rooms tree, photo picker, server field…)
  * shell.css      navigation, ThermoBox look (web)
  * shell-ios.css      Liquid Glass on iOS
  * shell-android.css  Material 3 on Android
@@ -19,13 +19,13 @@
 
 @import './styles/tokens.css';
 @import './styles/controls.css';
-@import './styles/jsf.css';
+@import './styles/base.css';
 @import './styles/pages.css';
 @import './styles/shell.css';
 @import './styles/shell-ios.css';
 @import './styles/shell-android.css';
 @import './styles/mobile.css';
 @import './styles/motion.css';
-@import './styles/refonte.css';
-@import './styles/refonte-pages.css';
-@import './styles/refonte-ios.css';
+@import './styles/theme.css';
+@import './styles/theme-pages.css';
+@import './styles/theme-ios.css';
