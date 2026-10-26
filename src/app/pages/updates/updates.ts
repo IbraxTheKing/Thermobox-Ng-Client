@@ -11,6 +11,7 @@ import { FlipService } from '../../core/flip';
 import { UpdatesState, Preparation, AvailableVersion } from '../../models/models';
 import { UpdateService } from '../../services/update.service';
 import { TbSheet } from '../../ui/sheet';
+import { updateTypeLabel } from '../../core/version';
 
 /** A channel filter; [couleur] is the tb-channel-* class. */
 interface ChannelChip {
@@ -162,6 +163,8 @@ export class UpdatesPage implements OnInit, OnDestroy {
   protected checkIcon(level: string): string {
     return { OK: 'pi-check-circle', INFO: 'pi-info-circle', WARNING: 'pi-exclamation-triangle', BLOCKING: 'pi-ban' }[level] ?? 'pi-info-circle';
   }
+
+  protected readonly typeLabel = updateTypeLabel;
 
   protected stepIcon(state: string): string {
     return { PENDING: 'pi-circle', RUNNING: 'pi-spin pi-spinner', OK: 'pi-check', SKIPPED: 'pi-minus', FAILED: 'pi-times' }[state] ?? 'pi-circle';

@@ -117,8 +117,8 @@
 :root[data-platform="ios"]:not([data-style="panel"]) .tb-room-tile-photo::after {
     background: linear-gradient(180deg, color-mix(in srgb, var(--c) 30%, transparent) 0%, color-mix(in srgb, var(--c) 70%, transparent) 50%, color-mix(in srgb, var(--c) 86%, transparent) 100%);
 }
-:root[data-platform="ios"]:not([data-style="panel"]) .tb-room.tb-room-tile.tb-with-photo .tb-room-tile-favori,
-:root[data-platform="ios"]:not([data-style="panel"]) .tb-room-tile-favori:hover {
+:root[data-platform="ios"]:not([data-style="panel"]) .tb-room.tb-room-tile.tb-with-photo .tb-room-tile-favorite,
+:root[data-platform="ios"]:not([data-style="panel"]) .tb-room-tile-favorite:hover {
     background: var(--tb-lg-background);
     -webkit-backdrop-filter: var(--tb-lg-blur);
     backdrop-filter: var(--tb-lg-blur);

@@ -18,16 +18,18 @@
 
     <!-- Accounts saved on this device: one tap to open one -->
     @if (accounts().length) {
-      <section class="tb-panel tb-auth-card tb-auth-accounts" aria-labelledby="titre-comptes">
-        <h2 class="tb-panel-title" id="titre-comptes">Comptes enregistrés</h2>
+      <section class="tb-panel tb-auth-card tb-auth-accounts" aria-labelledby="accounts-title">
+        <h2 class="tb-panel-title" id="accounts-title">Comptes enregistrés</h2>
         <ul class="tb-accounts">
-          @for (l of accounts(); track l.account.key) {
+          @for (g of servers(); track g.base) {
+            <li class="tb-accounts-server"><tb-server-logo [base]="g.base" /><span>{{ g.address }}</span></li>
+            @for (l of g.rows; track l.account.key) {
             <li>
-              <button type="button" class="tb-account" [class.tb-account-active]="l.current" (click)="openAccount(l)">
-                <span class="tb-avatar" aria-hidden="true">{{ l.initial }}</span>
+              <button type="button" class="tb-account" [class.tb-account-active]="l.current" (click)="openAccount(l)"
+                      [attr.aria-label]="l.account.user.username + ' sur ' + g.address">
+                <span class="tb-avatar" aria-hidden="true">{{ l.initial }}<tb-server-logo badge [base]="g.base" /></span>
                 <span class="tb-account-text">
                   <strong>{{ l.account.user.username }}</strong>
-                  <span class="tb-account-address"><i class="pi pi-server" aria-hidden="true"></i>{{ l.address }}</span>
                 </span>
                 @if (l.current) {
                   <span class="tb-tag">Ouvert</span>
@@ -38,6 +40,7 @@
                 }
               </button>
             </li>
+            }
           }
         </ul>
       </section>
@@ -51,15 +54,15 @@
             <span class="tb-avatar" aria-hidden="true">{{ chosenInitial() }}</span>
             <span class="tb-account-text">
               <strong>{{ c.user.username }}</strong>
-              <span class="tb-account-address"><i class="pi pi-server" aria-hidden="true"></i>{{ chosenAddress() }}</span>
+              <span class="tb-account-address"><tb-server-logo [base]="c.server" />{{ chosenAddress() }}</span>
             </span>
             <button type="button" class="tb-text-btn" (click)="choose(null)">Autre compte</button>
           </div>
         } @else {
           @if (serverField()) {
             <div class="tb-field">
-              <label class="tb-label" for="serveur">Serveur ThermoBox</label>
-              <input id="serveur" class="tb-input" type="url" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false"
+              <label class="tb-label" for="server">Serveur ThermoBox</label>
+              <input id="server" class="tb-input" type="url" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false"
                      [placeholder]="server.defaultBase ? server.readable() : 'thermobox.mon-organisation.fr'" [value]="address()" (input)="address.set($any($event.target).value)" />
               <span class="tb-field-hint">
                 L'adresse donnée par ton administrateur, avec le port s'il y en a un.@if (server.defaultBase) { Vide : ce site.}

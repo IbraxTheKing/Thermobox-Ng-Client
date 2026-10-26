@@ -5,7 +5,7 @@ import { Observable } from 'rxjs';
 import { ServerService } from '../core/api.config';
 import { Group, GroupRequest } from '../models/models';
 
-/** Client Angular de GroupeResource — /api/groups (ADMIN). */
+/** Angular client of the groups resource — /api/v2/groups (ADMIN). */
 @Injectable({ providedIn: 'root' })
 export class GroupService {
   private readonly http = inject(HttpClient);
@@ -36,7 +36,7 @@ export class GroupService {
     return this.http.delete<void>(this.url(`/${id}`));
   }
 
-  /** Corps d'enregistrement d'un groupe existant, à modifier. */
+  /** Body to save an existing group, to edit. */
   static query(g: Group): GroupRequest {
     return { name: g.name, description: g.description, members: g.members.map((m) => m.id), elements: g.elements.map((e) => e.id) };
   }

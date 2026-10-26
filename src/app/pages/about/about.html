@@ -23,7 +23,7 @@
         <strong>Client Thermobox</strong>
         <span class="tb-muted">{{ platformName }} · Angular {{ versionAngular }}@if (commitClient) { · {{ commitClient }} }@if (versionNative()) { · application {{ versionNative() }} }</span>
       </span>
-      <span class="tb-apropos-version" [class.tb-apropos-dev]="!updateClient.installed">{{ versionClient }}</span>
+      <span class="tb-about-version" [class.tb-about-dev]="!updateClient.installed">{{ versionClient }}</span>
     </div>
     <!-- Versions of this client published on GitHub (same numbering as the server) -->
     @if (updateClient.latestAvailable(); as d) {
@@ -33,7 +33,7 @@
           <strong>{{ updateClient.installed ? 'Nouvelle version du client' : 'Dernière version publiée du client' }}</strong>
           <span class="tb-muted">{{ d.title }}@if (updateClient.installed) { · {{ updateType(d.type) }} }</span>
         </span>
-        <span class="tb-apropos-version">{{ d.version.tag }}</span>
+        <span class="tb-about-version">{{ d.version.tag }}</span>
         <i class="pi pi-external-link tb-list-continuation"></i>
       </a>
     } @else if (updateClient.available() && updateClient.installed) {
@@ -48,7 +48,7 @@
       </div>
     }
     <div class="tb-list-row tb-list-info">
-      <span class="tb-list-icon"><i class="pi pi-server"></i></span>
+      <span class="tb-list-icon"><tb-server-logo [base]="serverUrl.base()" /></span>
       <span class="tb-list-text">
         <strong>Serveur REST</strong>
         <span class="tb-muted">
@@ -61,22 +61,24 @@
           }
         </span>
       </span>
-      <span class="tb-apropos-version">{{ server()?.installedVersion ?? (server() ? 'sources' : '—') }}</span>
+      <span class="tb-about-version">{{ server()?.installedVersion ?? (server() ? 'sources' : '—') }}</span>
     </div>
-    <div class="tb-list-row tb-list-info">
-      <span class="tb-list-icon"><i class="pi pi-desktop"></i></span>
-      <span class="tb-list-text">
-        <strong>Interface JSF</strong>
-        <span class="tb-muted">Publiée avec le serveur dans les versions de ThermoBox ; elle tourne et se met à jour à part.</span>
-      </span>
-      <span class="tb-apropos-version">{{ server()?.installedVersion ?? '—' }}</span>
-    </div>
+    @if (jsf()) {
+      <div class="tb-list-row tb-list-info">
+        <span class="tb-list-icon"><i class="pi pi-desktop"></i></span>
+        <span class="tb-list-text">
+          <strong>Interface JSF</strong>
+          <span class="tb-muted">Publiée avec le serveur dans les versions de ThermoBox ; elle tourne et se met à jour à part.</span>
+        </span>
+        <span class="tb-about-version">{{ server()?.installedVersion ?? '—' }}</span>
+      </div>
+    }
   </div>
 
   <!-- Repositories -->
   <h2 class="tb-list-title">Code source</h2>
   <nav class="tb-list-group" aria-label="Dépôts GitHub">
-    @for (d of repositories; track d.url) {
+    @for (d of repositories(); track d.url) {
       <a class="tb-list-row" [href]="d.url" target="_blank" rel="noopener">
         <span class="tb-list-icon"><i class="pi pi-github"></i></span>
         <span class="tb-list-text">
@@ -101,7 +103,7 @@
     </a>
   </div>
   <div class="tb-list-group">
-    @for (b of libraries; track b.name) {
+    @for (b of libraries(); track b.name) {
       <a class="tb-list-row tb-list-compact" [href]="b.url" target="_blank" rel="noopener">
         <span class="tb-list-text">
           <strong>{{ b.name }}</strong>

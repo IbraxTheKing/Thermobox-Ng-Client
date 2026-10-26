@@ -4,7 +4,7 @@ declare const THERMOBOX_COMMIT: string;
 
 /** Version of this client: the GitHub tag that was built (26.11.0, 26.11.0-beta.2…), or "dev". */
 export const VERSION_CLIENT: string = typeof THERMOBOX_VERSION === 'string' ? THERMOBOX_VERSION : 'dev';
-/** Commit construit (7 caractères), vide si inconnu. */
+/** Commit that was built (7 characters), empty when unknown. */
 export const COMMIT_CLIENT: string = typeof THERMOBOX_COMMIT === 'string' ? THERMOBOX_COMMIT : '';
 
 const RANKS: Record<string, number> = { nightly: 0, alpha: 1, beta: 2, rc: 3 };
@@ -66,4 +66,9 @@ export class Version {
       this.prereleaseNumber - o.prereleaseNumber
     );
   }
+}
+
+/** « Corrective » / « Fonctionnelle » for the type of an update (the server's typeLabel is English since 26.12). */
+export function updateTypeLabel(type: string): string {
+  return ({ PATCH: 'Corrective', FEATURE: 'Fonctionnelle' } as Record<string, string>)[type] ?? type;
 }

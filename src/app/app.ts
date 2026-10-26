@@ -6,6 +6,7 @@ import { AuthService } from './core/auth';
 import { KeyboardService } from './core/keyboard';
 import { PlatformService } from './core/platform';
 import { PreferencesService } from './core/preferences';
+import { ServerFeaturesService } from './services/server-features.service';
 import { TbConfirm, TbToasts } from './ui/hosts';
 
 @Component({
@@ -25,6 +26,8 @@ export class App {
     inject(PlatformService);
     inject(KeyboardService);
     inject(AnimationsService);
+    // Which API the server answers, its logo and limits
+    inject(ServerFeaturesService);
     const auth = inject(AuthService);
     const body = inject(DOCUMENT).body;
     effect(() => {

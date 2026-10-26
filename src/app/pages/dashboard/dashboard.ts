@@ -46,7 +46,7 @@ const TRENDS_KEY = 'overview';
 const POLL = 30_000;
 
 /**
- * Aperçu (dashboard.xhtml): every room the user may see, as a card with its temperature, state,
+ * Overview (dashboard.xhtml): every room the user may see, as a card with its temperature, state,
  * setpoint and its curve over 24 h; favourites first, then one section per building. Refreshed
  * every 30 seconds.
  */
@@ -161,11 +161,11 @@ export class DashboardPage implements OnInit, OnDestroy {
       .map((r) => ({ id: r.room.id, name: r.room.name ?? '', delta: r.delta!, pct: this.percent(r.delta!), inside: this.inRange(r.delta) })),
   );
   /** A handle moved: at the end of the bar, no bound on that side. */
-  protected setBound(side: 'bas' | 'haut', value: number): void {
+  protected setBound(side: 'bottom' | 'top', value: number): void {
     const e = this.extent();
     const v = Math.round(value * 10) / 10;
     this.flip.animate(() => {
-      if (side === 'bas') this.range.bottom.set(v <= -e ? null : Math.min(v, this.range.top() ?? e));
+      if (side === 'bottom') this.range.bottom.set(v <= -e ? null : Math.min(v, this.range.top() ?? e));
       else this.range.top.set(v >= e ? null : Math.max(v, this.range.bottom() ?? -e));
     });
   }

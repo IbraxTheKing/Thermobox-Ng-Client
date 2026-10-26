@@ -42,8 +42,9 @@ export class ServerService {
     return this.fallback;
   }
 
+  /** URL of [path] in the v2 API ("/hierarchy/tree"); sent to a v1 server as its v1 equivalent. */
   url(path: string): string {
-    return this.base() + path;
+    return apiUrl(this.base(), path);
   }
 
   /**
@@ -102,6 +103,11 @@ function write(v: string | null): void {
   } catch {
     /* private browsing: kept for this session only */
   }
+}
+
+/** URL of [path] in the v2 API of the server at [base] (see ApiVersionService). */
+export function apiUrl(base: string, path: string): string {
+  return `${base}/v2${path}`;
 }
 
 /** A Date (or an ISO string) as the ISO-8601 Instant the backend expects (Instant.parse). */

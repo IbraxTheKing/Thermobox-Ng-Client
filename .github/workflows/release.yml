@@ -1,11 +1,11 @@
 name: Release assets
 
-# Même logique que le serveur ThermoBox : une version publiée à la main (stable 26.11.0, beta,
-# rc) reçoit le client construit depuis son tag, avec ce numéro de version inscrit dedans
-# (scripts/construire.mjs) : l'archive du site, et l'application Android (APK / AAB signés si la
-# clé est dans les secrets ANDROID_*, sinon APK de debug ; .github/actions/android).
-# Les notes de version restent celles écrites à la main.
-# Les nightly ont leur propre workflow.
+# Same logic as the ThermoBox server: a version published by hand (stable 26.11.0, beta, rc) gets
+# the client built from its tag, with that version number written into it (scripts/build.mjs):
+# the archive of the site, and the Android app (APK / AAB signed when the key is in the ANDROID_*
+# secrets, else a debug APK; .github/actions/android).
+# The release notes stay those written by hand.
+# The nightlies have their own workflow.
 
 on:
   release:
@@ -13,7 +13,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: Tag de la version à compléter (ex. 26.11.0)
+        description: Tag of the version to complete (e.g. 26.11.0)
         required: true
 
 permissions:
@@ -29,7 +29,7 @@ jobs:
         id: check
         run: |
           case "$TAG" in
-            *nightly*) echo "Nightly : fichiers déjà publiés par nightly.yml"; echo "build=false" >> "$GITHUB_OUTPUT" ;;
+            *nightly*) echo "Nightly: files already published by nightly.yml"; echo "build=false" >> "$GITHUB_OUTPUT" ;;
             *) echo "build=true" >> "$GITHUB_OUTPUT" ;;
           esac
 
@@ -44,20 +44,20 @@ jobs:
           node-version: '24'
           cache: npm
 
-      - name: Construire (version inscrite dans le client)
+      - name: Build (version written into the client)
         if: steps.check.outputs.build == 'true'
         run: |
           npm ci
           THERMOBOX_VERSION="$TAG" npm run build
 
-      - name: Archive du client
+      - name: Archive of the client
         if: steps.check.outputs.build == 'true'
         run: |
-          mkdir -p livrables
-          (cd dist/Thermobox-Ng-Client/browser && zip -qr "$GITHUB_WORKSPACE/livrables/thermobox-ng-client-$TAG.zip" .)
-          ls -l livrables
+          mkdir -p deliverables
+          (cd dist/Thermobox-Ng-Client/browser && zip -qr "$GITHUB_WORKSPACE/deliverables/thermobox-ng-client-$TAG.zip" .)
+          ls -l deliverables
 
-      - name: Application Android
+      - name: Android app
         if: steps.check.outputs.build == 'true'
         uses: ./.github/actions/android
         with:
@@ -67,9 +67,9 @@ jobs:
           key-alias: ${{ secrets.ANDROID_KEY_ALIAS }}
           key-password: ${{ secrets.ANDROID_KEY_PASSWORD }}
 
-      # --clobber : relancer le workflow remplace les fichiers au lieu d'échouer
-      - name: Joindre les fichiers à la version
+      # --clobber: running the workflow again replaces the files instead of failing
+      - name: Attach the files to the release
         if: steps.check.outputs.build == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "$TAG" livrables/* --clobber
+        run: gh release upload "$TAG" deliverables/* --clobber

@@ -4,11 +4,11 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "node scripts/construire.mjs",
+    "build": "node scripts/build.mjs",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "demo": "node mock/demo.mjs",
-    "mock": "node mock/serveur-demo.mjs",
+    "mock": "node mock/demo-server.mjs",
     "cap:sync": "npm run build && npx cap sync"
   },
   "private": true,

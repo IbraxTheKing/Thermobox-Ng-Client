@@ -2,7 +2,8 @@ import { ChangeDetectionStrategy, Component, computed, effect, inject, input, si
 import { Router, RouterLink } from '@angular/router';
 
 import { ServerService, readableAddress, errorMessage, toBase } from '../../core/api.config';
-import { AuthService, Account, openable } from '../../core/auth';
+import { AuthService, Account, openable, byServer } from '../../core/auth';
+import { TbServerLogo } from '../../ui/server-logo';
 import { PlatformService } from '../../core/platform';
 import { PreferencesService } from '../../core/preferences';
 import { initial } from '../../core/text';
@@ -12,12 +13,12 @@ import { TbPassword } from '../../ui/controls';
  * Connexion (login.xhtml), and the accounts saved on this device: tap one to open it, or to give
  * its password again. In the mobile app, also the address of the ThermoBox server.
  *
- * ?ajout: adds an account (the current one stays saved). ?compte=<key>: logs in again to a saved
- * account. ?serveur=&nom=: after registering, the new account's server and name.
+ * ?add: adds an account (the current one stays saved). ?account=<key>: logs in again to a saved
+ * account. ?server=&name=: after registering, the new account's server and name.
  */
 @Component({
   selector: 'tb-login',
-  imports: [RouterLink, TbPassword],
+  imports: [RouterLink, TbPassword, TbServerLogo],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './login.html',
 })
@@ -59,9 +60,11 @@ export class LoginPage {
           current: c.key === this.auth.key(),
           openable: openable(c),
           initial: initial(c.user.username),
-          address: readableAddress(c.server),
         })),
   );
+
+  /** The saved accounts in one section per server, its logo next to its address. */
+  protected readonly servers = computed(() => byServer(this.accounts()));
 
   /** The address field: needed in the mobile app on first launch, offered elsewhere. */
   protected readonly serverField = computed(() => !this.chosen() && (this.server.unknown() || this.changeServer() || this.adding()));

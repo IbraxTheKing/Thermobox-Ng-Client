@@ -14,7 +14,7 @@ export class RoomService {
   private readonly http = inject(HttpClient);
   private readonly server = inject(ServerService);
   private url(path = ''): string {
-    return this.server.url(`/salles${path}`);
+    return this.server.url(`/rooms${path}`);
   }
 
   getAll(): Observable<Room[]> {

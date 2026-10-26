@@ -48,7 +48,7 @@ export const KIND_ORDER: RoomKind[] = ['BUILDING', 'FLOOR', 'ROOM', 'DEVICE'];
 
 /**
  * The building → floor → room → device tree as the logged-in user sees it
- * (GET /api/hierarchie/arbre), shared by the pages: dashboard, rooms, gestion, mesures, and the
+ * (GET /api/v2/hierarchy/tree), shared by the pages: dashboard, rooms, gestion, mesures, and the
  * lists of possible parents. Reloaded by each page when it opens, and by the 30-second polls.
  */
 @Injectable({ providedIn: 'root' })

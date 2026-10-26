@@ -26,7 +26,9 @@ import { PreferencesService } from '../core/preferences';
 import { TitleService } from '../core/title';
 import { TransitionsService } from '../core/transitions';
 import { SettingsService } from '../services/settings.service';
+import { ServerService } from '../core/api.config';
 import { TbAccounts } from '../ui/accounts';
+import { TbServerLogo } from '../ui/server-logo';
 import { TbSheet } from '../ui/sheet';
 import { Destination, lastTab, destinationsOf, barSlots } from './destinations';
 
@@ -48,7 +50,7 @@ const SLIDE = 8;
  */
 @Component({
   selector: 'tb-shell',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, TbSheet, TbAccounts],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, TbSheet, TbAccounts, TbServerLogo],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './shell.html',
   host: {
@@ -62,6 +64,7 @@ export class Shell implements OnInit, OnDestroy {
   private readonly doc = inject(DOCUMENT);
   private readonly router = inject(Router);
   protected readonly auth = inject(AuthService);
+  protected readonly server = inject(ServerService);
   protected readonly prefs = inject(PreferencesService);
   protected readonly platform = inject(PlatformService);
   protected readonly notice = inject(UpdateNoticeService);

@@ -1472,21 +1472,21 @@ a.tb-crumb:hover { background: var(--md-secondary-container); color: var(--md-on
     font-size: .8rem;
 }
 
-.tb-maj-etape-PENDING { opacity: .55; }
+.tb-update-step-PENDING { opacity: .55; }
 
-.tb-maj-etape-RUNNING .tb-update-step-icon { border-color: var(--md-primary); color: var(--md-primary); }
+.tb-update-step-RUNNING .tb-update-step-icon { border-color: var(--md-primary); color: var(--md-primary); }
 
 .tb-update-step-OK .tb-update-step-icon { border-color: var(--tb-stable); background: var(--tb-stable); color: #fff; }
 
-.tb-maj-etape-FAILED .tb-update-step-icon { border-color: var(--md-error); background: var(--md-error); color: var(--md-on-error); }
+.tb-update-step-FAILED .tb-update-step-icon { border-color: var(--md-error); background: var(--md-error); color: var(--md-on-error); }
 
-.tb-maj-etape-FAILED strong { color: var(--md-error); }
+.tb-update-step-FAILED strong { color: var(--md-error); }
 
 .tb-update-message { margin-top: 12px; padding: 12px 16px; border-radius: var(--tb-shape-md); background: var(--md-surface-container-high); font-weight: 600; }
 
-.tb-maj-message-FAILED { background: var(--md-error-container); color: var(--md-on-error-container); }
+.tb-update-message-FAILED { background: var(--md-error-container); color: var(--md-on-error-container); }
 
-.tb-maj-message-DONE { background: var(--tb-stable-container); color: var(--tb-on-stable-container); }
+.tb-update-message-DONE { background: var(--tb-stable-container); color: var(--tb-on-stable-container); }
 
 .tb-update-backup { margin-top: 12px; font-size: .9rem; overflow-wrap: anywhere; }
 
@@ -1572,10 +1572,10 @@ a.tb-crumb:hover { background: var(--md-secondary-container); color: var(--md-on
 
 .tb-update-check-OK > .pi { color: var(--tb-stable); }
 
-.tb-maj-controle-WARNING > .pi { color: var(--tb-heating); }
+.tb-update-check-WARNING > .pi { color: var(--tb-heating); }
 
-.tb-maj-controle-BLOCKING > .pi,
-.tb-maj-controle-BLOCKING strong { color: var(--md-error); }
+.tb-update-check-BLOCKING > .pi,
+.tb-update-check-BLOCKING strong { color: var(--md-error); }
 
 .tb-update-options { display: flex; flex-direction: column; gap: 12px; padding: 14px 0 4px; border-top: 1px solid var(--md-outline-variant); }
 

@@ -15,8 +15,8 @@ const PACE = [150, 110, 80, 60];
 /**
  * « Maison »: the setpoint as the dial of a thermostat. The temperature in its centre, the
  * setpoint as a knob on the arc, turned with a finger (or the arrows of the keyboard, or − / +,
- * which repeat when held). The arc spans the range people set at home (10-30 °C); the bounds of a
- * consigne still apply.
+ * which repeat when held). The arc spans the range people set at home (10-30 °C, narrower when
+ * the server accepts less); the bounds of a setpoint still apply.
  *
  * While the setpoint is set, it becomes the big figure in the centre and the temperature goes
  * underneath; a line across the track always shows where the temperature is now (for everyone,
@@ -102,16 +102,19 @@ export class TbDial {
   /** The page of a room: its temperature morphs from the tile of the dashboard. */
   readonly vtId = input<number | null>(null);
 
-  private readonly dial = viewChild<ElementRef<SVGSVGElement>>('cadran');
+  private readonly dial = viewChild<ElementRef<SVGSVGElement>>('dial');
   /** The knob is held: it follows the finger without easing. */
   protected readonly input = signal(false);
   /** − or + held down (repeating). */
   protected readonly held = signal<0 | 1 | -1>(0);
   private repeat?: ReturnType<typeof setTimeout>;
 
-  /** Range of the arc, in the unit shown. */
-  protected readonly low = computed(() => (this.unit.fahrenheit() ? 50 : 10));
-  protected readonly high = computed(() => (this.unit.fahrenheit() ? 86 : 30));
+  /** Range of the arc, in the unit shown: 10-30 °C, narrowed to the setpoints the server accepts. */
+  protected readonly low = computed(() => {
+    const l = Math.max(this.unit.fahrenheit() ? 50 : 10, this.unit.setpointMin());
+    return l < this.high() ? l : this.unit.setpointMin();
+  });
+  protected readonly high = computed(() => Math.min(this.unit.fahrenheit() ? 86 : 30, this.unit.setpointMax()));
 
   /** Value at the knob (the one being set, else the current setpoint), in the unit shown. */
   protected readonly position = computed(() => {

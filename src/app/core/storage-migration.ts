@@ -22,7 +22,8 @@ const PREFERENCES: Record<string, string> = {
   ordreBatiments: 'buildingOrder',
 };
 
-const SECTION = (k: string): string => (k === 'sans' ? 'none' : k);
+const SECTIONS: Record<string, string> = { sans: 'none', favoris: 'favorites' };
+const SECTION = (k: string): string => SECTIONS[k] ?? k;
 
 export function migrateStorage(): void {
   try {
@@ -47,7 +48,7 @@ export function migrateStorage(): void {
       }
     }
     const sections = s.getItem('tb-sections');
-    if (sections?.includes('"sans"')) s.setItem('tb-sections', JSON.stringify((JSON.parse(sections) as string[]).map(SECTION)));
+    if (sections && /"(sans|favoris)"/.test(sections)) s.setItem('tb-sections', JSON.stringify((JSON.parse(sections) as string[]).map(SECTION)));
   } catch {
     /* private browsing, or unreadable data: the defaults then */
   }
