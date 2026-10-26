@@ -1602,6 +1602,18 @@ a.tb-crumb:hover { background: var(--md-secondary-container); color: var(--md-on
     white-space: nowrap;
 }
 
+.tb-canal-alpha {
+    --canal: #3b82f6;
+    --canal-container: #dbeafe;
+    --canal-on: #1d4ed8;
+}
+
+.dark .tb-canal-alpha {
+    --canal: #60a5fa;
+    --canal-container: #1e3a5f;
+    --canal-on: #bfdbfe;
+}
+
 .tb-canal::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--canal); }
 
 .tb-maj-version-card .tb-maj-version { color: color-mix(in srgb, var(--canal) 55%, var(--md-on-surface)); }
