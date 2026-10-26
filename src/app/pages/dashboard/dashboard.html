@@ -172,7 +172,7 @@
     </h2>
     <div class="tb-section-body">
       <div [class]="panel() ? 'tb-cells' : 'tb-room-tiles'">
-        @for (r of favorites(); track r.room.id) {
+        @for (r of shownFavorites(); track r.room.id) {
           <tb-room-card [r]="r" [fresh]="newCurves()" (favorite)="toggleFavorite($event)" (overview)="openOverview($event)" />
         }
       </div>
@@ -180,7 +180,7 @@
   </section>
 }
 
-@for (g of groups(); track g.key) {
+@for (g of shownGroups(); track g.key) {
   <section class="tb-section" [class.tb-collapsed]="isFolded(g.key)" [class.tb-dragged]="dragged() === g.key" [attr.data-section]="g.key" [attr.data-group]="g.key">
     @if (panel() || severalBuildings() || favorites().length) {
       <h2 class="tb-section-title" [attr.data-flip]="'section-' + g.key">
@@ -209,7 +209,7 @@
       @if (panel()) {
         <!-- One row of squares per floor, its name on its edge (one child: the section folds whole) -->
         <div class="tb-floors">
-          @for (e of g.floors; track e.key) {
+          @for (e of g.shownFloors; track e.key) {
             <div class="tb-floor" [attr.data-flip]="g.key + e.key">
               @if (e.name) {
                 <span class="tb-floor-name">{{ e.name }}</span>
@@ -224,13 +224,18 @@
         </div>
       } @else {
         <div class="tb-room-tiles">
-          @for (r of g.rooms; track r.room.id) {
+          @for (r of g.shownRooms; track r.room.id) {
             <tb-room-card [r]="r" [fresh]="newCurves()" (favorite)="toggleFavorite($event)" (overview)="openOverview($event)" />
           }
         </div>
       }
     </div>
   </section>
+}
+
+<!-- Many rooms: the next cards as the end of the page comes near -->
+@if (large()) {
+  <tb-more [total]="openTotal()" [shown]="shownCount.count()" (more)="shownCount.more()" label="Afficher d'autres salles" />
 }
 
 <!-- A card held down: its whole day and its details -->

@@ -62,7 +62,10 @@ export class TbAccessTree {
   /** Ids of the ticked elements. */
   readonly checked = model<Set<number>>(new Set());
 
-  private readonly closed = signal<Set<number>>(new Set());
+  /** Branches opened or closed by hand (their default: open, closed in a large structure). */
+  private readonly toggled = signal<Set<number>>(new Set());
+  /** Hundreds of elements: only the buildings at first, each opened on demand (and drawn then). */
+  private readonly large = computed(() => this.nodes().length > 120);
 
   protected readonly branches = computed(() => {
     const nodes = this.nodes().filter((n) => n.kind !== 'DEVICE');
@@ -70,7 +73,9 @@ export class TbAccessTree {
     const byParent = new Map<number, Node[]>();
     for (const n of nodes) {
       const p = n.parentId != null && ids.has(n.parentId) ? n.parentId : -1;
-      byParent.set(p, [...(byParent.get(p) ?? []), n]);
+      const l = byParent.get(p);
+      if (l) l.push(n);
+      else byParent.set(p, [n]);
     }
     const build = (p: number, depth: number): Branch[] =>
       depth > 5 ? [] : (byParent.get(p) ?? []).map((node) => ({ node, children: build(node.id, depth + 1) }));
@@ -82,11 +87,11 @@ export class TbAccessTree {
   }
 
   protected open(id: number): boolean {
-    return !this.closed().has(id);
+    return this.large() ? this.toggled().has(id) : !this.toggled().has(id);
   }
 
   protected toggleOpen(id: number): void {
-    this.closed.update((s) => {
+    this.toggled.update((s) => {
       const r = new Set(s);
       if (r.has(id)) r.delete(id);
       else r.add(id);

@@ -29,11 +29,16 @@ import { RoomService } from '../../services/room.service';
 import { TbStepper, TbSwitch, TbWatch } from '../../ui/controls';
 import { ChartSeries, TbChart } from '../../ui/chart';
 import { TbPhotoImg } from '../../ui/photo';
+import { ShownCount, TbMore } from '../../ui/more';
 import { TbDial } from '../../ui/dial';
 
 /** One colour per box or room, defined by the theme (light and dark differ). */
 const PALETTE = Array.from({ length: 8 }, (_, i) => `--tb-series-${i + 1}`);
 const DEFAULT_SETPOINT = 20;
+/** A floor or a building with more rooms: its average curve only. */
+const MAX_ROOM_CURVES = 12;
+/** Room tiles of a floor or a building drawn at a time. */
+const ROOM_TILES = 48;
 const MAX_PHOTO_SIZE = 10 * 1024 * 1024;
 
 /**
@@ -42,7 +47,7 @@ const MAX_PHOTO_SIZE = 10 * 1024 * 1024;
  */
 @Component({
   selector: 'tb-room-page',
-  imports: [RouterLink, NgTemplateOutlet, TbStepper, TbSwitch, TbWatch, TbChart, TbPhotoImg, TbDial],
+  imports: [RouterLink, NgTemplateOutlet, TbStepper, TbSwitch, TbWatch, TbChart, TbPhotoImg, TbDial, TbMore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './room.html',
 })
@@ -72,6 +77,8 @@ export class RoomPage implements OnDestroy {
   readonly id = input.required<string>();
 
   protected readonly detail = signal<DetailElement | null>(null);
+  /** Many rooms in a floor or a building: their tiles a part at a time. */
+  protected readonly shownRooms = new ShownCount(ROOM_TILES);
   protected readonly missing = signal(false);
   protected readonly labels = LABELS;
 
@@ -235,7 +242,8 @@ export class RoomPage implements OnDestroy {
     await this.refresh(id, false);
     if (!this.detail()) return;
     void this.loadHistory();
-    this.timer = setInterval(() => void this.refresh(id, true), 30_000);
+    // Not while the page is hidden (another tab, the app in the background)
+    this.timer = setInterval(() => !document.hidden && void this.refresh(id, true), 30_000);
   }
 
   /**
@@ -386,6 +394,17 @@ export class RoomPage implements OnDestroy {
     void this.loadHistory();
   }
 
+  /**
+   * The curves of the period. A floor or a building with many rooms: its average only (a chart
+   * of dozens of curves reads as nothing, and costs as much to download), the setpoints from a
+   * history reduced to almost nothing.
+   */
+  private async readHistory(id: number, start: Date, end: Date): Promise<History> {
+    if (!this.container() || (this.detail()?.rooms.length ?? 0) <= MAX_ROOM_CURVES) return firstValueFrom(this.climate.history(id, start, end));
+    const [h, a] = await Promise.all([firstValueFrom(this.climate.history(id, start, end, 3)), firstValueFrom(this.climate.averages([id], start, end))]);
+    return { devices: [], rooms: [], average: a[String(id)] ?? [], setpoints: h.setpoints };
+  }
+
   private async loadHistory(): Promise<void> {
     const e = this.element();
     if (!e) return;
@@ -406,7 +425,7 @@ export class RoomPage implements OnDestroy {
       if (kept.age < freshness(hours!)) return;
     }
     try {
-      const h = await firstValueFrom(this.climate.history(e.id, start, end));
+      const h = await this.readHistory(e.id, start, end);
       // Still the page and the period asked for
       if (this.element()?.id !== e.id || this.periodHours() !== hours) return;
       this.history.set(h);

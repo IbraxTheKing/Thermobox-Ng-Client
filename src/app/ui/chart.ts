@@ -47,6 +47,8 @@ export interface ChartSeries {
   values: (number | null)[];
   /** setpoint: dashed steps (a setpoint holds until the next one); moyenne: thick line. */
   role?: 'setpoint' | 'average';
+  /** Given: the curve is hidden (true) or shown (false) whatever was toggled before. */
+  hidden?: boolean;
 }
 
 /** Values at one instant, read under the finger (phones). */
@@ -302,13 +304,17 @@ export class TbChart implements OnDestroy {
       this.chart.data.labels = labels;
       this.chart.data.datasets = datasets;
       this.chart.options = options;
-      visible.forEach((v, i) => this.chart!.setDatasetVisibility(i, v));
+      visible.forEach((v, i) => this.chart!.setDatasetVisibility(i, series[i].hidden != null ? !series[i].hidden : v));
       this.chart.update();
       this.read(null);
       return;
     }
     this.chart?.destroy();
     this.chart = new Chart(this.canvas().nativeElement, { type: 'line', data: { labels, datasets }, options, plugins: [crosshair] });
+    if (series.some((s) => s.hidden)) {
+      series.forEach((s, i) => this.chart!.setDatasetVisibility(i, !s.hidden));
+      this.chart.update('none');
+    }
     this.read(null);
   }
 

@@ -13,7 +13,13 @@ import { TreeStore, CHILDREN, ICONS, LABELS } from '../../services/tree.store';
 import { HierarchyService } from '../../services/hierarchy.service';
 import { RoomService } from '../../services/room.service';
 import { TbSheet } from '../../ui/sheet';
+import { ShownCount, TbMore } from '../../ui/more';
 import { ElementDialog } from './element-dialog';
+
+/** Elements beyond which the structure is « large » (see [RoomsPage.large]). */
+const LARGE = 200;
+/** Elements of one level drawn at a time. */
+const BRANCH = 60;
 
 /**
  * Buildings and rooms (salles.xhtml): the whole structure. On wide screens a tree where an ADMIN
@@ -22,7 +28,7 @@ import { ElementDialog } from './element-dialog';
  */
 @Component({
   selector: 'tb-rooms',
-  imports: [RouterLink, NgTemplateOutlet, TbSheet, ElementDialog],
+  imports: [RouterLink, NgTemplateOutlet, TbSheet, ElementDialog, TbMore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './rooms.html',
 })
@@ -55,7 +61,7 @@ export class RoomsPage implements OnInit, OnDestroy {
 
   // Drag and drop (ADMIN, mouse)
   protected readonly slide = signal<number | null>(null);
-  protected readonly hover = signal<number | 'racine' | null>(null);
+  protected readonly hover = signal<number | 'root' | null>(null);
 
   private timer?: ReturnType<typeof setInterval>;
 
@@ -76,7 +82,7 @@ export class RoomsPage implements OnInit, OnDestroy {
       this.toasts.error('Impossible de charger les bâtiments et salles', errorMessage(e));
     }
     this.initFolded();
-    this.timer = setInterval(() => void this.store.load(true).catch(() => undefined), 30_000);
+    this.timer = setInterval(() => !document.hidden && void this.store.load(true).catch(() => undefined), 30_000);
   }
 
   ngOnDestroy(): void {
@@ -86,8 +92,33 @@ export class RoomsPage implements OnInit, OnDestroy {
   private initFolded(): void {
     if (this.initialized || !this.store.tree()) return;
     this.initialized = true;
-    this.folded.set(new Set(this.store.nodes().filter((n) => n.kind === 'ROOM').map((n) => n.id)));
+    // Rooms start folded (their devices are below); a large structure shows its buildings only
+    const kinds: RoomKind[] = this.large() ? ['BUILDING', 'FLOOR', 'ROOM'] : ['ROOM'];
+    this.folded.set(new Set(this.store.nodes().filter((n) => kinds.includes(n.kind)).map((n) => n.id)));
   }
+
+  // ---------------------------------------------------------------- large structures
+
+  /** Hundreds of elements: what is folded is not drawn, and long lists come a part at a time. */
+  protected readonly large = computed(() => this.store.nodes().length > LARGE);
+  /** Children drawn per element of the tree (-1: the top level), [BRANCH] more on demand. */
+  private readonly drawn = signal<Map<number, number>>(new Map());
+
+  protected shownChildren(id: number, list: Node[]): Node[] {
+    return list.length > BRANCH ? list.slice(0, this.drawn().get(id) ?? BRANCH) : list;
+  }
+
+  protected moreChildren(id: number): void {
+    this.drawn.update((m) => new Map(m).set(id, (m.get(id) ?? BRANCH) + BRANCH));
+  }
+
+  /** The content of a branch is drawn only while it is open (or always, for a small structure). */
+  protected drawChildren(id: number): boolean {
+    return !this.large() || !this.isFolded(id);
+  }
+
+  /** Phones: the content of the folder opened, a part at a time. */
+  protected readonly shownContent = new ShownCount(BRANCH);
 
   protected icon(n: Node): string {
     return ICONS[n.kind];
@@ -126,11 +157,13 @@ export class RoomsPage implements OnInit, OnDestroy {
 
   protected open(id: number | null): void {
     this.folderId.set(id);
+    this.shownContent.reset();
     scrollTo({ top: 0 });
   }
 
   protected goUp(): void {
     this.folderId.set(this.folder()?.parentId ?? null);
+    this.shownContent.reset();
   }
 
   protected choose(n: Node): void {
@@ -194,13 +227,13 @@ export class RoomsPage implements OnInit, OnDestroy {
     this.hover.set(null);
   }
 
-  protected onHover(e: DragEvent, target: Node | 'racine'): void {
+  protected onHover(e: DragEvent, target: Node | 'root'): void {
     const id = this.slide();
     if (id == null) return;
-    if (target !== 'racine' && (target.id === id || this.store.descendants(id).some((d) => d.id === target.id))) return;
+    if (target !== 'root' && (target.id === id || this.store.descendants(id).some((d) => d.id === target.id))) return;
     e.preventDefault();
     if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
-    this.hover.set(target === 'racine' ? 'racine' : target.id);
+    this.hover.set(target === 'root' ? 'root' : target.id);
   }
 
   /**

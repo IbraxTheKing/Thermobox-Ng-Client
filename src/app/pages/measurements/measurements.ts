@@ -1,5 +1,5 @@
 import { DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
@@ -20,6 +20,8 @@ import { ClimateService } from '../../services/climate.service';
 import { TemperatureService, TemperatureTyped } from '../../services/temperature.service';
 import { ChartSeries, TbChart } from '../../ui/chart';
 import { TbSheet } from '../../ui/sheet';
+import { ShownCount, TbMore } from '../../ui/more';
+import { RawFeed } from './raw-feed';
 
 /** One curve: a room or a building, with its figures over the period (Celsius). */
 interface Row {
@@ -35,7 +37,34 @@ interface Row {
   delta: number | null;
   inTarget: number | null;
   state: RoomState;
-  curve: Curve;
+  /** null until read (rows not shown yet are not read). */
+  curve: Curve | null;
+}
+
+/** The curves of one choice: its period, and those read so far. */
+interface Curves {
+  key: string;
+  start: number;
+  end: number;
+  instants: number[];
+  byId: Map<number, Curve>;
+  /** Read for this period (the others are kept from before, shown until read again). */
+  fresh: Set<number>;
+}
+
+/** Lines of a page of the raw history. */
+const RAW_PAGE = 20;
+
+/** Rows shown (and curves read) at a time. */
+const ROWS = 24;
+
+/** No curve read yet for [key], over the [hours] ending now. Those of [kept] stay meanwhile. */
+function emptyCurves(key: string, hours = 24, kept?: Curves): Curves {
+  const end = new Date();
+  end.setSeconds(0, 0);
+  const start = end.getTime() - hours * 3_600_000;
+  const p = step(start, end.getTime());
+  return { key, start, end: end.getTime(), instants: kept?.instants ?? instants(start, end.getTime(), p), byId: kept?.byId ?? new Map(), fresh: new Set() };
 }
 
 type Sort = 'name' | 'current' | 'setpoint' | 'min' | 'max' | 'average' | 'target';
@@ -48,7 +77,7 @@ const NO_BUILDING = -1;
  */
 @Component({
   selector: 'tb-measurements',
-  imports: [RouterLink, DecimalPipe, TbChart, TbSheet],
+  imports: [RouterLink, DecimalPipe, TbChart, TbSheet, TbMore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './measurements.html',
 })
@@ -64,21 +93,63 @@ export class MeasurementsPage implements OnInit {
   private readonly toasts = inject(ToastService);
   private readonly confirm = inject(ConfirmService);
 
-  private readonly chart = viewChild(TbChart);
-
   protected readonly periodHours = signal(24);
   protected readonly byBuilding = signal(false);
   protected readonly buildingId = signal<number | null>(null);
-  protected readonly rows = signal<Row[]>([]);
-  protected readonly instants = signal<number[]>([]);
   protected readonly loading = signal(false);
   private readonly cache = inject(CurveCache);
+  /** Curves hidden from the chart, by element. */
   protected readonly hidden = signal<Set<number>>(new Set());
   protected readonly sortState = signal<{ by: Sort; desc: boolean } | null>(null);
 
   protected readonly NO_BUILDING = NO_BUILDING;
 
   protected readonly buildings = computed(() => [...this.store.buildings()].sort(byName((b) => b.name)));
+
+  /** The rooms (or buildings) chosen, from the tree: their figures of now need no curve. */
+  private readonly elements = computed(() => {
+    // A building's curve aggregates all its boxes: only for a user who may see all of it
+    const elements = this.byBuilding()
+      ? this.store.buildings().filter((b) => b.accessible).map((b) => ({ n: b, path: '' }))
+      : this.store
+          .rooms()
+          .filter((s) => {
+            const b = this.buildingId();
+            const building = this.store.buildingOf(s.id);
+            return b == null || (b === NO_BUILDING ? building == null : building?.id === b);
+          })
+          .map((s) => ({ n: s, path: this.store.pathText(s.id) }));
+    return elements.sort((a, b) => normalize(a.path).localeCompare(normalize(b.path), 'fr') || normalize(a.n.name).localeCompare(normalize(b.n.name), 'fr'));
+  });
+
+  /** Key of the choices: the curves read belong to it. */
+  private readonly choice = computed(() => `measurements|${this.byBuilding()}|${this.buildingId()}|${this.periodHours()}`);
+  /** Curves read for the current choice (the period is the same for all of them). */
+  private readonly curves = signal<Curves>(emptyCurves(''));
+
+  protected readonly rows = computed<Row[]>(() => {
+    const read = this.curves();
+    const curves = read.key === this.choice() ? read.byId : new Map<number, Curve>();
+    return this.elements().map(({ n, path }, i): Row => {
+      const c = curves.get(n.id) ?? null;
+      const setpoint = n.setpoint?.value ?? null;
+      return {
+        element: n,
+        path,
+        color: (i % 8) + 1,
+        current: n.temperature,
+        min: c?.min ?? null,
+        max: c?.max ?? null,
+        average: c?.average ?? null,
+        setpoint,
+        delta: n.temperature != null && setpoint != null ? n.temperature - setpoint : null,
+        inTarget: c ? inTarget(c, setpoint) : null,
+        state: stateOf(n.temperature, setpoint),
+        curve: c,
+      };
+    });
+  });
+
   protected readonly hasData = computed(() => this.rows().filter((l) => l.current != null));
   protected readonly hottest = computed(() => this.hasData().reduce<Row | null>((m, l) => (!m || l.current! > m.current! ? l : m), null));
   protected readonly coldest = computed(() => this.hasData().reduce<Row | null>((m, l) => (!m || l.current! < m.current! ? l : m), null));
@@ -88,24 +159,16 @@ export class MeasurementsPage implements OnInit {
   });
   protected readonly offSetpoint = computed(() => this.rows().filter((l) => offSetpoint(l.state)).length);
 
-  protected readonly series = computed<ChartSeries[]>(() =>
-    this.rows().map((l) => ({ label: l.element.name ?? '', color: `--tb-series-${l.color}`, values: l.curve.values })),
-  );
-  protected readonly labels = computed(() => {
-    const format = this.periodHours() <= 24 ? clockTime : ddmmHHmm;
-    return this.instants().map((t) => format(new Date(t)));
-  });
-
   /** The table, sorted as asked (clicking a column title). */
   protected readonly sortedRows = computed(() => {
     const t = this.sortState();
-    const l = this.rows().map((x, i) => ({ l: x, i }));
+    const l = this.rows();
     if (!t) return l;
     const key = (x: Row): number | string | null =>
       t.by === 'name' ? normalize(x.element.name) : t.by === 'target' ? x.inTarget : x[t.by];
     return [...l].sort((a, b) => {
-      const valueA = key(a.l);
-      const valueB = key(b.l);
+      const valueA = key(a);
+      const valueB = key(b);
       if (valueA == null) return 1;
       if (valueB == null) return -1;
       const c = typeof valueA === 'string' ? valueA.localeCompare(valueB as string, 'fr') : (valueA as number) - (valueB as number);
@@ -113,7 +176,42 @@ export class MeasurementsPage implements OnInit {
     });
   });
 
+  /**
+   * Many rooms: the table and the chart show the first [ROWS] (in the order of the table), more
+   * as the end of the table comes near; only their curves are read. Hundreds of curves on one
+   * chart read as nothing, and cost as much to download.
+   */
+  protected readonly shown = new ShownCount(ROWS);
+  protected readonly shownRows = computed(() => this.sortedRows().slice(0, this.shown.count()));
+  /** Curves of the rows shown not read yet. */
+  protected readonly waiting = computed(() => this.shownRows().filter((l) => !l.curve).length);
+
+  /** On the chart: the rows shown whose curve is read. */
+  private readonly chartRows = computed(() => this.shownRows().filter((l) => l.curve));
+  protected readonly series = computed<ChartSeries[]>(() => {
+    const hidden = this.hidden();
+    return this.chartRows().map((l) => ({ label: l.element.name ?? '', color: `--tb-series-${l.color}`, values: l.curve!.values, hidden: hidden.has(l.element.id) }));
+  });
+  protected readonly labels = computed(() => {
+    const format = this.periodHours() <= 24 ? clockTime : ddmmHHmm;
+    return this.curves().instants.map((t) => format(new Date(t)));
+  });
+
   protected readonly stepText = computed(() => (this.periodHours() <= 24 ? "quart d'heure" : this.periodHours() <= 168 ? 'heure' : 'tranche de 4 h'));
+
+  constructor() {
+    // Rows shown without their curve: read (a little later, the table may still grow)
+    effect((onCleanup) => {
+      const fresh = this.curves().fresh;
+      const missing = this.shownRows().filter((l) => !fresh.has(l.element.id)).map((l) => l.element.id);
+      if (!missing.length || !this.started()) return;
+      const t = setTimeout(() => void untracked(() => this.read(missing)), 120);
+      onCleanup(() => clearTimeout(t));
+    });
+  }
+
+  /** The tree is there: the curves may be read. */
+  private readonly started = signal(false);
 
   async ngOnInit(): Promise<void> {
     try {
@@ -121,69 +219,47 @@ export class MeasurementsPage implements OnInit {
     } catch (e) {
       this.toasts.error('Impossible de charger les salles', errorMessage(e));
     }
-    await this.load();
+    this.load();
+    this.started.set(true);
   }
 
-  protected async load(force = false): Promise<void> {
-    // Kept in memory (CurveCache): the curves already read for these choices show at once, and
-    // are read again only when no longer recent
-    const key = `measurements|${this.byBuilding()}|${this.buildingId()}|${this.periodHours()}`;
-    const kept = this.cache.read<{ rows: Row[]; instants: number[] }>(key);
-    if (kept) {
-      this.instants.set(kept.value.instants);
-      this.rows.set(kept.value.rows);
-      this.hidden.set(new Set());
-      if (!force && kept.age < freshness(this.periodHours())) return;
+  /**
+   * Another choice (period, rooms or buildings, building): its curves kept in memory show at
+   * once, and are read again (those shown) when no longer recent.
+   */
+  protected load(force = false): void {
+    const key = this.choice();
+    const kept = this.cache.read<Curves>(key);
+    this.shown.reset();
+    if (kept && !force && kept.age < freshness(this.periodHours())) {
+      this.curves.set(kept.value);
+      return;
     }
+    this.curves.set(emptyCurves(key, this.periodHours(), kept?.value));
+  }
+
+  /** Reads the curves of [ids] for the current choice, a few hundred points each. */
+  private async read(ids: number[]): Promise<void> {
+    const c = this.curves();
+    if (c.key !== this.choice()) return;
     this.loading.set(true);
     try {
-      // A building's curve aggregates all its boxes: only for a user who may see all of it
-      const elements = this.byBuilding()
-        ? this.store.buildings().filter((b) => b.accessible).map((b) => ({ n: b, path: '' }))
-        : this.store
-            .rooms()
-            .filter((s) => {
-              const b = this.buildingId();
-              const building = this.store.buildingOf(s.id);
-              return b == null || (b === NO_BUILDING ? building == null : building?.id === b);
-            })
-            .map((s) => ({ n: s, path: this.store.pathText(s.id) }));
-      elements.sort((a, b) => normalize(a.path).localeCompare(normalize(b.path), 'fr') || normalize(a.n.name).localeCompare(normalize(b.n.name), 'fr'));
-
-      const end = new Date();
-      end.setSeconds(0, 0);
-      const start = new Date(end.getTime() - this.periodHours() * 3_600_000);
-      const p = step(start.getTime(), end.getTime());
-      const averages: Record<string, { date: string | null; value: number | null }[]> = {};
-      for (let i = 0; i < elements.length; i += 200) {
-        Object.assign(averages, await firstValueFrom(this.climate.averages(elements.slice(i, i + 200).map((e) => e.n.id), start, end)));
-      }
-      const rows = elements.map(({ n, path }, i): Row => {
-        const points = (averages[String(n.id)] ?? []).filter((x) => x.value != null).map((x) => ({ t: time(x.date), v: x.value! }));
-        const c = curve(points, start.getTime(), end.getTime(), p);
-        const setpoint = n.setpoint?.value ?? null;
-        return {
-          element: n,
-          path,
-          color: (i % 8) + 1,
-          current: n.temperature,
-          min: c.min,
-          max: c.max,
-          average: c.average,
-          setpoint,
-          delta: n.temperature != null && setpoint != null ? n.temperature - setpoint : null,
-          inTarget: inTarget(c, setpoint),
-          state: stateOf(n.temperature, setpoint),
-          curve: c,
-        };
-      });
+      const p = step(c.start, c.end);
+      const averages = await firstValueFrom(this.climate.averages(ids, new Date(c.start), new Date(c.end), true, 2 * c.instants.length));
       // The choices changed meanwhile: these curves are not the ones asked for any more
-      if (key !== `measurements|${this.byBuilding()}|${this.buildingId()}|${this.periodHours()}`) return;
-      const ins = instants(start.getTime(), end.getTime(), p);
-      this.instants.set(ins);
-      this.rows.set(rows);
-      if (!kept) this.hidden.set(new Set());
-      this.cache.write(key, { rows, instants: ins });
+      if (this.curves().key !== c.key) return;
+      const byId = new Map(this.curves().byId);
+      const fresh = new Set(this.curves().fresh);
+      // A curve kept from before was on its own time axis: all of them on the new one
+      if (!fresh.size) byId.clear();
+      for (const id of ids) {
+        fresh.add(id);
+        const points = (averages[String(id)] ?? []).filter((x) => x.value != null).map((x) => ({ t: time(x.date), v: x.value! }));
+        byId.set(id, curve(points, c.start, c.end, p));
+      }
+      const next = { ...this.curves(), byId, fresh, instants: instants(c.start, c.end, p) };
+      this.curves.set(next);
+      this.cache.write(c.key, next);
     } catch (e) {
       this.toasts.error('Impossible de charger les courbes', errorMessage(e));
     } finally {
@@ -193,22 +269,24 @@ export class MeasurementsPage implements OnInit {
 
   protected async refresh(): Promise<void> {
     await this.store.load(true).catch(() => undefined);
-    await this.load(true);
+    this.load(true);
   }
 
   protected period(h: number): void {
     this.periodHours.set(h);
-    void this.load();
+    this.load();
   }
 
   protected group(byBuilding: boolean): void {
     this.byBuilding.set(byBuilding);
-    void this.load();
+    this.hidden.set(new Set());
+    this.load();
   }
 
   protected chooseBuilding(v: string): void {
     this.buildingId.set(v === '' ? null : Number(v));
-    void this.load();
+    this.hidden.set(new Set());
+    this.load();
   }
 
   protected sort(by: Sort): void {
@@ -221,35 +299,49 @@ export class MeasurementsPage implements OnInit {
   }
 
   /** Colour chip of a row: shows or hides its curve. */
-  protected toggleCurve(i: number): void {
-    const visible = this.chart()?.toggle(i) ?? true;
-    this.onToggle({ index: i, visible });
-  }
-
-  protected onToggle(e: { index: number; visible: boolean }): void {
+  protected toggleCurve(id: number): void {
     this.hidden.update((s) => {
       const r = new Set(s);
-      if (e.visible) r.delete(e.index);
-      else r.add(e.index);
+      if (r.has(id)) r.delete(id);
+      else r.add(id);
       return r;
     });
   }
 
-  protected highlight(i: number): void {
-    this.chart()?.highlight(i);
+  /** From the legend of the chart. */
+  protected onToggle(e: { index: number; visible: boolean }): void {
+    const id = this.chartRows()[e.index]?.element.id;
+    if (id == null) return;
+    this.hidden.update((s) => {
+      const r = new Set(s);
+      if (e.visible) r.delete(id);
+      else r.add(id);
+      return r;
+    });
   }
+
+  protected highlight(id: number | null): void {
+    this.chart()?.highlight(id == null ? -1 : this.chartRows().findIndex((l) => l.element.id === id));
+  }
+
+  private readonly chart = viewChild(TbChart);
 
   /** Points of the chart: one line per moment, one column per curve (French spreadsheet format). */
   protected async exportCsv(): Promise<void> {
+    // Every row, not only those shown: their curves first
+    const fresh = this.curves().fresh;
+    const missing = this.rows().filter((l) => !fresh.has(l.element.id)).map((l) => l.element.id);
+    if (missing.length) await this.read(missing);
+    const rowsOut = this.rows().filter((l) => l.curve);
     const symbol = this.unit.symbol();
     const cell = (t: string) => `"${t.replace(/"/g, '""')}"`;
-    const rows = [['Moment', ...this.rows().map((l) => `${l.element.name} (${symbol})`)].map(cell).join(';')];
-    this.instants().forEach((t, k) => {
+    const rows = [['Moment', ...rowsOut.map((l) => `${l.element.name} (${symbol})`)].map(cell).join(';')];
+    this.curves().instants.forEach((t, k) => {
       rows.push(
         [
           cell(full(new Date(t))),
-          ...this.rows().map((l) => {
-            const v = l.curve.values[k];
+          ...rowsOut.map((l) => {
+            const v = l.curve!.values[k];
             return v == null ? '' : String(Math.round(this.unit.fromCelsius(v) * 10) / 10).replace('.', ',');
           }),
         ].join(';'),
@@ -263,12 +355,15 @@ export class MeasurementsPage implements OnInit {
   protected readonly rawOpen = signal(false);
   protected readonly rawLoaded = signal(false);
   protected readonly typeFilter = signal<TemperatureType | 'all'>('all');
-  protected readonly raw = signal<TemperatureTyped[]>([]);
+  /** The lines of the page shown. */
+  protected readonly rawPage = signal<TemperatureTyped[]>([]);
   protected readonly rawPageIndex = signal(0);
-  protected readonly rawPages = computed(() => Math.max(1, Math.ceil(this.raw().length / 20)));
-  protected readonly rawPage = computed(() => this.raw().slice(this.rawPageIndex() * 20, this.rawPageIndex() * 20 + 20));
+  /** Pages in all, when the server tells how many lines there are (null: unknown). */
+  protected readonly rawPages = signal<number | null>(null);
+  protected readonly rawHasNext = signal(false);
+  private feed?: RawFeed;
 
-  /** Read only once its section is opened (every temperature of the base). */
+  /** Read only once its section is opened, a page at a time (there can be millions). */
   protected onRaw(e: Event): void {
     const open = (e.target as HTMLDetailsElement).open;
     this.rawOpen.set(open);
@@ -280,12 +375,25 @@ export class MeasurementsPage implements OnInit {
     void this.loadRaw();
   }
 
+  /** From the first page again (another type, a line added, changed or deleted). */
   private async loadRaw(): Promise<void> {
+    const f = this.typeFilter();
+    this.feed = new RawFeed(this.temperatures, f === 'all' ? ['measurement', 'setpoint'] : [f]);
+    await this.showRawPage(0);
+    this.rawLoaded.set(true);
+  }
+
+  protected async showRawPage(i: number): Promise<void> {
+    const feed = this.feed;
+    if (!feed) return;
     try {
-      const l = await firstValueFrom(this.temperatures.getTyped(this.typeFilter()));
-      this.raw.set(l.sort((a, b) => time(b.date) - time(a.date)));
-      this.rawPageIndex.set(0);
-      this.rawLoaded.set(true);
+      const r = await feed.slice(i * RAW_PAGE, RAW_PAGE);
+      if (feed !== this.feed) return;
+      this.rawPage.set(r.items);
+      this.rawPageIndex.set(i);
+      this.rawHasNext.set(r.more);
+      const total = feed.total;
+      this.rawPages.set(total != null ? Math.max(1, Math.ceil(total / RAW_PAGE)) : null);
     } catch (e) {
       this.toasts.error("Impossible de charger l'historique", errorMessage(e));
     }

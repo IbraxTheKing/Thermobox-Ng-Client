@@ -257,7 +257,7 @@
         <div class="tb-empty tb-empty-sm">Aucune salle ici pour le moment.</div>
       }
       <div class="tb-boxes">
-        @for (s of d.rooms; track s.id) {
+        @for (s of d.rooms.slice(0, shownRooms.count()); track s.id) {
           <a [routerLink]="['/app/room', s.id]" class="tb-box tb-room-mini tb-tone-{{ toneOf(s) }}">
             <span class="tb-box-name"><i class="pi pi-home"></i>{{ s.name }}</span>
             <span class="tb-temp-l" [tbWatch]="s.temperature">{{ unit.t(s.temperature) }}<span class="tb-deg">°</span></span>
@@ -271,6 +271,7 @@
           </a>
         }
       </div>
+      <tb-more [total]="d.rooms.length" [shown]="shownRooms.count()" (more)="shownRooms.more()" label="Afficher d'autres salles" />
     </section>
   }
 

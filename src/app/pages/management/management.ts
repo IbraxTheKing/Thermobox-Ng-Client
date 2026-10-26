@@ -23,6 +23,7 @@ import { UserService } from '../../services/user.service';
 import { Option, TbMultipleChoice } from '../../ui/multiple-choice';
 import { TbStepper, TbSwitch } from '../../ui/controls';
 import { TbSheet } from '../../ui/sheet';
+import { TbMore } from '../../ui/more';
 import { ElementDialog } from '../rooms/element-dialog';
 import { AccessTab } from './access';
 
@@ -50,7 +51,7 @@ const PER_PAGE = 50;
  */
 @Component({
   selector: 'tb-management',
-  imports: [RouterLink, TbSheet, TbSwitch, TbStepper, TbMultipleChoice, ElementDialog, AccessTab],
+  imports: [RouterLink, TbSheet, TbSwitch, TbStepper, TbMultipleChoice, ElementDialog, AccessTab, TbMore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './management.html',
 })
@@ -292,6 +293,7 @@ export class ManagementPage implements OnInit {
       // "Tout": every element again
       if (k == null) this.onlyToHandle.set(false);
       this.page.set(0);
+      this.phoneLimit.set(50);
     });
   }
 
@@ -299,6 +301,7 @@ export class ManagementPage implements OnInit {
     this.flip.animate(() => {
       this.onlyToHandle.update((v) => !v);
       this.page.set(0);
+      this.phoneLimit.set(50);
     });
   }
 
@@ -306,6 +309,7 @@ export class ManagementPage implements OnInit {
     this.flip.animate(() => {
       this.search.set(v);
       this.page.set(0);
+      this.phoneLimit.set(50);
     });
   }
 
@@ -517,6 +521,8 @@ export class ManagementPage implements OnInit {
     }
     const done: string[] = [];
     const ignored: string[] = [];
+    // Their accesses as they are now, before changing them
+    await this.access.ensure([...this.usersAccess()]);
     for (const id of this.usersAccess()) {
       const l = this.access.byId().get(id);
       if (!l) continue;

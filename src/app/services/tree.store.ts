@@ -66,6 +66,8 @@ export class TreeStore {
   }
 
   readonly error = signal<string | null>(null);
+  /** The last tree read, to tell whether a poll brought anything new. */
+  private lastJson = '';
   readonly loading = signal(false);
 
   readonly nodes = computed(() => this.tree()?.nodes ?? []);
@@ -100,7 +102,10 @@ export class TreeStore {
     if (!quiet) this.loading.set(true);
     try {
       const a = await firstValueFrom(this.api.tree(quiet));
-      this.tree.set(a);
+      // Nothing changed (most polls): the pages keep what they computed from it
+      const json = JSON.stringify(a);
+      if (json !== this.lastJson || !this.tree()) this.tree.set(a);
+      this.lastJson = json;
       this.error.set(null);
     } catch (e) {
       this.error.set(errorMessage(e, "Impossible de charger les bâtiments et salles"));

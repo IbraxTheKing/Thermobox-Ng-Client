@@ -35,7 +35,7 @@ export class TbToasts {
   imports: [TbSheet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <tb-sheet [open]="open()" (ouvertChange)="!$event && confirm.answer(false)" [title]="c()?.title ?? ''" [width]="400">
+    <tb-sheet [open]="open()" (openChange)="!$event && confirm.answer(false)" [title]="c()?.title ?? ''" [width]="400">
       @if (c(); as c) {
         <div class="tb-confirm">
           <i class="pi pi-exclamation-triangle"></i>

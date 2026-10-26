@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, Injector, OnDestroy, OnInit, afterNextRender, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, Injector, OnDestroy, OnInit, afterNextRender, computed, effect, inject, signal, untracked } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
@@ -9,6 +9,7 @@ import { PointT, Sparkline, sparkline } from '../../core/curves';
 import { clockTime, time } from '../../core/dates';
 import { STATES, RoomState, STATE_ORDER, countLabel, stateOf } from '../../core/state';
 import { ToastService } from '../../core/messages';
+import { ShownCount, TbMore } from '../../ui/more';
 import { FlipService } from '../../core/flip';
 import { PlatformService } from '../../core/platform';
 import { PreferencesService } from '../../core/preferences';
@@ -19,7 +20,7 @@ import { Node, Point } from '../../models/models';
 import { TreeStore } from '../../services/tree.store';
 import { PullToRefresh } from '../../ui/pull-to-refresh';
 import { CurveCache } from '../../core/curve-cache';
-import { ClimateService } from '../../services/climate.service';
+import { ClimateService, SPARKLINE_POINTS } from '../../services/climate.service';
 import { FavoriteService } from '../../services/favorite.service';
 import { DeltaRange } from './delta-range';
 import { TbRoomOverview } from './room-overview';
@@ -44,6 +45,8 @@ const TREND_PERIOD = 24 * 3_600_000;
 const TREND_VALIDITY = 5 * 60_000;
 const TRENDS_KEY = 'overview';
 const POLL = 30_000;
+/** Cards drawn at first, and added each time the end of the page comes near. */
+const CARDS = 48;
 
 /**
  * Overview (dashboard.xhtml): every room the user may see, as a card with its temperature, state,
@@ -52,7 +55,7 @@ const POLL = 30_000;
  */
 @Component({
   selector: 'tb-dashboard',
-  imports: [RouterLink, TbRoomCard, TbRoomOverview],
+  imports: [RouterLink, TbRoomCard, TbRoomOverview, TbMore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './dashboard.html',
   // Computers: the size of the cards (the slider of the header)
@@ -83,7 +86,26 @@ export class DashboardPage implements OnInit, OnDestroy {
     // The page takes the colour of the state picked (« Couleurs selon l'état »)
     effect(() => this.transitions.setTone(this.stateFilter()?.tone ?? null));
     inject(DestroyRef).onDestroy(() => this.transitions.setTone(null));
+    // Another search or filter: from the top again
+    effect(() => {
+      this.search();
+      this.stateFilter();
+      this.buildingId();
+      this.range.bottom();
+      this.range.top();
+      untracked(() => this.shownCount.reset());
+    });
+    // The curves of the cards drawn, as they come (not those of hundreds of rooms never seen)
+    let pending: ReturnType<typeof setTimeout> | undefined;
+    effect((onCleanup) => {
+      const ids = this.shownIds();
+      if (!this.started) return;
+      pending = setTimeout(() => void untracked(() => this.loadTrends(true, [...ids], false)), 150);
+      onCleanup(() => clearTimeout(pending));
+    });
   }
+  /** The first curves were asked for (ngOnInit): later ones follow the cards drawn. */
+  private started = false;
   protected readonly buildingId = signal<number | null>(null);
 
   /** Curves of the last 24 h by room: undefined while they load, null without enough measures. */
@@ -111,7 +133,8 @@ export class DashboardPage implements OnInit, OnDestroy {
         building: this.store.buildingOf(room.id),
         state: stateOf(room.temperature, setpoint),
         delta: room.temperature != null && setpoint != null ? room.temperature - setpoint : null,
-        trend: trends ? (trends.get(room.id) ?? null) : undefined,
+        // undefined while it loads (or not asked for yet: a card not drawn), null without enough measures
+        trend: trends?.has(room.id) ? trends.get(room.id) : undefined,
       };
     });
   });
@@ -192,6 +215,65 @@ export class DashboardPage implements OnInit, OnDestroy {
     return `De ${this.unit.delta(b)} à ${this.unit.delta(h)}`;
   });
   protected readonly visibleCount = computed(() => this.visible().length);
+
+  // ---------------------------------------------------------------- many rooms: a part at a time
+
+  /**
+   * Cards drawn: the first [CARDS] in the order of the page, [CARDS] more as the end comes near.
+   * Hundreds of rooms are not all drawn (nor their curves read) at once; a search or a filter
+   * looks through all of them and starts again from the top.
+   */
+  protected readonly shownCount = new ShownCount(CARDS);
+  /** Few rooms: everything is drawn, folded sections included (they fold with their cards). */
+  protected readonly large = computed(() => this.visible().length > CARDS);
+
+  /** Ids of the cards drawn. */
+  private readonly shownIds = computed(() => {
+    const ids = new Set<number>();
+    let left = this.shownCount.count();
+    const take = (rooms: RoomSummary[]) => {
+      for (const r of rooms) {
+        if (left <= 0) return;
+        ids.add(r.room.id);
+        left--;
+      }
+    };
+    if (!this.isFolded('favorites')) take(this.favorites());
+    for (const g of this.groups()) if (!this.isFolded(g.key)) take(this.panel() ? g.floors.flatMap((f) => f.rooms) : g.rooms);
+    return ids;
+  });
+  /** Cards of open sections not drawn yet. */
+  protected readonly openTotal = computed(
+    () =>
+      (this.isFolded('favorites') ? 0 : this.favorites().length) +
+      this.groups().reduce((n, g) => n + (this.isFolded(g.key) ? 0 : g.rooms.length), 0),
+  );
+
+  protected readonly shownFavorites = computed(() => {
+    if (!this.large()) return this.favorites();
+    const ids = this.shownIds();
+    return this.favorites().filter((r) => ids.has(r.room.id));
+  });
+
+  /**
+   * The sections drawn, with their cards drawn: up to the one where the cards stop (the next
+   * ones come with the next part). A folded section keeps its title only.
+   */
+  protected readonly shownGroups = computed(() => {
+    const groups = this.groups();
+    if (!this.large()) return groups.map((g) => ({ ...g, shownRooms: g.rooms, shownFloors: g.floors }));
+    const ids = this.shownIds();
+    const out: (BuildingGroup & { shownRooms: RoomSummary[]; shownFloors: BuildingGroup['floors'] })[] = [];
+    for (const g of groups) {
+      const folded = this.isFolded(g.key);
+      const shownRooms = folded ? [] : g.rooms.filter((r) => ids.has(r.room.id));
+      const shownFloors = folded ? [] : g.floors.map((f) => ({ ...f, rooms: f.rooms.filter((r) => ids.has(r.room.id)) })).filter((f) => f.rooms.length);
+      if (!folded && !shownRooms.length && g.rooms.length) break;
+      out.push({ ...g, shownRooms, shownFloors });
+      if (!folded && shownRooms.length < g.rooms.length) break;
+    }
+    return out;
+  });
 
   protected readonly favorites = computed(() => this.visible().filter((r) => r.room.favorite));
 
@@ -472,8 +554,12 @@ export class DashboardPage implements OnInit, OnDestroy {
     // The curves come in a second request, so the page shows without waiting for them; kept
     // ones are already there (and don't draw themselves again)
     const kept = this.trends();
+    this.started = true;
     void this.loadTrends(false).then(() => this.newCurves.set(this.trends() !== kept));
-    this.timer = setInterval(() => void this.reload(true), POLL);
+    // Not while the page is hidden (another tab, the app in the background): no data for no one
+    this.timer = setInterval(() => {
+      if (!document.hidden) void this.reload(true);
+    }, POLL);
   }
 
   ngOnDestroy(): void {
@@ -496,29 +582,29 @@ export class DashboardPage implements OnInit, OnDestroy {
     }
   }
 
-  /** Average curve of each room over the last 24 h: read again every few minutes, not on every poll. */
-  private async loadTrends(quiet: boolean): Promise<void> {
-    const rooms = this.store.rooms();
+  /**
+   * Average curve over the last 24 h of the rooms whose card is drawn ([ids]: those, all of them
+   * by default); read again every few minutes, not on every poll. [all]: those already known too.
+   */
+  private async loadTrends(quiet: boolean, ids?: number[], all = true): Promise<void> {
+    const drawn = ids ?? [...this.shownIds()];
     const known = this.trends();
-    const allKnown = !!known && rooms.every((s) => known.has(s.id));
-    if (allKnown && Date.now() - this.trendsComputedAt < TREND_VALIDITY) {
-      return;
-    }
+    const stale = Date.now() - this.trendsComputedAt >= TREND_VALIDITY;
+    const wanted = drawn.filter((id) => !known?.has(id) || (all && stale));
+    if (!wanted.length) return;
     const end = new Date();
     const start = new Date(end.getTime() - TREND_PERIOD);
-    const m = new Map<number, Sparkline | null>();
+    const byId = this.store.byId();
     try {
-      // At most 200 elements per request (server limit)
-      for (let i = 0; i < rooms.length; i += 200) {
-        const batch = rooms.slice(i, i + 200);
-        const r = await firstValueFrom(this.climate.averages(batch.map((s) => s.id), start, end, quiet));
-        for (const s of batch) m.set(s.id, sparkline(points(r[String(s.id)] ?? []), start.getTime(), end.getTime(), s.setpoint?.value ?? null));
-      }
+      // A few points per curve (the server picks them among the real measures)
+      const r = await firstValueFrom(this.climate.averages(wanted, start, end, quiet, SPARKLINE_POINTS));
+      const m = new Map(this.trends() ?? []);
+      for (const id of wanted) m.set(id, sparkline(points(r[String(id)] ?? []), start.getTime(), end.getTime(), byId.get(id)?.setpoint?.value ?? null));
       this.trends.set(m);
-      this.trendsComputedAt = Date.now();
+      if (all) this.trendsComputedAt = Date.now();
       this.cache.write(TRENDS_KEY, m);
     } catch {
-      if (!this.trends()) this.trends.set(new Map(rooms.map((s) => [s.id, null])));
+      if (!this.trends()) this.trends.set(new Map(wanted.map((id) => [id, null])));
     }
   }
 

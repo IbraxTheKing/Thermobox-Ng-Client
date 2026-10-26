@@ -142,11 +142,7 @@
         <li class="tb-mgmt-empty tb-muted">{{ store.tree() ? 'Aucun élément ne correspond' : 'Chargement…' }}</li>
       }
     </ul>
-    @if (listRows().length > phoneLimit()) {
-      <button type="button" class="tb-btn tb-tonal tb-mgmt-more" (click)="phoneLimit.set(phoneLimit() + 50)">
-        Afficher {{ listRows().length - phoneLimit() > 50 ? 50 : listRows().length - phoneLimit() }} de plus
-      </button>
-    }
+    <tb-more [total]="listRows().length" [shown]="phoneLimit()" (more)="phoneLimit.set(phoneLimit() + 50)" />
   } @else {
   <div class="tb-table tb-mgmt-table">
     <table>

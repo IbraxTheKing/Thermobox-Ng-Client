@@ -70,7 +70,7 @@
       <div class="tb-empty tb-empty-sm">{{ byBuilding() ? 'Aucun bâtiment entièrement accessible.' : 'Aucune salle à afficher.' }}</div>
     } @else {
       <div class="tb-chart tb-chart-tall">
-        @if (rows().length) {
+        @if (series().length) {
           <tb-chart-view [labels]="labels()" [series]="series()" description="Températures de toutes les salles" (toggled)="onToggle($event)" />
         } @else {
           <div class="tb-spark-loading tb-chart-waiting"><span class="tb-muted">Chargement…</span></div>
@@ -99,13 +99,12 @@
             </tr>
           </thead>
           <tbody>
-            @for (x of sortedRows(); track x.l.element.id) {
-              @let l = x.l;
+            @for (l of shownRows(); track l.element.id) {
               <tr class="tb-tone-{{ l.state.tone }}">
                 <td class="tb-col-room">
-                  <div class="tb-compare-name" (mouseenter)="highlight(x.i)" (mouseleave)="highlight(-1)">
-                    <button type="button" class="tb-series-chip" [class.tb-off]="hidden().has(x.i)" [style.--serie]="'var(--tb-series-' + l.color + ')'"
-                            [attr.aria-pressed]="!hidden().has(x.i)" [title]="'Masquer ou afficher la courbe de ' + l.element.name" (click)="toggleCurve(x.i)"></button>
+                  <div class="tb-compare-name" (mouseenter)="highlight(l.element.id)" (mouseleave)="highlight(null)">
+                    <button type="button" class="tb-series-chip" [class.tb-off]="hidden().has(l.element.id)" [style.--serie]="'var(--tb-series-' + l.color + ')'"
+                            [attr.aria-pressed]="!hidden().has(l.element.id)" [title]="'Masquer ou afficher la courbe de ' + l.element.name" (click)="toggleCurve(l.element.id)"></button>
                     <a [routerLink]="['/app/room', l.element.id]" title="Voir le détail">
                       <strong>{{ l.element.name }}</strong>
                       @if (l.path) {
@@ -139,7 +138,14 @@
           </tbody>
         </table>
       </div>
-      <p class="tb-muted tb-compare-hint">Températures en {{ unit.symbol() }} ; minimum, maximum et moyenne sur la période choisie.</p>
+      <tb-more [total]="rows().length" [shown]="shownRows().length" (more)="shown.more()" [label]="byBuilding() ? 'Afficher d\'autres bâtiments' : 'Afficher d\'autres salles'" />
+      <p class="tb-muted tb-compare-hint">
+        Températures en {{ unit.symbol() }} ; minimum, maximum et moyenne sur la période choisie.
+        @if (rows().length > shownRows().length) {
+          Le graphique montre les {{ shownRows().length }} premières lignes du tableau ; un tri sur le minimum, le maximum, la moyenne ou
+          la part à la consigne porte sur les lignes déjà chargées.
+        }
+      </p>
     </div>
   }
 </div>
@@ -200,13 +206,12 @@
             }
           </tbody>
         </table>
-        @if (rawPages() > 1) {
+        @if (rawPageIndex() > 0 || rawHasNext()) {
           <div class="tb-pagination">
-            <button type="button" [disabled]="rawPageIndex() === 0" (click)="rawPageIndex.set(0)" aria-label="Première page"><i class="pi pi-angle-double-left"></i></button>
-            <button type="button" [disabled]="rawPageIndex() === 0" (click)="rawPageIndex.set(rawPageIndex() - 1)" aria-label="Page précédente"><i class="pi pi-angle-left"></i></button>
-            <span>{{ rawPageIndex() + 1 }} / {{ rawPages() }}</span>
-            <button type="button" [disabled]="rawPageIndex() + 1 >= rawPages()" (click)="rawPageIndex.set(rawPageIndex() + 1)" aria-label="Page suivante"><i class="pi pi-angle-right"></i></button>
-            <button type="button" [disabled]="rawPageIndex() + 1 >= rawPages()" (click)="rawPageIndex.set(rawPages() - 1)" aria-label="Dernière page"><i class="pi pi-angle-double-right"></i></button>
+            <button type="button" [disabled]="rawPageIndex() === 0" (click)="showRawPage(0)" aria-label="Première page"><i class="pi pi-angle-double-left"></i></button>
+            <button type="button" [disabled]="rawPageIndex() === 0" (click)="showRawPage(rawPageIndex() - 1)" aria-label="Page précédente"><i class="pi pi-angle-left"></i></button>
+            <span>{{ rawPageIndex() + 1 }}@if (rawPages(); as n) { / {{ n }}}</span>
+            <button type="button" [disabled]="!rawHasNext()" (click)="showRawPage(rawPageIndex() + 1)" aria-label="Page suivante"><i class="pi pi-angle-right"></i></button>
           </div>
         }
       </div>
