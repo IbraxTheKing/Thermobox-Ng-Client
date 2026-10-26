@@ -2,11 +2,11 @@ import { DOCUMENT } from '@angular/common';
 import { Injectable, inject } from '@angular/core';
 import { ActivatedRouteSnapshot, ViewTransitionInfo } from '@angular/router';
 
-import { PlateformeService } from './plateforme';
+import { PlatformService } from './platform';
 import { PreferencesService } from './preferences';
 
 /** State whose colour the page takes (« Couleurs selon l'état »). */
-export type Ton = 'stable' | 'chauffe' | 'chaud' | 'inconnu';
+export type Tone = 'stable' | 'heating' | 'hot' | 'unknown';
 
 type Doc = Document & { startViewTransition?: (f: () => void | Promise<void>) => ViewTransition };
 
@@ -14,18 +14,18 @@ type Doc = Document & { startViewTransition?: (f: () => void | Promise<void>) =>
  * Motion between pages, as tbAnim of the JSF interface, for a single-page app:
  *
  * - every page change goes through a view transition (cross-fade, the dashboard card morphing into
- *   the salle page), and the new page makes its entrance (html.tb-entering, 1.6 s: the head rises,
+ *   the room page), and the new page makes its entrance (html.tb-entering, 1.6 s: the head rises,
  *   the cards follow one after the other, their curves draw themselves);
- * - dashboard ↔ salle: only the card moves (html.tb-carte), nothing else pops in. On phones
- *   (html.tb-carte-plein) the card opens into the whole salle page and the page closes back into
+ * - dashboard ↔ room: only the card moves (html.tb-card-morph), nothing else pops in. On phones
+ *   (html.tb-card-full) the card opens into the whole room page and the page closes back into
  *   it (Material container transform): card and page are the same width there, a card morphing
  *   into the card of the page did not show. Only that card
- *   and its salle page carry view-transition names (data-vt), and only during the transition: a
+ *   and its room page carry view-transition names (data-vt), and only during the transition: a
  *   name on every card made each of them a group of its own, every page change blurred and faded
  *   the whole dashboard piece by piece;
  * - other page changes: no picture of the pages at all (the new page is there at once and makes
  *   its entrance, live; pictures of glass came out blurred);
- * - the colour of the page (state of the salle shown, dashboard filter) changes through a
+ * - the colour of the page (state of the room shown, dashboard filter) changes through a
  *   cross-fade of two pictures of the page, done by the compositor, instead of animating the
  *   colours of every element on every frame (which made phones stutter and went through other
  *   hues on the way). A change during a page transition joins it; after it, waits for its end.
@@ -36,10 +36,10 @@ type Doc = Document & { startViewTransition?: (f: () => void | Promise<void>) =>
 export class TransitionsService {
   private readonly doc = inject(DOCUMENT) as Doc;
   private readonly prefs = inject(PreferencesService);
-  private readonly plateforme = inject(PlateformeService);
+  private readonly platform = inject(PlatformService);
   private readonly root = this.doc.documentElement;
 
-  private courante: ViewTransition | null = null;
+  private current: ViewTransition | null = null;
   /**
    * Safari and every browser of iOS: pictures of the glass (backdrop-filter) come out blurred.
    * The colour of the page then changes without pictures: the background glides to the new
@@ -47,118 +47,118 @@ export class TransitionsService {
    */
   private readonly webkit = /AppleWebKit/.test(navigator.userAgent) && !/Chrome\/|Chromium|Edg\//.test(navigator.userAgent);
   /** The new page is not in place yet: a colour asked now goes with it. */
-  private avantMaj = false;
-  private minuterie?: ReturnType<typeof setTimeout>;
+  private beforeUpdate = false;
+  private timer?: ReturnType<typeof setTimeout>;
 
-  private tonAffiche: Ton | null = null;
-  private tonVoulu: Ton | null = null;
-  private tonPrevu = false;
+  private shownTone: Tone | null = null;
+  private wantedTone: Tone | null = null;
+  private tonePending = false;
 
   /** Card clicked on the dashboard, and where it was on the screen (to come back to it). */
-  private carteCliquee: { id: string; el: HTMLElement; haut: number } | null = null;
-  private nommes: HTMLElement[] = [];
+  private clickedCard: { id: string; el: HTMLElement; top: number } | null = null;
+  private named: HTMLElement[] = [];
 
   /**
    * The browser has already shown the way back itself (swipe from the edge in Safari, back
    * gesture of Android): no second animation on top of it.
    */
-  private parLeNavigateur = false;
+  private byBrowser = false;
   /** What to do on the new page before its picture is taken (names, colour, scroll…). */
-  private surNouvellePage: (() => void) | null = null;
-  private enAttente: (() => void)[] = [];
+  private onNewPage: (() => void) | null = null;
+  private pending: (() => void)[] = [];
 
   constructor() {
     // The picture of the new page is taken as soon as the update callback is done: what must be
     // in it (names of what morphs, colour, page put straight) is done at the end of that
     // callback, not after updateCallbackDone (too late: the picture is already taken)
-    const demarrer = this.doc.startViewTransition?.bind(this.doc);
-    if (demarrer) {
-      this.doc.startViewTransition = (maj?: () => void | Promise<void>) =>
-        demarrer(async () => {
+    const start = this.doc.startViewTransition?.bind(this.doc);
+    if (start) {
+      this.doc.startViewTransition = (update?: () => void | Promise<void>) =>
+        start(async () => {
           try {
-            await maj?.();
+            await update?.();
           } finally {
-            this.nouvellePage();
+            this.newPage();
           }
         });
     }
     addEventListener(
       'popstate',
-      (e) => (this.parLeNavigateur = (e as PopStateEvent & { hasUAVisualTransition?: boolean }).hasUAVisualTransition === true),
+      (e) => (this.byBrowser = (e as PopStateEvent & { hasUAVisualTransition?: boolean }).hasUAVisualTransition === true),
       true,
     );
     this.doc.addEventListener(
       'click',
       (e) => {
-        const carte = (e.target as Element | null)?.closest?.('.tb-room') as HTMLElement | null;
-        if (!carte || !(e.target as Element).closest('.tb-stretched')) return;
-        this.carteCliquee = { id: carte.dataset['vtId'] ?? '', el: carte, haut: carte.getBoundingClientRect().top };
+        const card = (e.target as Element | null)?.closest?.('.tb-room') as HTMLElement | null;
+        if (!card || !(e.target as Element).closest('.tb-stretched')) return;
+        this.clickedCard = { id: card.dataset['vtId'] ?? '', el: card, top: card.getBoundingClientRect().top };
       },
       true,
     );
   }
 
   /** Called by the router for each page change (app.config.ts). */
-  surTransition({ transition, from, to }: ViewTransitionInfo): void {
-    const parLeNavigateur = this.parLeNavigateur;
-    this.parLeNavigateur = false;
-    if (this.prefs.mouvementReduit() || parLeNavigateur) {
+  onTransition({ transition, from, to }: ViewTransitionInfo): void {
+    const byBrowser = this.byBrowser;
+    this.byBrowser = false;
+    if (this.prefs.reducedMotion() || byBrowser) {
       transition.skipTransition();
       return;
     }
-    const depuis = chemin(from);
-    const vers = chemin(to);
-    const carte = estCarte(depuis, vers);
-    const id = carte ? String(feuille(vers === 'salle/:id' ? to : from).params['id'] ?? '') : '';
+    const fromPath = path(from);
+    const toPath = path(to);
+    const card = isCard(fromPath, toPath);
+    const id = card ? String(sheet(toPath === 'room/:id' ? to : from).params['id'] ?? '') : '';
     // Between pages: no pictures of the pages. A picture of the glass (backdrop-filter) is drawn
     // without its blur or blurred as a whole depending on the browser, and every card of the
     // dashboard showed blurred, then popped back. The new page is there at once, live, and makes
-    // its entrance. Only the dashboard card morphing into its salle page needs pictures.
-    if (!carte) transition.skipTransition();
-    this.courante = transition;
-    this.avantMaj = true;
-    this.root.classList.toggle('tb-carte', carte);
-    this.root.classList.toggle('tb-carte-plein', carte && this.plateforme.barreBas());
+    // its entrance. Only the dashboard card morphing into its room page needs pictures.
+    if (!card) transition.skipTransition();
+    this.current = transition;
+    this.beforeUpdate = true;
+    this.root.classList.toggle('tb-card-morph', card);
+    this.root.classList.toggle('tb-card-full', card && this.platform.bottomBar());
     // A real transition: what morphs must not also slide in (jsf.css, .tb-vt-in)
-    this.root.classList.toggle('tb-vt-in', carte);
-    // The card (or the salle page) we leave: its picture is taken on the next frame
-    if (carte) this.nommer(id, depuis === 'apercu');
+    this.root.classList.toggle('tb-vt-in', card);
+    // The card (or the room page) we leave: its picture is taken on the next frame
+    if (card) this.name(id, fromPath === 'overview');
     // The photo flies out of the card (and back into it): where it starts, measured on the page
     // we leave, before it changes
-    const aller = vers === 'salle/:id';
-    const carteAvant = carte && aller && this.carteCliquee?.id === id && this.carteCliquee.el.isConnected ? cadre(this.carteCliquee.el) : null;
-    const photoAvant = carte && !aller ? this.photoNommee(id) : null;
-    const departRetour = photoAvant ? cadre(photoAvant) : null;
-    this.surNouvellePage = () => {
+    const forward = toPath === 'room/:id';
+    const cardStart = card && forward && this.clickedCard?.id === id && this.clickedCard.el.isConnected ? frame(this.clickedCard.el) : null;
+    const photoStart = card && !forward ? this.namedPhoto(id) : null;
+    const backStart = photoStart ? frame(photoStart) : null;
+    this.onNewPage = () => {
       // The page we arrive on, before its picture is taken
-      if (carte) {
-        this.denommer();
-        if (vers === 'apercu') this.revenirALaCarte(id);
-        this.nommer(id, false);
-        // Nothing to morph into (salle page not ready, card in a folded section): the card
+      if (card) {
+        this.unname();
+        if (toPath === 'overview') this.returnToCard(id);
+        this.name(id, false);
+        // Nothing to morph into (room page not ready, card in a folded section): the card
         // would stay on its own in the middle of the new page, so no transition at all
-        if (!this.nommes.some((e) => e.style.getPropertyValue('view-transition-name') === `salle-card-${id}`)) {
-          this.denommer();
+        if (!this.named.some((e) => e.style.getPropertyValue('view-transition-name') === `salle-card-${id}`)) {
+          this.unname();
           transition.skipTransition();
         }
       }
       // Part of the new picture: no second cross-fade
-      this.appliquerTon(this.tonVoulu);
-      if (!carte) this.entree();
+      this.applyTone(this.wantedTone);
+      if (!card) this.entrance();
     };
     // Not through the wrapped startViewTransition (created before this service): late, but done
-    transition.updateCallbackDone.catch(() => undefined).then(() => this.nouvellePage());
-    if (carte && (carteAvant || departRetour)) {
-      transition.ready.then(() => this.envolerPhoto(id, carteAvant, departRetour)).catch(() => undefined);
+    transition.updateCallbackDone.catch(() => undefined).then(() => this.newPage());
+    if (card && (cardStart || backStart)) {
+      transition.ready.then(() => this.flyPhoto(id, cardStart, backStart)).catch(() => undefined);
     }
     transition.finished
       .catch(() => undefined)
       .then(() => {
-        this.denommer();
-        if (this.courante !== transition) return;
-        this.courante = null;
-        this.root.classList.remove('tb-vt-in', 'tb-carte', 'tb-carte-plein', 'tb-vt-vol');
-        if (this.tonPrevu) this.fondu();
+        this.unname();
+        if (this.current !== transition) return;
+        this.current = null;
+        this.root.classList.remove('tb-vt-in', 'tb-card-morph', 'tb-card-full', 'tb-vt-flight');
+        if (this.tonePending) this.fade();
       });
   }
 
@@ -166,208 +166,208 @@ export class TransitionsService {
    * [fn] once the new page is in place: right away, or, during a page transition, between the
    * picture of the page left and the picture of the new one.
    */
-  apresMaj(fn: () => void): void {
-    if (this.courante && this.avantMaj) this.enAttente.push(fn);
+  afterUpdate(fn: () => void): void {
+    if (this.current && this.beforeUpdate) this.pending.push(fn);
     else fn();
   }
 
   /** End of the update of a page transition: the new page is there, its picture not taken yet. */
-  private nouvellePage(): void {
-    if (!this.avantMaj) return;
-    this.avantMaj = false;
-    const f = this.surNouvellePage;
-    this.surNouvellePage = null;
+  private newPage(): void {
+    if (!this.beforeUpdate) return;
+    this.beforeUpdate = false;
+    const f = this.onNewPage;
+    this.onNewPage = null;
     f?.();
-    for (const fn of this.enAttente.splice(0)) fn();
+    for (const fn of this.pending.splice(0)) fn();
   }
 
   /** A page shown without a view transition (first load, browser without them). */
-  sansTransition(): void {
-    if (this.courante) return;
-    this.entree();
+  withoutTransition(): void {
+    if (this.current) return;
+    this.entrance();
   }
 
   /** Colour of the page; null: the colours of the theme. */
-  definirTon(ton: Ton | null): void {
-    this.tonVoulu = ton;
-    if (this.courante) {
+  setTone(tone: Tone | null): void {
+    this.wantedTone = tone;
+    if (this.current) {
       // During a transition: with the new page, or right after
-      if (!this.avantMaj) this.tonPrevu = true;
+      if (!this.beforeUpdate) this.tonePending = true;
       return;
     }
-    this.fondu();
+    this.fade();
   }
 
   /** Entrance of the page (CSS under html.tb-entering). */
-  private entree(): void {
-    if (this.prefs.mouvementReduit()) return;
-    clearTimeout(this.minuterie);
+  private entrance(): void {
+    if (this.prefs.reducedMotion()) return;
+    clearTimeout(this.timer);
     this.root.classList.remove('tb-entering');
     // Restart the animations of a page entered again quickly
     void this.root.offsetWidth;
     this.root.classList.add('tb-entering');
-    this.minuterie = setTimeout(() => this.root.classList.remove('tb-entering'), 1600);
+    this.timer = setTimeout(() => this.root.classList.remove('tb-entering'), 1600);
   }
 
   /**
-   * Names the card of salle [id] and what morphs with it (data-vt), on the page shown: the card
-   * clicked if it is this one ([cliquee]), else the first one on the screen (a salle can be both
-   * in the favourites and in its building), and the salle page.
+   * Names the card of room [id] and what morphs with it (data-vt), on the page shown: the card
+   * clicked if it is this one ([cliquee]), else the first one on the screen (a room can be both
+   * in the favourites and in its building), and the room page.
    */
-  private nommer(id: string, cliquee: boolean): void {
+  private name(id: string, clicked: boolean): void {
     if (!id) return;
-    const tous = [...this.doc.querySelectorAll<HTMLElement>(`[data-vt][data-vt-id="${CSS.escape(id)}"]`)];
-    const cartes = tous.filter((e) => e.classList.contains('tb-room'));
-    let carte: HTMLElement | undefined;
-    if (cliquee && this.carteCliquee?.id === id && this.carteCliquee.el.isConnected) carte = this.carteCliquee.el;
-    carte ??= cartes.find((c) => {
+    const all = [...this.doc.querySelectorAll<HTMLElement>(`[data-vt][data-vt-id="${CSS.escape(id)}"]`)];
+    const cards = all.filter((e) => e.classList.contains('tb-room'));
+    let card: HTMLElement | undefined;
+    if (clicked && this.clickedCard?.id === id && this.clickedCard.el.isConnected) card = this.clickedCard.el;
+    card ??= cards.find((c) => {
       const r = c.getBoundingClientRect();
       return r.bottom > 0 && r.top < innerHeight;
     });
-    carte ??= cartes[0];
-    if (this.root.classList.contains('tb-carte-plein')) {
-      // Phones: the card alone, or the whole page of the salle
-      const page = carte ?? (tous.length ? this.doc.querySelector<HTMLElement>('.tb-main') : null);
+    card ??= cards[0];
+    if (this.root.classList.contains('tb-card-full')) {
+      // Phones: the card alone, or the whole page of the room
+      const page = card ?? (all.length ? this.doc.querySelector<HTMLElement>('.tb-main') : null);
       if (!page) return;
       page.style.setProperty('view-transition-name', `salle-card-${id}`);
       page.style.setProperty('view-transition-class', 'tb-card');
-      page.dataset['vtPlein'] = '';
-      this.nommes.push(page);
-      // The salle page: its photo flies on its own, out of the card (envolerPhoto)
-      const photo = carte ? null : tous.find((e) => e.dataset['vt'] === 'salle-photo' && !e.classList.contains('tb-photo-empty'));
+      page.dataset['vtFull'] = '';
+      this.named.push(page);
+      // The room page: its photo flies on its own, out of the card (flyPhoto)
+      const photo = card ? null : all.find((e) => e.dataset['vt'] === 'room-photo' && !e.classList.contains('tb-photo-empty'));
       if (photo) {
         photo.style.setProperty('view-transition-name', `salle-photo-${id}`);
         photo.style.setProperty('view-transition-class', 'tb-vt-photo');
-        photo.dataset['vtClasse'] = '';
-        this.nommes.push(photo);
+        photo.dataset['vtClass'] = '';
+        this.named.push(photo);
       }
       return;
     }
-    const pris = new Set<string>();
-    for (const e of tous) {
-      const nom = e.dataset['vt']!;
-      // Only one element per name: the one of the chosen card, or the only one of the salle page
-      if (pris.has(nom) || (carte && e !== carte && !carte.contains(e) && e.closest('.tb-room'))) continue;
-      pris.add(nom);
-      e.style.setProperty('view-transition-name', `${nom}-${id}`);
+    const taken = new Set<string>();
+    for (const e of all) {
+      const name = e.dataset['vt']!;
+      // Only one element per name: the one of the chosen card, or the only one of the room page
+      if (taken.has(name) || (card && e !== card && !card.contains(e) && e.closest('.tb-room'))) continue;
+      taken.add(name);
+      e.style.setProperty('view-transition-name', `${name}-${id}`);
       // Their layers: the photo under the card and its words (motion.css), whichever page it
       // comes from; a photo alone (the card has none to morph into) fades under the card
       if (!e.style.getPropertyValue('view-transition-class')) {
-        e.style.setProperty('view-transition-class', nom === 'salle-photo' ? 'tb-vt-photo' : 'tb-vt-texte');
-        e.dataset['vtClasse'] = '';
+        e.style.setProperty('view-transition-class', name === 'room-photo' ? 'tb-vt-photo' : 'tb-vt-text');
+        e.dataset['vtClass'] = '';
       }
-      this.nommes.push(e);
+      this.named.push(e);
     }
   }
 
-  /** The photo of the salle page, named for the transition, if the salle has one. */
-  private photoNommee(id: string): HTMLElement | null {
-    const p = this.nommes.find((e) => e.style.getPropertyValue('view-transition-name') === `salle-photo-${id}`);
+  /** The photo of the room page, named for the transition, if the room has one. */
+  private namedPhoto(id: string): HTMLElement | null {
+    const p = this.named.find((e) => e.style.getPropertyValue('view-transition-name') === `salle-photo-${id}`);
     return p && !p.classList.contains('tb-photo-empty') ? p : null;
   }
 
   /**
-   * The photo of the salle leaves its card on the dashboard and lands in its frame on the salle
+   * The photo of the room leaves its card on the dashboard and lands in its frame on the room
    * page; back, it flies from its frame into the card and melts into it. One group of the view
    * transition (the photo was already pictured on its own), animated by the compositor:
    * position, size, corners.
    */
-  private envolerPhoto(id: string, carteAvant: Cadre | null, departRetour: Cadre | null): void {
+  private flyPhoto(id: string, cardStart: Frame | null, backStart: Frame | null): void {
     const pseudo = `::view-transition-group(salle-photo-${id})`;
     const options: KeyframeAnimationOptions = { duration: 520, easing: 'cubic-bezier(.2, .8, .2, 1)', fill: 'both', pseudoElement: pseudo };
-    if (carteAvant) {
-      const photo = this.photoNommee(id);
+    if (cardStart) {
+      const photo = this.namedPhoto(id);
       if (!photo) return;
-      this.root.classList.add('tb-vt-vol');
-      this.root.animate(images(carteAvant, cadre(photo)), options);
-    } else if (departRetour) {
-      const carte = this.nommes.find((e) => e.style.getPropertyValue('view-transition-name') === `salle-card-${id}` && e.classList.contains('tb-room'));
-      if (!carte) return;
-      this.root.classList.add('tb-vt-vol');
-      this.root.animate(images(departRetour, cadre(carte)), options);
+      this.root.classList.add('tb-vt-flight');
+      this.root.animate(images(cardStart, frame(photo)), options);
+    } else if (backStart) {
+      const card = this.named.find((e) => e.style.getPropertyValue('view-transition-name') === `salle-card-${id}` && e.classList.contains('tb-room'));
+      if (!card) return;
+      this.root.classList.add('tb-vt-flight');
+      this.root.animate(images(backStart, frame(card)), options);
       // It melts into the card at the end of the way
       this.root.animate({ opacity: [1, 1, 0], offset: [0, 0.6, 1] }, { ...options, pseudoElement: `::view-transition-old(salle-photo-${id})` });
     }
   }
 
-  private denommer(): void {
-    for (const e of this.nommes.splice(0)) {
+  private unname(): void {
+    for (const e of this.named.splice(0)) {
       e.style.removeProperty('view-transition-name');
-      // Set here only on the page; the cards carry their own (salle-card.ts)
-      if ((e.dataset['vtPlein'] != null && !e.classList.contains('tb-room')) || e.dataset['vtClasse'] != null) e.style.removeProperty('view-transition-class');
-      delete e.dataset['vtPlein'];
-      delete e.dataset['vtClasse'];
+      // Set here only on the page; the cards carry their own (room-card.ts)
+      if ((e.dataset['vtFull'] != null && !e.classList.contains('tb-room')) || e.dataset['vtClass'] != null) e.style.removeProperty('view-transition-class');
+      delete e.dataset['vtFull'];
+      delete e.dataset['vtClass'];
     }
   }
 
   /** Back on the dashboard: the card reopens where it was on the screen when it was clicked. */
-  private revenirALaCarte(id: string): void {
-    const carte = this.doc.querySelector<HTMLElement>(`.tb-room[data-vt-id="${CSS.escape(id)}"]`);
-    if (!carte) return;
-    const haut = this.carteCliquee?.id === id ? this.carteCliquee.haut : (innerHeight - carte.offsetHeight) / 2;
-    scrollTo(0, Math.max(0, carte.getBoundingClientRect().top + scrollY - haut));
+  private returnToCard(id: string): void {
+    const card = this.doc.querySelector<HTMLElement>(`.tb-room[data-vt-id="${CSS.escape(id)}"]`);
+    if (!card) return;
+    const top = this.clickedCard?.id === id ? this.clickedCard.top : (innerHeight - card.offsetHeight) / 2;
+    scrollTo(0, Math.max(0, card.getBoundingClientRect().top + scrollY - top));
   }
 
-  private fondu(): void {
-    this.tonPrevu = false;
-    const ton = this.tonVoulu;
-    if (ton === this.tonAffiche) return;
-    if (!this.doc.startViewTransition || this.webkit || this.prefs.mouvementReduit() || this.root.dataset['teinte'] === 'off' || this.doc.hidden) {
-      this.appliquerTon(ton);
+  private fade(): void {
+    this.tonePending = false;
+    const tone = this.wantedTone;
+    if (tone === this.shownTone) return;
+    if (!this.doc.startViewTransition || this.webkit || this.prefs.reducedMotion() || this.root.dataset['tint'] === 'off' || this.doc.hidden) {
+      this.applyTone(tone);
       return;
     }
-    this.root.classList.add('tb-ton-fondu');
-    const t = this.doc.startViewTransition(() => this.appliquerTon(ton));
-    this.courante = t;
+    this.root.classList.add('tb-tone-fade');
+    const t = this.doc.startViewTransition(() => this.applyTone(tone));
+    this.current = t;
     t.finished
       .catch(() => undefined)
       .then(() => {
-        this.root.classList.remove('tb-ton-fondu');
-        if (this.courante === t) this.courante = null;
-        if (this.tonPrevu) this.fondu();
+        this.root.classList.remove('tb-tone-fade');
+        if (this.current === t) this.current = null;
+        if (this.tonePending) this.fade();
       });
   }
 
-  private appliquerTon(ton: Ton | null): void {
-    this.tonAffiche = ton;
-    if (ton) this.root.dataset['ton'] = ton;
-    else delete this.root.dataset['ton'];
+  private applyTone(tone: Tone | null): void {
+    this.shownTone = tone;
+    if (tone) this.root.dataset['tone'] = tone;
+    else delete this.root.dataset['tone'];
   }
 }
 
-function feuille(s: ActivatedRouteSnapshot): ActivatedRouteSnapshot {
+function sheet(s: ActivatedRouteSnapshot): ActivatedRouteSnapshot {
   let r = s;
   while (r.firstChild) r = r.firstChild;
   return r;
 }
 
 /** Path of the deepest route ("apercu", "salle/:id"…). */
-function chemin(s: ActivatedRouteSnapshot): string {
-  return feuille(s).routeConfig?.path ?? '';
+function path(s: ActivatedRouteSnapshot): string {
+  return sheet(s).routeConfig?.path ?? '';
 }
 
-function estCarte(depuis: string, vers: string): boolean {
-  return (depuis === 'apercu' && vers === 'salle/:id') || (depuis === 'salle/:id' && vers === 'apercu');
+function isCard(from: string, to: string): boolean {
+  return (from === 'overview' && to === 'room/:id') || (from === 'room/:id' && to === 'overview');
 }
 
-interface Cadre {
+interface Frame {
   x: number;
   y: number;
   l: number;
   h: number;
-  rayon: string;
+  radius: string;
 }
 
 /** Where an element is on the screen, and its corners. */
-function cadre(e: HTMLElement): Cadre {
+function frame(e: HTMLElement): Frame {
   const r = e.getBoundingClientRect();
-  return { x: r.left, y: r.top, l: r.width, h: r.height, rayon: getComputedStyle(e).borderRadius || '0px' };
+  return { x: r.left, y: r.top, l: r.width, h: r.height, radius: getComputedStyle(e).borderRadius || '0px' };
 }
 
 /** Keyframes of a view transition group going from one frame to another. */
-function images(de: Cadre, a: Cadre): Keyframe[] {
+function images(from: Frame, to: Frame): Keyframe[] {
   return [
-    { transform: `translate(${de.x}px, ${de.y}px)`, width: `${de.l}px`, height: `${de.h}px`, borderRadius: de.rayon },
-    { transform: `translate(${a.x}px, ${a.y}px)`, width: `${a.l}px`, height: `${a.h}px`, borderRadius: a.rayon },
+    { transform: `translate(${from.x}px, ${from.y}px)`, width: `${from.l}px`, height: `${from.h}px`, borderRadius: from.radius },
+    { transform: `translate(${to.x}px, ${to.y}px)`, width: `${to.l}px`, height: `${to.h}px`, borderRadius: to.radius },
   ];
 }

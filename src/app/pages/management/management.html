@@ -1,0 +1,345 @@
+<header class="tb-page-head">
+  <div class="tb-page-title">
+    <span class="tb-eyebrow">{{ auth.admin() ? 'Administration' : 'Gestionnaire' }}</span>
+    <h1>Gestion des salles</h1>
+  </div>
+  @if (auth.admin() && tab() === 'access') {
+    <button type="button" class="tb-btn tb-btn-lg tb-fab" (click)="newGroup()"><i class="pi pi-users"></i>Nouveau groupe</button>
+  }
+  @if (auth.admin() && tab() === 'rooms' && !selectionMode()) {
+    <button type="button" class="tb-btn tb-btn-lg tb-fab" (click)="createNew()"><i class="pi pi-plus"></i>Nouvel élément</button>
+  }
+</header>
+
+<!-- ADMIN: the elements, or the users and their groups -->
+@if (auth.admin()) {
+  <div class="tb-segmented tb-mgmt-tabs" role="tablist">
+    <button type="button" role="tab" [attr.aria-selected]="tab() === 'rooms'" [class.tb-seg-on]="tab() === 'rooms'" (click)="openTab('rooms')">
+      <i class="pi pi-building"></i>{{ phone() ? 'Éléments' : 'Salles et bâtiments' }}
+    </button>
+    <button type="button" role="tab" [attr.aria-selected]="tab() === 'access'" [class.tb-seg-on]="tab() === 'access'" (click)="openTab('access')">
+      <i class="pi pi-users"></i>{{ phone() ? 'Accès' : 'Utilisateurs et groupes' }}
+    </button>
+  </div>
+}
+
+@if (tab() === 'rooms') {
+  <p class="tb-lead">
+    {{
+      auth.admin()
+        ? 'Tous les bâtiments, étages, salles et boîtiers sur une page : consignes, noms, emplacements. Coche plusieurs lignes pour agir sur toutes à la fois.'
+        : 'Les consignes de toutes vos salles sur une page. Coche plusieurs lignes pour leur envoyer la même consigne.'
+    }}
+  </p>
+
+  <div class="tb-toolbar">
+    <span class="tb-search">
+      <i class="pi pi-search"></i>
+      <input class="tb-input" type="search" placeholder="Rechercher un élément ou un emplacement…" autocomplete="off" aria-label="Rechercher"
+             [value]="search()" (input)="onSearch($any($event.target).value)" />
+    </span>
+  </div>
+
+  <div class="tb-summary tb-summary-scrolled">
+    <button type="button" class="tb-summary-chip" [class.tb-chip-on]="type() == null && !onlyToHandle()" (click)="filterType(null)">
+      <i class="pi pi-check tb-chip-check"></i>Tout<span class="tb-chip-n">{{ count(null) }}</span>
+    </button>
+    @for (k of types(); track k) {
+      <button type="button" class="tb-summary-chip" [class.tb-chip-on]="type() === k" (click)="filterType(k)">
+        <i class="pi pi-check tb-chip-check"></i>{{ labels[k] }}<span class="tb-chip-n">{{ count(k) }}</span>
+      </button>
+    }
+    <button type="button" class="tb-summary-chip tb-tone-heating" [class.tb-chip-on]="onlyToHandle()" (click)="toggleToHandle()">
+      <i class="pi pi-check tb-chip-check"></i>À traiter<span class="tb-chip-n">{{ toHandleCount() }}</span>
+    </button>
+  </div>
+
+  <p class="tb-muted tb-mgmt-tip">
+    <i class="pi pi-check-square"></i> Coche des lignes pour agir sur plusieurs éléments à la fois : les actions apparaissent en bas de l'écran.
+  </p>
+
+  <!-- Actions on the ticked rows: a bar fixed at the bottom of the screen, each action opens its own small window -->
+  <div class="tb-bar" [class.tb-bar-on]="barVisible()" [attr.aria-hidden]="!barVisible()">
+    <span class="tb-bar-account">{{ selection().size }} sélectionné(s)</span>
+    <div class="tb-bar-actions">
+      <button type="button" class="tb-btn tb-tonal" (click)="dlgSetpoint.set(true)"><i class="pi pi-sliders-h"></i>Consigne</button>
+      @if (auth.admin()) {
+        <button type="button" class="tb-btn tb-flat" (click)="targetId.set(null); dlgMove.set(true)"><i class="pi pi-arrow-right"></i>Déplacer</button>
+        <button type="button" class="tb-btn tb-flat" (click)="openAccess()"><i class="pi pi-key"></i>Accès</button>
+        <button type="button" class="tb-btn tb-flat tb-btn-danger" (click)="deleteSelection()"><i class="pi pi-trash"></i>Supprimer</button>
+      }
+    </div>
+    @if (!phone()) {
+      <button type="button" class="tb-btn tb-icon tb-flat tb-bar-close" title="Tout décocher" aria-label="Tout décocher" (click)="uncheckAll()"><i class="pi pi-times"></i></button>
+    }
+  </div>
+
+  @if (phone()) {
+    <!-- Several rows at once, as « Sélectionner » in native apps (or hold a row) -->
+    <div class="tb-mgmt-selection">
+      <span>
+        @if (selectionMode()) {
+          {{ selection().size ? selection().size + ' sélectionné(s)' : 'Touche les éléments' }}
+        } @else {
+          {{ asTree() || listRows().length === rows().length ? rows().length : listRows().length + ' sur ' + rows().length }} élément(s)
+        }
+      </span>
+      @if (selectionMode()) {
+        <button type="button" class="tb-btn tb-flat" (click)="checkAll(!allChecked())">{{ allChecked() ? 'Aucun' : 'Tout' }}</button>
+      }
+      <button type="button" class="tb-btn tb-flat tb-mgmt-mode" (click)="toggleSelectionMode()">{{ selectionMode() ? 'OK' : 'Sélectionner' }}</button>
+    </div>
+    <ul class="tb-list-mgmt" [class.tb-in-selection]="selectionMode()" [class.tb-mgmt-tree]="asTree()">
+      @for (l of phoneRows(); track l.n.id) {
+        <li [attr.data-flip]="'g' + l.n.id" [style.--tb-depth]="l.depth ?? 0" [class.tb-mgmt-root]="asTree() && l.depth === 0">
+          @if (asTree()) {
+            <!-- Fold / unfold what the element contains -->
+            @if (l.children) {
+              <button type="button" class="tb-mgmt-fold" [attr.aria-expanded]="!folded().has(l.n.id)"
+                      [attr.aria-label]="(folded().has(l.n.id) ? 'Déplier ' : 'Replier ') + l.n.name" (click)="fold(l, $event)">
+                <i class="pi pi-chevron-down"></i>
+              </button>
+            } @else {
+              <span class="tb-mgmt-fold" aria-hidden="true"></span>
+            }
+          }
+          <button
+            type="button"
+            class="tb-mgmt-row tb-tone-{{ l.state.tone }}"
+            [class.tb-row-on]="selection().has(l.n.id)"
+            [attr.aria-pressed]="selectionMode() ? selection().has(l.n.id) : null"
+            (click)="touchRow(l)"
+            (pointerdown)="longPressStart(l, $event)"
+          >
+            @if (selectionMode()) {
+              <span class="tb-mgmt-check" aria-hidden="true"><i class="pi pi-check"></i></span>
+            }
+            <span class="tb-mgmt-icon"><i class="pi" [class]="icons[l.n.kind]"></i></span>
+            <span class="tb-mgmt-text">
+              <strong>{{ l.n.name }}</strong>
+              @if (asTree()) {
+                <!-- In the tree, the place is shown by the indent: what it contains instead -->
+                <span class="tb-muted">{{ labels[l.n.kind] }}@if (l.children) { · {{ l.children }} élément{{ l.children > 1 ? 's' : '' }}@if (folded().has(l.n.id)) { (replié)} }</span>
+              } @else {
+                <span class="tb-muted">{{ labels[l.n.kind] }}@if (l.path) { · {{ l.path }} }</span>
+              }
+              @if (!l.n.attached) {
+                <span class="tb-tag tb-tag-warning">Non rattaché</span>
+              }
+            </span>
+            <span class="tb-mgmt-values">
+              <strong>{{ unit.t(l.n.temperature) }}<small>°</small></strong>
+              @if (!l.device) {
+                <span class="tb-mgmt-target" [title]="l.state.label"><span class="tb-mgmt-point"></span>{{ unit.t(l.n.setpoint?.value) }}°</span>
+              }
+            </span>
+            @if (!selectionMode()) {
+              <i class="pi pi-angle-right tb-list-continuation" aria-hidden="true"></i>
+            }
+          </button>
+        </li>
+      } @empty {
+        <li class="tb-mgmt-empty tb-muted">{{ store.tree() ? 'Aucun élément ne correspond' : 'Chargement…' }}</li>
+      }
+    </ul>
+    @if (listRows().length > phoneLimit()) {
+      <button type="button" class="tb-btn tb-tonal tb-mgmt-more" (click)="phoneLimit.set(phoneLimit() + 50)">
+        Afficher {{ listRows().length - phoneLimit() > 50 ? 50 : listRows().length - phoneLimit() }} de plus
+      </button>
+    }
+  } @else {
+  <div class="tb-table tb-mgmt-table">
+    <table>
+      <thead>
+        <tr>
+          <th class="tb-col-check"><input type="checkbox" class="tb-check" [checked]="allChecked()" (change)="checkAll($any($event.target).checked)" aria-label="Tout cocher" /></th>
+          <th class="tb-col-room">Élément</th>
+          <th class="tb-col-num">Température</th>
+          <th class="tb-col-setpoint">Consigne</th>
+          @if (auth.admin()) {
+            <th class="tb-col-actions">Actions</th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (l of pageRows(); track l.n.id) {
+          <tr class="tb-tone-{{ l.state.tone }}" [class.tb-row-on]="selection().has(l.n.id)" [attr.data-flip]="'g' + l.n.id">
+            <td class="tb-col-check">
+              <input type="checkbox" class="tb-check" [checked]="selection().has(l.n.id)" (change)="check(l.n.id, $any($event.target).checked)" [attr.aria-label]="'Sélectionner ' + l.n.name" />
+            </td>
+            <td class="tb-col-room">
+              <div class="tb-mgmt-name">
+                <span class="tb-section-icon"><i class="pi" [class]="icons[l.n.kind]"></i></span>
+                <span class="tb-mgmt-name-text">
+                  <a [routerLink]="['/app/room', l.n.id]" title="Voir la page"><strong>{{ l.n.name }}</strong></a>
+                  <span class="tb-muted">{{ labels[l.n.kind] }}@if (l.path) { · {{ l.path }} }</span>
+                  @if (!l.n.attached) {
+                    <span class="tb-tag tb-tag-warning">Non rattaché</span>
+                  }
+                </span>
+              </div>
+            </td>
+            <td class="tb-col-num">
+              <strong>{{ unit.t(l.n.temperature) }}</strong>
+              @if (!l.device) {
+                <span class="tb-state tb-state-sm">{{ l.state.label }}</span>
+                @if (l.n.devices > 0) {
+                  <span class="tb-muted tb-mgmt-devices"><i class="pi pi-wifi"></i>{{ l.n.devices }}</span>
+                }
+              }
+            </td>
+            <td class="tb-col-setpoint">
+              @if (!l.device) {
+                <span class="tb-mgmt-setpoint-current">
+                  {{ unit.t(l.n.setpoint?.value) }} {{ unit.symbol() }}
+                  @if (l.n.setpoint?.inherited) {
+                    <span class="tb-muted">héritée de {{ l.n.setpoint?.sourceName }}</span>
+                  }
+                </span>
+                <span class="tb-entry" [title]="'Nouvelle consigne pour ' + l.n.name">
+                  <input inputmode="decimal" placeholder="Nouvelle" autocomplete="off" [attr.aria-label]="'Nouvelle consigne pour ' + l.n.name"
+                         [value]="inputs().get(l.n.id) ?? ''" (input)="enter(l.n.id, $any($event.target).value)" (keydown.enter)="apply(l)" />
+                  <span class="tb-entry-unit">{{ unit.symbol() }}</span>
+                  <button type="button" [title]="'Envoyer cette consigne à ' + l.n.name" [attr.aria-label]="'Envoyer cette consigne à ' + l.n.name" (click)="apply(l)">
+                    <i class="pi" [class.pi-send]="sending() !== l.n.id" [class.pi-spinner]="sending() === l.n.id" [class.pi-spin]="sending() === l.n.id"></i>
+                  </button>
+                </span>
+              } @else {
+                <span class="tb-muted">Suit sa salle</span>
+              }
+            </td>
+            @if (auth.admin()) {
+              <td class="tb-col-actions">
+                <button type="button" class="tb-btn tb-icon tb-flat" [title]="'Renommer ou déplacer ' + l.n.name" (click)="edit(l)"><i class="pi pi-pencil"></i></button>
+                <button type="button" class="tb-btn tb-icon tb-flat tb-btn-danger" [title]="'Supprimer ' + l.n.name" (click)="remove(l)"><i class="pi pi-trash"></i></button>
+              </td>
+            }
+          </tr>
+        } @empty {
+          <tr class="tb-empty-row"><td [attr.colspan]="auth.admin() ? 5 : 4">{{ store.tree() ? 'Aucun élément ne correspond' : 'Chargement…' }}</td></tr>
+        }
+      </tbody>
+    </table>
+    @if (pages() > 1) {
+      <div class="tb-pagination">
+        <button type="button" [disabled]="page() === 0" (click)="page.set(page() - 1)" aria-label="Page précédente"><i class="pi pi-angle-left"></i></button>
+        @for (p of pageNumbers(); track p) {
+          <button type="button" [class.tb-page-on]="p === page()" (click)="page.set(p)">{{ p + 1 }}</button>
+        }
+        <button type="button" [disabled]="page() + 1 >= pages()" (click)="page.set(page() + 1)" aria-label="Page suivante"><i class="pi pi-angle-right"></i></button>
+      </div>
+    }
+  </div>
+  }
+}
+
+@if (auth.admin() && tab() === 'access') {
+  <tb-access />
+}
+
+<!-- Phones: what can be done with one element, from its row -->
+<tb-sheet [(open)]="sheetOpen" [title]="asSheet()?.n?.name ?? ''" nativeMenu [width]="420">
+  @if (asSheet(); as l) {
+    <!-- Android app: this sheet opens as a native menu (TbSheet nativeMenu), with this line under the title -->
+    <span hidden data-menu-subtitle>{{ labels[l.n.kind] }}@if (l.path) { · {{ l.path }} } · {{ unit.t(l.n.temperature) }} {{ unit.symbol() }}@if (!l.device) { · {{ l.state.label }} }</span>
+    <div class="tb-mgmt-sheet-head tb-tone-{{ l.state.tone }}">
+      <span class="tb-mgmt-icon"><i class="pi" [class]="icons[l.n.kind]"></i></span>
+      <div>
+        <span class="tb-muted">{{ labels[l.n.kind] }}@if (l.path) { · {{ l.path }} }</span>
+        <strong>{{ unit.t(l.n.temperature) }} {{ unit.symbol() }}</strong>
+      </div>
+      @if (!l.device) {
+        <span class="tb-state">{{ l.state.label }}</span>
+      }
+    </div>
+    @if (!l.device) {
+      <form class="tb-mgmt-sheet-setpoint" (submit)="sendFromSheet($event, l)" novalidate>
+        <span class="tb-label">
+          Consigne : {{ unit.t(l.n.setpoint?.value) }} {{ unit.symbol() }}
+          @if (l.n.setpoint?.inherited) { <span class="tb-muted">· héritée de {{ l.n.setpoint?.sourceName }}</span> }
+        </span>
+        <tb-stepper [(value)]="sheetSetpoint" />
+        @if (l.n.kind !== 'ROOM') {
+          <div class="tb-switch-row">
+            <tb-switch [(checked)]="force" label="Remplacer aussi les consignes propres des éléments contenus" />
+            <span class="tb-switch-text" (click)="force.set(!force())">Remplacer aussi celles des éléments contenus</span>
+          </div>
+        }
+        <button type="submit" class="tb-btn tb-btn-lg" [disabled]="sending() === l.n.id">
+          <i class="pi" [class.pi-send]="sending() !== l.n.id" [class.pi-spinner]="sending() === l.n.id" [class.pi-spin]="sending() === l.n.id"></i>Envoyer la consigne
+        </button>
+      </form>
+    }
+    <nav class="tb-sheet-list">
+      @if (!l.device) {
+        <!-- Native menu only: opens this sheet itself, with its setpoint form -->
+        <button type="button" class="tb-sheet-item tb-native-only" data-native-web><i class="pi pi-sliders-h"></i>Régler la consigne</button>
+      }
+      <a class="tb-sheet-item" [routerLink]="['/app/room', l.n.id]" (click)="sheetOpen.set(false)"><i class="pi pi-external-link"></i>Voir la page</a>
+      @if (auth.admin()) {
+        <button type="button" class="tb-sheet-item" (click)="fromSheet(l, 'edit')"><i class="pi pi-pencil"></i>Renommer ou déplacer</button>
+        @if (!l.device) {
+          <button type="button" class="tb-sheet-item" (click)="fromSheet(l, 'access')"><i class="pi pi-key"></i>Accès</button>
+        }
+        <button type="button" class="tb-sheet-item tb-sheet-danger" (click)="fromSheet(l, 'delete')"><i class="pi pi-trash"></i>Supprimer</button>
+      }
+    </nav>
+  }
+</tb-sheet>
+
+<!-- Actions of the bottom bar, each in a small window -->
+<tb-sheet [(open)]="dlgSetpoint" title="Consigne pour la sélection" [width]="400">
+  <form (submit)="applySelection($event)" novalidate>
+    <p class="tb-muted">Les bâtiments, étages et salles sélectionnés la reçoivent ; les boîtiers suivent leur salle.</p>
+    <div class="tb-field">
+      <label class="tb-label" for="tb-g-setpoint">Consigne</label>
+      <span class="tb-entry tb-entry-large">
+        <input id="tb-g-setpoint" inputmode="decimal" autocomplete="off" [value]="groupSetpoint()" (input)="groupSetpoint.set($any($event.target).value)" />
+        <span class="tb-entry-unit">{{ unit.symbol() }}</span>
+      </span>
+    </div>
+    <div class="tb-switch-row">
+      <tb-switch [(checked)]="force" label="Remplacer aussi les consignes propres des éléments contenus" />
+      <span class="tb-switch-text" (click)="force.set(!force())">Remplacer aussi les consignes propres des éléments contenus</span>
+    </div>
+    <div class="tb-actions">
+      <button type="button" class="tb-btn tb-flat" (click)="dlgSetpoint.set(false)">Annuler</button>
+      <button type="submit" class="tb-btn"><i class="pi pi-send"></i>Envoyer</button>
+    </div>
+  </form>
+</tb-sheet>
+
+<tb-sheet [(open)]="dlgMove" title="Déplacer la sélection" [width]="440">
+  <p class="tb-muted">Seules les destinations possibles pour tous les éléments sélectionnés sont proposées.</p>
+  <div class="tb-field">
+    <label class="tb-label" for="tb-g-target">Dans</label>
+    <select id="tb-g-target" class="tb-select" (change)="targetId.set($any($event.target).value === '' ? null : +$any($event.target).value)">
+      <option value="" [selected]="targetId() == null">Rien (non rattachés)</option>
+      @for (c of possibleTargets(); track c.n.id) {
+        <option [value]="c.n.id" [selected]="targetId() === c.n.id">{{ label(c) }}</option>
+      }
+    </select>
+  </div>
+  <div class="tb-actions">
+    <button type="button" class="tb-btn tb-flat" (click)="dlgMove.set(false)">Annuler</button>
+    <button type="button" class="tb-btn" (click)="moveSelection()"><i class="pi pi-arrow-right"></i>Déplacer</button>
+  </div>
+</tb-sheet>
+
+<tb-sheet [(open)]="dlgAccess" title="Accès à la sélection" [width]="460">
+  <p class="tb-muted">Les éléments sélectionnés, avec tout ce qu'ils contiennent, pour ces utilisateurs et ces groupes.</p>
+  <div class="tb-field">
+    <span class="tb-label">Utilisateurs</span>
+    <tb-choice-multiple [options]="userOptions()" [(value)]="usersAccess" placeholder="Rechercher un utilisateur…" />
+  </div>
+  <div class="tb-field">
+    <span class="tb-label">Groupes</span>
+    <tb-choice-multiple [options]="groupOptions()" [(value)]="groupAccess" placeholder="Rechercher un groupe…" />
+  </div>
+  <div class="tb-actions">
+    <button type="button" class="tb-btn tb-flat" (click)="changeAccess(false)"><i class="pi pi-lock"></i>Retirer l'accès</button>
+    <button type="button" class="tb-btn" (click)="changeAccess(true)"><i class="pi pi-lock-open"></i>Donner l'accès</button>
+  </div>
+</tb-sheet>
+
+<tb-element-dialog [hasDevices]="auth.seesDevices()" (saved)="afterSave()" />

@@ -5,8 +5,8 @@
 
 .tb-auth-card { border-radius: var(--tb-shape-xxl); padding: 28px 28px 24px; }
 .tb-auth-card .tb-panel-title { font-size: 1.8rem; font-weight: 800; letter-spacing: -.035em; }
-.tb-auth-pied { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 16px; }
-.tb-auth-pied .tb-serveur-btn { margin-right: -14px; padding: 6px 12px; font-size: .9rem; }
+.tb-auth-foot { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 16px; }
+.tb-auth-foot .tb-server-btn { margin-right: -14px; padding: 6px 12px; font-size: .9rem; }
 .tb-auth > .tb-message { margin: 0; }
 @media (max-width: 640px) {
     .tb-public .tb-main { padding: calc(20px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(32px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left)); }
@@ -21,28 +21,28 @@
     .tb-auth-name { font-size: 2.6rem; }
     .tb-auth-tagline { max-width: none; font-size: 1rem; }
     .tb-auth-card > .tb-panel-title { text-align: center; }
-    .tb-auth-pied { flex-direction: column; justify-content: center; text-align: center; }
-    .tb-auth-pied .tb-serveur-btn { margin: 0; }
-    .tb-auth-comptes .tb-panel-title { text-align: left; }
+    .tb-auth-foot { flex-direction: column; justify-content: center; text-align: center; }
+    .tb-auth-foot .tb-server-btn { margin: 0; }
+    .tb-auth-accounts .tb-panel-title { text-align: left; }
 }
 
 /* ============================== Loading placeholders ============================== */
 
-.tb-room-attente { min-height: 260px; }
-.tb-attente-ligne {
+.tb-room-waiting { min-height: 260px; }
+.tb-waiting-row {
     height: 14px;
     margin: 8px 0;
     border-radius: 7px;
     background: color-mix(in srgb, var(--md-on-surface) 10%, transparent);
-    animation: tb-attente-pulse 1.4s ease-in-out infinite;
+    animation: tb-waiting-pulse 1.4s ease-in-out infinite;
 }
-.tb-attente-titre { min-height: 1.1em; width: 50%; border-radius: 12px; background: color-mix(in srgb, var(--md-on-surface) 8%, transparent); animation: tb-attente-pulse 1.4s ease-in-out infinite; }
-@keyframes tb-attente-pulse { 50% { opacity: .45; } }
-.tb-chart-attente, .tb-chart-vide { height: 100%; display: grid; place-items: center; margin: 0; }
+.tb-waiting-title { min-height: 1.1em; width: 50%; border-radius: 12px; background: color-mix(in srgb, var(--md-on-surface) 8%, transparent); animation: tb-waiting-pulse 1.4s ease-in-out infinite; }
+@keyframes tb-waiting-pulse { 50% { opacity: .45; } }
+.tb-chart-waiting, .tb-chart-empty { height: 100%; display: grid; place-items: center; margin: 0; }
 
 /* ============================== Salles: tree (wide screens) ============================== */
 
-.tb-arbre-salles {
+.tb-tree-rooms {
     width: 100%;
     padding: 10px;
     border: 1px solid var(--tb-glass-line);
@@ -51,11 +51,11 @@
     box-shadow: var(--tb-glass-shadow);
     color: var(--md-on-surface);
 }
-.tb-arbre-salles ul { margin: 0; padding: 0; list-style: none; }
-.tb-arbre-salles ul ul { padding-left: 24px; }
-@media (max-width: 840px) { .tb-arbre-salles { display: none; } }
+.tb-tree-rooms ul { margin: 0; padding: 0; list-style: none; }
+.tb-tree-rooms ul ul { padding-left: 24px; }
+@media (max-width: 840px) { .tb-tree-rooms { display: none; } }
 
-.tb-node-ligne {
+.tb-node-row {
     display: flex;
     align-items: center;
     gap: 4px;
@@ -65,11 +65,11 @@
     border-radius: var(--tb-shape-lg);
     transition: background-color var(--tb-fast) linear;
 }
-.tb-node-ligne:has(.tb-tree-toggler:not(.tb-tree-feuille)) { cursor: pointer; }
-.tb-node-ligne:hover { background: var(--md-secondary-container); }
-.tb-node-ligne[draggable="true"] { cursor: grab; }
-.tb-node-ligne.tb-glisse { opacity: .45; }
-.tb-node-ligne.tb-survol {
+.tb-node-row:has(.tb-tree-toggler:not(.tb-tree-sheet)) { cursor: pointer; }
+.tb-node-row:hover { background: var(--md-secondary-container); }
+.tb-node-row[draggable="true"] { cursor: grab; }
+.tb-node-row.tb-slide { opacity: .45; }
+.tb-node-row.tb-hover {
     background: color-mix(in srgb, var(--md-primary) 16%, transparent);
     outline: 2px dashed var(--md-primary);
     outline-offset: -2px;
@@ -89,14 +89,14 @@
 }
 .tb-tree-toggler:hover { background: var(--md-secondary-container); color: var(--md-on-surface); }
 .tb-tree-toggler .pi { font-size: .8rem; transition: transform .45s var(--tb-ease); }
-.tb-tree-toggler.tb-ouvert .pi { transform: rotate(90deg); }
-.tb-tree-feuille { cursor: default; }
-.tb-tree-feuille:hover { background: none; }
+.tb-tree-toggler.tb-open .pi { transform: rotate(90deg); }
+.tb-tree-sheet { cursor: default; }
+.tb-tree-sheet:hover { background: none; }
 /* Children slide open and closed (0fr → 1fr) */
-.tb-tree-enfants { display: grid; grid-template-rows: 1fr; transition: grid-template-rows .45s var(--tb-ease); }
-.tb-tree-enfants > div { min-height: 0; overflow: hidden; }
-.tb-tree-enfants.tb-replie { grid-template-rows: 0fr; }
-.tb-tree-enfants.tb-replie > div { visibility: hidden; transition: visibility 0s .45s; }
+.tb-tree-children { display: grid; grid-template-rows: 1fr; transition: grid-template-rows .45s var(--tb-ease); }
+.tb-tree-children > div { min-height: 0; overflow: hidden; }
+.tb-tree-children.tb-folded { grid-template-rows: 0fr; }
+.tb-tree-children.tb-folded > div { visibility: hidden; transition: visibility 0s .45s; }
 
 .tb-node { display: flex; align-items: center; gap: 12px; width: 100%; min-width: 0; }
 .tb-node-main { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 10px; flex: 1 1 auto; min-width: 0; }
@@ -123,12 +123,12 @@
     opacity: .5;
     transition: opacity var(--tb-fast) linear;
 }
-.tb-node-ligne:hover .tb-node-actions, .tb-node-actions:focus-within { opacity: 1; }
+.tb-node-row:hover .tb-node-actions, .tb-node-actions:focus-within { opacity: 1; }
 .tb-node-actions .tb-btn.tb-icon { width: 38px; min-width: 38px; height: 38px; }
 @media (hover: none) { .tb-node-actions { opacity: 1; } }
 
 /* Top-level drop zone: dropping there detaches the element */
-.tb-arbre-racine {
+.tb-tree-root {
     display: none;
     align-items: center;
     justify-content: center;
@@ -141,8 +141,8 @@
     font-size: .9rem;
     font-weight: 600;
 }
-.tb-arbre-racine.tb-visible { display: flex; }
-.tb-arbre-racine.tb-survol { border-color: var(--md-primary); background: color-mix(in srgb, var(--md-primary) 12%, transparent); color: var(--md-primary); }
+.tb-tree-root.tb-visible { display: flex; }
+.tb-tree-root.tb-hover { border-color: var(--md-primary); background: color-mix(in srgb, var(--md-primary) 12%, transparent); color: var(--md-primary); }
 
 /* Phone list: the folder head and the items are buttons here */
 button.tb-drill-crumb, button.tb-drill-main { border: 0; background: none; font: inherit; text-align: left; cursor: pointer; }
@@ -186,23 +186,23 @@ button.tb-drill-crumb, button.tb-drill-main { border: 0; background: none; font:
     border: 1px solid var(--tb-glass-line);
     background: var(--tb-glass-solid);
     color: var(--md-error);
-    box-shadow: var(--tb-elev-1);
+    box-shadow: var(--tb-raised-1);
 }
 .tb-crumb.tb-crumb-off { cursor: default; }
 .tb-hero-reading .tb-temp-hero { margin-top: auto; }
 .tb-switch-row .tb-switch-text { font-weight: 650; }
-.tb-consigne-options .tb-switch-row { flex: none; }
+.tb-setpoint-options .tb-switch-row { flex: none; }
 
 /* ============================== Gestion ============================== */
 
-.tb-gest-onglets > button { gap: 8px; }
-.tb-select.tb-gest-role { width: auto; min-width: 170px; min-height: 40px; padding-top: 6px; padding-bottom: 6px; }
-.tb-gest-table .tb-col-actions { white-space: nowrap; text-align: right; }
-.tb-gest-table tr.tb-row-on td { background: color-mix(in srgb, var(--md-primary) 8%, transparent); }
+.tb-mgmt-tabs > button { gap: 8px; }
+.tb-select.tb-mgmt-role { width: auto; min-width: 170px; min-height: 40px; padding-top: 6px; padding-bottom: 6px; }
+.tb-mgmt-table .tb-col-actions { white-space: nowrap; text-align: right; }
+.tb-mgmt-table tr.tb-row-on td { background: color-mix(in srgb, var(--md-primary) 8%, transparent); }
 .tb-dialog .tb-switch-row { margin: 6px 0 4px; }
 
 /* Several choices with a search (users of a group…) */
-.tb-choix-multiple {
+.tb-choice-multiple {
     display: flex;
     flex-direction: column;
     gap: 6px;
@@ -211,26 +211,26 @@ button.tb-drill-crumb, button.tb-drill-main { border: 0; background: none; font:
     border-radius: var(--tb-shape-lg);
     background: var(--tb-field);
 }
-.tb-choix-recherche { flex: none; }
-.tb-choix-recherche > .tb-input { height: 42px; min-height: 42px; border-radius: var(--tb-shape-md); padding-left: 42px; box-shadow: none; }
-.tb-choix-recherche > .pi { left: 14px; }
-.tb-choix-liste { max-height: 200px; margin: 0; padding: 0 4px; overflow-y: auto; list-style: none; overscroll-behavior: contain; }
-.tb-choix-liste .tb-choix { min-height: 40px; padding: 4px 6px; border-radius: var(--tb-shape-sm); font-weight: 600; }
-.tb-choix-liste .tb-choix:hover { background: var(--md-secondary-container); }
-.tb-choix-vide { padding: 8px 6px; }
-.tb-choix-compte { padding: 0 6px; font-size: .8rem; }
+.tb-choice-search { flex: none; }
+.tb-choice-search > .tb-input { height: 42px; min-height: 42px; border-radius: var(--tb-shape-md); padding-left: 42px; box-shadow: none; }
+.tb-choice-search > .pi { left: 14px; }
+.tb-choice-list { max-height: 200px; margin: 0; padding: 0 4px; overflow-y: auto; list-style: none; overscroll-behavior: contain; }
+.tb-choice-list .tb-choice { min-height: 40px; padding: 4px 6px; border-radius: var(--tb-shape-sm); font-weight: 600; }
+.tb-choice-list .tb-choice:hover { background: var(--md-secondary-container); }
+.tb-choice-empty { padding: 8px 6px; }
+.tb-choice-account { padding: 0 6px; font-size: .8rem; }
 
 /* ============================== Updates ============================== */
 
-.tb-maj-options .tb-choix { align-items: flex-start; font-weight: 600; }
-.tb-maj-options .tb-check { margin-top: 2px; }
-.tb-maj-etat { margin-left: auto; }
+.tb-update-options .tb-choice { align-items: flex-start; font-weight: 600; }
+.tb-update-options .tb-check { margin-top: 2px; }
+.tb-update-state { margin-left: auto; }
 
-/* ============================== Préférences ============================== */
+/* ============================== Preferences ============================== */
 
 .tb-pref .tb-pref-text .pi { font-size: .85rem; }
-.tb-panel .tb-pref-portee { margin: 14px 0 0; font-size: .88rem; }
-.tb-pref-clavier .tb-raccourcis { margin-top: 12px; }
+.tb-panel .tb-pref-scope { margin: 14px 0 0; font-size: .88rem; }
+.tb-pref-keyboard .tb-shortcuts { margin-top: 12px; }
 
 /* ============================== Shell bits ============================== */
 
@@ -238,18 +238,18 @@ button.tb-drill-crumb, button.tb-drill-main { border: 0; background: none; font:
 .tb-public .tb-theme-corner { z-index: 70; }
 
 /* Installed app (PWA / native): no text selection on the chrome, as in native apps */
-.tb-natif .tb-rail, .tb-natif .tb-topbar, :root[data-plateforme="ios"] .tb-rail, :root[data-plateforme="android"] .tb-rail { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.tb-native .tb-rail, .tb-native .tb-topbar, :root[data-platform="ios"] .tb-rail, :root[data-platform="android"] .tb-rail { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 
 /* Phones: the two tabs of the Gestion page share the width, on two lines if needed */
 @media (max-width: 640px) {
-    .tb-segmented.tb-gest-onglets > button { white-space: normal; line-height: 1.2; text-align: center; }
+    .tb-segmented.tb-mgmt-tabs > button { white-space: normal; line-height: 1.2; text-align: center; }
 }
 
 /* ============================== Saved accounts (ui/comptes.ts) ============================== */
 
-.tb-comptes { display: flex; flex-direction: column; gap: 2px; margin: 0 0 6px; padding: 0; list-style: none; }
-.tb-comptes > li { display: flex; align-items: center; gap: 4px; }
-.tb-compte {
+.tb-accounts { display: flex; flex-direction: column; gap: 2px; margin: 0 0 6px; padding: 0; list-style: none; }
+.tb-accounts > li { display: flex; align-items: center; gap: 4px; }
+.tb-account {
     display: flex;
     flex: 1 1 auto;
     align-items: center;
@@ -267,13 +267,13 @@ button.tb-drill-crumb, button.tb-drill-main { border: 0; background: none; font:
     -webkit-tap-highlight-color: transparent;
     transition: background-color .2s ease;
 }
-.tb-compte:hover, .tb-compte:active { background: color-mix(in srgb, var(--md-on-surface) 6%, transparent); }
-.tb-compte.tb-compte-actif { background: var(--md-secondary-container); color: var(--md-on-secondary-container); cursor: default; }
-.tb-compte .tb-avatar { flex: none; width: 40px; height: 40px; font-size: 1rem; }
-.tb-compte-texte { display: flex; flex: 1 1 auto; flex-direction: column; min-width: 0; }
-.tb-compte-texte strong { overflow: hidden; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.tb-account:hover, .tb-account:active { background: color-mix(in srgb, var(--md-on-surface) 6%, transparent); }
+.tb-account.tb-account-active { background: var(--md-secondary-container); color: var(--md-on-secondary-container); cursor: default; }
+.tb-account .tb-avatar { flex: none; width: 40px; height: 40px; font-size: 1rem; }
+.tb-account-text { display: flex; flex: 1 1 auto; flex-direction: column; min-width: 0; }
+.tb-account-text strong { overflow: hidden; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
 /* The server, under the name: what tells « home » from « work » */
-.tb-compte-adresse {
+.tb-account-address {
     display: flex;
     align-items: center;
     gap: 6px;
@@ -283,18 +283,18 @@ button.tb-drill-crumb, button.tb-drill-main { border: 0; background: none; font:
     text-overflow: ellipsis;
     white-space: nowrap;
 }
-.tb-compte-adresse .pi { flex: none; font-size: .75rem; opacity: .8; }
-.tb-compte-coche { flex: none; color: var(--md-primary); font-size: 1.1rem; }
-.tb-compte-oublier { flex: none; color: var(--md-on-surface-variant); }
-.tb-compte-ajout { width: 100%; margin-top: 4px; border-top: 1px solid var(--md-outline-variant); border-radius: 0 0 var(--tb-shape-md) var(--tb-shape-md); }
+.tb-account-address .pi { flex: none; font-size: .75rem; opacity: .8; }
+.tb-account-check { flex: none; color: var(--md-primary); font-size: 1.1rem; }
+.tb-account-forget { flex: none; color: var(--md-on-surface-variant); }
+.tb-account-adding { width: 100%; margin-top: 4px; border-top: 1px solid var(--md-outline-variant); border-radius: 0 0 var(--tb-shape-md) var(--tb-shape-md); }
 
 /* Login page: the saved accounts, above the form */
-.tb-auth-comptes { padding: 6px; }
-.tb-auth-comptes .tb-panel-title { margin: 10px 12px 6px; font-size: 1rem; font-weight: 750; color: var(--md-on-surface-variant); }
-.tb-auth-compte-choisi { display: flex; align-items: center; gap: 12px; margin: 0 0 18px; padding: 10px 12px; border-radius: var(--tb-shape-lg); background: var(--md-secondary-container); color: var(--md-on-secondary-container); }
-.tb-auth-compte-choisi .tb-avatar { flex: none; width: 40px; height: 40px; font-size: 1rem; }
-.tb-auth-compte-choisi .tb-compte-adresse { color: inherit; opacity: .8; }
+.tb-auth-accounts { padding: 6px; }
+.tb-auth-accounts .tb-panel-title { margin: 10px 12px 6px; font-size: 1rem; font-weight: 750; color: var(--md-on-surface-variant); }
+.tb-auth-account-chosen { display: flex; align-items: center; gap: 12px; margin: 0 0 18px; padding: 10px 12px; border-radius: var(--tb-shape-lg); background: var(--md-secondary-container); color: var(--md-on-secondary-container); }
+.tb-auth-account-chosen .tb-avatar { flex: none; width: 40px; height: 40px; font-size: 1rem; }
+.tb-auth-account-chosen .tb-account-address { color: inherit; opacity: .8; }
 /* Registration: the server the account is created on */
-.tb-auth-serveur { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; margin: -4px 0 16px; color: var(--md-on-surface-variant); font-size: .92rem; }
-.tb-auth-serveur strong { color: var(--md-on-surface); font-weight: 700; overflow-wrap: anywhere; }
-.tb-auth-serveur .tb-serveur-btn { padding: 6px 12px; margin-right: -12px; font-size: .9rem; }
+.tb-auth-server { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; margin: -4px 0 16px; color: var(--md-on-surface-variant); font-size: .92rem; }
+.tb-auth-server strong { color: var(--md-on-surface); font-weight: 700; overflow-wrap: anywhere; }
+.tb-auth-server .tb-server-btn { padding: 6px 12px; margin-right: -12px; font-size: .9rem; }

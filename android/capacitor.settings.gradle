@@ -11,5 +11,5 @@ project(':capacitor-haptics').projectDir = new File('../node_modules/@capacitor/
 include ':capacitor-status-bar'
 project(':capacitor-status-bar').projectDir = new File('../node_modules/@capacitor/status-bar/android')
 
-include ':thermobox-natif'
-project(':thermobox-natif').projectDir = new File('../plugins/thermobox-natif/android')
+include ':thermobox-native'
+project(':thermobox-native').projectDir = new File('../plugins/thermobox-native/android')

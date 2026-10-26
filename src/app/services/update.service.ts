@@ -2,41 +2,41 @@ import { HttpClient, HttpContext } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
-import { ServeurService } from '../core/api.config';
+import { ServerService } from '../core/api.config';
 import { DISCRETE } from '../core/http';
-import { EtatMisesAJour, Installation, Preparation } from '../models/models';
+import { UpdatesState, Installation, Preparation } from '../models/models';
 
 /** Client Angular de UpdateResource — /api/updates : versions du serveur REST. */
 @Injectable({ providedIn: 'root' })
 export class UpdateService {
   private readonly http = inject(HttpClient);
-  private readonly serveur = inject(ServeurService);
-  private url(chemin = ''): string {
-    return this.serveur.url(`/updates${chemin}`);
+  private readonly server = inject(ServerService);
+  private url(path = ''): string {
+    return this.server.url(`/updates${path}`);
   }
 
-  /** Tout utilisateur connecté : version installée, versions disponibles. */
-  etat(discret = false): Observable<EtatMisesAJour> {
-    return this.http.get<EtatMisesAJour>(this.url(), { context: new HttpContext().set(DISCRETE, discret) });
+  /** Any logged-in user: installed version, available versions. */
+  state(quiet = false): Observable<UpdatesState> {
+    return this.http.get<UpdatesState>(this.url(), { context: new HttpContext().set(DISCRETE, quiet) });
   }
 
-  /** ADMIN — vérifie sur GitHub maintenant. */
-  verifier(): Observable<EtatMisesAJour> {
-    return this.http.post<EtatMisesAJour>(this.url('/check'), null);
+  /** ADMIN — checks GitHub now. */
+  check(): Observable<UpdatesState> {
+    return this.http.post<UpdatesState>(this.url('/check'), null);
   }
 
-  /** ADMIN — déroulement de la dernière installation (null : aucune). */
+  /** ADMIN — progress of the last installation (null: none). */
   installation(): Observable<Installation | null> {
     return this.http.get<Installation | null>(this.url('/installation'), { context: new HttpContext().set(DISCRETE, true) });
   }
 
-  /** ADMIN — contrôles, risques et sauvegarde avant d'installer [version]. */
-  preparer(version: string): Observable<Preparation> {
+  /** ADMIN — checks, risks and backup before installing [version]. */
+  prepare(version: string): Observable<Preparation> {
     return this.http.get<Preparation>(this.url(`/${encodeURIComponent(version)}`));
   }
 
-  /** ADMIN — lance l'installation ; le serveur redémarre ensuite sur la nouvelle version. */
-  installer(version: string, backupDatabase: boolean, acceptRisks: boolean): Observable<Installation> {
+  /** ADMIN — starts the installation; the server then restarts on the new version. */
+  install(version: string, backupDatabase: boolean, acceptRisks: boolean): Observable<Installation> {
     return this.http.post<Installation>(this.url(`/${encodeURIComponent(version)}/install`), { backupDatabase, acceptRisks });
   }
 }

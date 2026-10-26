@@ -93,7 +93,7 @@ temperature('consigne', 21.5, maintenant - 40 * JOUR, batB.id);
 temperature('consigne', 18, maintenant - 40 * JOUR, serveurs.id);
 temperature('consigne', 22.5, maintenant - 3 * JOUR, s201.id);
 
-// 30 days of measures per box: a daily cycle around its own level, drawn towards the consigne
+// 30 days of measures per box: a daily cycle around its own level, drawn towards the setpoint
 const debutHistorique = Math.floor((maintenant - 31 * JOUR) / PAS_MESURES) * PAS_MESURES;
 for (const [b, niveau] of boitiers) {
   const phase = Math.random() * Math.PI * 2;
@@ -403,7 +403,7 @@ route('DELETE', '/api/groups/{id}', 'ADMIN', ({ p }) => {
   return vide();
 });
 
-// ---- salles (without kind) and photos
+// ---- rooms (without kind) and photos
 route('GET', '/api/salles', 'auth', ({ perim }) => ok(elements.filter((e) => peutVoir(perim, e)).map((e) => ({ id: e.id, name: e.name }))));
 route('DELETE', '/api/salles/{id}', 'ADMIN', ({ p }) => {
   const e = elementParId(+p.id);

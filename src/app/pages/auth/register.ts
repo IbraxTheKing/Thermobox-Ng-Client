@@ -2,14 +2,14 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
-import { ServeurService, adresseLisible, messageErreur, versBase } from '../../core/api.config';
-import { PlateformeService } from '../../core/plateforme';
+import { ServerService, readableAddress, errorMessage, toBase } from '../../core/api.config';
+import { PlatformService } from '../../core/platform';
 import { PreferencesService } from '../../core/preferences';
 import { UserService } from '../../services/user.service';
-import { TbPassword } from '../../ui/controles';
+import { TbPassword } from '../../ui/controls';
 
 /** Bytes of a password in UTF-8: BCrypt only uses the first 72 (accented characters count double). */
-export function octets(s: string): number {
+export function bytes(s: string): number {
   return new TextEncoder().encode(s).length;
 }
 
@@ -38,60 +38,60 @@ export class RegisterPage {
   private readonly users = inject(UserService);
   private readonly router = inject(Router);
   protected readonly prefs = inject(PreferencesService);
-  protected readonly serveur = inject(ServeurService);
-  protected readonly plateforme = inject(PlateformeService);
+  protected readonly server = inject(ServerService);
+  protected readonly platform = inject(PlatformService);
 
   protected readonly username = signal('');
   protected readonly password = signal('');
   protected readonly confirm = signal('');
-  protected readonly envoye = signal(false);
-  protected readonly enCours = signal(false);
-  protected readonly erreur = signal<string | null>(null);
-  protected readonly adresse = signal(this.serveur.saisie() ? adresseLisible(this.serveur.base()) : '');
-  protected readonly changerServeur = signal(false);
-  protected readonly champServeur = computed(() => this.serveur.inconnu() || this.changerServeur());
+  protected readonly sent = signal(false);
+  protected readonly inProgress = signal(false);
+  protected readonly error = signal<string | null>(null);
+  protected readonly address = signal(this.server.input() ? readableAddress(this.server.base()) : '');
+  protected readonly changeServer = signal(false);
+  protected readonly serverField = computed(() => this.server.unknown() || this.changeServer());
 
-  protected readonly erreurNom = computed(() => {
+  protected readonly nameError = computed(() => {
     const n = this.username().trim();
     if (!n) return "Nom d'utilisateur obligatoire";
     if (n.length < 3 || n.length > 50) return 'Entre 3 et 50 caractères';
     if (/\s/.test(n)) return "Le nom d'utilisateur ne peut pas contenir d'espace";
     return null;
   });
-  protected readonly erreurMdp = computed(() => {
+  protected readonly passwordError = computed(() => {
     const p = this.password();
     if (!p) return 'Mot de passe obligatoire';
     if (p.length < 8) return 'Au moins 8 caractères';
-    if (octets(p) > 72) return 'Trop long (72 octets au plus, les lettres accentuées comptent double)';
+    if (bytes(p) > 72) return 'Trop long (72 octets au plus, les lettres accentuées comptent double)';
     return null;
   });
-  protected readonly erreurConfirm = computed(() => {
+  protected readonly confirmError = computed(() => {
     if (!this.confirm()) return 'Confirmation obligatoire';
     return this.confirm() !== this.password() ? 'Les mots de passe ne correspondent pas' : null;
   });
   protected readonly force = computed(() => force(this.password()));
 
-  protected async creer(e: Event): Promise<void> {
+  protected async create(e: Event): Promise<void> {
     e.preventDefault();
-    this.envoye.set(true);
-    this.erreur.set(null);
-    const base = this.champServeur() ? (versBase(this.adresse()) ?? this.serveur.defaut) : this.serveur.base();
+    this.sent.set(true);
+    this.error.set(null);
+    const base = this.serverField() ? (toBase(this.address()) ?? this.server.defaultBase) : this.server.base();
     if (!base) {
-      this.erreur.set("Indique l'adresse du serveur ThermoBox");
+      this.error.set("Indique l'adresse du serveur ThermoBox");
       return;
     }
-    if (this.erreurNom() || this.erreurMdp() || this.erreurConfirm()) return;
-    this.enCours.set(true);
+    if (this.nameError() || this.passwordError() || this.confirmError()) return;
+    this.inProgress.set(true);
     try {
       const username = this.username().trim();
       await firstValueFrom(this.users.add({ username, password: this.password() }, base));
       // The login page, ready for the new account: its server and its name
-      await this.router.navigate(['/login'], { queryParams: { inscrit: 'true', nom: username, serveur: base } });
+      await this.router.navigate(['/login'], { queryParams: { registered: 'true', name: username, server: base } });
     } catch (err) {
-      const m = messageErreur(err, 'Inscription impossible');
-      this.erreur.set(m === 'Username already taken' ? "Ce nom d'utilisateur est déjà pris" : m);
+      const m = errorMessage(err, 'Inscription impossible');
+      this.error.set(m === 'Username already taken' ? "Ce nom d'utilisateur est déjà pris" : m);
     } finally {
-      this.enCours.set(false);
+      this.inProgress.set(false);
     }
   }
 

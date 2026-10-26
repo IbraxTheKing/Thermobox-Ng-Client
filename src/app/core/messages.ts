@@ -1,13 +1,13 @@
 import { Injectable, signal } from '@angular/core';
 
-import { natifMessages } from './android-natif';
+import { nativeMessages } from './android-native';
 
-export type Gravite = 'info' | 'warn' | 'error';
+export type Severity = 'info' | 'warn' | 'error';
 
 export interface Toast {
   id: number;
-  gravite: Gravite;
-  titre: string;
+  severity: Severity;
+  title: string;
   detail?: string | null;
 }
 
@@ -15,63 +15,63 @@ export interface Toast {
 @Injectable({ providedIn: 'root' })
 export class ToastService {
   readonly toasts = signal<Toast[]>([]);
-  private suivant = 1;
+  private next = 1;
 
-  info(titre: string, detail?: string | null): void {
-    this.ajouter('info', titre, detail);
+  info(title: string, detail?: string | null): void {
+    this.add('info', title, detail);
   }
 
-  warn(titre: string, detail?: string | null): void {
-    this.ajouter('warn', titre, detail);
+  warn(title: string, detail?: string | null): void {
+    this.add('warn', title, detail);
   }
 
-  error(titre: string, detail?: string | null): void {
-    this.ajouter('error', titre, detail, 7000);
+  error(title: string, detail?: string | null): void {
+    this.add('error', title, detail, 7000);
   }
 
-  fermer(id: number): void {
+  close(id: number): void {
     this.toasts.update((l) => l.filter((t) => t.id !== id));
   }
 
-  private ajouter(gravite: Gravite, titre: string, detail?: string | null, duree = 4500): void {
+  private add(severity: Severity, title: string, detail?: string | null, duration = 4500): void {
     // Android app: a Material snackbar, above the navigation bar
-    if (natifMessages) {
-      natifMessages.snackbar(detail ? `${titre} — ${detail}` : titre, gravite === 'error' || !!detail);
+    if (nativeMessages) {
+      nativeMessages.snackbar(detail ? `${title} — ${detail}` : title, severity === 'error' || !!detail);
       return;
     }
-    const id = this.suivant++;
+    const id = this.next++;
     // At most three at once: the oldest goes
-    this.toasts.update((l) => [...l.slice(-2), { id, gravite, titre, detail }]);
-    setTimeout(() => this.fermer(id), duree + (detail ? 1500 : 0));
+    this.toasts.update((l) => [...l.slice(-2), { id, severity, title, detail }]);
+    setTimeout(() => this.close(id), duration + (detail ? 1500 : 0));
   }
 }
 
 export interface Confirmation {
-  titre: string;
+  title: string;
   message: string;
   /** Label of the confirming button. */
-  confirmer?: string;
+  confirm?: string;
   danger?: boolean;
-  resoudre: (ok: boolean) => void;
+  resolve: (ok: boolean) => void;
 }
 
 /** "Are you sure?" before deleting (p:confirm). */
 @Injectable({ providedIn: 'root' })
 export class ConfirmService {
-  readonly courante = signal<Confirmation | null>(null);
+  readonly current = signal<Confirmation | null>(null);
 
-  demander(titre: string, message: string, options: { confirmer?: string; danger?: boolean } = {}): Promise<boolean> {
+  ask(title: string, message: string, options: { confirm?: string; danger?: boolean } = {}): Promise<boolean> {
     // Android app: a Material dialog
-    if (natifMessages) return natifMessages.confirmer(titre, message, options.confirmer ?? 'Confirmer', options.danger ?? true);
-    this.courante()?.resoudre(false);
-    return new Promise((resoudre) => {
-      this.courante.set({ titre, message, confirmer: options.confirmer ?? 'Confirmer', danger: options.danger ?? true, resoudre });
+    if (nativeMessages) return nativeMessages.confirm(title, message, options.confirm ?? 'Confirmer', options.danger ?? true);
+    this.current()?.resolve(false);
+    return new Promise((resolve) => {
+      this.current.set({ title, message, confirm: options.confirm ?? 'Confirmer', danger: options.danger ?? true, resolve });
     });
   }
 
-  repondre(ok: boolean): void {
-    const c = this.courante();
-    this.courante.set(null);
-    c?.resoudre(ok);
+  answer(ok: boolean): void {
+    const c = this.current();
+    this.current.set(null);
+    c?.resolve(ok);
   }
 }

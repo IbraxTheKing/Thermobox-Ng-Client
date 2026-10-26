@@ -156,14 +156,14 @@ source. Ce qui est régénéré (client copié, `build/`, `local.properties`…)
 
 Dans l'application Android, la barre de navigation du bas, le bouton d'action principal des pages, les
 notifications et les confirmations sont des **composants Material 3 natifs** (plugin local
-`plugins/thermobox-natif` : NavigationBar, ExtendedFloatingActionButton, Snackbar, MaterialAlertDialog)
+`plugins/thermobox-native` : NavigationBar, ExtendedFloatingActionButton, Snackbar, MaterialAlertDialog)
 posés par-dessus la page, aux couleurs du thème ThermoBox (clair / sombre, teinte de l'état). Les menus
 d'actions (Salles, Gestion) s'ouvrent en feuille Material native. Le retour d'Android ferme ce qui est
 ouvert, puis revient en arrière, puis met l'application en arrière-plan ; avec le geste depuis le bord
 (retour prédictif, Android 14+), la page rétrécit sous le doigt avant de revenir, et une salle se
 referme dans sa carte de l'aperçu. Ailleurs (web, PWA, iOS), la page dessine tout elle-même.
 
-Si `android/capacitor.settings.gradle` ne cite pas `thermobox-natif`, le plugin n'est pas dans
+Si `android/capacitor.settings.gradle` ne cite pas `thermobox-native`, le plugin n'est pas dans
 l'application (`npm install` oublié avant `npx cap sync`) : elle garde alors la navigation de la page.
 
 Première fois (Android Studio et un JDK 21) :
@@ -173,7 +173,7 @@ npm install                      # installe aussi le plugin local (dépendance �
 npm run build
 npx cap add android              # crée android/
 node scripts/android.mjs preparer   # version et signature lues dans les propriétés Gradle
-npx cap sync android             # copie le client, inscrit les plugins (dont thermobox-natif)
+npx cap sync android             # copie le client, inscrit les plugins (dont thermobox-native)
 git add android && git commit -m "Projet Android"
 ```
 
@@ -212,7 +212,7 @@ l'application installée est indiquée à part dans **À propos**.
 
 ```
 scripts/          construire.mjs (build avec la version), version.mjs, android.mjs (projet Android)
-plugins/          thermobox-natif : composants Material 3 natifs de l'application Android
+plugins/          thermobox-native : composants Material 3 natifs de l'application Android
 src/app/core      session, HTTP, préférences, plateforme, transitions et animations, versions, unités…
 src/app/services  accès à l'API REST
 src/app/ui        feuilles, notifications, interrupteurs, graphique, arbre d'accès…

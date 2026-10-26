@@ -86,8 +86,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .tb-btn.tb-full { width: 100%; min-height: 52px; margin-top: 8px; }
 
 /* Busy: the icon turns */
-.tb-btn.tb-busy .pi { animation: tb-tourne .8s linear infinite; }
-@keyframes tb-tourne { to { transform: rotate(360deg); } }
+.tb-btn.tb-busy .pi { animation: tb-turn .8s linear infinite; }
+@keyframes tb-turn { to { transform: rotate(360deg); } }
 
 /* Text button (Exporter CSV…) */
 .tb-text-btn {
@@ -106,23 +106,23 @@ button, input, select, textarea { font: inherit; color: inherit; }
     right: 18px;
     border: 1px solid var(--tb-glass-line);
     background: var(--tb-glass-solid);
-    box-shadow: var(--tb-elev-1);
+    box-shadow: var(--tb-raised-1);
 }
 .tb-head-actions .tb-fav-on .pi { animation: tb-pop .45s var(--tb-spring); }
 .tb-btn.tb-back { align-self: center; margin-left: -8px; }
 
-/* Ripple (Android and touch: see PlateformeService) */
-.tb-ripple-cadre { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; pointer-events: none; z-index: 0; }
-.tb-ripple-onde {
+/* Ripple (Android and touch: see PlatformService) */
+.tb-ripple-frame { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; pointer-events: none; z-index: 0; }
+.tb-ripple-wave {
     position: absolute;
     border-radius: 50%;
     background: currentColor;
     opacity: .16;
     transform: scale(0);
     pointer-events: none;
-    animation: tb-onde .55s cubic-bezier(.2, .8, .2, 1) forwards;
+    animation: tb-wave .55s cubic-bezier(.2, .8, .2, 1) forwards;
 }
-@keyframes tb-onde { to { transform: scale(1); opacity: 0; } }
+@keyframes tb-wave { to { transform: scale(1); opacity: 0; } }
 
 /* ============================== Fields ============================== */
 
@@ -186,8 +186,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 /* Strength of a new password */
 .tb-force { display: flex; align-items: center; gap: 10px; font-size: .82rem; color: var(--md-on-surface-variant); }
-.tb-force-barre { flex: 1 1 auto; height: 6px; border-radius: 3px; background: var(--md-outline-variant); overflow: hidden; }
-.tb-force-barre > span { display: block; height: 100%; border-radius: inherit; transition: width .3s var(--tb-ease), background-color .3s; }
+.tb-force-bar { flex: 1 1 auto; height: 6px; border-radius: 3px; background: var(--md-outline-variant); overflow: hidden; }
+.tb-force-bar > span { display: block; height: 100%; border-radius: inherit; transition: width .3s var(--tb-ease), background-color .3s; }
 
 /* Search with its icon */
 .tb-search { position: relative; flex: 1 1 320px; display: block; }
@@ -207,8 +207,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 /* Checkbox and radio: native, in the theme colour */
 .tb-check { width: 20px; height: 20px; margin: 0; flex: none; accent-color: var(--md-primary); cursor: pointer; }
-.tb-choix { display: flex; align-items: center; gap: 10px; padding: 6px 0; font-weight: 600; cursor: pointer; }
-.tb-choix input { margin: 0; accent-color: var(--md-primary); width: 18px; height: 18px; }
+.tb-choice { display: flex; align-items: center; gap: 10px; padding: 6px 0; font-weight: 600; cursor: pointer; }
+.tb-choice input { margin: 0; accent-color: var(--md-primary); width: 18px; height: 18px; }
 
 /* Consigne stepper: − 20,5 °C + */
 .tb-stepper {
@@ -234,7 +234,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
     font-variant-numeric: tabular-nums;
 }
 .tb-stepper input:focus { outline: none; }
-.tb-stepper-unite { margin-left: -4px; padding-right: 6px; color: var(--md-on-surface-variant); font-weight: 600; }
+.tb-stepper-unit { margin-left: -4px; padding-right: 6px; color: var(--md-on-surface-variant); font-weight: 600; }
 .tb-stepper button {
     display: grid;
     place-items: center;
@@ -244,7 +244,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
     border-radius: var(--tb-shape-md);
     background: var(--tb-glass-solid);
     color: var(--md-primary);
-    box-shadow: var(--tb-elev-1);
+    box-shadow: var(--tb-raised-1);
     cursor: pointer;
     transition: background-color var(--tb-fast) linear, color var(--tb-fast) linear, transform var(--tb-fast) var(--tb-ease);
 }
@@ -252,19 +252,19 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .tb-stepper button:active { transform: scale(.94); }
 
 /* A value with its unit and a send button, joined (Gestion page) */
-.tb-saisie input {
+.tb-entry input {
     width: 5.5em; height: 100%; margin: 0; padding: 0 4px 0 12px;
     border: 0; background: transparent; font: inherit; font-variant-numeric: tabular-nums; text-align: right; color: var(--md-on-surface);
 }
-.tb-saisie input:focus { outline: none; }
-.tb-saisie > button {
+.tb-entry input:focus { outline: none; }
+.tb-entry > button {
     display: grid; place-items: center; width: 40px; min-width: 40px; margin: 0; padding: 0;
     border: 0; border-left: 1px solid var(--md-outline-variant); border-radius: 0;
     background: color-mix(in srgb, var(--md-primary) 10%, transparent); color: var(--md-primary); cursor: pointer;
 }
-.tb-saisie > button:hover { background: var(--md-primary); color: var(--md-on-primary); }
-.tb-saisie.tb-saisie-grande input { width: 6em; }
-.tb-saisie.tb-saisie-grande > button { width: 48px; min-width: 48px; }
+.tb-entry > button:hover { background: var(--md-primary); color: var(--md-on-primary); }
+.tb-entry.tb-entry-large input { width: 6em; }
+.tb-entry.tb-entry-large > button { width: 48px; min-width: 48px; }
 
 /* ============================== Segmented control ============================== */
 
@@ -291,13 +291,13 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .tb-segmented > button.tb-seg-on {
     background: var(--tb-glass-solid);
     color: var(--md-primary);
-    box-shadow: var(--tb-elev-1);
+    box-shadow: var(--tb-raised-1);
     font-weight: 700;
 }
 @media (max-width: 640px) {
     .tb-segmented > button { flex: 1 1 0; padding-inline: 10px; }
-    .tb-segmented.tb-unite { width: auto; }
-    .tb-segmented.tb-unite > button { flex: none; }
+    .tb-segmented.tb-unit { width: auto; }
+    .tb-segmented.tb-unit > button { flex: none; }
 }
 
 /* ============================== Switch ============================== */
@@ -351,7 +351,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 .tb-tag .pi { font-size: .75rem; }
 .tb-tag-success { background: var(--tb-stable-container); color: var(--tb-on-stable-container); }
-.tb-tag-warning { background: var(--tb-chauffe-container); color: var(--tb-on-chauffe-container); }
+.tb-tag-warning { background: var(--tb-heating-container); color: var(--tb-on-heating-container); }
 .tb-tag-danger { background: var(--md-error-container); color: var(--md-on-error-container); }
 .tb-tag-info { background: var(--md-secondary-container); color: var(--md-on-secondary-container); }
 
@@ -377,7 +377,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
     background: var(--md-secondary-container); color: var(--md-on-surface);
 }
 .tb-message strong { display: block; }
-.tb-message-warn { background: var(--tb-chauffe-container); color: var(--tb-on-chauffe-container); }
+.tb-message-warn { background: var(--tb-heating-container); color: var(--tb-on-heating-container); }
 .tb-message-error { background: var(--md-error-container); color: var(--md-on-error-container); }
 
 /* ============================== Tables (p:dataTable) ============================== */
@@ -403,8 +403,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
     text-transform: uppercase;
     white-space: nowrap;
 }
-.tb-table th.tb-trie { cursor: pointer; user-select: none; }
-.tb-table th.tb-trie:hover { background: var(--md-secondary-container); color: var(--md-on-surface); }
+.tb-table th.tb-sorted { cursor: pointer; user-select: none; }
+.tb-table th.tb-sorted:hover { background: var(--md-secondary-container); color: var(--md-on-surface); }
 .tb-table th .pi { margin-left: 6px; font-size: .7rem; }
 .tb-table td { padding: 13px 20px; border-bottom: 1px solid var(--md-outline-variant); color: var(--md-on-surface); vertical-align: middle; }
 .tb-table tbody tr:last-child td { border-bottom: 0; }
@@ -413,9 +413,9 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .tb-table tbody tr.tb-row-on { background: color-mix(in srgb, var(--md-primary) 10%, transparent); }
 .tb-table.tb-table-sm td { padding: 10px 20px; }
 .tb-table.tb-table-sm th { padding: 12px 20px; }
-.tb-table .tb-vide td { color: var(--md-on-surface-variant); text-align: center; }
+.tb-table .tb-empty-row td { color: var(--md-on-surface-variant); text-align: center; }
 .tb-table td.tb-col-num, .tb-table th.tb-col-num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.tb-table td.tb-col-salle { min-width: 220px; }
+.tb-table td.tb-col-room { min-width: 220px; }
 .tb-table td.tb-col-check, .tb-table th.tb-col-check { width: 48px; text-align: center; }
 
 .tb-pagination { display: flex; align-items: center; justify-content: center; gap: 4px; padding: 10px; border-top: 1px solid var(--md-outline-variant); color: var(--md-on-surface-variant); }
@@ -450,7 +450,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
     border-radius: var(--tb-shape-xl);
     background: var(--tb-glass-solid);
     color: var(--md-on-surface);
-    box-shadow: var(--tb-elev-3);
+    box-shadow: var(--tb-raised-3);
     -webkit-backdrop-filter: var(--tb-blur);
     backdrop-filter: var(--tb-blur);
     overflow: hidden;
@@ -523,7 +523,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
     border-radius: var(--tb-shape-lg);
     background: color-mix(in srgb, var(--md-inverse-surface) 92%, transparent);
     color: var(--md-inverse-on-surface);
-    box-shadow: var(--tb-elev-3);
+    box-shadow: var(--tb-raised-3);
     -webkit-backdrop-filter: var(--tb-blur);
     backdrop-filter: var(--tb-blur);
     pointer-events: auto;
@@ -546,7 +546,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 /* ============================== Checkbox tree (accesses, groups) ============================== */
 
-.tb-arbre-acces {
+.tb-tree-access {
     max-height: min(46vh, 420px);
     overflow-y: auto;
     padding: 6px;
@@ -554,29 +554,29 @@ button, input, select, textarea { font: inherit; color: inherit; }
     border-radius: var(--tb-shape-lg);
     background: var(--tb-field);
 }
-.tb-arbre-acces ul { margin: 0; padding: 0; list-style: none; }
-.tb-arbre-acces ul ul { margin-left: 22px; padding-left: 6px; border-left: 2px solid var(--md-outline-variant); }
-.tb-arbre-ligne { display: flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 6px; border-radius: var(--tb-shape-sm); }
-.tb-arbre-ligne:hover { background: var(--md-secondary-container); }
-.tb-arbre-ligne > button {
+.tb-tree-access ul { margin: 0; padding: 0; list-style: none; }
+.tb-tree-access ul ul { margin-left: 22px; padding-left: 6px; border-left: 2px solid var(--md-outline-variant); }
+.tb-tree-row { display: flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 6px; border-radius: var(--tb-shape-sm); }
+.tb-tree-row:hover { background: var(--md-secondary-container); }
+.tb-tree-row > button {
     display: grid; place-items: center; width: 28px; height: 28px; flex: none;
     border: 0; border-radius: var(--tb-shape-sm); background: transparent; color: var(--md-on-surface-variant); cursor: pointer;
 }
-.tb-arbre-ligne > button .pi { font-size: .75rem; transition: transform .3s var(--tb-ease); }
-.tb-arbre-ligne > button.tb-ouvert .pi { transform: rotate(90deg); }
-.tb-arbre-ligne > .tb-arbre-vide { width: 28px; flex: none; }
-.tb-arbre-ligne label { display: flex; align-items: center; gap: 10px; flex: 1 1 auto; min-width: 0; cursor: pointer; }
-.tb-acces-noeud { display: inline-flex; align-items: baseline; gap: 8px; min-width: 0; }
-.tb-acces-noeud .tb-muted { font-size: .8rem; }
+.tb-tree-row > button .pi { font-size: .75rem; transition: transform .3s var(--tb-ease); }
+.tb-tree-row > button.tb-open .pi { transform: rotate(90deg); }
+.tb-tree-row > .tb-tree-empty { width: 28px; flex: none; }
+.tb-tree-row label { display: flex; align-items: center; gap: 10px; flex: 1 1 auto; min-width: 0; cursor: pointer; }
+.tb-access-node { display: inline-flex; align-items: baseline; gap: 8px; min-width: 0; }
+.tb-access-node .tb-muted { font-size: .8rem; }
 
 /* ============================== Charts ============================== */
 
 .tb-chart canvas { width: 100% !important; height: 100% !important; }
 
 /* Closing: taps already go to the page under it */
-.tb-scrim.tb-scrim-ferme { pointer-events: none; animation: tb-fade-out .25s ease forwards; }
-/* Android app: shown as a native menu (TbSheet menuNatif), the web sheet stays out of sight */
-.tb-scrim.tb-sheet-natif { visibility: hidden; pointer-events: none; animation: none; }
-.tb-sheet-natif .tb-dialog { animation: none; }
+.tb-scrim.tb-scrim-closed { pointer-events: none; animation: tb-fade-out .25s ease forwards; }
+/* Android app: shown as a native menu (TbSheet nativeMenu), the web sheet stays out of sight */
+.tb-scrim.tb-sheet-native { visibility: hidden; pointer-events: none; animation: none; }
+.tb-sheet-native .tb-dialog { animation: none; }
 /* Rows of the native menu only */
-.tb-natif-seul { display: none !important; }
+.tb-native-only { display: none !important; }

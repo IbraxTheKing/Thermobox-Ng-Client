@@ -1,13 +1,13 @@
 /*
  * ThermoBox – design tokens, shared by every platform.
  *
- * Two looks, chosen by an ADMIN for everyone (Préférences, data-style):
+ * Two looks, chosen by an ADMIN for everyone (Preferences, data-style):
  *
- * - « Maison » (data-style="verre", the default): for a home. Calm mineral greens, soft tiles,
+ * - « Maison » (data-style="glass", the default): for a home. Calm mineral greens, soft tiles,
  *   light large figures (Albert Sans), the colour of each room following its temperature.
- * - « Panneau de configuration » (data-style="panneau"): for a company, the supervision desk of a
+ * - « Panneau de configuration » (data-style="panel"): for a company, the supervision desk of a
  *   building. Enamel grey-green, panels with clean edges, signal lamps, condensed figures readable
- *   from afar (IBM Plex Sans Condensed), colours following the gap to the consigne.
+ *   from afar (IBM Plex Sans Condensed), colours following the gap to the setpoint.
  *
  * Each in light and dark (data-theme). Colours are roles (--md-*, --tb-*): the components never
  * name a colour. No glass, no gradients, no blur in the pages: the platform layers only change the
@@ -32,8 +32,8 @@
     color-scheme: light;
 
     /* Page and surfaces */
-    --tb-fond: #e9efec;
-    --md-surface: var(--tb-fond);
+    --tb-background: #e9efec;
+    --md-surface: var(--tb-background);
     --md-surface-container-lowest: #fbfcfb;
     --md-surface-container-low: #f3f6f4;
     --md-surface-container: #eef3f0;
@@ -64,7 +64,7 @@
     --md-on-error-container: #7a2a20;
 
     /* Surfaces of the pages: solid, no glass (the old names stay, the components use them) */
-    --tb-bg: var(--tb-fond);
+    --tb-bg: var(--tb-background);
     --tb-glass: #f6f8f7;
     --tb-glass-hover: #fbfcfb;
     --tb-glass-solid: #f6f8f7;
@@ -79,35 +79,35 @@
     --tb-blur: none;
     --tb-brand: linear-gradient(#23302b, #23302b);
 
-    /* Where a room stands against its consigne */
+    /* Where a room stands against its setpoint */
     --tb-stable: #3f7d5a;
     --tb-stable-container: #d5e8dc;
     --tb-on-stable-container: #2b5c41;
-    --tb-chauffe: #a8701c;
-    --tb-chauffe-container: #f1e3c8;
-    --tb-on-chauffe-container: #7a4f0e;
+    --tb-heating: #a8701c;
+    --tb-heating-container: #f1e3c8;
+    --tb-on-heating-container: #7a4f0e;
     --tb-star: #a8701c;
     --tb-star-container: #f1e3c8;
     --tb-on-star-container: #4d3209;
 
     /* Charts */
-    --tb-serie-1: #2f6b58;
-    --tb-serie-2: #c27a2c;
-    --tb-serie-3: #3d6cb4;
-    --tb-serie-4: #8a5bb0;
-    --tb-serie-5: #b0473a;
-    --tb-serie-6: #2e8ca0;
-    --tb-serie-7: #8c7a2a;
-    --tb-serie-8: #6b7570;
-    --tb-serie-moyenne: #23302b;
-    --tb-serie-consigne: #6b5a9a;
+    --tb-series-1: #2f6b58;
+    --tb-series-2: #c27a2c;
+    --tb-series-3: #3d6cb4;
+    --tb-series-4: #8a5bb0;
+    --tb-series-5: #b0473a;
+    --tb-series-6: #2e8ca0;
+    --tb-series-7: #8c7a2a;
+    --tb-series-8: #6b7570;
+    --tb-series-average: #23302b;
+    --tb-series-setpoint: #6b5a9a;
 
     /* Type: one family; the figures large and light */
     --tb-font: "Albert Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
-    --tb-font-chiffres: "Albert Sans", "Segoe UI", system-ui, sans-serif;
-    --tb-chiffre-poids: 200;
-    --tb-titre-poids: 600;
-    --tb-titre-espace: -.02em;
+    --tb-font-figures: "Albert Sans", "Segoe UI", system-ui, sans-serif;
+    --tb-figure-weight: 200;
+    --tb-title-weight: 600;
+    --tb-title-space: -.02em;
 
     --tb-shape-xs: 8px;
     --tb-shape-sm: 12px;
@@ -117,9 +117,9 @@
     --tb-shape-xxl: 28px;
     --tb-shape-full: 999px;
 
-    --tb-elev-1: 0 1px 3px rgba(25, 34, 30, .10);
-    --tb-elev-2: 0 6px 18px rgba(25, 34, 30, .12);
-    --tb-elev-3: 0 16px 40px rgba(25, 34, 30, .18);
+    --tb-raised-1: 0 1px 3px rgba(25, 34, 30, .10);
+    --tb-raised-2: 0 6px 18px rgba(25, 34, 30, .12);
+    --tb-raised-3: 0 16px 40px rgba(25, 34, 30, .18);
 
     --tb-ease: cubic-bezier(.2, .8, .2, 1);
     --tb-spring: cubic-bezier(.3, 1.3, .5, 1);
@@ -133,7 +133,7 @@
 :root[data-theme="dark"] {
     color-scheme: dark;
 
-    --tb-fond: #151b19;
+    --tb-background: #151b19;
     --md-surface-container-lowest: #101513;
     --md-surface-container-low: #1a211f;
     --md-surface-container: #1e2624;
@@ -174,33 +174,33 @@
     --tb-stable: #8fcfa6;
     --tb-stable-container: #23402f;
     --tb-on-stable-container: #c6ebd3;
-    --tb-chauffe: #e8b56a;
-    --tb-chauffe-container: #4a3517;
-    --tb-on-chauffe-container: #f6dcb3;
+    --tb-heating: #e8b56a;
+    --tb-heating-container: #4a3517;
+    --tb-on-heating-container: #f6dcb3;
     --tb-star: #e8b56a;
     --tb-star-container: #4a3517;
     --tb-on-star-container: #f6dcb3;
 
-    --tb-serie-1: #8fcdb2;
-    --tb-serie-2: #e8a86a;
-    --tb-serie-3: #8fb2e6;
-    --tb-serie-4: #c9a6e6;
-    --tb-serie-5: #f2a092;
-    --tb-serie-6: #7fcbd8;
-    --tb-serie-7: #d9c77a;
-    --tb-serie-8: #a8b2ad;
-    --tb-serie-moyenne: #e4ebe7;
-    --tb-serie-consigne: #c3b5ec;
+    --tb-series-1: #8fcdb2;
+    --tb-series-2: #e8a86a;
+    --tb-series-3: #8fb2e6;
+    --tb-series-4: #c9a6e6;
+    --tb-series-5: #f2a092;
+    --tb-series-6: #7fcbd8;
+    --tb-series-7: #d9c77a;
+    --tb-series-8: #a8b2ad;
+    --tb-series-average: #e4ebe7;
+    --tb-series-setpoint: #c3b5ec;
 
-    --tb-elev-1: 0 1px 3px rgba(0, 0, 0, .4);
-    --tb-elev-2: 0 6px 18px rgba(0, 0, 0, .45);
-    --tb-elev-3: 0 16px 40px rgba(0, 0, 0, .55);
+    --tb-raised-1: 0 1px 3px rgba(0, 0, 0, .4);
+    --tb-raised-2: 0 6px 18px rgba(0, 0, 0, .45);
+    --tb-raised-3: 0 16px 40px rgba(0, 0, 0, .55);
 }
 
 /* ============================== Panneau de configuration ============================== */
 
-:root[data-style="panneau"] {
-    --tb-fond: #e3e6e0;
+:root[data-style="panel"] {
+    --tb-background: #e3e6e0;
     --md-surface-container-lowest: #fafbf8;
     --md-surface-container-low: #f2f3ef;
     --md-surface-container: #eceee9;
@@ -240,29 +240,29 @@
     --tb-stable: #2c7a4b;
     --tb-stable-container: #d7eadd;
     --tb-on-stable-container: #1d5a35;
-    --tb-chauffe: #c98200;
-    --tb-chauffe-container: #f5e6c6;
-    --tb-on-chauffe-container: #7a4f00;
+    --tb-heating: #c98200;
+    --tb-heating-container: #f5e6c6;
+    --tb-on-heating-container: #7a4f00;
     --tb-star: #c98200;
     --tb-star-container: #f5e6c6;
     --tb-on-star-container: #4d3200;
 
-    --tb-serie-1: #1f5aa6;
-    --tb-serie-2: #c98200;
-    --tb-serie-3: #2c7a4b;
-    --tb-serie-4: #7a4fb0;
-    --tb-serie-5: #c0302c;
-    --tb-serie-6: #11808f;
-    --tb-serie-7: #8c6a14;
-    --tb-serie-8: #5d6862;
-    --tb-serie-moyenne: #1d2421;
-    --tb-serie-consigne: #1d2421;
+    --tb-series-1: #1f5aa6;
+    --tb-series-2: #c98200;
+    --tb-series-3: #2c7a4b;
+    --tb-series-4: #7a4fb0;
+    --tb-series-5: #c0302c;
+    --tb-series-6: #11808f;
+    --tb-series-7: #8c6a14;
+    --tb-series-8: #5d6862;
+    --tb-series-average: #1d2421;
+    --tb-series-setpoint: #1d2421;
 
     --tb-font: "IBM Plex Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
-    --tb-font-chiffres: "IBM Plex Sans Condensed", "Arial Narrow", sans-serif;
-    --tb-chiffre-poids: 500;
-    --tb-titre-poids: 600;
-    --tb-titre-espace: -.01em;
+    --tb-font-figures: "IBM Plex Sans Condensed", "Arial Narrow", sans-serif;
+    --tb-figure-weight: 500;
+    --tb-title-weight: 600;
+    --tb-title-space: -.01em;
 
     --tb-shape-xs: 3px;
     --tb-shape-sm: 4px;
@@ -271,13 +271,13 @@
     --tb-shape-xl: 8px;
     --tb-shape-xxl: 10px;
 
-    --tb-elev-1: 0 1px 2px rgba(20, 24, 22, .12);
-    --tb-elev-2: 0 4px 12px rgba(20, 24, 22, .14);
-    --tb-elev-3: 0 12px 30px rgba(20, 24, 22, .2);
+    --tb-raised-1: 0 1px 2px rgba(20, 24, 22, .12);
+    --tb-raised-2: 0 4px 12px rgba(20, 24, 22, .14);
+    --tb-raised-3: 0 12px 30px rgba(20, 24, 22, .2);
 }
 
-:root[data-style="panneau"][data-theme="dark"] {
-    --tb-fond: #181c1a;
+:root[data-style="panel"][data-theme="dark"] {
+    --tb-background: #181c1a;
     --md-surface-container-lowest: #131614;
     --md-surface-container-low: #1d2220;
     --md-surface-container: #212724;
@@ -314,24 +314,24 @@
     --tb-stable: #6cc58f;
     --tb-stable-container: #1f3a29;
     --tb-on-stable-container: #bfe8cd;
-    --tb-chauffe: #f0b545;
-    --tb-chauffe-container: #44330f;
-    --tb-on-chauffe-container: #f8dfae;
+    --tb-heating: #f0b545;
+    --tb-heating-container: #44330f;
+    --tb-on-heating-container: #f8dfae;
     --tb-star: #f0b545;
     --tb-star-container: #44330f;
     --tb-on-star-container: #f8dfae;
 
-    --tb-serie-1: #8fb2e6;
-    --tb-serie-5: #f08a7e;
-    --tb-serie-moyenne: #e3e7e2;
-    --tb-serie-consigne: #e3e7e2;
+    --tb-series-1: #8fb2e6;
+    --tb-series-5: #f08a7e;
+    --tb-series-average: #e3e7e2;
+    --tb-series-setpoint: #e3e7e2;
 }
 
-/* State of a salle: every component inside reads --tone-* */
-.tb-ton-stable   { --tone: var(--tb-stable);    --tone-container: var(--tb-stable-container);    --tone-on-container: var(--tb-on-stable-container); }
-.tb-ton-chauffe  { --tone: var(--tb-chauffe);   --tone-container: var(--tb-chauffe-container);   --tone-on-container: var(--tb-on-chauffe-container); }
-.tb-ton-chaud    { --tone: var(--md-error);     --tone-container: var(--md-error-container);     --tone-on-container: var(--md-on-error-container); }
-.tb-ton-inconnu  { --tone: var(--md-outline);   --tone-container: var(--md-surface-container-high); --tone-on-container: var(--md-on-surface-variant); }
+/* State of a room: every component inside reads --tone-* */
+.tb-tone-stable   { --tone: var(--tb-stable);    --tone-container: var(--tb-stable-container);    --tone-on-container: var(--tb-on-stable-container); }
+.tb-tone-heating  { --tone: var(--tb-heating);   --tone-container: var(--tb-heating-container);   --tone-on-container: var(--tb-on-heating-container); }
+.tb-tone-hot    { --tone: var(--md-error);     --tone-container: var(--md-error-container);     --tone-on-container: var(--md-on-error-container); }
+.tb-tone-unknown  { --tone: var(--md-outline);   --tone-container: var(--md-surface-container-high); --tone-on-container: var(--md-on-surface-variant); }
 
 /* Release channels: stable green, beta / rc orange, nightly violet */
 :root {
@@ -344,19 +344,19 @@
     --tb-nightly-container: #3c3263;
     --tb-on-nightly-container: #e8e0ff;
 }
-.tb-canal-stable  { --canal: var(--tb-stable);  --canal-container: var(--tb-stable-container);  --canal-on: var(--tb-on-stable-container); }
-.tb-canal-test    { --canal: var(--tb-chauffe); --canal-container: var(--tb-chauffe-container); --canal-on: var(--tb-on-chauffe-container); }
-.tb-canal-nightly { --canal: var(--tb-nightly); --canal-container: var(--tb-nightly-container); --canal-on: var(--tb-on-nightly-container); }
+.tb-channel-stable  { --canal: var(--tb-stable);  --canal-container: var(--tb-stable-container);  --canal-on: var(--tb-on-stable-container); }
+.tb-channel-test    { --canal: var(--tb-heating); --canal-container: var(--tb-heating-container); --canal-on: var(--tb-on-heating-container); }
+.tb-channel-nightly { --canal: var(--tb-nightly); --canal-container: var(--tb-nightly-container); --canal-on: var(--tb-on-nightly-container); }
 
 /*
  * The page, and its tint. In « Maison », the page of a room takes the colour of its temperature:
- * a fixed layer behind everything (FondService), whose own colour fades, one element, nothing
+ * a fixed layer behind everything (BackgroundService), whose own colour fades, one element, nothing
  * else restyled. The panel style keeps its enamel everywhere; the state colours its lamps.
  */
 /* The page colour is on <html> (the canvas): <body> stays clear so the tint layer shows */
-html { background-color: var(--tb-fond); }
+html { background-color: var(--tb-background); }
 :root body { background: transparent; }
-.tb-fond-page {
+.tb-background-page {
     position: fixed;
     inset: 0;
     z-index: -1;
@@ -364,4 +364,4 @@ html { background-color: var(--tb-fond); }
     background-color: transparent;
     transition: background-color .8s ease;
 }
-:root:is([data-teinte="off"], [data-style="panneau"]) .tb-fond-page { display: none; }
+:root:is([data-tint="off"], [data-style="panel"]) .tb-background-page { display: none; }

@@ -2,7 +2,7 @@
  * Shell: top bar, navigation (rail on wide screens, bar at the bottom of phones), main area.
  *
  * Same markup on every platform (shell.component.html). This file is the ThermoBox look of the JSF
- * interface, used as is on the web ([data-plateforme="web"]); shell-ios.css and shell-android.css
+ * interface, used as is on the web ([data-platform="web"]); shell-ios.css and shell-android.css
  * restyle the navigation as Liquid Glass (iOS) or Material 3 (Android), keeping the ThermoBox
  * colours, logo and type.
  */
@@ -10,7 +10,7 @@
 :root {
     --tb-topbar-h: 0px;
     /* Height taken by the navigation at the bottom of phones (0 on wide screens) */
-    --tb-nav-bas: 0px;
+    --tb-nav-bottom: 0px;
 }
 
 /* ============================== Navigation rail (wide screens) ============================== */
@@ -77,9 +77,9 @@
     box-shadow: 0 0 0 2px var(--tb-glass-solid);
 }
 /* The lens of Liquid Glass (iOS): hidden elsewhere */
-.tb-lentille { display: none; }
+.tb-lens { display: none; }
 /* Last tab of phones (« Plus » / « Compte »): the account is at the bottom of the rail elsewhere */
-.tb-dest-plus { display: none; }
+.tb-dest-more { display: none; }
 
 .tb-rail-end { margin-top: auto; display: flex; flex-direction: column; align-items: center; gap: 10px; }
 
@@ -165,7 +165,7 @@ a:hover > .tb-logo { transform: rotate(-6deg) scale(1.05); }
 }
 .tb-brand .tb-logo { width: 36px; height: 36px; }
 /* Title of the page, shown in the bar once the page title has scrolled away (iOS, Android) */
-.tb-topbar-titre { display: none; }
+.tb-topbar-title { display: none; }
 
 /* ============================== Main area ============================== */
 
@@ -198,13 +198,13 @@ a:hover > .tb-logo { transform: rotate(-6deg) scale(1.05); }
     background-repeat: no-repeat;
     transition: opacity .25s ease;
 }
-.tb-busy-bar.tb-busy-on { opacity: 1; animation: tb-balayage 1.1s ease-in-out infinite; }
-@keyframes tb-balayage { from { background-position: -40% 0; } to { background-position: 140% 0; } }
+.tb-busy-bar.tb-busy-on { opacity: 1; animation: tb-sweep 1.1s ease-in-out infinite; }
+@keyframes tb-sweep { from { background-position: -40% 0; } to { background-position: 140% 0; } }
 
 /* ============================== Phones: top bar + navigation at the bottom ============================== */
 
 @media (max-width: 840px) {
-    :root { --tb-topbar-h: calc(58px + env(safe-area-inset-top)); --tb-nav-bas: calc(76px + env(safe-area-inset-bottom)); }
+    :root { --tb-topbar-h: calc(58px + env(safe-area-inset-top)); --tb-nav-bottom: calc(76px + env(safe-area-inset-bottom)); }
     .tb-topbar {
         position: fixed;
         top: 0;
@@ -223,7 +223,7 @@ a:hover > .tb-logo { transform: rotate(-6deg) scale(1.05); }
         view-transition-name: tb-topbar;
     }
     /* Title of the page in the bar once its own title has scrolled under it */
-    .tb-topbar-titre {
+    .tb-topbar-title {
         position: absolute;
         left: 50%;
         bottom: 0;
@@ -242,14 +242,14 @@ a:hover > .tb-logo { transform: rotate(-6deg) scale(1.05); }
         pointer-events: none;
     }
     .tb-brand { transition: opacity .25s ease, transform .3s var(--tb-ease); }
-    .tb-defile-titre .tb-topbar-titre { opacity: 1; transform: translate(-50%, 0); }
-    .tb-defile-titre .tb-brand { opacity: 0; transform: translateY(-4px); pointer-events: none; }
+    .tb-scrolled-title .tb-topbar-title { opacity: 1; transform: translate(-50%, 0); }
+    .tb-scrolled-title .tb-brand { opacity: 0; transform: translateY(-4px); pointer-events: none; }
 
     .tb-rail {
         inset: auto 0 0 0;
         left: 0;
         width: auto;
-        height: var(--tb-nav-bas);
+        height: var(--tb-nav-bottom);
         padding: 8px calc(8px + env(safe-area-inset-right)) env(safe-area-inset-bottom) calc(8px + env(safe-area-inset-left));
         flex-direction: row;
         justify-content: center;
@@ -267,11 +267,11 @@ a:hover > .tb-logo { transform: rotate(-6deg) scale(1.05); }
     .tb-dest-label { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
     /* At most four pages, then « Plus » / « Compte » */
     .tb-dest-cache { display: none; }
-    .tb-dest-plus { display: flex; }
+    .tb-dest-more { display: flex; }
 
     .tb-app .tb-main {
         margin-left: 0;
-        padding: calc(var(--tb-topbar-h) + 16px) calc(16px + env(safe-area-inset-right)) calc(var(--tb-nav-bas) + 32px) calc(16px + env(safe-area-inset-left));
+        padding: calc(var(--tb-topbar-h) + 16px) calc(16px + env(safe-area-inset-right)) calc(var(--tb-nav-bottom) + 32px) calc(16px + env(safe-area-inset-left));
     }
     .tb-main { padding: 20px 16px 48px; }
     html { scroll-padding-top: calc(var(--tb-topbar-h) + 8px); }
@@ -290,12 +290,12 @@ a:hover > .tb-logo { transform: rotate(-6deg) scale(1.05); }
     .tb-page-head > .tb-btn.tb-fab, .tb-page-head > a.tb-btn.tb-fab {
         position: fixed;
         right: calc(16px + env(safe-area-inset-right));
-        bottom: calc(var(--tb-nav-bas) + 16px);
+        bottom: calc(var(--tb-nav-bottom) + 16px);
         z-index: 45;
         margin: 0;
-        box-shadow: var(--tb-elev-3);
+        box-shadow: var(--tb-raised-3);
     }
-    :root.tb-barre-ouverte .tb-fab { opacity: 0; pointer-events: none; }
+    :root.tb-bar-open .tb-fab { opacity: 0; pointer-events: none; }
 }
 
 /*
@@ -303,7 +303,7 @@ a:hover > .tb-logo { transform: rotate(-6deg) scale(1.05); }
  * on the left with every page, the account behind its last tab.
  */
 @media (orientation: landscape) and (max-height: 520px) {
-    :root { --tb-rail: 76px; --tb-topbar-h: 0px; --tb-nav-bas: 0px; }
+    :root { --tb-rail: 76px; --tb-topbar-h: 0px; --tb-nav-bottom: 0px; }
     .tb-topbar { display: none !important; }
     .tb-rail {
         inset: 8px auto 8px calc(8px + env(safe-area-inset-left));
@@ -325,7 +325,7 @@ a:hover > .tb-logo { transform: rotate(-6deg) scale(1.05); }
     .tb-dest-label { display: none; }
     .tb-dest-icon { width: 42px; height: 36px; }
     .tb-rail-end { display: none; }
-    .tb-dest-plus { display: flex !important; }
+    .tb-dest-more { display: flex !important; }
     .tb-dest-cache { display: flex !important; }
 
     .tb-app .tb-main {

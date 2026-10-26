@@ -15,17 +15,17 @@ import { ImagesService } from '../services/images.service';
 })
 export class TbPhotoImg {
   private readonly images = inject(ImagesService);
-  readonly salleId = input.required<number>();
+  readonly roomId = input.required<number>();
   readonly version = input.required<number>();
   readonly alt = input('');
   protected readonly src = signal<string | null>(null);
 
   constructor() {
     effect(() => {
-      const id = this.salleId();
+      const id = this.roomId();
       const v = this.version();
       void this.images.url(id, v).then((u) => {
-        if (this.salleId() === id && this.version() === v) this.src.set(u);
+        if (this.roomId() === id && this.version() === v) this.src.set(u);
       });
     });
   }

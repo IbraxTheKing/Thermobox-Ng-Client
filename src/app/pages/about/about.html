@@ -1,0 +1,115 @@
+<div class="tb-narrow">
+  <header class="tb-page-head">
+    <div class="tb-page-title">
+      <span class="tb-eyebrow">Thermobox</span>
+      <h1>À propos</h1>
+    </div>
+  </header>
+
+  <div class="tb-about-mark">
+    <span class="tb-logo tb-logo-xl" aria-hidden="true"></span>
+    <div>
+      <strong>Thermobox</strong>
+      <span class="tb-muted">La température de chaque salle, en un coup d'œil.</span>
+    </div>
+  </div>
+
+  <!-- Versions -->
+  <h2 class="tb-list-title">Versions</h2>
+  <div class="tb-list-group">
+    <div class="tb-list-row tb-list-info">
+      <span class="tb-list-icon"><i class="pi pi-mobile"></i></span>
+      <span class="tb-list-text">
+        <strong>Client Thermobox</strong>
+        <span class="tb-muted">{{ platformName }} · Angular {{ versionAngular }}@if (commitClient) { · {{ commitClient }} }@if (versionNative()) { · application {{ versionNative() }} }</span>
+      </span>
+      <span class="tb-apropos-version" [class.tb-apropos-dev]="!updateClient.installed">{{ versionClient }}</span>
+    </div>
+    <!-- Versions of this client published on GitHub (same numbering as the server) -->
+    @if (updateClient.latestAvailable(); as d) {
+      <a class="tb-list-row tb-about-update" [href]="d.page" target="_blank" rel="noopener">
+        <span class="tb-list-icon"><i class="pi pi-cloud-download"></i></span>
+        <span class="tb-list-text">
+          <strong>{{ updateClient.installed ? 'Nouvelle version du client' : 'Dernière version publiée du client' }}</strong>
+          <span class="tb-muted">{{ d.title }}@if (updateClient.installed) { · {{ updateType(d.type) }} }</span>
+        </span>
+        <span class="tb-apropos-version">{{ d.version.tag }}</span>
+        <i class="pi pi-external-link tb-list-continuation"></i>
+      </a>
+    } @else if (updateClient.available() && updateClient.installed) {
+      <div class="tb-list-row tb-list-info">
+        <span class="tb-list-icon"><i class="pi pi-check"></i></span>
+        <span class="tb-list-text"><strong>Client à jour</strong><span class="tb-muted">Aucune version plus récente sur GitHub</span></span>
+      </div>
+    } @else if (updateClient.error(); as err) {
+      <div class="tb-list-row tb-list-info">
+        <span class="tb-list-icon"><i class="pi pi-exclamation-circle"></i></span>
+        <span class="tb-list-text"><strong>Versions du client</strong><span class="tb-muted">{{ err }}</span></span>
+      </div>
+    }
+    <div class="tb-list-row tb-list-info">
+      <span class="tb-list-icon"><i class="pi pi-server"></i></span>
+      <span class="tb-list-text">
+        <strong>Serveur REST</strong>
+        <span class="tb-muted">
+          @if (server(); as s) {
+            Canal {{ channel(s.channel) }}@if (serverUrl.input()) { · {{ serverUrl.input() }} }
+          } @else if (serverError()) {
+            Version non communiquée par le serveur
+          } @else {
+            Chargement…
+          }
+        </span>
+      </span>
+      <span class="tb-apropos-version">{{ server()?.installedVersion ?? (server() ? 'sources' : '—') }}</span>
+    </div>
+    <div class="tb-list-row tb-list-info">
+      <span class="tb-list-icon"><i class="pi pi-desktop"></i></span>
+      <span class="tb-list-text">
+        <strong>Interface JSF</strong>
+        <span class="tb-muted">Publiée avec le serveur dans les versions de ThermoBox ; elle tourne et se met à jour à part.</span>
+      </span>
+      <span class="tb-apropos-version">{{ server()?.installedVersion ?? '—' }}</span>
+    </div>
+  </div>
+
+  <!-- Repositories -->
+  <h2 class="tb-list-title">Code source</h2>
+  <nav class="tb-list-group" aria-label="Dépôts GitHub">
+    @for (d of repositories; track d.url) {
+      <a class="tb-list-row" [href]="d.url" target="_blank" rel="noopener">
+        <span class="tb-list-icon"><i class="pi pi-github"></i></span>
+        <span class="tb-list-text">
+          <strong>{{ d.name }}</strong>
+          <span class="tb-muted">{{ d.detail }}</span>
+        </span>
+        <i class="pi pi-external-link tb-list-continuation"></i>
+      </a>
+    }
+  </nav>
+
+  <!-- Credits -->
+  <h2 class="tb-list-title">Crédits</h2>
+  <div class="tb-list-group">
+    <a class="tb-list-row" href="https://github.com/IbraxTheKing" target="_blank" rel="noopener">
+      <span class="tb-avatar">i</span>
+      <span class="tb-list-text">
+        <strong>ib · IbraxTheKing</strong>
+        <span class="tb-muted">Conception et développement de ThermoBox</span>
+      </span>
+      <i class="pi pi-external-link tb-list-continuation"></i>
+    </a>
+  </div>
+  <div class="tb-list-group">
+    @for (b of libraries; track b.name) {
+      <a class="tb-list-row tb-list-compact" [href]="b.url" target="_blank" rel="noopener">
+        <span class="tb-list-text">
+          <strong>{{ b.name }}</strong>
+          <span class="tb-muted">{{ b.role }}</span>
+        </span>
+        <i class="pi pi-external-link tb-list-continuation"></i>
+      </a>
+    }
+  </div>
+  <p class="tb-muted tb-about-license">ThermoBox est distribué sous licence MIT. © 2026 ib.</p>
+</div>

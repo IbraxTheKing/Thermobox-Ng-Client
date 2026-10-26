@@ -3,7 +3,7 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { catchError, finalize, throwError } from 'rxjs';
 
-import { ServeurService } from './api.config';
+import { ServerService } from './api.config';
 import { AuthService } from './auth';
 
 /** Requests made in the background (polling every 30 s): no busy bar. */
@@ -11,14 +11,14 @@ export const DISCRETE = new HttpContextToken<boolean>(() => false);
 
 /** Requests in progress, for the thin bar at the top of the screen. */
 @Injectable({ providedIn: 'root' })
-export class ActiviteService {
-  private readonly enCours = signal(0);
-  readonly occupe = computed(() => this.enCours() > 0);
-  debut(): void {
-    this.enCours.update((n) => n + 1);
+export class ActivityService {
+  private readonly inProgress = signal(0);
+  readonly busy = computed(() => this.inProgress() > 0);
+  start(): void {
+    this.inProgress.update((n) => n + 1);
   }
-  fin(): void {
-    this.enCours.update((n) => Math.max(0, n - 1));
+  end(): void {
+    this.inProgress.update((n) => Math.max(0, n - 1));
   }
 }
 
@@ -28,31 +28,31 @@ export class ActiviteService {
  */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const auth = inject(AuthService);
-  const serveur = inject(ServeurService);
-  const activite = inject(ActiviteService);
+  const server = inject(ServerService);
+  const activity = inject(ActivityService);
   const token = auth.token();
-  const versApi = req.url.startsWith(serveur.base());
+  const toApi = req.url.startsWith(server.base());
   const login = req.url.endsWith('/auth/login');
   // A request that brings its own token (logging out another saved account) keeps it
-  const propre = req.headers.has('Authorization');
-  const requete = token && versApi && !login && !propre ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } }) : req;
+  const own = req.headers.has('Authorization');
+  const query = token && toApi && !login && !own ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } }) : req;
   const discrete = req.context.get(DISCRETE);
-  if (!discrete) activite.debut();
-  return next(requete).pipe(
+  if (!discrete) activity.start();
+  return next(query).pipe(
     catchError((err: unknown) => {
-      if (err instanceof HttpErrorResponse && err.status === 401 && versApi && !login && !propre) auth.expiree();
+      if (err instanceof HttpErrorResponse && err.status === 401 && toApi && !login && !own) auth.expired();
       return throwError(() => err);
     }),
     finalize(() => {
-      if (!discrete) activite.fin();
+      if (!discrete) activity.end();
     }),
   );
 };
 
 /** Pages of a logged-in user. */
-export const connecteGuard: CanActivateFn = () => {
+export const loggedInGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
-  return auth.connecte() ? true : inject(Router).createUrlTree(['/login']);
+  return auth.loggedIn() ? true : inject(Router).createUrlTree(['/login']);
 };
 
 /**
@@ -61,18 +61,18 @@ export const connecteGuard: CanActivateFn = () => {
  */
 export const publicGuard: CanActivateFn = (route) => {
   const auth = inject(AuthService);
-  if (!auth.connecte() || route.queryParamMap.has('ajout') || route.queryParamMap.has('compte')) return true;
-  return inject(Router).createUrlTree(['/app/apercu']);
+  if (!auth.loggedIn() || route.queryParamMap.has('add') || route.queryParamMap.has('account')) return true;
+  return inject(Router).createUrlTree(['/app/overview']);
 };
 
-/** GESTIONNAIRE and ADMIN (Gestion page); the others go back to the dashboard. */
-export const gestionnaireGuard: CanActivateFn = () => {
+/** MANAGER and ADMIN (Gestion page); the others go back to the dashboard. */
+export const managerGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
-  return auth.gestionnaire() ? true : inject(Router).createUrlTree(['/app/apercu']);
+  return auth.manager() ? true : inject(Router).createUrlTree(['/app/overview']);
 };
 
 /** ADMIN only (users, updates). */
 export const adminGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
-  return auth.admin() ? true : inject(Router).createUrlTree(['/app/apercu']);
+  return auth.admin() ? true : inject(Router).createUrlTree(['/app/overview']);
 };

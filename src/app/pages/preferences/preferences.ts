@@ -2,17 +2,17 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
-import { messageErreur } from '../../core/api.config';
+import { errorMessage } from '../../core/api.config';
 import { AuthService } from '../../core/auth';
-import { ClavierService } from '../../core/clavier';
+import { KeyboardService } from '../../core/keyboard';
 import { ToastService } from '../../core/messages';
-import { PlateformeService } from '../../core/plateforme';
-import { ChoixTheme, PreferencesService } from '../../core/preferences';
-import { ReglagesService } from '../../services/reglages.service';
-import { TbSwitch } from '../../ui/controles';
+import { PlatformService } from '../../core/platform';
+import { ThemeChoice, PreferencesService } from '../../core/preferences';
+import { SettingsService } from '../../services/settings.service';
+import { TbSwitch } from '../../ui/controls';
 
 /**
- * Préférences (preferences.xhtml): theme, colours following the state, unit, keyboard shortcuts
+ * Preferences (preferences.xhtml): theme, colours following the state, unit, keyboard shortcuts
  * (kept on this device) and, for an ADMIN, the look of every client. Animations follow the system.
  */
 @Component({
@@ -24,34 +24,34 @@ import { TbSwitch } from '../../ui/controles';
 export class PreferencesPage {
   protected readonly auth = inject(AuthService);
   protected readonly prefs = inject(PreferencesService);
-  protected readonly clavier = inject(ClavierService);
-  protected readonly plateforme = inject(PlateformeService);
-  private readonly reglages = inject(ReglagesService);
+  protected readonly keyboard = inject(KeyboardService);
+  protected readonly platform = inject(PlatformService);
+  private readonly settings = inject(SettingsService);
   private readonly toasts = inject(ToastService);
 
-  protected readonly themes: { id: ChoixTheme; label: string; icone: string }[] = [
-    { id: 'light', label: 'Clair', icone: 'pi-sun' },
-    { id: 'dark', label: 'Sombre', icone: 'pi-moon' },
-    { id: 'auto', label: 'Système', icone: 'pi-mobile' },
+  protected readonly themes: { id: ThemeChoice; label: string; icon: string }[] = [
+    { id: 'light', label: 'Clair', icon: 'pi-sun' },
+    { id: 'dark', label: 'Sombre', icon: 'pi-moon' },
+    { id: 'auto', label: 'Système', icon: 'pi-mobile' },
   ];
-  protected readonly panneau = computed(() => this.prefs.style() === 'panneau');
-  protected readonly enregistrementStyle = signal(false);
+  protected readonly panel = computed(() => this.prefs.style() === 'panel');
+  protected readonly styleSaving = signal(false);
   /** Phones and tablets: no keyboard, no list. */
-  protected readonly avecClavier = matchMedia('(hover: hover) and (pointer: fine)').matches;
+  protected readonly hasKeyboard = matchMedia('(hover: hover) and (pointer: fine)').matches;
   /** The side bar of computers (the web on a wide screen). */
-  protected readonly avecBarre = this.plateforme.plateforme === 'web' && this.avecClavier;
-  protected readonly nomPlateforme = { ios: 'iOS (Liquid Glass)', android: 'Android (Material 3)', web: 'Web (ThermoBox)' }[this.plateforme.plateforme];
+  protected readonly hasSidebar = this.platform.platform === 'web' && this.hasKeyboard;
+  protected readonly platformName = { ios: 'iOS (Liquid Glass)', android: 'Android (Material 3)', web: 'Web (ThermoBox)' }[this.platform.platform];
 
   /** Saves the control-panel look for every user. */
-  protected async changerStyle(panneau: boolean): Promise<void> {
-    this.enregistrementStyle.set(true);
+  protected async changeStyle(panel: boolean): Promise<void> {
+    this.styleSaving.set(true);
     try {
-      await firstValueFrom(this.reglages.changerStyle(panneau ? 'panneau' : 'verre'));
-      this.toasts.info(panneau ? 'Style panneau de configuration pour tout le monde' : "Style d'origine pour tout le monde");
+      await firstValueFrom(this.settings.changeStyle(panel ? 'panel' : 'glass'));
+      this.toasts.info(panel ? 'Style panneau de configuration pour tout le monde' : "Style d'origine pour tout le monde");
     } catch (e) {
-      this.toasts.error('Réglage non enregistré', messageErreur(e));
+      this.toasts.error('Réglage non enregistré', errorMessage(e));
     } finally {
-      this.enregistrementStyle.set(false);
+      this.styleSaving.set(false);
     }
   }
 }

@@ -1,10 +1,10 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 /**
- * Applications iOS et Android (Capacitor) : le même client, empaqueté.
- *   npm run build && npx cap add ios && npx cap add android   (une seule fois)
- *   npm run cap:sync      puis ouvrir dans Xcode / Android Studio : npx cap open ios|android
- * L'adresse du serveur ThermoBox est demandée à la connexion (src/environments/environment.ts).
+ * iOS and Android apps (Capacitor): the same client, packaged.
+ *   npm run build && npx cap add ios && npx cap add android   (once)
+ *   npm run cap:sync      then open in Xcode / Android Studio: npx cap open ios|android
+ * The address of the ThermoBox server is asked at login (src/environments/environment.ts).
  */
 const config: CapacitorConfig = {
   appId: 'ax.ibr.thermobox',

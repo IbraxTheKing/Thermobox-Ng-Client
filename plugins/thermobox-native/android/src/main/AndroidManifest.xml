@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Predictive back of Android 14+ (gesture from the edge): the page follows the finger, then goes
+         back (ThermoboxNativePlugin.enableBack). Merged into the manifest of the app. -->
+    <application android:enableOnBackInvokedCallback="true" />
+</manifest>
