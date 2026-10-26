@@ -376,3 +376,17 @@ tb-molette { display: flex; flex-direction: column; align-items: center; }
 .tb-molette-reglage .tb-molette-objectif { animation: tb-objectif .24s cubic-bezier(.3, 1.5, .5, 1); }
 .tb-molette-reglage em { color: var(--md-on-surface-variant); }
 @media (prefers-reduced-motion: reduce) { .tb-molette-reglage .tb-molette-objectif { animation: none; } .tb-molette-repere { transition: none; } }
+
+/* ============================== Panneau: the setting of the consigne under the reading ============================== */
+
+.tb-pupitre-gauche { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.tb-reglage { display: flex; flex-direction: column; gap: 10px; padding: 12px 14px; border: 1px solid var(--md-outline-variant); border-radius: var(--tb-shape-md); background: var(--tb-glass); }
+.tb-reglage-ligne { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+.tb-reglage-titre { margin-right: auto; font-weight: 600; }
+.tb-reglage .tb-consigne-options { margin: 0; padding: 10px 0 0; border: 0; border-top: 1px solid var(--md-outline-variant); border-radius: 0; background: none; }
+/* The photo as tall as the reading and its setting together (computers) */
+.tb-hero.tb-pupitre { align-items: stretch; }
+
+/* − / + held down: the button holds its pressed look while it repeats */
+.tb-stepper button.tb-maintenu { background: var(--md-on-surface); color: var(--tb-fond); }
+.tb-stepper button { touch-action: manipulation; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }

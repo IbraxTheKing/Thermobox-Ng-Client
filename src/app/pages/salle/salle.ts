@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, OnDestroy, computed, effect, inject, input, signal, untracked } from '@angular/core';
-import { Location } from '@angular/common';
+import { Location, NgTemplateOutlet } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
@@ -42,7 +42,7 @@ const TAILLE_MAX_PHOTO = 10 * 1024 * 1024;
  */
 @Component({
   selector: 'tb-salle',
-  imports: [RouterLink, TbStepper, TbSwitch, TbWatch, TbGraphique, TbPhotoImg, TbMolette],
+  imports: [RouterLink, NgTemplateOutlet, TbStepper, TbSwitch, TbWatch, TbGraphique, TbPhotoImg, TbMolette],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './salle.html',
 })

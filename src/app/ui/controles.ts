@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Directive, ElementRef, booleanAttribute, computed, effect, inject, input, model } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Directive, ElementRef, booleanAttribute, computed, effect, inject, input, model, signal } from '@angular/core';
 
 import { PlateformeService } from '../core/plateforme';
 import { PreferencesService } from '../core/preferences';
@@ -39,7 +39,7 @@ export class TbSwitch {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <span class="tb-stepper">
-      <button type="button" (click)="pas(-1)" aria-label="Moins"><i class="pi pi-minus"></i></button>
+      <button type="button" [class.tb-maintenu]="maintenu() === -1" (pointerdown)="appuyer(-1, $event)" (click)="clic(-1, $event)" aria-label="Moins"><i class="pi pi-minus"></i></button>
       <input
         type="text"
         inputmode="decimal"
@@ -51,7 +51,7 @@ export class TbSwitch {
         [attr.aria-label]="'Consigne en ' + unite.symbole()"
       />
       <span class="tb-stepper-unite">{{ unite.symbole() }}</span>
-      <button type="button" (click)="pas(1)" aria-label="Plus"><i class="pi pi-plus"></i></button>
+      <button type="button" [class.tb-maintenu]="maintenu() === 1" (pointerdown)="appuyer(1, $event)" (click)="clic(1, $event)" aria-label="Plus"><i class="pi pi-plus"></i></button>
     </span>
   `,
 })
@@ -66,6 +66,48 @@ export class TbStepper {
     const v = this.valeur();
     return v == null ? '' : v.toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   });
+
+  /** − or + held down: it repeats, faster and faster (as the dial of « Maison »). */
+  protected readonly maintenu = signal<0 | 1 | -1>(0);
+  private repetition?: ReturnType<typeof setTimeout>;
+
+  protected appuyer(sens: 1 | -1, e: PointerEvent): void {
+    if (e.button !== 0) return;
+    this.relacher();
+    this.pas(sens);
+    this.maintenu.set(sens);
+    const bouton = e.currentTarget as HTMLElement;
+    const fin = () => {
+      this.relacher();
+      bouton.removeEventListener('pointerup', fin);
+      bouton.removeEventListener('pointerleave', fin);
+      bouton.removeEventListener('pointercancel', fin);
+    };
+    bouton.addEventListener('pointerup', fin);
+    bouton.addEventListener('pointerleave', fin);
+    bouton.addEventListener('pointercancel', fin);
+    let n = 0;
+    const suivant = (delai: number) => {
+      this.repetition = setTimeout(() => {
+        const avant = this.valeur();
+        this.pas(sens);
+        if (this.valeur() === avant) return this.relacher();
+        n++;
+        suivant([150, 110, 80, 60][Math.min(3, Math.floor(n / 4))]);
+      }, delai);
+    };
+    suivant(380);
+  }
+
+  /** Keyboard (Enter, Space): a pointer already stepped on pointerdown. */
+  protected clic(sens: 1 | -1, e: MouseEvent): void {
+    if (e.detail === 0) this.pas(sens);
+  }
+
+  private relacher(): void {
+    clearTimeout(this.repetition);
+    this.maintenu.set(0);
+  }
 
   protected pas(sens: number): void {
     const step = this.unite.consigneStep();
