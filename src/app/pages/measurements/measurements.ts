@@ -127,7 +127,7 @@ export class MeasurementsPage implements OnInit {
   protected async load(force = false): Promise<void> {
     // Kept in memory (CurveCache): the curves already read for these choices show at once, and
     // are read again only when no longer recent
-    const key = `mesures|${this.byBuilding()}|${this.buildingId()}|${this.periodHours()}`;
+    const key = `measurements|${this.byBuilding()}|${this.buildingId()}|${this.periodHours()}`;
     const kept = this.cache.read<{ rows: Row[]; instants: number[] }>(key);
     if (kept) {
       this.instants.set(kept.value.instants);
@@ -178,7 +178,7 @@ export class MeasurementsPage implements OnInit {
         };
       });
       // The choices changed meanwhile: these curves are not the ones asked for any more
-      if (key !== `mesures|${this.byBuilding()}|${this.buildingId()}|${this.periodHours()}`) return;
+      if (key !== `measurements|${this.byBuilding()}|${this.buildingId()}|${this.periodHours()}`) return;
       const ins = instants(start.getTime(), end.getTime(), p);
       this.instants.set(ins);
       this.rows.set(rows);
