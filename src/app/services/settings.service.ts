@@ -15,11 +15,11 @@ export class SettingsService {
 
   /** Reads the style and applies it to this page. */
   load(): Observable<Settings> {
-    return this.http.get<Settings>(this.server.url('/reglages')).pipe(tap((r) => this.prefs.style.set(r.style)));
+    return this.http.get<Settings>(this.server.url('/settings')).pipe(tap((r) => this.prefs.style.set(r.style)));
   }
 
   /** ADMIN — for every user, on every device. */
   changeStyle(style: StyleSite): Observable<Settings> {
-    return this.http.put<Settings>(this.server.url('/reglages'), { style }).pipe(tap((r) => this.prefs.style.set(r.style)));
+    return this.http.put<Settings>(this.server.url('/settings'), { style }).pipe(tap((r) => this.prefs.style.set(r.style)));
   }
 }

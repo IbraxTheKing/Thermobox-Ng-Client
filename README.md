@@ -1,106 +1,138 @@
-# Thermobox — client Angular
+# Thermobox — Angular client
 
-Client mobile-first de **[ThermoBox](https://github.com/IbraxTheKing/ThermoBox)** (surveillance des
-températures par bâtiment, étage et salle) : le client JSF du serveur, refait en Angular et branché sur
-son API REST. Une seule application pour le web, la PWA et les applications iOS / Android.
+Mobile-first client of **[ThermoBox](https://github.com/IbraxTheKing/ThermoBox)** (temperature
+monitoring per building, floor and room): the former JSF client of the server, redone in Angular on
+top of its REST API. One app for the web, the PWA and the iOS / Android apps.
 
-- Angular 22 : composants autonomes, sans zone.js, signals, `OnPush`, routes chargées à la demande
-- PWA (service worker, manifeste, icônes) **et** applications natives avec Capacitor 8
-- Une interface ThermoBox dont la « coque » (barre d'onglets, barre du haut, feuilles, notifications)
-  prend le style de la plateforme, détecté automatiquement :
-  - **iOS** : Liquid Glass (barre d'onglets en capsule de verre, lentille qu'on peut tenir et faire
-    glisser, barre qui rétrécit au défilement)
-  - **Android** : Material 3 (barre de navigation avec indicateur pilule, top app bar, snackbars, ondes)
-  - **Web / ordinateur** : le rail et la barre du client JSF
+- Angular 22: standalone components, no zone.js, signals, `OnPush`, lazy-loaded routes
+- PWA (service worker, manifest, icons) **and** native apps with Capacitor 8
+- A ThermoBox interface whose "shell" (tab bar, top bar, sheets, notifications) takes the style of
+  the platform, detected automatically:
+  - **iOS**: Liquid Glass (glass capsule tab bar, a lens that can be held and slid, a bar that
+    shrinks while scrolling)
+  - **Android**: Material 3 (navigation bar with pill indicator, top app bar, snackbars, ripples)
+  - **Web / computer**: the rail and the bar of the former JSF client
 
-  Pour tester une autre plateforme : `?plateforme=ios|android|web` dans l'adresse (`?plateforme=auto`
-  pour revenir à la détection).
+  To try another platform: `?platform=ios|android|web` in the address (`?platform=auto` to go back
+  to detection).
 
-## Fonctionnalités
+The interface itself is in French; the code, comments and tooling are in English.
 
-- **Aperçu** : une carte par salle (température, état, courbe des dernières 24 h, consigne), favoris,
-  filtres par état, bâtiment et recherche ; la page prend la couleur de l'état choisi
-- **Salle** : la carte de l'aperçu se transforme en page de la salle ; consigne, photo, historique
-  (courbe avec bande de lecture sous le doigt et plein écran sur téléphone), consignes de la période
-- **Salles** : arbre des bâtiments, étages, salles et boîtiers (glisser-déposer pour ranger)
-- **Mesures** : courbes de toutes les salles ou de tous les bâtiments, tableau, export CSV
-- **Gestion** (gestionnaires et administrateurs) : consignes en masse ; création, déplacement, accès ;
-  utilisateurs et groupes. Sur téléphone : une liste, une feuille d'actions par élément, un mode sélection
-- **Comptes** : plusieurs comptes sur le même appareil, sur un ou plusieurs serveurs ThermoBox (chez soi,
-  au travail…), chacun avec l'adresse de son serveur ; on passe de l'un à l'autre depuis « Changer de compte »
-  (onglet Plus sur téléphone, rail sur ordinateur) ou depuis la page de connexion. L'inscription se fait
-  sur le serveur de son choix
-- **Utilisateurs**, **Mises à jour** du serveur (administrateurs), **Profil**, **Préférences**
-  (thème clair / sombre / système, unité, couleurs selon l'état, raccourcis clavier)
-- **À propos** : versions du client, du serveur et de l'interface JSF ; versions du client publiées sur
-  GitHub ; code source et crédits
-- **Mouvement** : transitions entre les pages, cartes qui glissent quand un filtre ou un favori les
-  déplace, retour en arrière en faisant glisser la page vers la droite (téléphones). Tout s'arrête quand
-  l'appareil demande de réduire les animations (réglage du système, il n'y a pas de réglage dans l'app)
+## Features
 
-## Prérequis
+- **Overview**: a card per room (temperature, state, last 24 h curve, setpoint), favorites, filters
+  by state, building and search; the page takes the colour of the chosen state
+- **Room**: the card of the overview morphs into the room page; setpoint, photo, history (curve with
+  a reading band under the finger and full screen on phones), setpoints of the period
+- **Rooms**: tree of the buildings, floors, rooms and devices (drag and drop to arrange)
+- **Measurements**: curves of every room or every building, table, CSV export
+- **Management** (managers and administrators): setpoints in bulk; creation, moves, accesses; users
+  and groups. On phones: a list, an action sheet per element, a selection mode
+- **Accounts**: several accounts on the same device, on one or several ThermoBox servers (at home, at
+  work…), listed per server with its logo (26.12 servers); switch from "Changer de compte" (More tab
+  on phones, rail on computers) or from the login page. Registering happens on the server of one's
+  choice
+- **Users**, server **Updates** (administrators), **Profile**, **Preferences** (light / dark /
+  system theme, unit, colours following the state, keyboard shortcuts; for an administrator of a
+  26.12 server: its logo and the temperatures it accepts)
+- **About**: versions of the client and the server; client versions published on GitHub; source code
+  and credits
+- **Motion**: transitions between pages, cards that slide when a filter or a favorite moves them,
+  going back by dragging the page to the right (phones). Everything stops when the device asks for
+  reduced motion (system setting, there is no setting in the app)
 
-- Node ≥ 22.22.3 (ou 24) et npm
-- Le serveur ThermoBox, branche `dev` (les routes REST du client y sont depuis la PR #52)
+## ThermoBox servers: API v1 and v2
 
-## Démarrer
+The client talks to every ThermoBox server:
+
+| Server            | API                                                                          |
+| ----------------- | ---------------------------------------------------------------------------- |
+| 26.12 and later   | **v2**, `/api/v2/…` in English (`/api/v2/hierarchy/tree`, `"BUILDING"`)     |
+| 26.11             | v1, `/api/…` with French names (`/api/hierarchie/arbre`, `"BATIMENT"`), and `GET /api/server` |
+| before 26.11      | v1 only                                                                      |
+
+The services are written against v2. `GET /api/server` (public) tells which APIs a server answers
+(`"apiVersions": ["v1", "v2"]` since 26.12; 404 before 26.11). For a v1 server,
+`src/app/core/api-version.ts` rewrites each request to its v1 path and translates the JSON both ways,
+as the server itself does for old clients (`LegacyApi.kt`). What only v2 has is offered only to v2
+servers:
+
+- the **server logo** (`/api/v2/server/logo`): next to the server in the account lists, as a badge
+  on the avatar of an account, in the browser tab; an administrator changes it in Preferences;
+- the **temperature limits** (`/api/v2/server/limits`): the dial and the steppers stay within the
+  setpoints the server accepts; an administrator sets them in Preferences. Before 26.12: 5 to 35 °C,
+  as before;
+- no more mention of the JSF interface, which 26.12 no longer has.
+
+The server is asked again at each login (it may have been updated since).
+
+## Requirements
+
+- Node ≥ 22.22.3 (or 24) and npm
+- The ThermoBox server (any version with the REST routes of PR #52; 26.12 for v2)
+
+## Getting started
 
 ```bash
 npm install
-npm run demo        # API de démonstration en mémoire sur :8080 + ng serve (proxy /api)
+npm run demo        # in-memory demo API on :8080 + ng serve (proxy /api)
 ```
 
-Comptes de démonstration : `admin / admin1234`, `gestion / gestion1234`, `lecteur / lecteur1234`
-(ce dernier ne voit que le bâtiment A).
+Demo accounts: `admin / admin1234`, `gestion / gestion1234`, `lecteur / lecteur1234` (sees building
+A only), `camille / camille1234`.
 
-Contre un vrai serveur : lancer ThermoBox sur `:8080`, puis `npm start` (`proxy.conf.json` envoie `/api`).
+The demo server plays a 26.12 server by default; `node mock/demo-server.mjs --api v1` plays a 26.11
+one, `--api old` an older one (French API only), to try the client against each.
+
+Against a real server: start ThermoBox on `:8080`, then `npm start` (`proxy.conf.json` forwards
+`/api`).
 
 ## Versions
 
-Le client suit **la même numérotation que le serveur ThermoBox** : `AA.MM.PATCH`, éventuellement suivie
-d'une prépublication.
+The client follows **the same numbering as the ThermoBox server**: `YY.MM.PATCH`, maybe followed by
+a prerelease.
 
-| Version            | Ce que c'est                                                                 |
+| Version            | What it is                                                                   |
 | ------------------ | ---------------------------------------------------------------------------- |
-| `26.11.0`          | stable, première version de la série de novembre 2026                        |
-| `26.11.1`          | correctif de la série (mise à jour **corrective**, compatible)               |
-| `26.12.0`          | série suivante (mise à jour **fonctionnelle**)                               |
-| `26.12.0-beta.1`   | beta de la série suivante, puis `-rc.1`…                                     |
-| `26.12.0-nightly.3`| construite chaque nuit depuis la branche `dev`                               |
+| `26.11.0`          | stable, first version of the November 2026 series                            |
+| `26.11.1`          | patch of the series (**patch** update, compatible)                           |
+| `26.12.0`          | next series (**feature** update)                                             |
+| `26.12.0-beta.1`   | beta of the next series, then `-rc.1`…                                       |
+| `26.12.0-nightly.3`| built every night from the `dev` branch                                      |
 
-**La version vient de GitHub, pas de `package.json`** (qui reste à `0.0.0`) : `npm run build`
-(`scripts/construire.mjs`) inscrit dans le client
+**The version comes from GitHub, not from `package.json`** (which stays at `0.0.0`): `npm run build`
+(`scripts/build.mjs`) writes into the client
 
-1. `THERMOBOX_VERSION` si elle est définie (workflows GitHub, argument Docker),
-2. sinon le tag Git posé sur le commit construit,
-3. sinon `dev`,
+1. `THERMOBOX_VERSION` when it is defined (GitHub workflows, Docker argument),
+2. else the Git tag on the commit being built,
+3. else `dev`,
 
-ainsi que le commit construit. `ng serve` et `ng build` seuls donnent `dev`.
+and the commit being built. `ng serve` and `ng build` alone give `dev`.
 
-La page **À propos** affiche cette version et interroge les releases GitHub du dépôt : elle signale une
-version plus récente (stable, ou aussi les prépublications quand le client en est une), corrective ou
-fonctionnelle selon la série, comme le système de mise à jour du serveur.
+The **About** page shows this version and reads the GitHub releases of the repository: it points out
+a newer version (stable, or also the prereleases when the client is one), patch or feature depending
+on the series, like the update system of the server.
 
-### Publier (GitHub Actions)
+### Publishing (GitHub Actions)
 
-Mêmes workflows que le serveur (`.github/workflows`) :
+Same workflows as the server (`.github/workflows`):
 
-- **Release assets** (`release.yml`) : publier une release à la main sur GitHub (tag `26.11.0`…)
-  joint `thermobox-ng-client-<version>.zip`, le client construit depuis ce tag avec sa version inscrite
-- **Beta / RC** (`prerelease.yml`) : lancé à la main (onglet Actions) ; numérote la prochaine série
-  (`26.12.0-beta.N`, `-rc.N`) d'après la dernière stable, construit la branche choisie, crée la pre-release
-- **Nightly** (`nightly.yml`) : chaque nuit, construit `dev/<série>`, sinon `dev`, et publie
-  `<série>.0-nightly.N` s'il y a de nouveaux commits. Le cron ne lit que le fichier présent sur la branche
-  par défaut (`main`)
+- **Release assets** (`release.yml`): publishing a release by hand on GitHub (tag `26.11.0`…)
+  attaches `thermobox-ng-client-<version>.zip`, the client built from that tag with its version
+- **Beta / RC** (`prerelease.yml`): started by hand (Actions tab); numbers the next series
+  (`26.12.0-beta.N`, `-rc.N`) from the last stable, builds the chosen branch, creates the pre-release
+- **Nightly** (`nightly.yml`): every night, builds `dev/<series>`, else `dev`, and publishes
+  `<series>.0-nightly.N` when there are new commits. The cron only reads the file on the default
+  branch (`main`)
 
 ## Production
 
 ```bash
-npm run build       # dist/Thermobox-Ng-Client/browser (avec service worker)
+npm run build       # dist/Thermobox-Ng-Client/browser (with service worker)
 ```
 
-Servir ce dossier derrière le même hôte que l'API (`/api`), ou modifier `src/environments/environment.ts`.
-Le service worker ne met jamais `/api` en cache.
+Serve that folder behind the same host as the API (`/api`), or change
+`src/environments/environment.ts`. The service worker never caches `/api`.
 
 ### Docker
 
@@ -109,25 +141,25 @@ docker compose up -d --build                                    # http://localho
 docker build --build-arg THERMOBOX_VERSION=26.11.0 -t thermobox-ng-client .
 ```
 
-L'image sert le client avec Nginx et relaie `/api` vers `API_UPSTREAM`
-(`http://host.docker.internal:8080` dans `compose.yaml`). `THERMOBOX_VERSION` (argument de construction) fixe la version
-inscrite ; sans lui, c'est `dev` (le dossier `.git` n'est pas dans l'image).
+The image serves the client with Nginx and forwards `/api` to `API_UPSTREAM`
+(`http://host.docker.internal:8080` in `compose.yaml`). `THERMOBOX_VERSION` (build argument) sets the
+version written; without it, it is `dev` (the `.git` folder is not in the image).
 
-### Depuis une release (`.zip`), sans rien construire
+### From a release (`.zip`), without building anything
 
-Chaque release GitHub contient `thermobox-ng-client-<version>.zip` : le client déjà construit, avec sa
-version inscrite (`index.html` à la racine). Il suffit de le faire servir par Nginx avec
-`nginx/default.conf.template`, qui renvoie `/api` vers le serveur ThermoBox :
+Each GitHub release has `thermobox-ng-client-<version>.zip`: the client already built, with its
+version (`index.html` at the root). Serve it with Nginx and `nginx/default.conf.template`, which
+forwards `/api` to the ThermoBox server:
 
 ```bash
 mkdir thermobox-client && cd thermobox-client
-gh release download 26.11.0-beta.1 -R IbraxTheKing/Thermobox-Ng-Client -p '*.zip'   # ou depuis la page de la release
+gh release download 26.11.0-beta.1 -R IbraxTheKing/Thermobox-Ng-Client -p '*.zip'   # or from the release page
 unzip thermobox-ng-client-26.11.0-beta.1.zip -d html
 curl -LO https://raw.githubusercontent.com/IbraxTheKing/Thermobox-Ng-Client/dev/nginx/default.conf.template
 ```
 
 ```yaml
-# compose.yaml, dans ce dossier : docker compose up -d   →   http://localhost:2767
+# compose.yaml, in that folder: docker compose up -d   →   http://localhost:2767
 services:
   thermobox-ng-client:
     image: nginx:1.28-alpine
@@ -141,93 +173,99 @@ services:
     restart: unless-stopped
 ```
 
-- `API_UPSTREAM` : adresse du serveur REST, **sans** `/api` ni `/` final (Nginx garde `/api` dans l'adresse
-  transmise). Serveur sur la même machine : `http://host.docker.internal:8080` ; serveur dans un conteneur
-  du même réseau Docker : son nom de service (`http://thermobox-rest:8080`), sans `extra_hosts`.
-- Nouvelle version : vider `html/`, y décompresser le nouveau zip, `docker compose restart`. Les
-  navigateurs et la PWA installée la prennent au chargement suivant (service worker).
+- `API_UPSTREAM`: address of the REST server, **without** `/api` or a final `/` (Nginx keeps `/api`
+  in the forwarded address). Server on the same machine: `http://host.docker.internal:8080`; server
+  in a container of the same Docker network: its service name (`http://thermobox-rest:8080`), without
+  `extra_hosts`.
+- New version: empty `html/`, unzip the new archive there, `docker compose restart`. Browsers and the
+  installed PWA take it at the next load (service worker).
 
-## Applications iOS / Android (Capacitor)
+## iOS / Android apps (Capacitor)
 
-`android/` (et plus tard `ios/`) est commité avec le reste, sur les mêmes branches : ce sont des projets
-source. Ce qui est régénéré (client copié, `build/`, `local.properties`…) est ignoré par leurs `.gitignore`.
+`android/` (and later `ios/`) is committed with the rest, on the same branches: they are source
+projects. What is regenerated (copied client, `build/`, `local.properties`…) is ignored by their
+`.gitignore`.
 
 ### Android
 
-Dans l'application Android, la barre de navigation du bas, le bouton d'action principal des pages, les
-notifications et les confirmations sont des **composants Material 3 natifs** (plugin local
-`plugins/thermobox-native` : NavigationBar, ExtendedFloatingActionButton, Snackbar, MaterialAlertDialog)
-posés par-dessus la page, aux couleurs du thème ThermoBox (clair / sombre, teinte de l'état). Les menus
-d'actions (Salles, Gestion) s'ouvrent en feuille Material native. Le retour d'Android ferme ce qui est
-ouvert, puis revient en arrière, puis met l'application en arrière-plan ; avec le geste depuis le bord
-(retour prédictif, Android 14+), la page rétrécit sous le doigt avant de revenir, et une salle se
-referme dans sa carte de l'aperçu. Ailleurs (web, PWA, iOS), la page dessine tout elle-même.
+In the Android app, the bottom navigation bar (a rail on tablets and phones held sideways), the main
+action button of the pages, the notifications and the confirmations are **native Material 3
+components** (local plugin `plugins/thermobox-native`: NavigationBarView, ExtendedFloatingActionButton,
+Snackbar, MaterialAlertDialog) laid over the page, in the colours of the ThermoBox theme (light /
+dark, tint of the state). The action menus (Rooms, Management) open as a native Material sheet.
+Android back closes what is open, then goes back, then puts the app in the background; with the
+gesture from the edge (predictive back, Android 14+), the page shrinks under the finger before going
+back, and a room closes back into its card of the overview. Elsewhere (web, PWA, iOS), the page draws
+everything itself.
 
-Si `android/capacitor.settings.gradle` ne cite pas `thermobox-native`, le plugin n'est pas dans
-l'application (`npm install` oublié avant `npx cap sync`) : elle garde alors la navigation de la page.
+If `android/capacitor.settings.gradle` does not mention `thermobox-native`, the plugin is not in the
+app (`npm install` forgotten before `npx cap sync`): it then keeps the navigation of the page.
 
-Première fois (Android Studio et un JDK 21) :
+> 26.12: the plugin was renamed from `thermobox-natif` to `thermobox-native` (Java package
+> `ax.ibr.thermobox.plugin`). After pulling: `npm install`, then `npx cap sync android`.
+
+First time (Android Studio and a JDK 21):
 
 ```bash
-npm install                      # installe aussi le plugin local (dépendance « file: »)
+npm install                      # also installs the local plugin ("file:" dependency)
 npm run build
-npx cap add android              # crée android/
-node scripts/android.mjs preparer   # version et signature lues dans les propriétés Gradle
-npx cap sync android             # copie le client, inscrit les plugins (dont thermobox-native)
-git add android && git commit -m "Projet Android"
+npx cap add android              # creates android/
+node scripts/android.mjs prepare # version and signing read from Gradle properties
+npx cap sync android             # copies the client, registers the plugins (thermobox-native among them)
+git add android && git commit -m "Android project"
 ```
 
-Ensuite, à chaque changement : `npm run cap:sync`, puis `npx cap open android` (ou `./gradlew` dans
-`android/`). `scripts/android.mjs preparer` ne modifie rien deux fois : les workflows le relancent.
+Then, at each change: `npm run cap:sync`, then `npx cap open android` (or `./gradlew` in
+`android/`). `scripts/android.mjs prepare` changes nothing twice: the workflows run it again.
 
-Version de l'application : `versionName` = la version du client (`26.11.0-beta.1`), `versionCode` calculé
-depuis elle, toujours croissant (une stable passe après ses prépublications) :
+App version: `versionName` = the version of the client (`26.11.0-beta.1`), `versionCode` computed
+from it, always growing (a stable comes after its prereleases):
 
 ```bash
-node scripts/android.mjs version        # nom=26.11.0-beta.1  code=261100401
+node scripts/android.mjs version        # name=26.11.0-beta.1  code=261100401
 cd android && ./gradlew assembleDebug -PthermoboxVersionName=26.11.0-beta.1 -PthermoboxVersionCode=261100401
 ```
 
-Les workflows **Release assets**, **Beta / RC** et **Nightly** joignent l'application à la release
-(`.github/actions/android`) :
+The **Release assets**, **Beta / RC** and **Nightly** workflows attach the app to the release
+(`.github/actions/android`):
 
-- avec une clé de signature dans les secrets du dépôt : `thermobox-<version>.apk` et `.aab` (Play Store)
-  signés. Secrets : `ANDROID_KEYSTORE_BASE64` (le `.jks` en base64 : `base64 -w0 thermobox.jks`),
-  `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD` ;
-- sans clé : `thermobox-<version>-debug.apk`, installable pour essayer.
+- with a signing key in the secrets of the repository: signed `thermobox-<version>.apk` and `.aab`
+  (Play Store). Secrets: `ANDROID_KEYSTORE_BASE64` (the `.jks` in base64: `base64 -w0 thermobox.jks`),
+  `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`;
+- without a key: `thermobox-<version>-debug.apk`, installable to try.
 
-La clé (`*.jks`, `*.keystore`) n'est jamais dans le dépôt. Le workflow **Vérification** construit le
-client et l'APK de debug à chaque push sur `main` et `dev` (APK gardé une semaine dans les artefacts).
+The key (`*.jks`, `*.keystore`) is never in the repository. The **Check** workflow builds the client
+and the debug APK at each push on `main` and `dev` (APK kept a week in the artifacts).
 
 ### iOS
 
 ```bash
-npx cap add ios && npx cap open ios      # Xcode, sur un Mac
+npx cap add ios && npx cap open ios      # Xcode, on a Mac
 ```
 
-Dans l'application native, l'adresse du serveur est demandée sur l'écran de connexion. La version de
-l'application installée est indiquée à part dans **À propos**.
+In the native app, the address of the server is asked on the login screen. The version of the
+installed app is shown separately in **About**.
 
 ## Structure
 
 ```
-scripts/          construire.mjs (build avec la version), version.mjs, android.mjs (projet Android)
-plugins/          thermobox-native : composants Material 3 natifs de l'application Android
-src/app/core      session, HTTP, préférences, plateforme, transitions et animations, versions, unités…
-src/app/services  accès à l'API REST
-src/app/ui        feuilles, notifications, interrupteurs, graphique, arbre d'accès…
-src/app/shell     coque : navigation adaptée à la plateforme, onglet « Plus »
-src/app/pages     connexion, aperçu, salles, salle, mesures, gestion, utilisateurs, mises à jour,
-                  profil, préférences, plus, à propos
-src/styles        jetons et styles repris du JSF, couches iOS / Android, téléphone, mouvement
-mock/             serveur REST de démonstration
-nginx/, Dockerfile, compose.yaml   image de production
-.github/          workflows (vérification, release, beta / rc, nightly, Docker), action android
+scripts/          build.mjs (build with the version), version.mjs, android.mjs (Android project)
+plugins/          thermobox-native: native Material 3 components of the Android app
+src/app/core      session, HTTP, API v1 / v2, preferences, platform, transitions and animations, versions, units…
+src/app/services  access to the REST API
+src/app/ui        sheets, notifications, switches, chart, access tree, server logo…
+src/app/shell     shell: navigation suited to the platform, "More" tab
+src/app/pages     login, overview, rooms, room, measurements, management, users, updates,
+                  profile, preferences, more, about
+src/styles        tokens and base styles, iOS / Android layers, phone, motion
+mock/             demo REST server (v1 and v2)
+nginx/, Dockerfile, compose.yaml   production image
+.github/          workflows (check, release, beta / rc, nightly, Docker), android action
 ```
 
-## Crédits
+## Credits
 
-ThermoBox est conçu et développé par [ib · IbraxTheKing](https://github.com/IbraxTheKing).
-Ce client utilise Angular, Capacitor, Chart.js, PrimeIcons, la police Manrope (SIL Open Font License) et
-Tailwind CSS. Le serveur et l'interface JSF sont dans le dépôt
-[ThermoBox](https://github.com/IbraxTheKing/ThermoBox) (licence MIT).
+ThermoBox is designed and developed by [ib · IbraxTheKing](https://github.com/IbraxTheKing).
+This client uses Angular, Capacitor, Chart.js, PrimeIcons, the Manrope font (SIL Open Font License)
+and Tailwind CSS. The server is in the [ThermoBox](https://github.com/IbraxTheKing/ThermoBox)
+repository (MIT license).

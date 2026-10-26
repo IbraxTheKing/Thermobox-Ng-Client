@@ -15,18 +15,18 @@ export class ClimateService {
   private readonly http = inject(HttpClient);
   private readonly server = inject(ServerService);
   private url(path: string): string {
-    return this.server.url(`/climat${path}`);
+    return this.server.url(`/climate${path}`);
   }
 
   history(id: number, start: Date, end: Date): Observable<History> {
-    return this.http.get<History>(this.url(`/${id}/historique`), {
+    return this.http.get<History>(this.url(`/${id}/history`), {
       params: { start: toInstant(start), end: toInstant(end) },
     });
   }
 
   /** Average curve of several elements: { "3": [points], … }. */
   averages(ids: number[], start: Date, end: Date, quiet = false): Observable<Record<string, Point[]>> {
-    return this.http.get<Record<string, Point[]>>(this.url('/moyennes'), {
+    return this.http.get<Record<string, Point[]>>(this.url('/averages'), {
       params: { ids: ids.join(','), start: toInstant(start), end: toInstant(end) },
       context: new HttpContext().set(DISCRETE, quiet),
     });
@@ -37,6 +37,6 @@ export class ClimateService {
    * what has its own setpoint keeps it, unless [force].
    */
   sendSetpoint(id: number, value: number, force = false): Observable<SetpointSending> {
-    return this.http.put<SetpointSending>(this.url(`/${id}/consigne`), { value, force: force });
+    return this.http.put<SetpointSending>(this.url(`/${id}/setpoint`), { value, force });
   }
 }

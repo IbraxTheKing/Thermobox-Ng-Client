@@ -3,37 +3,43 @@ import { ChangeDetectionStrategy, Component, DOCUMENT, ElementRef, computed, eff
 import { Router, RouterLink } from '@angular/router';
 
 import { readableAddress } from '../core/api.config';
-import { AuthService, Account, openable } from '../core/auth';
+import { AuthService, Account, byServer, openable } from '../core/auth';
 import { ConfirmService } from '../core/messages';
 import { initial } from '../core/text';
+import { TbServerLogo } from './server-logo';
 import { TbSheet } from './sheet';
 
+const ROLE: Record<string, string> = { ADMIN: 'Administrateur', MANAGER: 'Gestionnaire', VIEWER: 'Lecteur' };
+
 /**
- * « Changer de compte »: the accounts saved on this device (one per server and user), each with
- * the address of its server under its name. Tap one to open it (its password is asked again if
+ * « Changer de compte »: the accounts saved on this device (one per server and user), in one
+ * section per server with its logo (26.12 servers) and address. Tap one to open it (its password is asked again if
  * it was logged out or has expired); « Ajouter un compte » logs in to another one, the current
  * account stays saved.
  *
  * Two forms: a sheet (phones, the Plus page) and, on a computer, a menu that drops from the
  * account at the foot of the side bar (mode="menu"; closed by a click elsewhere or Escape).
  *
- *   <tb-accounts [(ouvert)]="comptes" />
- *   <tb-accounts mode="menu" [(ouvert)]="menuComptes" />
+ *   <tb-accounts [(open)]="accounts" />
+ *   <tb-accounts mode="menu" [(open)]="accountsMenu" />
  */
 @Component({
   selector: 'tb-accounts',
-  imports: [TbSheet, RouterLink, NgTemplateOutlet],
+  imports: [TbSheet, RouterLink, NgTemplateOutlet, TbServerLogo],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <ng-template #list>
       <ul class="tb-accounts">
-        @for (c of rows(); track c.key) {
+        @for (g of servers(); track g.base) {
+          <li class="tb-accounts-server"><tb-server-logo [base]="g.base" /><span>{{ g.address }}</span></li>
+          @for (c of g.rows; track c.key) {
           <li>
-            <button type="button" class="tb-account" [class.tb-account-active]="c.active" [attr.aria-current]="c.active ? 'true' : null" (click)="choose(c)">
-              <span class="tb-avatar" aria-hidden="true">{{ c.initial }}</span>
+            <button type="button" class="tb-account" [class.tb-account-active]="c.active" [attr.aria-current]="c.active ? 'true' : null" (click)="choose(c)"
+                    [attr.aria-label]="c.account.user.username + ' sur ' + g.address">
+              <span class="tb-avatar" aria-hidden="true">{{ c.initial }}<tb-server-logo badge [base]="g.base" /></span>
               <span class="tb-account-text">
                 <strong>{{ c.account.user.username }}</strong>
-                <span class="tb-account-address"><i class="pi pi-server" aria-hidden="true"></i>{{ c.address }}</span>
+                <span class="tb-account-address">{{ c.role }}</span>
               </span>
               @if (c.active) {
                 <i class="pi pi-check tb-account-check" aria-label="Compte actuel"></i>
@@ -46,6 +52,7 @@ import { TbSheet } from './sheet';
               <i class="pi pi-times"></i>
             </button>
           </li>
+          }
         }
       </ul>
     </ng-template>
@@ -76,7 +83,7 @@ export class TbAccounts {
   private readonly confirm = inject(ConfirmService);
 
   readonly open = model(false);
-  readonly mode = input<'feuille' | 'menu'>('feuille');
+  readonly mode = input<'sheet' | 'menu'>('sheet');
 
   constructor() {
     // The menu: a click outside it (and outside what opened it) or Escape closes it
@@ -107,9 +114,12 @@ export class TbAccounts {
       active: account.key === this.auth.key(),
       openable: openable(account),
       initial: initial(account.user.username),
-      address: readableAddress(account.server),
+      role: ROLE[account.user.type ?? 'VIEWER'] ?? '',
     })),
   );
+
+  /** One section per server, its logo next to its address. */
+  protected readonly servers = computed(() => byServer(this.rows()));
 
   protected choose(l: { account: Account; active: boolean }): void {
     this.open.set(false);

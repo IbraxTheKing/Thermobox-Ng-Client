@@ -1,48 +1,48 @@
 #!/usr/bin/env node
 /*
- * Application Android (Capacitor) :
+ * Android app (Capacitor):
  *
- *   node scripts/android.mjs preparer
- *     À lancer une fois après « npx cap add android » (puis à commiter avec android/), et sans
- *     risque à chaque build (rien n'est modifié deux fois) :
- *     - versionName / versionCode lus dans les propriétés Gradle thermoboxVersionName /
- *       thermoboxVersionCode (sinon « dev » / 1) ;
- *     - signature de la version release par les propriétés thermoboxKeystore,
- *       thermoboxKeystorePassword, thermoboxKeyAlias, thermoboxKeyPassword (la clé n'est jamais
- *       dans le dépôt) ;
- *     - *.jks et *.keystore ignorés par Git.
+ *   node scripts/android.mjs prepare
+ *     To run once after "npx cap add android" (then to commit with android/), and safely at each
+ *     build (nothing is changed twice):
+ *     - versionName / versionCode read from the Gradle properties thermoboxVersionName /
+ *       thermoboxVersionCode (else "dev" / 1);
+ *     - signing of the release build with the properties thermoboxKeystore,
+ *       thermoboxKeystorePassword, thermoboxKeyAlias, thermoboxKeyPassword (the key is never in
+ *       the repository);
+ *     - *.jks and *.keystore ignored by Git.
  *
  *   node scripts/android.mjs version
- *     Affiche « nom=… » et « code=… » pour la version courante (scripts/version.mjs), à passer à
- *     Gradle : ./gradlew assembleRelease -PthermoboxVersionName=… -PthermoboxVersionCode=…
+ *     Prints "name=…" and "code=…" for the current version (scripts/version.mjs), to give to
+ *     Gradle: ./gradlew assembleRelease -PthermoboxVersionName=… -PthermoboxVersionCode=…
  */
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { versionClient, versionCodeAndroid } from './version.mjs';
+import { androidVersionCode, clientVersion } from './version.mjs';
 
-const racine = join(dirname(fileURLToPath(import.meta.url)), '..');
-const MARQUE = '// thermobox:';
+const root = join(dirname(fileURLToPath(import.meta.url)), '..');
+const MARK = '// thermobox:';
 
-function preparer() {
-  const gradle = join(racine, 'android', 'app', 'build.gradle');
+function prepare() {
+  const gradle = join(root, 'android', 'app', 'build.gradle');
   if (!existsSync(gradle)) {
-    console.error('android/app/build.gradle introuvable : lancez d\'abord « npx cap add android ».');
+    console.error('android/app/build.gradle not found: run "npx cap add android" first.');
     process.exit(1);
   }
   let s = readFileSync(gradle, 'utf8');
-  const avant = s;
+  const before = s;
 
-  if (!s.includes(`${MARQUE}version`)) {
+  if (!s.includes(`${MARK}version`)) {
     s = s
-      .replace(/^(\s*)versionCode\s+\d+\s*$/m, `$1${MARQUE}version — propriétés Gradle données par les workflows (scripts/android.mjs version)\n$1versionCode((project.findProperty('thermoboxVersionCode') ?: '1') as int)`)
+      .replace(/^(\s*)versionCode\s+\d+\s*$/m, `$1${MARK}version — Gradle properties given by the workflows (scripts/android.mjs version)\n$1versionCode((project.findProperty('thermoboxVersionCode') ?: '1') as int)`)
       .replace(/^(\s*)versionName\s+"[^"]*"\s*$/m, `$1versionName((project.findProperty('thermoboxVersionName') ?: 'dev') as String)`);
-    if (!s.includes(`${MARQUE}version`)) throw new Error('versionCode / versionName introuvables dans android/app/build.gradle');
+    if (!s.includes(`${MARK}version`)) throw new Error('versionCode / versionName not found in android/app/build.gradle');
   }
 
-  if (!s.includes(`${MARQUE}signature`)) {
-    const signature = `    ${MARQUE}signature — clé donnée par -PthermoboxKeystore=… (jamais dans le dépôt)
+  if (!s.includes(`${MARK}signature`)) {
+    const signature = `    ${MARK}signature — key given by -PthermoboxKeystore=… (never in the repository)
     signingConfigs {
         release {
             if (project.hasProperty('thermoboxKeystore')) {
@@ -55,42 +55,42 @@ function preparer() {
     }
 `;
     const i = s.search(/^\s*buildTypes\s*\{/m);
-    if (i < 0) throw new Error('buildTypes introuvable dans android/app/build.gradle');
+    if (i < 0) throw new Error('buildTypes not found in android/app/build.gradle');
     // The release build type (after buildTypes {), signed when a key is given
-    const types = s.slice(i).replace(/^(\s*)release\s*\{\s*\n/m, (m, indent) => `${m}${indent}    ${MARQUE}signature-release\n${indent}    if (project.hasProperty('thermoboxKeystore')) signingConfig = signingConfigs.release\n`);
+    const types = s.slice(i).replace(/^(\s*)release\s*\{\s*\n/m, (m, indent) => `${m}${indent}    ${MARK}signature-release\n${indent}    if (project.hasProperty('thermoboxKeystore')) signingConfig = signingConfigs.release\n`);
     s = s.slice(0, i) + signature + types;
-    if (!s.includes(`${MARQUE}signature-release`)) throw new Error('buildTypes.release introuvable dans android/app/build.gradle');
+    if (!s.includes(`${MARK}signature-release`)) throw new Error('buildTypes.release not found in android/app/build.gradle');
   }
 
-  if (s !== avant) {
+  if (s !== before) {
     writeFileSync(gradle, s);
-    console.log('android/app/build.gradle : version et signature prêtes');
+    console.log('android/app/build.gradle: version and signing ready');
   } else {
-    console.log('android/app/build.gradle : déjà prêt');
+    console.log('android/app/build.gradle: already ready');
   }
 
-  const ignore = join(racine, 'android', '.gitignore');
+  const ignore = join(root, 'android', '.gitignore');
   if (existsSync(ignore)) {
     const g = readFileSync(ignore, 'utf8');
     const g2 = g.replace(/^#\s*\*\.jks\s*$/m, '*.jks').replace(/^#\s*\*\.keystore\s*$/m, '*.keystore');
-    const g3 = /^\*\.jks$/m.test(g2) ? g2 : `${g2.trimEnd()}\n\n# Clés de signature : jamais dans le dépôt\n*.jks\n*.keystore\n`;
+    const g3 = /^\*\.jks$/m.test(g2) ? g2 : `${g2.trimEnd()}\n\n# Signing keys: never in the repository\n*.jks\n*.keystore\n`;
     if (g3 !== g) {
       writeFileSync(ignore, g3);
-      console.log('android/.gitignore : clés de signature ignorées');
+      console.log('android/.gitignore: signing keys ignored');
     }
   }
 }
 
 function version() {
-  const nom = versionClient();
-  console.log(`nom=${nom}`);
-  console.log(`code=${versionCodeAndroid(nom)}`);
+  const name = clientVersion();
+  console.log(`name=${name}`);
+  console.log(`code=${androidVersionCode(name)}`);
 }
 
-const commande = process.argv[2];
-if (commande === 'preparer') preparer();
-else if (commande === 'version') version();
+const command = process.argv[2];
+if (command === 'prepare') prepare();
+else if (command === 'version') version();
 else {
-  console.error('Usage : node scripts/android.mjs preparer | version');
+  console.error('Usage: node scripts/android.mjs prepare | version');
   process.exit(1);
 }

@@ -22,7 +22,7 @@
   </label>
   <!-- Phones: pull the page down instead (PullToRefresh) -->
   @if (!pull()) {
-    <button type="button" class="tb-btn tb-icon tb-tonal" data-action="actualiser" title="Actualiser" aria-label="Actualiser"
+    <button type="button" class="tb-btn tb-icon tb-tonal" data-action="refresh" title="Actualiser" aria-label="Actualiser"
             [class.tb-busy]="store.loading()" (click)="refresh()">
       <i class="pi pi-refresh"></i>
     </button>
@@ -88,10 +88,10 @@
       }
       <input type="range" class="tb-scale-handle" [min]="-extent()" [max]="extent()" step="0.1" [value]="range.bottom() ?? -extent()"
              aria-label="Écart minimal à la consigne" [attr.aria-valuetext]="range.bottom() == null ? 'Sans limite' : unit.delta(range.bottom())"
-             (input)="setBound('bas', +$any($event.target).value)" />
+             (input)="setBound('bottom', +$any($event.target).value)" />
       <input type="range" class="tb-scale-handle" [min]="-extent()" [max]="extent()" step="0.1" [value]="range.top() ?? extent()"
              aria-label="Écart maximal à la consigne" [attr.aria-valuetext]="range.top() == null ? 'Sans limite' : unit.delta(range.top())"
-             (input)="setBound('haut', +$any($event.target).value)" />
+             (input)="setBound('top', +$any($event.target).value)" />
     </div>
     <div class="tb-scale-legend" aria-hidden="true">
       <span>Trop froid <small class="tb-figures">{{ unit.delta(-extent()) }}</small></span>
@@ -152,7 +152,7 @@
 }
 
 @if (noResult()) {
-  <div class="tb-empty" data-flip="aucun-resultat">
+  <div class="tb-empty" data-flip="no-result">
     <span class="tb-empty-icon"><i class="pi pi-search"></i></span>
     <strong>Rien ne correspond à ta recherche</strong>
     <button type="button" class="tb-btn tb-tonal" (click)="clearFilters()">Effacer les filtres</button>
@@ -161,9 +161,9 @@
 
 <!-- Each section folds and unfolds from its title; remembered on this device -->
 @if (favorites().length) {
-  <section class="tb-section" [class.tb-collapsed]="isFolded('favoris')" data-section="favoris">
-    <h2 class="tb-section-title" data-flip="section-favoris">
-      <button type="button" class="tb-section-toggle" [attr.aria-expanded]="!isFolded('favoris')" (click)="toggleSection('favoris')">
+  <section class="tb-section" [class.tb-collapsed]="isFolded('favorites')" data-section="favorites">
+    <h2 class="tb-section-title" data-flip="section-favorites">
+      <button type="button" class="tb-section-toggle" [attr.aria-expanded]="!isFolded('favorites')" (click)="toggleSection('favorites')">
         <span class="tb-section-icon tb-section-icon-fav"><i class="pi pi-star-fill"></i></span>
         Favoris
         <span class="tb-section-meta">{{ favorites().length }}</span>

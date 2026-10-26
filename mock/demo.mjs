@@ -3,14 +3,14 @@
 import { spawn } from 'node:child_process';
 
 const opts = { stdio: 'inherit', shell: process.platform === 'win32' };
-const api = spawn(process.execPath, ['mock/serveur-demo.mjs', '--port', '8080'], opts);
+const api = spawn(process.execPath, ['mock/demo-server.mjs', '--port', '8080'], opts);
 const ng = spawn('npx', ['ng', 'serve', '--host', '0.0.0.0'], opts);
-const arreter = () => {
+const stop = () => {
   api.kill();
   ng.kill();
   process.exit();
 };
-process.on('SIGINT', arreter);
-process.on('SIGTERM', arreter);
-api.on('exit', arreter);
-ng.on('exit', arreter);
+process.on('SIGINT', stop);
+process.on('SIGTERM', stop);
+api.on('exit', stop);
+ng.on('exit', stop);

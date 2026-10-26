@@ -17,7 +17,7 @@ const RESISTANCE = 0.5;
  * pull; past the threshold it fills, a tap of the phone; let go, it spins until the page is read.
  * The browser's own gesture (Chrome reloads the whole app) is turned off meanwhile.
  *
- *   readonly tirer = inject(PullToRefresh).activate(() => this.actualiser());   // in a page
+ *   readonly pull = inject(PullToRefresh).activate(() => this.refresh());   // in a page
  *   @if (!tirer()) { <button …>Actualiser</button> }
  */
 @Injectable({ providedIn: 'root' })

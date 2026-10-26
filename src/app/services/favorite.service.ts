@@ -11,14 +11,14 @@ export class FavoriteService {
   private readonly server = inject(ServerService);
 
   list(): Observable<number[]> {
-    return this.http.get<number[]>(this.server.url('/favoris'));
+    return this.http.get<number[]>(this.server.url('/favorites'));
   }
 
   add(roomId: number): Observable<void> {
-    return this.http.put<void>(this.server.url(`/favoris/${roomId}`), null);
+    return this.http.put<void>(this.server.url(`/favorites/${roomId}`), null);
   }
 
   remove(roomId: number): Observable<void> {
-    return this.http.delete<void>(this.server.url(`/favoris/${roomId}`));
+    return this.http.delete<void>(this.server.url(`/favorites/${roomId}`));
   }
 }

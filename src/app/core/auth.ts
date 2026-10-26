@@ -4,7 +4,8 @@ import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
 import { LoginResponse, User, UserRole } from '../models/models';
-import { ServerService, readableAddress } from './api.config';
+import { ApiVersionService } from './api-version';
+import { ServerService, apiUrl, readableAddress } from './api.config';
 import { initial } from './text';
 
 /**
@@ -34,6 +35,18 @@ export function accountKey(server: string, username: string): string {
   return `${server}|${username.toLowerCase()}`;
 }
 
+/** Rows of an account list in one section per server, in the order the servers first come. */
+export function byServer<T extends { account: Account }>(rows: T[]): { base: string; address: string; rows: T[] }[] {
+  const groups = new Map<string, { base: string; address: string; rows: T[] }>();
+  for (const r of rows) {
+    const base = r.account.server;
+    let g = groups.get(base);
+    if (!g) groups.set(base, (g = { base, address: readableAddress(base), rows: [] }));
+    g.rows.push(r);
+  }
+  return [...groups.values()];
+}
+
 /** The account can be opened without its password. */
 export function openable(c: Account): boolean {
   if (!c.token) return false;
@@ -42,7 +55,7 @@ export function openable(c: Account): boolean {
 }
 
 /**
- * The logged-in user and their JWT (POST /api/auth/login), among the accounts saved on this
+ * The logged-in user and their JWT (POST /api/v2/auth/login), among the accounts saved on this
  * device. Tokens are kept until they expire or the user logs out; the token of the current account
  * is sent as "Authorization: Bearer" by authInterceptor. The role rules mirror the REST resources
  * (@RequiresRole / @RequiresAuth) and LoginBean.
@@ -52,6 +65,7 @@ export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
   private readonly server = inject(ServerService);
+  private readonly versions = inject(ApiVersionService);
 
   private readonly list = signal<Account[]>(readAccounts());
   private readonly active = signal<string | null>(readActive());
@@ -77,7 +91,7 @@ export class AuthService {
   readonly admin = computed(() => this.role() === 'ADMIN');
   /** Like hasRole("MANAGER") in REST: an ADMIN is also a MANAGER. */
   readonly manager = computed(() => this.role() === 'ADMIN' || this.role() === 'MANAGER');
-  /** PUT /api/climat/{id}/setpoint: ADMIN or MANAGER. */
+  /** PUT /api/v2/climate/{id}/setpoint: ADMIN or MANAGER. */
   readonly canSetSetpoint = this.manager;
   /** Boxes are hardware: VIEWERs only see buildings, floors, rooms and their temperatures. */
   readonly seesDevices = this.manager;
@@ -97,7 +111,9 @@ export class AuthService {
 
   /** Logs in on [base] (default: the current server); the account becomes the current one. */
   async login(username: string, password: string, base = this.server.base()): Promise<void> {
-    const r = await firstValueFrom(this.http.post<LoginResponse>(`${base}/auth/login`, { username, password }));
+    // Asked again at each login: the server may have been updated (v1 → v2) since
+    await this.versions.refresh(base);
+    const r = await firstValueFrom(this.http.post<LoginResponse>(apiUrl(base, '/auth/login'), { username, password }));
     const key = accountKey(base, r.user.username ?? username);
     const account: Account = { key, server: base, user: r.user, token: r.token, expiresAt: r.expiresAt, seen: Date.now() };
     this.list.update((l) => [...l.filter((x) => x.key !== key), account]);
@@ -201,7 +217,7 @@ export class AuthService {
   private async revoke(c: Account): Promise<void> {
     if (!c.token) return;
     try {
-      await firstValueFrom(this.http.post(`${c.server}/auth/logout`, null, { headers: { Authorization: `Bearer ${c.token}` } }));
+      await firstValueFrom(this.http.post(apiUrl(c.server, '/auth/logout'), null, { headers: { Authorization: `Bearer ${c.token}` } }));
     } catch {
       /* already expired or server unreachable: forgotten anyway */
     }

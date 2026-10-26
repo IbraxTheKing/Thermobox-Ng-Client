@@ -3,7 +3,7 @@
     <span class="tb-eyebrow">Administration</span>
     <h1>Mises à jour</h1>
   </div>
-  <button type="button" class="tb-btn tb-tonal" data-action="actualiser" [class.tb-busy]="checking()" [disabled]="tracking() || checking()" (click)="check()">
+  <button type="button" class="tb-btn tb-tonal" data-action="refresh" [class.tb-busy]="checking()" [disabled]="tracking() || checking()" (click)="check()">
     <i class="pi pi-refresh"></i>Rechercher maintenant
   </button>
 </header>
@@ -137,7 +137,7 @@
       <div class="tb-update-title">
         <strong class="tb-update-version">{{ v.version }}</strong>
         <span class="tb-channel tb-channel-{{ channel(v) }}">{{ channelLabel(v) }}</span>
-        <span class="tb-update-type-tag">{{ v.older ? 'Version antérieure' : v.typeLabel }}</span>
+        <span class="tb-update-type-tag">{{ v.older ? 'Version antérieure' : typeLabel(v.type) }}</span>
         @if (v.recommended) {
           <span class="tb-tag tb-tag-success"><i class="pi pi-thumbs-up"></i>Recommandée</span>
         }
@@ -177,7 +177,7 @@
       <i class="pi pi-arrow-right"></i>
       <strong class="tb-update-version">{{ p.version.version }}</strong>
       <span class="tb-channel tb-channel-{{ channel(p.version) }}">{{ channelLabel(p.version) }}</span>
-      <span class="tb-update-type-tag">{{ p.version.older ? 'Version antérieure' : p.version.typeLabel }}</span>
+      <span class="tb-update-type-tag">{{ p.version.older ? 'Version antérieure' : typeLabel(p.version.type) }}</span>
     </div>
 
     <!-- Feature update: rollback is not guaranteed -->

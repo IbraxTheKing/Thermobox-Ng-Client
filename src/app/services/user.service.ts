@@ -2,10 +2,10 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
-import { ServerService } from '../core/api.config';
+import { ServerService, apiUrl } from '../core/api.config';
 import { Access, User, UserChanges } from '../models/models';
 
-/** Client Angular de UserResource — /api/users */
+/** Angular client of the users resource — /api/v2/users */
 @Injectable({ providedIn: 'root' })
 export class UserService {
   private readonly http = inject(HttpClient);
@@ -34,7 +34,7 @@ export class UserService {
    * server other than the app's (registration page).
    */
   add(user: { username: string; password: string }, base?: string): Observable<void> {
-    return this.http.post<void>(base ? `${base}/users` : this.url(), user);
+    return this.http.post<void>(base ? apiUrl(base, '/users') : this.url(), user);
   }
 
   /** ADMIN or owner: only the fields given change; the role, ADMIN only. */
@@ -49,11 +49,11 @@ export class UserService {
 
   /** ADMIN or owner: everything, or only some buildings / floors / rooms. */
   getAccess(id: number): Observable<Access> {
-    return this.http.get<Access>(this.url(`/${id}/acces`));
+    return this.http.get<Access>(this.url(`/${id}/access`));
   }
 
   /** ADMIN — an ADMIN account cannot be restricted. */
   setAccess(id: number, restricted: boolean, elements: number[]): Observable<Access> {
-    return this.http.put<Access>(this.url(`/${id}/acces`), { restricted, elements });
+    return this.http.put<Access>(this.url(`/${id}/access`), { restricted, elements });
   }
 }

@@ -6,6 +6,8 @@ import { UpdateNoticeService } from '../../core/update-notice';
 import { PlatformService } from '../../core/platform';
 import { PreferencesService } from '../../core/preferences';
 import { destinationsOf, barSlots } from '../../shell/destinations';
+import { ServerService } from '../../core/api.config';
+import { TbServerLogo } from '../../ui/server-logo';
 import { TbAccounts } from '../../ui/accounts';
 
 /**
@@ -14,7 +16,7 @@ import { TbAccounts } from '../../ui/accounts';
  */
 @Component({
   selector: 'tb-more',
-  imports: [RouterLink, TbAccounts],
+  imports: [RouterLink, TbAccounts, TbServerLogo],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="tb-narrow">
@@ -29,7 +31,7 @@ import { TbAccounts } from '../../ui/accounts';
         <span class="tb-list-text">
           <strong>{{ auth.user()?.username }}</strong>
           <span class="tb-muted">{{ role() }} · Mon profil</span>
-          <span class="tb-account-address"><i class="pi pi-server" aria-hidden="true"></i>{{ auth.address() }}</span>
+          <span class="tb-account-address"><tb-server-logo [base]="server.base()" />{{ auth.address() }}</span>
         </span>
         <i class="pi pi-angle-right tb-list-continuation"></i>
       </a>
@@ -88,6 +90,7 @@ import { TbAccounts } from '../../ui/accounts';
 })
 export class MorePage {
   protected readonly auth = inject(AuthService);
+  protected readonly server = inject(ServerService);
   protected readonly notice = inject(UpdateNoticeService);
 
   protected readonly accounts = signal(false);

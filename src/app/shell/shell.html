@@ -67,7 +67,7 @@
     <div class="tb-rail-account-zone">
       <button type="button" class="tb-rail-account" data-accounts-opener aria-haspopup="dialog" [attr.aria-expanded]="accounts()"
               [title]="'Comptes (' + auth.user()?.username + ' · ' + auth.address() + ')'" (click)="accounts.set(!accounts())">
-        <span class="tb-avatar" aria-hidden="true">{{ auth.initial() }}</span>
+        <span class="tb-avatar" aria-hidden="true">{{ auth.initial() }}<tb-server-logo badge [base]="server.base()" /></span>
         <span class="tb-rail-account-text"><strong>{{ auth.user()?.username }}</strong><small>{{ auth.address() }}</small></span>
         <i class="pi pi-chevron-up tb-rail-account-arrow" aria-hidden="true"></i>
       </button>

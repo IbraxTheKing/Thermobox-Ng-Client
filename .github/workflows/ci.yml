@@ -1,10 +1,10 @@
-name: Vérification
+name: Check
 
-# À chaque push et pull request sur main et dev : le client se construit (Node 24, comme les
-# versions publiées) et, s'il y a un dossier android/, l'application Android aussi, avec le plugin
-# natif (plugins/thermobox-native). L'APK de debug est gardé une semaine dans les artefacts du run,
-# pour l'essayer sur un téléphone.
-# Remplace le modèle « NodeJS with Webpack » de GitHub (ce projet n'utilise pas webpack).
+# On every push and pull request on main and dev: the client builds (Node 24, as the published
+# versions) and, when there is an android/ folder, the Android app too, with the native plugin
+# (plugins/thermobox-native). The debug APK is kept a week in the artifacts of the run, to try it
+# on a phone.
+# Replaces GitHub's "NodeJS with Webpack" template (this project does not use webpack).
 
 on:
   push:
@@ -22,27 +22,27 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # tags : la version inscrite est celle du commit s'il en a une
+          fetch-depth: 0   # tags: the version written is the commit's when it has one
 
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
           cache: npm
 
-      - name: Construire le client
+      - name: Build the client
         run: |
           npm ci
           npm run build
 
-      - name: Application Android (debug)
+      - name: Android app (debug)
         uses: ./.github/actions/android
         with:
           tag: dev
 
-      - name: Garder l'APK
+      - name: Keep the APK
         uses: actions/upload-artifact@v4
         with:
           name: thermobox-android-debug
-          path: livrables/*.apk
+          path: deliverables/*.apk
           retention-days: 7
           if-no-files-found: ignore

@@ -27,32 +27,32 @@ services:
 
     develop:
       watch:
-        # Tout changement du code Angular reconstruit l'image
-        # et recrée le conteneur.
+        # Any change of the Angular code rebuilds the image
+        # and recreates the container.
         - action: rebuild
           path: ./src
           ignore:
             - "**/node_modules/**"
             - "**/*.spec.ts"
 
-        # Les dépendances doivent être réinstallées si elles changent.
+        # The dependencies must be installed again when they change.
         - action: rebuild
           path: ./package.json
 
         - action: rebuild
           path: ./package-lock.json
 
-        # Configuration de compilation Angular.
+        # Angular build configuration.
         - action: rebuild
           path: ./angular.json
 
         - action: rebuild
           path: ./tsconfig.json
 
-        # Configuration Nginx intégrée à l'image.
+        # Nginx configuration built into the image.
         - action: rebuild
           path: ./nginx
 
-        # Toute modification du Dockerfile nécessite une reconstruction.
+        # Any change of the Dockerfile needs a rebuild.
         - action: rebuild
           path: ./Dockerfile

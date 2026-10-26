@@ -6,7 +6,7 @@ import { ServerService } from '../core/api.config';
 import { DISCRETE } from '../core/http';
 import { UpdatesState, Installation, Preparation } from '../models/models';
 
-/** Client Angular de UpdateResource — /api/updates : versions du serveur REST. */
+/** Angular client of the updates resource — /api/v2/updates: versions of the REST server. */
 @Injectable({ providedIn: 'root' })
 export class UpdateService {
   private readonly http = inject(HttpClient);

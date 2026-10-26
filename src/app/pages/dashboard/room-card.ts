@@ -72,22 +72,22 @@ import { RoomSummary } from './summary';
         <a [routerLink]="['/app/room', s.id]" class="tb-stretched" [title]="'Ouvrir ' + s.name">
           <span class="tb-sr-only">Ouvrir {{ s.name }}</span>
         </a>
-        <button type="button" class="tb-room-tile-favori" [class.tb-fav-on]="s.favorite" [attr.aria-pressed]="s.favorite"
+        <button type="button" class="tb-room-tile-favorite" [class.tb-fav-on]="s.favorite" [attr.aria-pressed]="s.favorite"
                 [title]="s.favorite ? 'Retirer des favoris' : 'Ajouter aux favoris'" (click)="favorite.emit(s.id)">
           <i class="pi" [class.pi-star-fill]="s.favorite" [class.pi-star]="!s.favorite"></i>
         </button>
         @if (s.image != null) {
           <span class="tb-room-tile-photo"><tb-photo-img [roomId]="s.id" [version]="s.image" /></span>
         }
-        <span class="tb-room-tile-nom" data-vt="room-name" [attr.data-vt-id]="s.id">{{ s.name }}</span>
+        <span class="tb-room-tile-name" data-vt="room-name" [attr.data-vt-id]="s.id">{{ s.name }}</span>
         <span class="tb-room-tile-t tb-figures" data-vt="room-temp" [attr.data-vt-id]="s.id" [tbWatch]="s.temperature">{{ unit.t(s.temperature) }}<span>°</span></span>
-        <span class="tb-room-tile-etat">
+        <span class="tb-room-tile-state">
           @if (r().state.tone === 'stable') { Confortable } @else { <b>{{ homeState() }}</b> }
           @if (s.setpoint?.value != null) { · {{ unit.t(s.setpoint?.value) }}° }
         </span>
         @if (r().trend; as t) {
-          <svg class="tb-room-tile-courbe" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true">
-            <path class="tb-room-tile-aire" [attr.d]="t.area" /><path class="tb-room-tile-ligne" [attr.d]="t.row" />
+          <svg class="tb-room-tile-curve" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true">
+            <path class="tb-room-tile-area" [attr.d]="t.area" /><path class="tb-room-tile-line" [attr.d]="t.row" />
           </svg>
         }
       </article>
@@ -118,7 +118,7 @@ export class TbRoomCard {
   }
 
   protected press(e: PointerEvent): void {
-    if (e.button !== 0 || (e.target as Element).closest('.tb-room-tile-favori')) return;
+    if (e.button !== 0 || (e.target as Element).closest('.tb-room-tile-favorite')) return;
     this.swallowed = false;
     const x0 = e.clientX;
     const y0 = e.clientY;

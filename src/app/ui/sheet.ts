@@ -100,7 +100,7 @@ export class TbSheet {
   protected readonly closing = signal(false);
   /** Shown as a native menu: the web sheet is there (its rows are clicked) but not seen. */
   protected readonly isNative = signal(false);
-  private readonly box = viewChild<ElementRef<HTMLElement>>('boite');
+  private readonly box = viewChild<ElementRef<HTMLElement>>('box');
   private focusBefore: HTMLElement | null = null;
   /** The touch that began on the dark background around the sheet. */
   private backdropTouched = false;

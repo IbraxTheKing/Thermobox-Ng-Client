@@ -3,7 +3,7 @@
     <span class="tb-eyebrow">{{ byBuilding() ? 'Tous les bâtiments' : 'Toutes les salles' }}</span>
     <h1>{{ home() ? 'Historique' : 'Températures' }}</h1>
   </div>
-  <button type="button" class="tb-btn tb-icon tb-tonal" data-action="actualiser" title="Actualiser" aria-label="Actualiser" [class.tb-busy]="loading()" (click)="refresh()">
+  <button type="button" class="tb-btn tb-icon tb-tonal" data-action="refresh" title="Actualiser" aria-label="Actualiser" [class.tb-busy]="loading()" (click)="refresh()">
     <i class="pi pi-refresh"></i>
   </button>
 </header>

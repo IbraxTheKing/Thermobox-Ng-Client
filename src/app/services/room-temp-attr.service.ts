@@ -15,7 +15,7 @@ export class RoomTempAttrService {
   private readonly http = inject(HttpClient);
   private readonly server = inject(ServerService);
   private get url(): string {
-    return this.server.url('/salletemps');
+    return this.server.url('/roomtemps');
   }
 
   // ---------- CRUD ----------
@@ -60,7 +60,7 @@ export class RoomTempAttrService {
   }
 
   getSetpoint(roomId: number): Observable<Setpoint | null> {
-    return this.http.get<Setpoint | null>(`${this.url}/room/${roomId}/consigne`);
+    return this.http.get<Setpoint | null>(`${this.url}/room/${roomId}/setpoint`);
   }
 
   getLatestMeasured(roomId: number): Observable<Temperature | null> {
@@ -74,7 +74,7 @@ export class RoomTempAttrService {
   }
 
   getSetpointsTimed(roomId: number, start: Date | string, end: Date | string): Observable<Setpoint[] | null> {
-    return this.http.get<Setpoint[] | null>(`${this.url}/room/${roomId}/consignes`, {
+    return this.http.get<Setpoint[] | null>(`${this.url}/room/${roomId}/setpoints`, {
       params: this.range(start, end),
     });
   }
@@ -87,7 +87,7 @@ export class RoomTempAttrService {
 
   /** Sends a new setpoint to the room (PUT /room/{id}/setpoint?value=...). 404 for an unknown room. */
   sendSetpoint(roomId: number, value: number): Observable<void> {
-    return this.http.put<void>(`${this.url}/room/${roomId}/consigne`, null, {
+    return this.http.put<void>(`${this.url}/room/${roomId}/setpoint`, null, {
       params: new HttpParams().set('value', value),
     });
   }

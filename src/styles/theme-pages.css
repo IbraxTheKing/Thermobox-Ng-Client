@@ -3,7 +3,7 @@
  * and the page of a room (control desk / thermostat).
  */
 
-/* ============================== Aperçu ============================== */
+/* ============================== Overview ============================== */
 
 .tb-overview-under { margin: 6px 0 0; color: var(--md-on-surface-variant); font-size: .95rem; }
 /* Home: the house in one sentence, the names in bold */
@@ -119,17 +119,17 @@
     transition: transform var(--tb-fast) var(--tb-ease);
 }
 .tb-room.tb-room-tile:has(.tb-stretched:active) { transform: scale(.98); }
-.tb-room-tile-nom { position: relative; z-index: 1; font-size: 1.02rem; padding-right: 30px; }
+.tb-room-tile-name { position: relative; z-index: 1; font-size: 1.02rem; padding-right: 30px; }
 .tb-room-tile-t { position: relative; z-index: 1; margin-top: 6px; font-size: calc(3.4rem * var(--z, 1)); line-height: 1; letter-spacing: -.045em; }
 .tb-room-tile-t span { font-size: 1.5rem; vertical-align: 1.3rem; margin-left: 2px; font-weight: 300; }
-.tb-room-tile-etat { position: relative; z-index: 1; margin-top: 4px; color: var(--md-on-surface-variant); font-size: .85rem; }
-.tb-room-tile-etat b { color: var(--f); font-weight: 600; }
-.tb-room-tile-courbe { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 46px; }
-.tb-room-tile-aire { fill: color-mix(in srgb, var(--f) 14%, transparent); }
-.tb-room-tile-ligne { fill: none; stroke: color-mix(in srgb, var(--f) 60%, transparent); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
-.tb-room-tile-favori { position: absolute; top: 10px; right: 10px; z-index: 2; display: grid; place-items: center; width: 34px; height: 34px; border: 0; border-radius: 50%; background: none; color: var(--md-on-surface-variant); cursor: pointer; opacity: .55; }
-.tb-room-tile-favori.tb-fav-on { color: var(--tb-star); opacity: 1; }
-.tb-room-tile-favori:hover { background: color-mix(in srgb, var(--md-on-surface) 8%, transparent); opacity: 1; }
+.tb-room-tile-state { position: relative; z-index: 1; margin-top: 4px; color: var(--md-on-surface-variant); font-size: .85rem; }
+.tb-room-tile-state b { color: var(--f); font-weight: 600; }
+.tb-room-tile-curve { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 46px; }
+.tb-room-tile-area { fill: color-mix(in srgb, var(--f) 14%, transparent); }
+.tb-room-tile-line { fill: none; stroke: color-mix(in srgb, var(--f) 60%, transparent); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+.tb-room-tile-favorite { position: absolute; top: 10px; right: 10px; z-index: 2; display: grid; place-items: center; width: 34px; height: 34px; border: 0; border-radius: 50%; background: none; color: var(--md-on-surface-variant); cursor: pointer; opacity: .55; }
+.tb-room-tile-favorite.tb-fav-on { color: var(--tb-star); opacity: 1; }
+.tb-room-tile-favorite:hover { background: color-mix(in srgb, var(--md-on-surface) 8%, transparent); opacity: 1; }
 
 @media (max-width: 640px) {
     .tb-cells { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
@@ -245,7 +245,7 @@ tb-dial { display: flex; flex-direction: column; align-items: center; }
 }
 
 /* The words of a square or tile sit above its curve, but a tap on them still opens the room */
-:is(.tb-cell-name, .tb-cell-bottom, .tb-room-tile-nom, .tb-room-tile-t, .tb-room-tile-etat, .tb-cell-curve, .tb-room-tile-courbe) { pointer-events: none; }
+:is(.tb-cell-name, .tb-cell-bottom, .tb-room-tile-name, .tb-room-tile-t, .tb-room-tile-state, .tb-cell-curve, .tb-room-tile-curve) { pointer-events: none; }
 
 /* ============================== Photos on the dashboard ============================== */
 
@@ -261,8 +261,8 @@ tb-dial { display: flex; flex-direction: column; align-items: center; }
 /* Home: the photo shows through at the top, the colour of the room thickens towards the words */
 .tb-room-tile-photo img { filter: saturate(.85); }
 .tb-room-tile-photo::after { background: linear-gradient(180deg, color-mix(in srgb, var(--c) 38%, transparent) 0%, color-mix(in srgb, var(--c) 80%, transparent) 50%, color-mix(in srgb, var(--c) 94%, transparent) 100%); }
-.tb-room.tb-room-tile.tb-with-photo .tb-room-tile-favori { background: color-mix(in srgb, var(--c) 70%, transparent); opacity: 1; }
-.tb-room.tb-room-tile.tb-with-photo .tb-room-tile-favori:not(.tb-fav-on) { color: var(--md-on-surface); }
+.tb-room.tb-room-tile.tb-with-photo .tb-room-tile-favorite { background: color-mix(in srgb, var(--c) 70%, transparent); opacity: 1; }
+.tb-room.tb-room-tile.tb-with-photo .tb-room-tile-favorite:not(.tb-fav-on) { color: var(--md-on-surface); }
 
 
 /* ============================== A card held down ============================== */

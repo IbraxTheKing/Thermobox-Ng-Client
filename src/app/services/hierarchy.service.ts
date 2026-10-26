@@ -15,12 +15,12 @@ export class HierarchyService {
   private readonly http = inject(HttpClient);
   private readonly server = inject(ServerService);
   private url(path: string): string {
-    return this.server.url(`/hierarchie${path}`);
+    return this.server.url(`/hierarchy${path}`);
   }
 
   /** [quiet]: automatic refresh, without the activity bar. */
   tree(quiet = false): Observable<Tree> {
-    return this.http.get<Tree>(this.url('/arbre'), { context: new HttpContext().set(DISCRETE, quiet) });
+    return this.http.get<Tree>(this.url('/tree'), { context: new HttpContext().set(DISCRETE, quiet) });
   }
 
   detail(id: number, quiet = false): Observable<DetailElement> {

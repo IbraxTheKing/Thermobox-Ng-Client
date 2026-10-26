@@ -1,5 +1,6 @@
 import { Injectable, computed, inject } from '@angular/core';
 
+import { ServerFeaturesService } from '../services/server-features.service';
 import { PreferencesService } from './preferences';
 
 const ONE_DECIMAL = new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
@@ -11,18 +12,27 @@ const ONE_DECIMAL = new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 1, m
 @Injectable({ providedIn: 'root' })
 export class UnitService {
   private readonly prefs = inject(PreferencesService);
+  private readonly features = inject(ServerFeaturesService);
 
   readonly fahrenheit = computed(() => this.prefs.unit() === 'F');
   readonly symbol = computed(() => (this.fahrenheit() ? '°F' : '°C'));
 
-  /** Bounds and step of a setpoint, in this unit (5 to 35 °C). */
-  readonly setpointMin = computed(() => (this.fahrenheit() ? 41 : 5));
-  readonly setpointMax = computed(() => (this.fahrenheit() ? 95 : 35));
   readonly setpointStep = computed(() => (this.fahrenheit() ? 1 : 0.5));
+  /**
+   * Bounds of a setpoint, in this unit, on the step: those the server accepts (26.12, chosen by an
+   * ADMIN), else 5 to 35 °C.
+   */
+  readonly setpointMin = computed(() => this.onStep(this.features.setpointRange().min, Math.ceil));
+  readonly setpointMax = computed(() => this.onStep(this.features.setpointRange().max, Math.floor));
 
-  /** Bounds of a raw temperature (-50 to 80 °C). */
-  readonly minValue = computed(() => (this.fahrenheit() ? -58 : -50));
-  readonly maxValue = computed(() => (this.fahrenheit() ? 176 : 80));
+  /** Bounds of a measurement typed by hand: the server's (26.12), else -50 to 80 °C. */
+  readonly minValue = computed(() => Math.ceil(this.fromCelsius(this.features.measurementRange().min)));
+  readonly maxValue = computed(() => Math.floor(this.fromCelsius(this.features.measurementRange().max)));
+
+  private onStep(celsius: number, round: (x: number) => number): number {
+    const step = this.setpointStep();
+    return round(Math.round((this.fromCelsius(celsius) / step) * 1000) / 1000) * step;
+  }
 
   fromCelsius(c: number): number {
     return this.fahrenheit() ? (c * 9) / 5 + 32 : c;

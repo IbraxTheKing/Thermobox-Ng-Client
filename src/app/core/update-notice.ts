@@ -4,6 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import { UpdatesState } from '../models/models';
 import { UpdateService } from '../services/update.service';
 import { AuthService } from './auth';
+import { updateTypeLabel } from './version';
 
 /** The rail badge and the banner shown to admins when a version is out (UpdateNoticeBean). */
 @Injectable({ providedIn: 'root' })
@@ -21,7 +22,7 @@ export class UpdateNoticeService {
     if (!e) return '';
     return [e.latestPatch, e.latestFeature]
       .filter((v) => v != null)
-      .map((v) => `${v!.version} (${v!.typeLabel.toLowerCase()}${v!.type === 'PATCH' ? ', recommandée' : ''})`)
+      .map((v) => `${v!.version} (${updateTypeLabel(v!.type).toLowerCase()}${v!.type === 'PATCH' ? ', recommandée' : ''})`)
       .join(' et ');
   });
 

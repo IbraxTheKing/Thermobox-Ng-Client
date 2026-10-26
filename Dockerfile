@@ -7,13 +7,13 @@ WORKDIR /app
 
 # Install dependencies first to benefit from Docker layer caching.
 COPY package.json package-lock.json ./
-# Plugin natif local (dépendance « file: » de package.json)
+# Local native plugin ("file:" dependency of package.json)
 COPY plugins/ ./plugins/
 RUN npm ci
 
 COPY . .
-# Version inscrite dans le client (même numérotation que le serveur : 26.11.0, 26.11.0-beta.2…).
-# Sans elle : le tag Git du commit construit s'il est dans le contexte, sinon « dev ».
+# Version written into the client (same numbering as the server: 26.11.0, 26.11.0-beta.2…).
+# Without it: the Git tag of the commit built when it is in the context, else "dev".
 ARG THERMOBOX_VERSION=""
 ARG THERMOBOX_COMMIT=""
 RUN THERMOBOX_VERSION="$THERMOBOX_VERSION" THERMOBOX_COMMIT="$THERMOBOX_COMMIT" npm run build -- --configuration production

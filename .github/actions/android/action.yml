@@ -1,15 +1,16 @@
-name: Application Android
+name: Android app
 description: >
-  Construit l'application Android (Capacitor) depuis le client déjà construit (npm run build), avec la
-  version du tag (versionName / versionCode), et la met dans livrables/ : APK et AAB signés si la clé
-  est fournie (secrets ANDROID_*), sinon un APK de debug installable. Rien sans dossier android/.
+  Builds the Android app (Capacitor) from the client already built (npm run build), with the
+  version of the tag (versionName / versionCode), and puts it in deliverables/: signed APK and AAB
+  when the key is given (ANDROID_* secrets), else an installable debug APK. Nothing without an
+  android/ folder.
 
 inputs:
   tag:
     description: Version (26.11.0, 26.11.0-beta.1…)
     required: true
   keystore-base64:
-    description: Clé de signature (.jks) en base64 (secret ANDROID_KEYSTORE_BASE64)
+    description: Signing key (.jks) in base64 (ANDROID_KEYSTORE_BASE64 secret)
     required: false
     default: ''
   keystore-password:
@@ -25,58 +26,58 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Projet Android
-      id: projet
+    - name: Android project
+      id: project
       shell: bash
       run: |
         if [ -d android ]; then
           echo "present=true" >> "$GITHUB_OUTPUT"
         else
-          echo "::notice::Pas de dossier android/ dans le dépôt : pas d'application Android (npx cap add android, puis commit)."
+          echo "::notice::No android/ folder in the repository: no Android app (npx cap add android, then commit)."
           echo "present=false" >> "$GITHUB_OUTPUT"
         fi
 
     - uses: actions/setup-java@v4
-      if: steps.projet.outputs.present == 'true'
+      if: steps.project.outputs.present == 'true'
       with:
         distribution: temurin
         java-version: '21'
         cache: gradle
 
-    - name: Copier le client et préparer le projet
-      if: steps.projet.outputs.present == 'true'
+    - name: Copy the client and prepare the project
+      if: steps.project.outputs.present == 'true'
       shell: bash
       run: |
         npx cap sync android
-        node scripts/android.mjs preparer
-        # Commité depuis Windows, gradlew peut avoir perdu son droit d'exécution
+        node scripts/android.mjs prepare
+        # Committed from Windows, gradlew may have lost its execute permission
         chmod +x android/gradlew
 
-    - name: Construire
-      if: steps.projet.outputs.present == 'true'
+    - name: Build
+      if: steps.project.outputs.present == 'true'
       shell: bash
       env:
         THERMOBOX_VERSION: ${{ inputs.tag }}
-        CLE: ${{ inputs.keystore-base64 }}
-        CLE_MDP: ${{ inputs.keystore-password }}
+        KEY: ${{ inputs.keystore-base64 }}
+        KEY_STORE_PASSWORD: ${{ inputs.keystore-password }}
         ALIAS: ${{ inputs.key-alias }}
-        ALIAS_MDP: ${{ inputs.key-password }}
+        ALIAS_PASSWORD: ${{ inputs.key-password }}
       run: |
         eval "$(node scripts/android.mjs version)"
-        echo "Android : versionName $nom, versionCode $code"
-        mkdir -p livrables
-        props=(-PthermoboxVersionName="$nom" -PthermoboxVersionCode="$code")
-        if [ -n "$CLE" ]; then
-          echo "$CLE" | base64 -d > "$RUNNER_TEMP/thermobox.jks"
+        echo "Android: versionName $name, versionCode $code"
+        mkdir -p deliverables
+        props=(-PthermoboxVersionName="$name" -PthermoboxVersionCode="$code")
+        if [ -n "$KEY" ]; then
+          echo "$KEY" | base64 -d > "$RUNNER_TEMP/thermobox.jks"
           (cd android && ./gradlew --no-daemon assembleRelease bundleRelease "${props[@]}" \
-            -PthermoboxKeystore="$RUNNER_TEMP/thermobox.jks" -PthermoboxKeystorePassword="$CLE_MDP" \
-            -PthermoboxKeyAlias="$ALIAS" -PthermoboxKeyPassword="$ALIAS_MDP")
-          cp android/app/build/outputs/apk/release/app-release.apk "livrables/thermobox-$THERMOBOX_VERSION.apk"
-          cp android/app/build/outputs/bundle/release/app-release.aab "livrables/thermobox-$THERMOBOX_VERSION.aab"
+            -PthermoboxKeystore="$RUNNER_TEMP/thermobox.jks" -PthermoboxKeystorePassword="$KEY_STORE_PASSWORD" \
+            -PthermoboxKeyAlias="$ALIAS" -PthermoboxKeyPassword="$ALIAS_PASSWORD")
+          cp android/app/build/outputs/apk/release/app-release.apk "deliverables/thermobox-$THERMOBOX_VERSION.apk"
+          cp android/app/build/outputs/bundle/release/app-release.aab "deliverables/thermobox-$THERMOBOX_VERSION.aab"
           rm -f "$RUNNER_TEMP/thermobox.jks"
         else
-          echo "::notice::Pas de clé de signature (secrets ANDROID_*) : APK de debug seulement."
+          echo "::notice::No signing key (ANDROID_* secrets): debug APK only."
           (cd android && ./gradlew --no-daemon assembleDebug "${props[@]}")
-          cp android/app/build/outputs/apk/debug/app-debug.apk "livrables/thermobox-$THERMOBOX_VERSION-debug.apk"
+          cp android/app/build/outputs/apk/debug/app-debug.apk "deliverables/thermobox-$THERMOBOX_VERSION-debug.apk"
         fi
-        ls -l livrables
+        ls -l deliverables

@@ -1,10 +1,11 @@
 /*
- * JSON of the ThermoBox REST API (RestServer, branch dev).
+ * JSON of the ThermoBox REST API v2 (RestServer 26.12, English names). A server before 26.12
+ * answers the same with French names (API v1): core/api-version.ts translates it.
  *
  * Two kinds of dates come from the server:
  * - the entities (Temperature, Setpoint…) carry a java.time.LocalDateTime, which Jackson writes
  *   either as an array ([2026, 10, 21, 14, 5, 0]) or as a string, depending on its configuration;
- * - the DTOs (/api/hierarchie, /api/climat, /api/updates) carry ISO-8601 strings.
+ * - the DTOs (/api/v2/hierarchy, /api/v2/climate, /api/v2/updates) carry ISO-8601 strings.
  * Both are read with parseDate (core/dates.ts), always as a local time of the server.
  */
 
@@ -25,7 +26,7 @@ export interface User {
   type?: UserRole | null;
 }
 
-/** Body of POST /api/users (registration) and PUT /api/users/{id} (partial update). */
+/** Body of POST /api/v2/users (registration) and PUT /api/v2/users/{id} (partial update). */
 export interface UserChanges {
   username?: string;
   password?: string;
@@ -40,7 +41,7 @@ export interface LoginResponse {
   user: User;
 }
 
-/** GET /api/users/{id}/acces. restricted false: sees everything. */
+/** GET /api/v2/users/{id}/access. restricted false: sees everything. */
 export interface Access {
   restricted: boolean;
   elements: { id: number; name: string | null; kind: RoomKind }[];
@@ -68,7 +69,7 @@ export interface GroupRequest {
 /** Level in the tree, from the top: Building → (Floor) → Room → Device. */
 export type RoomKind = 'BUILDING' | 'FLOOR' | 'ROOM' | 'DEVICE';
 
-/** /api/rooms: an element without its kind. Prefer /api/hierarchie. */
+/** /api/v2/rooms: an element without its kind. Prefer /api/v2/hierarchy. */
 export interface Room {
   id?: number;
   name: string | null;
@@ -91,7 +92,7 @@ export interface EffectiveSetpoint {
   sourceName: string | null;
 }
 
-/** One element of GET /api/hierarchie/arbre. */
+/** One element of GET /api/v2/hierarchy/tree. */
 export interface Node {
   id: number;
   name: string | null;
@@ -127,7 +128,7 @@ export interface DeviceMeasurement {
   date: string | null;
 }
 
-/** GET /api/hierarchie/elements/{id} */
+/** GET /api/v2/hierarchy/elements/{id} */
 export interface DetailElement {
   element: Node;
   ancestors: Element[];
@@ -167,7 +168,7 @@ export interface Series {
   points: Point[];
 }
 
-/** GET /api/climat/{id}/historique */
+/** GET /api/v2/climate/{id}/history */
 export interface History {
   devices: Series[];
   rooms: Series[];
@@ -175,7 +176,7 @@ export interface History {
   setpoints: Point[];
 }
 
-/** PUT /api/climat/{id}/consigne */
+/** PUT /api/v2/climate/{id}/setpoint */
 export interface SetpointSending {
   kept: EffectiveSetpoint[];
   replaced: Element[];
@@ -189,7 +190,7 @@ export interface RoomTempAttr {
   temperature: Temperature;
 }
 
-// ---------------------------------------------------------------- updates (/api/updates)
+// ---------------------------------------------------------------- updates (/api/v2/updates)
 
 export interface AvailableVersion {
   version: string;
@@ -280,4 +281,18 @@ export interface ApiError {
   error?: string | null;
   message?: string | null;
   status?: number;
+}
+
+// ---------------------------------------------------------------- the server (API v2, 26.12)
+
+/** A closed range of temperatures, in Celsius. */
+export interface TemperatureRange {
+  min: number;
+  max: number;
+}
+
+/** GET /api/v2/server/limits: what the server accepts, chosen by an ADMIN (-10 to 50 °C by default). */
+export interface TemperatureLimits {
+  measurement: TemperatureRange;
+  setpoint: TemperatureRange;
 }

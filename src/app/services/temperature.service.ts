@@ -5,12 +5,12 @@ import { Observable, forkJoin, map } from 'rxjs';
 import { ServerService } from '../core/api.config';
 import { Temperature, TemperatureType } from '../models/models';
 
-/** A temperature with its type, which the JSON of /api/temperatures does not give. */
+/** A temperature with its type, which the JSON of /api/v2/temperatures does not give. */
 export interface TemperatureTyped extends Temperature {
   type: TemperatureType;
 }
 
-/** Client Angular de TemperatureResource — /api/temperatures */
+/** Angular client of the temperatures resource — /api/v2/temperatures */
 @Injectable({ providedIn: 'root' })
 export class TemperatureService {
   private readonly http = inject(HttpClient);

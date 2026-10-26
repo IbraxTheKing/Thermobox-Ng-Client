@@ -1,8 +1,10 @@
-import { ChangeDetectionStrategy, Component, VERSION, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, VERSION, computed, inject, signal } from '@angular/core';
 import { App as AppNative } from '@capacitor/app';
 import { firstValueFrom } from 'rxjs';
 
 import { PlatformService } from '../../core/platform';
+import { TbServerLogo } from '../../ui/server-logo';
+import { ServerFeaturesService } from '../../services/server-features.service';
 import { ServerService } from '../../core/api.config';
 import { UpdatesState } from '../../models/models';
 import { UpdateService } from '../../services/update.service';
@@ -18,10 +20,11 @@ interface Link {
 
 /**
  * À propos: the versions of what makes up ThermoBox here (this client, the REST server it talks
- * to, the JSF interface), the GitHub repositories and the credits.
+ * to, the JSF interface before 26.12), the GitHub repositories and the credits.
  */
 @Component({
   selector: 'tb-about',
+  imports: [TbServerLogo],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './about.html',
 })
@@ -29,8 +32,9 @@ export class AboutPage {
   private readonly updates = inject(UpdateService);
   private readonly platform = inject(PlatformService);
   protected readonly serverUrl = inject(ServerService);
+  protected readonly features = inject(ServerFeaturesService);
 
-  /** Tag GitHub construit (scripts/construire.mjs), « dev » en développement. */
+  /** GitHub tag that was built (scripts/build.mjs), "dev" in development. */
   protected readonly versionClient = VERSION_CLIENT;
   protected readonly commitClient = COMMIT_CLIENT;
   protected readonly updateClient = inject(ClientUpdateService);
@@ -43,10 +47,13 @@ export class AboutPage {
   protected readonly server = signal<UpdatesState | null>(null);
   protected readonly serverError = signal(false);
 
-  protected readonly repositories: Link[] = [
+  /** 26.12 (API v2): the JSF interface is gone, nothing mentions it any more. */
+  protected readonly jsf = computed(() => !this.features.v2());
+
+  protected readonly repositories = computed<Link[]>(() => [
     {
       name: 'ThermoBox',
-      detail: 'Serveur REST, interface JSF, base de données et boîtiers',
+      detail: this.jsf() ? 'Serveur REST, interface JSF, base de données et boîtiers' : 'Serveur REST, base de données et boîtiers',
       url: 'https://github.com/IbraxTheKing/ThermoBox',
       icon: 'pi-server',
     },
@@ -56,9 +63,9 @@ export class AboutPage {
       url: 'https://github.com/IbraxTheKing/Thermobox-Ng-Client',
       icon: 'pi-mobile',
     },
-  ];
+  ]);
 
-  protected readonly libraries: { name: string; role: string; url: string }[] = [
+  protected readonly libraries = computed<{ name: string; role: string; url: string }[]>(() => [
     { name: 'Angular', role: 'application', url: 'https://angular.dev' },
     { name: 'Capacitor', role: 'applications iOS et Android', url: 'https://capacitorjs.com' },
     { name: 'Chart.js', role: 'courbes', url: 'https://www.chartjs.org' },
@@ -66,8 +73,8 @@ export class AboutPage {
     { name: 'Manrope', role: 'police (SIL Open Font License)', url: 'https://github.com/sharanda/manrope' },
     { name: 'Tailwind CSS', role: 'utilitaires de style', url: 'https://tailwindcss.com' },
     { name: 'Kotlin, Jersey, Jetty, Jackson', role: 'serveur REST', url: 'https://github.com/IbraxTheKing/ThermoBox' },
-    { name: 'Jakarta Faces et PrimeFaces', role: 'interface JSF', url: 'https://www.primefaces.org' },
-  ];
+    ...(this.jsf() ? [{ name: 'Jakarta Faces et PrimeFaces', role: 'interface JSF', url: 'https://www.primefaces.org' }] : []),
+  ]);
 
   constructor() {
     void this.load();

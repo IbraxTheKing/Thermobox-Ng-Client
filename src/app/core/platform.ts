@@ -16,8 +16,8 @@ import { PreferencesService } from './preferences';
  * user agent in a browser (an iPhone or an Android phone gets its platform's navigation in Safari
  * or Chrome too). Exposed to the stylesheets as <html data-platform="…">.
  *
- * For development only, "?plateforme=ios|android|web" in the address forces one (kept until
- * "?plateforme=auto").
+ * For development only, "?platform=ios|android|web" in the address forces one (kept until
+ * "?platform=auto"; "?plateforme=" still works).
  */
 export type Platform = 'ios' | 'android' | 'web';
 
@@ -80,7 +80,7 @@ export class PlatformService {
 
   private forced(): Platform | null {
     try {
-      const p = new URLSearchParams(location.search).get('plateforme');
+      const p = new URLSearchParams(location.search).get('platform') ?? new URLSearchParams(location.search).get('plateforme');
       if (p === 'auto') localStorage.removeItem(DEV_KEY);
       else if (p === 'ios' || p === 'android' || p === 'web') localStorage.setItem(DEV_KEY, p);
       const v = localStorage.getItem(DEV_KEY);

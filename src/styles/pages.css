@@ -298,3 +298,32 @@ button.tb-drill-crumb, button.tb-drill-main { border: 0; background: none; font:
 .tb-auth-server { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; margin: -4px 0 16px; color: var(--md-on-surface-variant); font-size: .92rem; }
 .tb-auth-server strong { color: var(--md-on-surface); font-weight: 700; overflow-wrap: anywhere; }
 .tb-auth-server .tb-server-btn { padding: 6px 12px; margin-right: -12px; font-size: .9rem; }
+
+/* ============================== Logo of a server (26.12) ============================== */
+.tb-server-logo { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 20px; height: 20px; overflow: hidden; border-radius: 6px; color: var(--md-on-surface-variant); }
+.tb-server-logo img { width: 100%; height: 100%; object-fit: contain; }
+.tb-server-logo:not(.tb-server-logo-none) { background: #fff; box-shadow: 0 0 0 1px color-mix(in srgb, var(--md-on-surface) 12%, transparent); }
+.tb-server-logo .pi { font-size: .8rem; }
+.tb-avatar { position: relative; }
+.tb-server-logo-badge { position: absolute; right: -3px; bottom: -3px; width: 18px; height: 18px; border-radius: 50%; }
+.tb-server-logo-badge:not(.tb-server-logo-none) { box-shadow: 0 0 0 2px var(--md-surface-container-lowest); }
+.tb-server-logo-badge img { padding: 2px; }
+.tb-server-logo-badge.tb-server-logo-none { display: none; }
+/* A section per server in the account lists */
+.tb-accounts-server { display: flex; align-items: center; gap: 8px; min-height: 32px; margin-top: 6px; padding: 0 12px; color: var(--md-on-surface-variant); font-size: .8rem; font-weight: 600; }
+.tb-accounts-server:first-child { margin-top: 0; }
+.tb-accounts-server span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tb-accounts-server .tb-server-logo { width: 22px; height: 22px; }
+/* Preferences: the server (ADMIN, 26.12) */
+.tb-server-logo-preview { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 48px; height: 48px; overflow: hidden; border-radius: 12px; background: #fff; box-shadow: 0 0 0 1px color-mix(in srgb, var(--md-on-surface) 12%, transparent); color: var(--md-on-surface-variant); }
+.tb-server-logo-preview img { width: 100%; height: 100%; padding: 4px; object-fit: contain; }
+.tb-pref-actions { display: flex; flex: none; flex-wrap: wrap; gap: 8px; margin-left: auto; }
+.tb-pref-actions label.tb-btn { cursor: pointer; }
+.tb-pref-actions .tb-disabled { opacity: .5; pointer-events: none; }
+.tb-limits { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+.tb-limits-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 0; padding: 0; border: 0; }
+.tb-limits-row legend { float: left; width: 96px; padding: 0; font-weight: 600; }
+.tb-limits-row label { display: inline-flex; align-items: center; gap: 6px; }
+.tb-limits-row .tb-input { width: 92px; }
+.tb-limits-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.tb-list-icon .tb-server-logo { width: 26px; height: 26px; }

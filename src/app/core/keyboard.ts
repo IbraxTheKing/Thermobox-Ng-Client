@@ -29,7 +29,7 @@ export class KeyboardService {
   readonly shortcuts: Shortcut[] = [
     { group: 'Partout', keys: ['1', '…', '6'], text: 'Ouvrir la 1ʳᵉ à la 6ᵉ entrée du menu (Aperçu, Salles, Mesures…)', key: /^[1-6]$/, act: (e) => this.destination(+e.key) },
     { group: 'Partout', keys: ['/'], text: 'Aller au champ de recherche de la page', key: '/', act: () => this.search() },
-    { group: 'Partout', keys: ['R'], text: 'Actualiser les données de la page', key: 'r', act: () => this.click('.tb-page-head [data-action="actualiser"]') },
+    { group: 'Partout', keys: ['R'], text: 'Actualiser les données de la page', key: 'r', act: () => this.click('.tb-page-head [data-action="refresh"]') },
     { group: 'Partout', keys: ['N'], text: 'Action principale de la page (nouvel élément, nouvel utilisateur…)', key: 'n', act: () => this.click('.tb-page-head .tb-fab') },
     { group: 'Partout', keys: ['T'], text: 'Passer du thème clair au thème sombre', key: 't', act: () => (this.prefs.changeTheme(this.prefs.theme() === 'dark' ? 'light' : 'dark'), true) },
     { group: 'Partout', keys: ['P'], text: 'Ouvrir les Préférences', key: 'p', act: () => this.forward('/app/preferences') },
@@ -45,7 +45,7 @@ export class KeyboardService {
       key: 'f',
       when: () => this.page('/app/overview'),
       act: () => {
-        const sections = this.doc.querySelectorAll<HTMLElement>('.tb-section[data-section]:not([data-section="favoris"]) .tb-section-toggle');
+        const sections = this.doc.querySelectorAll<HTMLElement>('.tb-section[data-section]:not([data-section="favorites"]) .tb-section-toggle');
         sections.forEach((b) => b.click());
         return sections.length > 0;
       },

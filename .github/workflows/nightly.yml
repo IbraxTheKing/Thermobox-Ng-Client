@@ -1,26 +1,26 @@
 name: Nightly pre-release
 
-# Client Thermobox, même logique que le serveur ThermoBox (son nightly.yml).
-# Nightly de la prochaine version fonctionnelle, construite depuis la branche dev/ :
-# après la stable 26.10.x, dev/ prépare 26.11.0 et les nightly s'appellent 26.11.0-nightly.<n>
-# (format du README ; les anciennes nightly en -nightly-<n> sont encore comptées).
-# Les correctifs (26.10.x) ne passent pas par ici : ils sont publiés comme versions stables.
+# Thermobox client, same logic as the ThermoBox server (its nightly.yml).
+# Nightly of the next feature version, built from the dev/ branch: after the stable 26.10.x, dev/
+# prepares 26.11.0 and the nightlies are named 26.11.0-nightly.<n> (format of the README; the
+# former nightlies in -nightly-<n> are still counted).
+# Patches (26.10.x) do not go through here: they are published as stable versions.
 #
-# Branche construite : dev/<série> (ex. dev/26.11) si elle existe, sinon la branche « dev »,
-# sinon la seule branche dev/*.
-# Un cron ne lit que le fichier du workflow présent sur la branche par défaut du dépôt.
+# Branch built: dev/<series> (e.g. dev/26.11) when it exists, else the "dev" branch, else the only
+# dev/* branch.
+# A cron only reads the workflow file on the default branch of the repository.
 
 on:
   schedule:
-    - cron: '0 2 * * *'   # chaque jour à 02:00 UTC (04:00 à Paris en été, 03:00 en hiver)
-  workflow_dispatch:       # lancement manuel possible depuis l'onglet Actions
+    - cron: '0 2 * * *'   # every day at 02:00 UTC (04:00 in Paris in summer, 03:00 in winter)
+  workflow_dispatch:       # can be started by hand from the Actions tab
     inputs:
-      branche:
-        description: Branche dev/ à construire (vide = choix automatique)
+      branch:
+        description: dev/ branch to build (empty = automatic choice)
         required: false
 
 permissions:
-  contents: write          # nécessaire pour créer le tag et la release
+  contents: write          # needed to create the tag and the release
 
 concurrency:
   group: nightly
@@ -32,76 +32,76 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # tous les tags et toutes les branches
+          fetch-depth: 0   # every tag and every branch
 
-      # Série : celle qui suit la dernière stable (26.10.1 -> 26.11, 26.12.x -> 27.01).
-      # Sans aucune stable : la série de la dernière prépublication, sinon celle du mois en cours.
-      - name: Branche dev/ et version
+      # Series: the one after the last stable (26.10.1 -> 26.11, 26.12.x -> 27.01).
+      # Without any stable: the series of the last prerelease, else the current month's.
+      - name: dev/ branch and version
         id: version
         env:
-          DEMANDEE: ${{ inputs.branche }}
+          REQUESTED: ${{ inputs.branch }}
         run: |
           stable=$(git tag --list | grep -E '^v?[0-9]+\.[0-9]+\.[0-9]+$' | sed 's/^v//' | sort -V | tail -n1 || true)
           if [ -n "$stable" ]; then
-            aa=$((10#$(echo "$stable" | cut -d. -f1)))
+            yy=$((10#$(echo "$stable" | cut -d. -f1)))
             mm=$((10#$(echo "$stable" | cut -d. -f2)))
-            if [ "$mm" -eq 12 ]; then aa=$((aa + 1)); mm=1; else mm=$((mm + 1)); fi
+            if [ "$mm" -eq 12 ]; then yy=$((yy + 1)); mm=1; else mm=$((mm + 1)); fi
           else
-            # Pas encore de stable : la série de la dernière prépublication (26.11.0-beta.1 -> 26.11),
-            # sinon celle du mois en cours
+            # No stable yet: the series of the last prerelease (26.11.0-beta.1 -> 26.11), else the
+            # current month's
             pre=$(git tag --list | grep -E '^v?[0-9]+\.[0-9]+\.[0-9]+-' | sed -E 's/^v//; s/-.*//' | sort -V | tail -n1 || true)
             if [ -n "$pre" ]; then
-              aa=$((10#$(echo "$pre" | cut -d. -f1)))
+              yy=$((10#$(echo "$pre" | cut -d. -f1)))
               mm=$((10#$(echo "$pre" | cut -d. -f2)))
             else
-              aa=$((10#$(date -u +%y)))
+              yy=$((10#$(date -u +%y)))
               mm=$((10#$(date -u +%m)))
             fi
           fi
-          serie=$(printf '%d.%02d' "$aa" "$mm")
+          series=$(printf '%d.%02d' "$yy" "$mm")
 
           branches=$(git branch -r --format='%(refname:short)' | sed -n 's#^origin/##p' | grep -E '^dev(/|$)' || true)
-          if [ -n "$DEMANDEE" ]; then
-            branche="$DEMANDEE"
-          elif echo "$branches" | grep -qx "dev/$serie"; then
-            branche="dev/$serie"
-          elif echo "$branches" | grep -qx "dev"; then
-            branche="dev"
-          elif [ -n "$branches" ] && [ "$(echo "$branches" | wc -l)" -eq 1 ]; then
-            branche="$branches"
+          if [ -n "$REQUESTED" ]; then
+            branch="$REQUESTED"
+          elif echo "$branchs" | grep -qx "dev/$series"; then
+            branch="dev/$series"
+          elif echo "$branchs" | grep -qx "dev"; then
+            branch="dev"
+          elif [ -n "$branchs" ] && [ "$(echo "$branchs" | wc -l)" -eq 1 ]; then
+            branch="$branchs"
           else
-            echo "Pas de branche dev/ à construire (attendu : dev/$serie). Branches dev/ : ${branches:-aucune}"
+            echo "No dev/ branch to build (expected: dev/$series). dev/ branches: ${branches:-none}"
             echo "build=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          if ! git rev-parse -q --verify "origin/$branche^{commit}" >/dev/null; then
-            echo "::error::Branche $branche introuvable"
+          if ! git rev-parse -q --verify "origin/$branch^{commit}" >/dev/null; then
+            echo "::error::Branch $branch not found"
             exit 1
           fi
-          commit=$(git rev-parse "origin/$branche")
+          commit=$(git rev-parse "origin/$branch")
 
-          base="$serie.0"
+          base="$series.0"
           # Last nightly of the series, whichever separator it was named with
           last=$(git tag --list "${base}-nightly[.-]*" | sed -E "s/^${base//./\.}-nightly[.-]//" | grep -E '^[0-9]+$' | sort -n | tail -n1 || true)
           if [ -n "$last" ]; then
             last_tag=$(git tag --list "${base}-nightly.${last}" "${base}-nightly-${last}" | head -n1)
           fi
           if [ -n "$last" ] && [ "$(git rev-list -n1 "$last_tag")" = "$commit" ]; then
-            echo "Aucun nouveau commit sur $branche depuis $last_tag, rien à publier."
+            echo "No new commit on $branch since $last_tag, nothing to publish."
             echo "build=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
           tag="${base}-nightly.$(( ${last:-0} + 1 ))"
-          echo "Dernière stable : ${stable:-aucune} ; $branche -> $tag"
+          echo "Last stable: ${stable:-none}; $branch -> $tag"
           {
             echo "build=true"
             echo "tag=$tag"
-            echo "branche=$branche"
+            echo "branch=$branch"
             echo "commit=$commit"
           } >> "$GITHUB_OUTPUT"
 
-      - name: Passer sur la branche dev/
+      - name: Check out the dev/ branch
         if: steps.version.outputs.build == 'true'
         run: git checkout --detach "${{ steps.version.outputs.commit }}"
 
@@ -111,21 +111,21 @@ jobs:
           node-version: '24'
           cache: npm
 
-      # Version inscrite dans le client (scripts/construire.mjs), comme -Dthermobox.version du serveur
-      - name: Construire
+      # Version written into the client (scripts/build.mjs), as -Dthermobox.version of the server
+      - name: Build
         if: steps.version.outputs.build == 'true'
         run: |
           npm ci
           THERMOBOX_VERSION="${{ steps.version.outputs.tag }}" npm run build
 
-      - name: Archive du client
+      - name: Archive of the client
         if: steps.version.outputs.build == 'true'
         run: |
-          mkdir -p livrables
-          (cd dist/Thermobox-Ng-Client/browser && zip -qr "$GITHUB_WORKSPACE/livrables/thermobox-ng-client-${{ steps.version.outputs.tag }}.zip" .)
-          ls -l livrables
+          mkdir -p deliverables
+          (cd dist/Thermobox-Ng-Client/browser && zip -qr "$GITHUB_WORKSPACE/deliverables/thermobox-ng-client-${{ steps.version.outputs.tag }}.zip" .)
+          ls -l deliverables
 
-      - name: Application Android
+      - name: Android app
         if: steps.version.outputs.build == 'true'
         uses: ./.github/actions/android
         with:
@@ -135,14 +135,14 @@ jobs:
           key-alias: ${{ secrets.ANDROID_KEY_ALIAS }}
           key-password: ${{ secrets.ANDROID_KEY_PASSWORD }}
 
-      - name: Créer la pre-release
+      - name: Create the pre-release
         if: steps.version.outputs.build == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           tag="${{ steps.version.outputs.tag }}"
-          gh release create "$tag" livrables/* \
+          gh release create "$tag" deliverables/* \
             --target "${{ steps.version.outputs.commit }}" \
             --prerelease \
-            --title "$tag ($(date -u +%Y-%m-%d), ${{ steps.version.outputs.branche }})" \
+            --title "$tag ($(date -u +%Y-%m-%d), ${{ steps.version.outputs.branch }})" \
             --generate-notes

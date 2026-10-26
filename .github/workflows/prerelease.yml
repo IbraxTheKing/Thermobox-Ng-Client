@@ -1,33 +1,33 @@
 name: Beta / RC
 
-# Client Thermobox, même logique que le serveur ThermoBox (son prerelease.yml).
-# Lancement manuel (onglet Actions → « Beta / RC » → Run workflow) : publie une beta ou une
-# release candidate de la prochaine version fonctionnelle, construite depuis la branche dev.
+# Thermobox client, same logic as the ThermoBox server (its prerelease.yml).
+# Started by hand (Actions tab → "Beta / RC" → Run workflow): publishes a beta or a release
+# candidate of the next feature version, built from the dev branch.
 #
-# Numéro : la série qui suit la dernière stable (après 26.10.x : 26.11), puis
-# AA.MM.0-beta.N ou AA.MM.0-rc.N, N = le dernier de ce type pour la série + 1 (format du README).
-# La version est inscrite dans le client (scripts/construire.mjs) et l'archive est jointe à une
-# pre-release GitHub, que la page À propos des clients en prépublication signale.
+# Number: the series after the last stable (after 26.10.x: 26.11), then YY.MM.0-beta.N or
+# YY.MM.0-rc.N, N = the last of that type for the series + 1 (format of the README).
+# The version is written into the client (scripts/build.mjs) and the archive is attached to a
+# GitHub pre-release, which the About page of prerelease clients points out.
 
 on:
   workflow_dispatch:
     inputs:
       type:
-        description: Type de prépublication
+        description: Type of prerelease
         type: choice
         options: [beta, rc]
         default: beta
         required: true
-      branche:
-        description: Branche à construire
+      branch:
+        description: Branch to build
         default: dev
         required: true
       notes:
-        description: Texte ajouté en tête des notes (facultatif ; « ## Migration » pour les opérations à prévoir)
+        description: Text added at the top of the notes (optional; "## Migration" for the operations to plan)
         required: false
 
 permissions:
-  contents: write          # créer le tag et la pre-release
+  contents: write          # create the tag and the pre-release
 
 concurrency:
   group: prerelease
@@ -39,66 +39,66 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # tous les tags et toutes les branches
+          fetch-depth: 0   # every tag and every branch
 
       - name: Version
         id: version
         env:
           TYPE: ${{ inputs.type }}
-          BRANCHE: ${{ inputs.branche }}
+          BRANCH: ${{ inputs.branch }}
         run: |
-          if ! git rev-parse -q --verify "origin/$BRANCHE^{commit}" >/dev/null; then
-            echo "::error::Branche $BRANCHE introuvable"
+          if ! git rev-parse -q --verify "origin/$BRANCH^{commit}" >/dev/null; then
+            echo "::error::Branch $BRANCH not found"
             exit 1
           fi
-          commit=$(git rev-parse "origin/$BRANCHE")
+          commit=$(git rev-parse "origin/$BRANCH")
 
-          # Série : celle qui suit la dernière stable (26.10.1 -> 26.11, 26.12.x -> 27.01).
+          # Series: the one after the last stable (26.10.1 -> 26.11, 26.12.x -> 27.01).
           stable=$(git tag --list | grep -E '^v?[0-9]+\.[0-9]+\.[0-9]+$' | sed 's/^v//' | sort -V | tail -n1 || true)
           if [ -n "$stable" ]; then
-            aa=$((10#$(echo "$stable" | cut -d. -f1)))
+            yy=$((10#$(echo "$stable" | cut -d. -f1)))
             mm=$((10#$(echo "$stable" | cut -d. -f2)))
-            if [ "$mm" -eq 12 ]; then aa=$((aa + 1)); mm=1; else mm=$((mm + 1)); fi
+            if [ "$mm" -eq 12 ]; then yy=$((yy + 1)); mm=1; else mm=$((mm + 1)); fi
           else
-            # Pas encore de stable : la série de la dernière prépublication (26.11.0-beta.1 -> 26.11),
-            # sinon celle du mois en cours
+            # No stable yet: the series of the last prerelease (26.11.0-beta.1 -> 26.11), else the
+            # current month's
             pre=$(git tag --list | grep -E '^v?[0-9]+\.[0-9]+\.[0-9]+-' | sed -E 's/^v//; s/-.*//' | sort -V | tail -n1 || true)
             if [ -n "$pre" ]; then
-              aa=$((10#$(echo "$pre" | cut -d. -f1)))
+              yy=$((10#$(echo "$pre" | cut -d. -f1)))
               mm=$((10#$(echo "$pre" | cut -d. -f2)))
             else
-              aa=$((10#$(date -u +%y)))
+              yy=$((10#$(date -u +%y)))
               mm=$((10#$(date -u +%m)))
             fi
           fi
-          base=$(printf '%d.%02d.0' "$aa" "$mm")
-          motif="^${base//./\\.}-${TYPE}[.-]([0-9]+)$"
+          base=$(printf '%d.%02d.0' "$yy" "$mm")
+          pattern="^${base//./\\.}-${TYPE}[.-]([0-9]+)$"
 
           if git rev-parse -q --verify "refs/tags/$base" >/dev/null; then
-            echo "::error::$base est déjà publiée en stable : plus de $TYPE pour cette série."
+            echo "::error::$base is already published as stable: no more $TYPE for this series."
             exit 1
           fi
           if [ "$TYPE" = beta ] && git tag --list "${base}-rc*" | grep -q .; then
-            echo "::warning::Une RC de $base existe déjà : cette beta passera avant elle dans l'ordre des versions."
+            echo "::warning::An RC of $base already exists: this beta will come before it in the order of versions."
           fi
 
-          last=$(git tag --list "${base}-${TYPE}*" | sed -nE "s/${motif}/\1/p" | sort -n | tail -n1 || true)
+          last=$(git tag --list "${base}-${TYPE}*" | sed -nE "s/${pattern}/\1/p" | sort -n | tail -n1 || true)
           if [ -n "$last" ]; then
             last_tag=$(git tag --list "${base}-${TYPE}.${last}" "${base}-${TYPE}-${last}" | head -n1)
             if [ "$(git rev-list -n1 "$last_tag")" = "$commit" ]; then
-              echo "::error::$last_tag a déjà été publiée depuis ce commit de $BRANCHE."
+              echo "::error::$last_tag was already published from this commit of $BRANCH."
               exit 1
             fi
           fi
           tag="${base}-${TYPE}.$(( ${last:-0} + 1 ))"
 
-          echo "Dernière stable : ${stable:-aucune} ; $BRANCHE ($commit) -> $tag"
+          echo "Last stable: ${stable:-none}; $BRANCH ($commit) -> $tag"
           {
             echo "tag=$tag"
             echo "commit=$commit"
           } >> "$GITHUB_OUTPUT"
 
-      - name: Passer sur la branche
+      - name: Check out the branch
         run: git checkout --detach "${{ steps.version.outputs.commit }}"
 
       - uses: actions/setup-node@v4
@@ -106,19 +106,19 @@ jobs:
           node-version: '24'
           cache: npm
 
-      # Version inscrite dans le client (scripts/construire.mjs), comme -Dthermobox.version du serveur
-      - name: Construire
+      # Version written into the client (scripts/build.mjs), as -Dthermobox.version of the server
+      - name: Build
         run: |
           npm ci
           THERMOBOX_VERSION="${{ steps.version.outputs.tag }}" npm run build
 
-      - name: Archive du client
+      - name: Archive of the client
         run: |
-          mkdir -p livrables
-          (cd dist/Thermobox-Ng-Client/browser && zip -qr "$GITHUB_WORKSPACE/livrables/thermobox-ng-client-${{ steps.version.outputs.tag }}.zip" .)
-          ls -l livrables
+          mkdir -p deliverables
+          (cd dist/Thermobox-Ng-Client/browser && zip -qr "$GITHUB_WORKSPACE/deliverables/thermobox-ng-client-${{ steps.version.outputs.tag }}.zip" .)
+          ls -l deliverables
 
-      - name: Application Android
+      - name: Android app
         uses: ./.github/actions/android
         with:
           tag: ${{ steps.version.outputs.tag }}
@@ -127,13 +127,13 @@ jobs:
           key-alias: ${{ secrets.ANDROID_KEY_ALIAS }}
           key-password: ${{ secrets.ANDROID_KEY_PASSWORD }}
 
-      - name: Créer la pre-release
+      - name: Create the pre-release
         env:
           GH_TOKEN: ${{ github.token }}
           NOTES: ${{ inputs.notes }}
         run: |
           tag="${{ steps.version.outputs.tag }}"
-          gh release create "$tag" livrables/* \
+          gh release create "$tag" deliverables/* \
             --target "${{ steps.version.outputs.commit }}" \
             --prerelease \
             --title "$tag" \

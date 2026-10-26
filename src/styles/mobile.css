@@ -281,11 +281,11 @@ body.tb-chart-open .tb-rail, body.tb-chart-open .tb-topbar { visibility: hidden;
 .tb-about-mark .tb-logo-xl { width: 72px; height: 72px; }
 .tb-about-mark > div { display: flex; flex-direction: column; }
 .tb-about-mark strong { font-size: 1.6rem; font-weight: 800; letter-spacing: -.03em; }
-.tb-apropos-version { flex: none; padding: 4px 10px; border-radius: 999px; background: var(--md-secondary-container); color: var(--md-on-surface); font-size: .85rem; font-weight: 750; font-variant-numeric: tabular-nums; }
+.tb-about-version { flex: none; padding: 4px 10px; border-radius: 999px; background: var(--md-secondary-container); color: var(--md-on-surface); font-size: .85rem; font-weight: 750; font-variant-numeric: tabular-nums; }
 .tb-about-license { margin: 18px 6px 0; font-size: .85rem; text-align: center; }
-a.tb-pref-apropos { margin-top: 16px; text-decoration: none; }
-.tb-apropos-version.tb-apropos-dev { background: var(--tb-heating-container); color: var(--tb-on-heating-container); }
-.tb-list-row.tb-about-update .tb-apropos-version { background: var(--md-primary); color: var(--md-on-primary); }
+a.tb-pref-about { margin-top: 16px; text-decoration: none; }
+.tb-about-version.tb-about-dev { background: var(--tb-heating-container); color: var(--tb-on-heating-container); }
+.tb-list-row.tb-about-update .tb-about-version { background: var(--md-primary); color: var(--md-on-primary); }
 
 /* ============================== Gestion (phones): the tree ============================== */
 
