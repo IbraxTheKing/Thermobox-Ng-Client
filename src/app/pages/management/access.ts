@@ -13,7 +13,10 @@ import { UserService } from '../../services/user.service';
 import { TbAccessTree } from '../../ui/access-tree';
 import { Option, TbMultipleChoice } from '../../ui/multiple-choice';
 import { TbSheet } from '../../ui/sheet';
-import { ShownCount, TbMore } from '../../ui/more';
+import { TbPager } from '../../ui/pager';
+import { TbUserAccessSheet } from '../../ui/user-access-sheet';
+import { TbUserGroupsSheet } from '../../ui/user-groups-sheet';
+import { TbUserFormSheet } from '../../ui/user-form-sheet';
 import { TbSwitch } from '../../ui/controls';
 import { PlatformService } from '../../core/platform';
 import { FlipService } from '../../core/flip';
@@ -24,9 +27,14 @@ import { followSelectionBar } from '../../ui/selection-bar';
  * and accesses of several users at once, and groups of users that give access to buildings, floors
  * and rooms.
  */
+/** Users per page. */
+const PAGE = 20;
+/** « Sans groupe » in the group filter. */
+const NO_GROUP = -1;
+
 @Component({
   selector: 'tb-access',
-  imports: [TbSheet, TbSwitch, TbMultipleChoice, TbAccessTree, TbMore],
+  imports: [TbSheet, TbSwitch, TbMultipleChoice, TbAccessTree, TbPager, TbUserAccessSheet, TbUserGroupsSheet, TbUserFormSheet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './access.html',
 })
@@ -35,7 +43,13 @@ export class AccessTab implements OnInit {
     followSelectionBar(() => this.selection().size > 0 && !this.phone());
     effect(() => {
       this.search();
-      untracked(() => this.shown.reset());
+      this.roleFilter();
+      this.groupFilter();
+      untracked(() => this.page.set(0));
+    });
+    effect(() => {
+      this.groupSearch();
+      untracked(() => this.groupPage.set(0));
     });
     // The accesses of the users shown, as they are shown
     effect(() => {
@@ -64,13 +78,101 @@ export class AccessTab implements OnInit {
   protected readonly search = signal('');
   protected readonly selection = signal<Set<number>>(new Set());
 
+  /** Roles ticked (none: all). */
+  protected readonly roleFilter = signal<Set<UserRole>>(new Set());
+  /** Groups ticked, NO_GROUP for the users in none (none ticked: all). A user in any of them shows. */
+  protected readonly groupFilter = signal<Set<number>>(new Set());
+  protected readonly groupsOpen = signal(false);
+  protected readonly NO_GROUP = NO_GROUP;
+  protected readonly groupChoices = computed<Option[]>(() => [
+    { id: NO_GROUP, label: 'Sans groupe' },
+    ...this.access.groups().map((g) => ({ id: g.id, label: g.name, detail: `${g.members.length}` })),
+  ]);
+  protected readonly filtering = computed(() => this.roleFilter().size > 0 || this.groupFilter().size > 0);
+  /** « Équipe 1, Équipe 2 », « 4 groupes ». */
+  protected readonly groupFilterText = computed(() => {
+    const ids = [...this.groupFilter()];
+    if (!ids.length) return 'Tous les groupes';
+    const names = ids.map((id) => (id === NO_GROUP ? 'Sans groupe' : this.access.groups().find((g) => g.id === id)?.name ?? '?'));
+    return names.length <= 2 ? names.join(', ') : `${names.length} groupes`;
+  });
+
   protected readonly visible = computed(() => {
     const word = this.search().trim().toLowerCase();
-    return this.access.users().filter((l) => !word || l.user.username.toLowerCase().includes(word) || l.groups.some((g) => g.toLowerCase().includes(word)));
+    const roles = this.roleFilter();
+    const gf = this.groupFilter();
+    const members = new Set(this.access.groups().filter((g) => gf.has(g.id)).flatMap((g) => g.members.map((m) => m.id)));
+    return this.access.users().filter(
+      (l) =>
+        (!word || l.user.username.toLowerCase().includes(word) || l.groups.some((g) => g.toLowerCase().includes(word))) &&
+        (!roles.size || roles.has(l.user.type!)) &&
+        (!gf.size || members.has(l.user.id!) || (gf.has(NO_GROUP) && !l.groups.length)),
+    );
   });
-  /** Hundreds of accounts: a part at a time, their accesses read as they are shown. */
-  protected readonly shown = new ShownCount(50);
-  protected readonly shownRows = computed(() => this.visible().slice(0, this.shown.count()));
+
+  protected count(r: UserRole): number {
+    return this.access.users().filter((l) => l.user.type === r).length;
+  }
+
+  protected toggleRole(r: UserRole): void {
+    this.flip.animate(() =>
+      this.roleFilter.update((x) => {
+        const s = new Set(x);
+        if (s.has(r)) s.delete(r);
+        else s.add(r);
+        return s;
+      }),
+    );
+  }
+
+  protected clearUserFilters(): void {
+    this.roleFilter.set(new Set());
+    this.groupFilter.set(new Set());
+  }
+
+  // ---------------------------------------------------------------- groups: a list
+
+  protected readonly MEMBERS_SHOWN = 5;
+  protected readonly groupSearch = signal('');
+  protected readonly groupPage = signal(0);
+  protected readonly visibleGroups = computed(() => {
+    const word = this.groupSearch().trim().toLowerCase();
+    return this.access
+      .groups()
+      .filter((g) => !word || g.name.toLowerCase().includes(word) || (g.description ?? '').toLowerCase().includes(word) || g.members.some((m) => (m.username ?? "").toLowerCase().includes(word)));
+  });
+  protected readonly shownGroups = computed(() => this.visibleGroups().slice(this.groupPage() * PAGE, this.groupPage() * PAGE + PAGE));
+
+  /** « user021, user022, user023 et 12 autres » */
+  protected firstNames(g: Group, n: number): string {
+    const names = g.members.slice(0, n).map((m) => m.username).join(', ');
+    return g.members.length > n ? `${names} et ${g.members.length - n} autre(s)` : names;
+  }
+
+  // ---------------------------------------------------------------- accounts
+
+  protected readonly userForm = viewChild.required(TbUserFormSheet);
+
+  newUser(): void {
+    this.userForm().create();
+  }
+
+  protected editUser(l: UserRow): void {
+    this.userSheet.set(false);
+    this.userForm().edit(l.user);
+  }
+
+  protected async removeUser(l: UserRow): Promise<void> {
+    if (await this.userForm().remove(l.user)) this.userSheet.set(false);
+  }
+  /** Users or groups shown. */
+  readonly view = signal<'users' | 'groups'>('users');
+  /** Hundreds of accounts: a page at a time, their accesses read as they are shown. */
+  protected readonly page = signal(0);
+  protected readonly pageSize = PAGE;
+  protected readonly shownRows = computed(() => this.visible().slice(this.page() * PAGE, this.page() * PAGE + PAGE));
+  protected readonly accessSheet = viewChild.required(TbUserAccessSheet);
+  protected readonly groupsSheet = viewChild.required(TbUserGroupsSheet);
   protected readonly selectedRows = computed(() => this.access.users().filter((l) => this.selection().has(l.user.id!)));
   protected readonly allChecked = computed(() => this.visible().length > 0 && this.visible().every((l) => this.selection().has(l.user.id!)));
 
@@ -82,7 +184,7 @@ export class AccessTab implements OnInit {
     await this.load();
   }
 
-  private async load(): Promise<void> {
+  protected async load(): Promise<void> {
     try {
       await this.access.load();
       // Keep the selection on what still exists
@@ -117,10 +219,14 @@ export class AccessTab implements OnInit {
 
   /** Group membership of this user (same window as for a selection). */
   protected groupsOf(l: UserRow): void {
-    this.selection.set(new Set([l.user.id!]));
-    this.targetGroupId.set(null);
     this.userSheet.set(false);
-    this.dlgMembers.set(true);
+    this.groupsSheet().open(l);
+  }
+
+  /** « Nouveau groupe » from the groups of a user: the group form, with them in it. */
+  protected async newGroupWith(l: UserRow): Promise<void> {
+    await this.newGroup();
+    this.formMembers.set(new Set([l.user.id!]));
   }
 
   protected check(id: number, isChecked: boolean): void {

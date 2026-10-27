@@ -1,8 +1,10 @@
-<header class="tb-page-head">
-  <div class="tb-page-title">
-    <span class="tb-eyebrow">Administration</span>
-    <h1>Mises à jour</h1>
-  </div>
+<header class="tb-page-head" [class.tb-page-head-embedded]="embedded()">
+  @if (!embedded()) {
+    <div class="tb-page-title">
+      <span class="tb-eyebrow">Administration</span>
+      <h1>Mises à jour</h1>
+    </div>
+  }
   <button type="button" class="tb-btn tb-tonal" data-action="refresh" [class.tb-busy]="checking()" [disabled]="tracking() || checking()" (click)="check()">
     <i class="pi pi-refresh"></i>Rechercher maintenant
   </button>
@@ -42,37 +44,51 @@
     </div>
   }
 
-  <!-- Progress of the last installation; followed while it runs -->
+  <!-- The last installation: followed step by step while it runs; once done, one line (who, when) -->
   @if (e.installation; as i) {
-    <div class="tb-card tb-update-installation">
-      <div class="tb-card-head">
-        <span class="tb-section-icon"><i class="pi pi-cloud-download"></i></span>
-        <div>
-          <h2>Installation de {{ i.target }}</h2>
-          <span class="tb-muted">
-            Lancée par {{ i.user }} le {{ date(i.startedAt) }} depuis {{ componentLabel(i.component) }}{{ i.from ? ', depuis la version ' + i.from : '' }}
-          </span>
+    @let finished = i.state === 'DONE' || i.state === 'FAILED';
+    @let open = !finished || installationOpen();
+    <div class="tb-card tb-update-installation" [class.tb-update-installation-done]="finished && !open">
+      <button type="button" class="tb-card-head tb-update-installation-head" [attr.aria-expanded]="open" [disabled]="!finished" (click)="installationOpen.set(!installationOpen())">
+        <span class="tb-section-icon"><i class="pi" [class.pi-cloud-download]="!finished" [class.pi-check-circle]="i.state === 'DONE'" [class.pi-times-circle]="i.state === 'FAILED'"></i></span>
+        <div class="tb-update-installation-title">
+          @if (finished) {
+            <strong>{{ i.state === 'DONE' ? (i.from ? 'Passé de ' + i.from + ' à ' + i.target : i.target + ' installée') : 'Installation de ' + i.target + ' échouée' }}</strong>
+            <span class="tb-muted">Par {{ i.user }}, le {{ date(i.finishedAt ?? i.startedAt) }}</span>
+          } @else {
+            <h2>Installation de {{ i.target }}</h2>
+            <span class="tb-muted">
+              Lancée par {{ i.user }} le {{ date(i.startedAt) }} depuis {{ componentLabel(i.component) }}{{ i.from ? ', depuis la version ' + i.from : '' }}
+            </span>
+          }
         </div>
         <span class="tb-tag tb-update-state" [class]="installationSeverity(i.state)">{{ installationLabel(i.state) }}</span>
-      </div>
-      <ol class="tb-update-steps">
-        @for (s of i.steps; track $index) {
-          <li class="tb-update-step tb-update-step-{{ s.state }}">
-            <span class="tb-update-step-icon"><i class="pi" [class]="stepIcon(s.state)"></i></span>
-            <div>
-              <strong>{{ s.title }}</strong>
-              @if (s.detail) {
-                <span class="tb-muted">{{ s.detail }}</span>
-              }
-            </div>
-          </li>
+        @if (finished) {
+          <i class="pi pi-chevron-down tb-update-installation-fold" aria-hidden="true"></i>
         }
-      </ol>
-      @if (i.message) {
-        <div class="tb-update-message tb-update-message-{{ i.state }}">{{ i.message }}</div>
-      }
-      @if (i.backupFile) {
-        <div class="tb-muted tb-update-backup"><i class="pi pi-database"></i> Sauvegarde de la base : <code>{{ i.backupFile }}</code></div>
+      </button>
+      @if (open) {
+        <div class="tb-update-installation-body" animate.enter="tb-menu-enter">
+          <ol class="tb-update-steps">
+            @for (s of i.steps; track $index) {
+              <li class="tb-update-step tb-update-step-{{ s.state }}">
+                <span class="tb-update-step-icon"><i class="pi" [class]="stepIcon(s.state)"></i></span>
+                <div>
+                  <strong>{{ s.title }}</strong>
+                  @if (s.detail) {
+                    <span class="tb-muted">{{ s.detail }}</span>
+                  }
+                </div>
+              </li>
+            }
+          </ol>
+          @if (i.message) {
+            <div class="tb-update-message tb-update-message-{{ i.state }}">{{ i.message }}</div>
+          }
+          @if (i.backupFile) {
+            <div class="tb-muted tb-update-backup"><i class="pi pi-database"></i> Sauvegarde de la base : <code>{{ i.backupFile }}</code></div>
+          }
+        </div>
       }
     </div>
   }
@@ -86,6 +102,13 @@
     </h2>
 
     <!-- Filter by channel: RC, Beta, Nightly, Stable (a second tap shows them all) -->
+    <div class="tb-update-tools">
+      @if (series().length) {
+        <div class="tb-segmented tb-update-view" role="radiogroup" aria-label="Affichage des versions">
+          <button type="button" role="radio" [class.tb-seg-on]="bySeries()" [attr.aria-checked]="bySeries()" (click)="bySeries.set(true)"><i class="pi pi-folder"></i>Par série</button>
+          <button type="button" role="radio" [class.tb-seg-on]="!bySeries()" [attr.aria-checked]="!bySeries()" (click)="bySeries.set(false)"><i class="pi pi-list"></i>Toutes</button>
+        </div>
+      }
     @if (channelChips().length > 1) {
       <div class="tb-summary tb-update-channels">
         @for (c of channelChips(); track c.key) {
@@ -95,6 +118,7 @@
         }
       </div>
     }
+    </div>
 
     @if (!e.available.length) {
       <div class="tb-empty">
@@ -104,34 +128,60 @@
       </div>
     }
 
-    @for (v of available(); track v.version) {
-      <ng-container *ngTemplateOutlet="card; context: { $implicit: v }" />
-    }
+    @if (bySeries()) {
+      <!-- One monthly series per block: « Installer » takes its most recent version -->
+      @for (g of series(); track g.key) {
+        <section class="tb-update-series" [class.tb-update-series-older]="g.older">
+          <header class="tb-update-series-head">
+            <div class="tb-update-series-title">
+              <strong>Série {{ g.key }}</strong>
+              @if (g.installed) { <span class="tb-tag tb-tag-info">Série installée</span> }
+              @if (g.older) { <span class="tb-tag">Antérieure</span> }
+              <span class="tb-muted">{{ g.others.length + 1 }} version(s) · la plus récente : {{ g.latest.version }}</span>
+            </div>
+            <button type="button" class="tb-btn" [class.tb-tonal]="g.older" [disabled]="tracking()" (click)="prepare(g.latest)">
+              <i class="pi pi-download"></i>{{ g.older ? 'Revenir à' : 'Installer' }} {{ g.latest.version }}
+            </button>
+          </header>
+          <ng-container *ngTemplateOutlet="card; context: { $implicit: g.latest, noInstall: true }" />
+          @if (g.others.length) {
+            <details class="tb-update-series-more">
+              <summary>Autres versions de la série {{ g.key }} <span class="tb-chip-n">{{ g.others.length }}</span></summary>
+              @for (v of g.others; track v.version) {
+                <ng-container *ngTemplateOutlet="card; context: { $implicit: v }" />
+              }
+            </details>
+          }
+        </section>
+      }
+    } @else {
+      @for (v of available(); track v.version) {
+        <ng-container *ngTemplateOutlet="card; context: { $implicit: v }" />
+      }
 
-    <!-- Prerelease channel: older versions can be installed again (rollback) -->
-    @if (earlier().length) {
-      <details class="tb-update-earlier">
-        <summary>
+      <!-- Prerelease channel: older versions can be installed again (rollback), shown at once -->
+      @if (earlier().length) {
+        <h2 class="tb-section-title tb-update-earlier-title">
           <span class="tb-section-icon"><i class="pi pi-history"></i></span>
           Versions antérieures
           <span class="tb-section-meta">{{ earlier().length }}</span>
-        </summary>
-        <p class="tb-muted">
+        </h2>
+        <p class="tb-muted tb-update-earlier-text">
           Plus anciennes que la version installée. Revenir dessus est un retour arrière : la base de données a pu être modifiée depuis,
           une sauvegarde est faite avant.
         </p>
         @for (v of earlier(); track v.version) {
           <ng-container *ngTemplateOutlet="card; context: { $implicit: v }" />
         }
-      </details>
+      }
     }
   </section>
 } @else {
   <div class="tb-card tb-update-installed"><span class="tb-muted">Chargement…</span></div>
 }
 
-<!-- A version. The colour follows the channel: stable green, beta / rc orange, nightly violet -->
-<ng-template #card let-v>
+<!-- A version. The colour follows the channel: stable green, rc strong orange (nearly stable), beta orange, alpha blue, nightly violet -->
+<ng-template #card let-v let-noInstall="noInstall">
   <article class="tb-card tb-update-version-card tb-channel-{{ channel(v) }}" [attr.data-flip]="'v' + v.version">
     <div class="tb-card-head">
       <div class="tb-update-title">
@@ -141,15 +191,36 @@
         @if (v.recommended) {
           <span class="tb-tag tb-tag-success"><i class="pi pi-thumbs-up"></i>Recommandée</span>
         }
-        @if (v.incompatible) {
-          <span class="tb-tag tb-tag-danger">Incompatibilité annoncée</span>
+        <!-- Going back: what the notes say (« Rétrocompatibilité : oui / non »), a corrective is by nature -->
+        @if (v.older) {
+          @if (blockedBy(v); as z) {
+            <span class="tb-tag tb-tag-danger" [title]="z + ' ne permet pas de revenir en arrière : ses notes l\'annoncent. Cette version ne fonctionnerait plus avec les données.'"><i class="pi pi-ban"></i>Incompatible depuis {{ z }}</span>
+          }
+        } @else {
+          @switch (rollback(v)) {
+            @case ('no') {
+              <span class="tb-tag tb-tag-danger" title="Les notes l'annoncent : une fois installée, revenir à une version plus ancienne ne sera plus possible."><i class="pi pi-lock"></i>Sans retour arrière</span>
+            }
+            @case ('yes') {
+              <span class="tb-tag tb-tag-success" title="Les notes l'annoncent : on peut revenir à la version actuelle sans rien faire."><i class="pi pi-replay"></i>Rétrocompatible</span>
+            }
+            @default {
+              @if (v.type === 'PATCH') {
+                <span class="tb-tag tb-tag-success" title="Corrective de la même série : la base de données n'est pas modifiée, revenir en arrière reste possible."><i class="pi pi-replay"></i>Rétrocompatible</span>
+              } @else {
+                <span class="tb-tag" title="Les notes ne le disent pas : revenir en arrière peut demander de restaurer la sauvegarde."><i class="pi pi-question-circle"></i>Retour arrière non garanti</span>
+              }
+            }
+          }
         }
       </div>
       <span class="tb-spacer"></span>
       <a [href]="v.url" target="_blank" rel="noopener noreferrer" class="tb-btn tb-flat"><i class="pi pi-external-link"></i>Sur GitHub</a>
-      <button type="button" class="tb-btn" [class.tb-tonal]="v.type !== 'PATCH' || v.older" [disabled]="tracking()" (click)="prepare(v)">
-        <i class="pi pi-download"></i>{{ v.older ? 'Réinstaller…' : 'Installer…' }}
-      </button>
+      @if (!noInstall) {
+        <button type="button" class="tb-btn" [class.tb-tonal]="v.type !== 'PATCH' || v.older" [disabled]="tracking()" (click)="prepare(v)">
+          <i class="pi pi-download"></i>{{ v.older ? 'Réinstaller…' : 'Installer…' }}
+        </button>
+      }
     </div>
     <p class="tb-update-type">
       @if (v.title !== v.version) { {{ v.title }} · }

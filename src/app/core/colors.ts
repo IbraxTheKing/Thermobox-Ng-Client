@@ -123,9 +123,12 @@ function mix(stops: [number, string][], x: number): string {
   return stops[stops.length - 1][1];
 }
 
-/** The same colour, softened into the page (tiles, background of a room's page). */
+/**
+ * The same colour, softened into the page (tiles, background of a room's page). Into the page of
+ * ThermoBox, not the page of the accent: a blue page would turn a comfortable green into blue.
+ */
 export function tintSoft(color: string, dark: boolean): string {
-  return `color-mix(in oklch, ${color} ${dark ? 30 : 24}%, var(--tb-background))`;
+  return `color-mix(in oklch, ${color} ${dark ? 30 : 24}%, var(--tb-tint-base, var(--tb-background)))`;
 }
 
 /** The same colour, for text and lines on its soft tint. */

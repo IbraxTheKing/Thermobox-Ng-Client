@@ -114,7 +114,8 @@
   <i class="pi tb-drill-go" [class.pi-angle-right]="isFolder(n)" [class.pi-arrow-up-right]="!isFolder(n)"></i>
 </ng-template>
 
-<!-- Wide screens: the whole tree -->
+<!-- Wide screens: the whole tree, and what is attached to nothing on its right (ADMIN) -->
+<div class="tb-rooms-layout" [class.tb-with-side]="side()">
 <div class="tb-tree-rooms" role="tree" aria-label="Bâtiments et salles">
   @if (auth.admin()) {
     <div
@@ -135,10 +136,55 @@
     }
   </div>
   }
-  <ng-container *ngTemplateOutlet="branch; context: { $implicit: shownChildren(-1, store.roots()), parent: -1, total: store.roots().length }" />
+  <ng-container *ngTemplateOutlet="branch; context: { $implicit: shownChildren(-1, treeRoots()), parent: -1, total: treeRoots().length }" />
   @if (store.tree() && !store.roots().length) {
     <div class="tb-empty tb-empty-sm">Aucun bâtiment pour le moment.</div>
   }
+</div>
+@if (side()) {
+  <aside
+    class="tb-rooms-side"
+    aria-label="Non rattachés"
+    [class.tb-hover]="hover() === 'root'"
+    (dragover)="onHover($event, 'root')"
+    (dragleave)="hover.set(null)"
+    (drop)="drop($event, null)"
+  >
+    <div class="tb-rooms-side-head">
+      <strong><i class="pi pi-inbox"></i> Non rattachés <span class="tb-chip-n">{{ unattached().length }}</span></strong>
+      <span class="tb-muted">Glisse-les sur un bâtiment, un étage ou une salle. Garde-le au-dessus d'un élément replié pour l'ouvrir.</span>
+    </div>
+    @if (unattached().length > 8) {
+      <span class="tb-search tb-rooms-side-search">
+        <i class="pi pi-search"></i>
+        <input class="tb-input" type="search" placeholder="Rechercher…" autocomplete="off" aria-label="Rechercher parmi les non rattachés"
+               [value]="sideSearch()" (input)="sideSearch.set($any($event.target).value); sideShown.reset()" />
+      </span>
+    }
+    <ul class="tb-rooms-side-list">
+      @for (n of sideList().slice(0, sideShown.count()); track n.id) {
+        <li
+          class="tb-rooms-side-item"
+          [class.tb-slide]="slide() === n.id"
+          draggable="true"
+          (dragstart)="slideStart($event, n)"
+          (dragend)="slideEnd()"
+        >
+          <i class="pi pi-bars tb-rooms-side-grip" aria-hidden="true"></i>
+          <i class="pi tb-tree-icon" [class]="icon(n)"></i>
+          <span class="tb-rooms-side-text">
+            <span class="tb-node-name">{{ n.name }}</span>
+            <span class="tb-muted">{{ label(n) }}@if (n.temperature != null) { · {{ unit.t(n.temperature) }} {{ unit.symbol() }} }</span>
+          </span>
+          <button type="button" class="tb-btn tb-icon tb-flat" [title]="'Ranger « ' + n.name + ' »'" (click)="edit(n)"><i class="pi pi-pencil"></i></button>
+        </li>
+      } @empty {
+        <li class="tb-muted tb-rooms-side-empty">Aucun ne correspond.</li>
+      }
+    </ul>
+    <tb-more [total]="sideList().length" [shown]="sideShown.count()" (more)="sideShown.more()" />
+  </aside>
+}
 </div>
 
 <ng-template #branch let-nodes let-parent="parent" let-total="total">

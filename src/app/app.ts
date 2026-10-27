@@ -7,6 +7,7 @@ import { KeyboardService } from './core/keyboard';
 import { PlatformService } from './core/platform';
 import { PreferencesService } from './core/preferences';
 import { WindowColorService } from './core/window-color';
+import { AccentService } from './core/accent';
 import { ServerFeaturesService } from './services/server-features.service';
 import { TbConfirm, TbToasts } from './ui/hosts';
 
@@ -30,6 +31,7 @@ export class App {
     // Which API the server answers, its logo and limits
     inject(ServerFeaturesService);
     // The title bar of the installed app (and the browser bars) in the colour of the page
+    inject(AccentService).start();
     inject(WindowColorService).start();
     const auth = inject(AuthService);
     const body = inject(DOCUMENT).body;

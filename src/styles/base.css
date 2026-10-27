@@ -989,8 +989,9 @@ a.tb-crumb:hover { background: var(--md-secondary-container); color: var(--md-on
 
 .tb-bar {
     position: fixed;
-    left: calc(var(--tb-rail) + 24px + max(0px, (100vw - var(--tb-rail) - 1480px) / 2));
-    right: 24px;
+    /* The column of the page (measured: selection-bar.ts), else an estimate */
+    left: var(--tb-bar-left, calc(var(--tb-rail) + 24px + max(0px, (100vw - var(--tb-rail) - 1480px) / 2)));
+    right: var(--tb-bar-right, 24px);
     bottom: calc(18px + env(safe-area-inset-bottom));
     z-index: 60;
     display: flex;
@@ -1608,7 +1609,7 @@ a.tb-crumb:hover { background: var(--md-secondary-container); color: var(--md-on
     --canal-on: #1d4ed8;
 }
 
-.dark .tb-channel-alpha {
+:root[data-theme="dark"] .tb-channel-alpha {
     --canal: #60a5fa;
     --canal-container: #1e3a5f;
     --canal-on: #bfdbfe;

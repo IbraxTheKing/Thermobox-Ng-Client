@@ -1,0 +1,105 @@
+<header class="tb-page-head">
+  <div class="tb-page-title">
+    <span class="tb-eyebrow">Administration</span>
+    <h1 class="tb-server-title"><tb-server-logo [base]="features.base()" />Serveur</h1>
+  </div>
+</header>
+
+<div class="tb-segmented tb-server-tabs" role="tablist" aria-label="Serveur">
+  <button type="button" role="tab" [class.tb-seg-on]="current() === 'resources'" [attr.aria-selected]="current() === 'resources'" (click)="open('resources')">
+    <i class="pi pi-chart-line"></i>Ressources
+  </button>
+  <button type="button" role="tab" [class.tb-seg-on]="current() === 'updates'" [attr.aria-selected]="current() === 'updates'" (click)="open('updates')">
+    <i class="pi pi-cloud-download"></i>Mises à jour
+    @if (notice.available()) {
+      <span class="tb-dest-badge tb-tab-badge" aria-label="Nouvelle version"></span>
+    }
+  </button>
+  <button type="button" role="tab" [class.tb-seg-on]="current() === 'settings'" [attr.aria-selected]="current() === 'settings'" (click)="open('settings')">
+    <i class="pi pi-sliders-h"></i>Réglages
+  </button>
+</div>
+
+@switch (current()) {
+  @case ('updates') {
+    <tb-updates-page embedded />
+  }
+  @case ('settings') {
+    <tb-style-setting />
+    @if (features.v2()) {
+      <tb-server-settings />
+    } @else {
+      <ng-container [ngTemplateOutlet]="older" />
+    }
+  }
+  @default {
+    @if (!features.v2() || metrics.available() === false) {
+      <ng-container [ngTemplateOutlet]="older" />
+    } @else {
+      @let m = metrics.last();
+      <!-- Now -->
+      <div class="tb-stats tb-server-stats">
+        <div class="tb-stat tb-stat-primary">
+          <span class="tb-stat-label"><i class="pi pi-microchip"></i> Processeur</span>
+          <span class="tb-temp-l">{{ number(m?.processCpu, 1) }}<span class="tb-deg"> %</span></span>
+          <span class="tb-stat-note">machine : {{ number(m?.systemCpu, 1) }} % · {{ m?.processors ?? '—' }} processeur(s)</span>
+        </div>
+        <div class="tb-stat">
+          <span class="tb-stat-label"><i class="pi pi-database"></i> Mémoire Java</span>
+          <span class="tb-temp-l">{{ number(m?.heapUsedMb) }}<span class="tb-deg"> Mo</span></span>
+          <span class="tb-stat-note">
+            @if (heapPercent() != null) { {{ heapPercent() }} % de {{ number(m?.heapMaxMb) }} Mo · } hors tas : {{ number(m?.nonHeapUsedMb) }} Mo
+          </span>
+        </div>
+        <div class="tb-stat">
+          <span class="tb-stat-label"><i class="pi pi-sitemap"></i> Threads</span>
+          <span class="tb-temp-l">{{ number(m?.threads) }}</span>
+          <span class="tb-stat-note">pauses du ramasse-miettes : {{ number(gcTotal()) }} ms sur la période</span>
+        </div>
+        <div class="tb-stat">
+          <span class="tb-stat-label"><i class="pi pi-clock"></i> En marche depuis</span>
+          <span class="tb-temp-l tb-server-uptime">{{ uptime(m?.uptimeSeconds) }}</span>
+          <span class="tb-stat-note">{{ features.info()?.version ?? '' }} · {{ number(m?.gcCount) }} passages du ramasse-miettes</span>
+        </div>
+      </div>
+
+      @if (metrics.samples().length < 2) {
+        <div class="tb-card tb-server-wait">
+          <div class="tb-spark-loading"><span class="tb-muted tb-spark-caption">Relevés en cours… (toutes les 3 secondes)</span></div>
+        </div>
+      } @else {
+        <div class="tb-server-charts">
+          <section class="tb-card tb-server-chart">
+            <div class="tb-card-head"><span class="tb-section-icon"><i class="pi pi-microchip"></i></span><h2>Processeur</h2></div>
+            <div class="tb-chart"><tb-chart-view live [labels]="labels()" [series]="cpu()" valueUnit="%" [yMin]="0" description="Processeur du serveur" /></div>
+          </section>
+          <section class="tb-card tb-server-chart">
+            <div class="tb-card-head"><span class="tb-section-icon"><i class="pi pi-database"></i></span><h2>Mémoire Java</h2></div>
+            <div class="tb-chart"><tb-chart-view live [labels]="labels()" [series]="memory()" valueUnit="Mo" [yMin]="0" description="Mémoire du serveur" /></div>
+          </section>
+          <section class="tb-card tb-server-chart">
+            <div class="tb-card-head"><span class="tb-section-icon"><i class="pi pi-sitemap"></i></span><h2>Threads</h2></div>
+            <div class="tb-chart"><tb-chart-view live [labels]="labels()" [series]="threads()" valueUnit="" [yMin]="0" description="Threads du serveur" /></div>
+          </section>
+          <section class="tb-card tb-server-chart">
+            <div class="tb-card-head"><span class="tb-section-icon"><i class="pi pi-pause"></i></span><h2>Pauses du ramasse-miettes</h2></div>
+            <div class="tb-chart"><tb-chart-view live [labels]="labels()" [series]="gc()" valueUnit="ms" [yMin]="0" description="Pauses du ramasse-miettes" /></div>
+          </section>
+        </div>
+      }
+      <p class="tb-muted tb-compare-hint">
+        Relevé toutes les 3 secondes tant que cette page est ouverte, les 10 dernières minutes. Dans un conteneur, les chiffres sont ceux du
+        conteneur (sa part de processeur, sa limite de mémoire).
+        @if (metrics.error(); as e) { <strong> {{ e }}.</strong> }
+      </p>
+    }
+  }
+}
+
+<ng-template #older>
+  <div class="tb-empty">
+    <span class="tb-empty-icon"><i class="pi pi-server"></i></span>
+    <strong>Disponible avec ThermoBox 26.12</strong>
+    <span class="tb-muted">Ce serveur ({{ features.info()?.version ?? 'version antérieure' }}) ne donne ni ses ressources ni ces réglages. Ses mises à jour sont dans l'onglet voisin.</span>
+  </div>
+</ng-template>

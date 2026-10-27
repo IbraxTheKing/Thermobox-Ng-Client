@@ -24,7 +24,7 @@ export class WindowColorService {
     // Theme, look, colours following the state, tint of the page: the window follows
     new MutationObserver(() => this.schedule()).observe(this.root, {
       attributes: true,
-      attributeFilter: ['data-theme', 'data-style', 'data-tint', 'data-tone', 'data-background', 'data-platform'],
+      attributeFilter: ['data-theme', 'data-style', 'data-tint', 'data-tone', 'data-background', 'data-platform', 'data-accent'],
     });
     this.schedule();
   }

@@ -33,6 +33,8 @@
 
     /* Page and surfaces */
     --tb-background: #e9efec;
+    /* What the colours of the rooms are softened into: the page of ThermoBox, whatever the accent */
+    --tb-tint-base: #e9efec;
     --md-surface: var(--tb-background);
     --md-surface-container-lowest: #fbfcfb;
     --md-surface-container-low: #f3f6f4;
@@ -134,6 +136,7 @@
     color-scheme: dark;
 
     --tb-background: #151b19;
+    --tb-tint-base: #151b19;
     --md-surface-container-lowest: #101513;
     --md-surface-container-low: #1a211f;
     --md-surface-container: #1e2624;
@@ -201,6 +204,7 @@
 
 :root[data-style="panel"] {
     --tb-background: #e3e6e0;
+    --tb-tint-base: #e3e6e0;
     --md-surface-container-lowest: #fafbf8;
     --md-surface-container-low: #f2f3ef;
     --md-surface-container: #eceee9;
@@ -278,6 +282,7 @@
 
 :root[data-style="panel"][data-theme="dark"] {
     --tb-background: #181c1a;
+    --tb-tint-base: #181c1a;
     --md-surface-container-lowest: #131614;
     --md-surface-container-low: #1d2220;
     --md-surface-container: #212724;

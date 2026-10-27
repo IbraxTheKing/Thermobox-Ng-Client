@@ -1,10 +1,10 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, effect, inject, signal, viewChild } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, effect, inject, input, signal, untracked, viewChild } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
 import { errorMessage } from '../../core/api.config';
 import { AuthService } from '../../core/auth';
-import { RoomState, stateOf, offSetpoint } from '../../core/state';
+import { RoomState, STATES, stateOf, offSetpoint } from '../../core/state';
 import { ConfirmService, ToastService } from '../../core/messages';
 import { FlipService } from '../../core/flip';
 import { followSelectionBar } from '../../ui/selection-bar';
@@ -21,9 +21,10 @@ import { HierarchyService } from '../../services/hierarchy.service';
 import { RoomService } from '../../services/room.service';
 import { UserService } from '../../services/user.service';
 import { Option, TbMultipleChoice } from '../../ui/multiple-choice';
-import { TbStepper, TbSwitch } from '../../ui/controls';
+import { TbAutofocus, TbStepper, TbSwitch } from '../../ui/controls';
 import { TbSheet } from '../../ui/sheet';
 import { TbMore } from '../../ui/more';
+import { TbPager } from '../../ui/pager';
 import { ElementDialog } from '../rooms/element-dialog';
 import { AccessTab } from './access';
 
@@ -39,6 +40,7 @@ interface Row {
 }
 
 const PER_PAGE = 50;
+const NO_BUILDING = -1;
 
 /**
  * Room management (gestion.xhtml), MANAGER and ADMIN: every building, floor, room and box
@@ -51,7 +53,7 @@ const PER_PAGE = 50;
  */
 @Component({
   selector: 'tb-management',
-  imports: [RouterLink, TbSheet, TbSwitch, TbStepper, TbMultipleChoice, ElementDialog, AccessTab, TbMore],
+  imports: [RouterLink, TbSheet, TbSwitch, TbStepper, TbAutofocus, TbMultipleChoice, ElementDialog, AccessTab, TbMore, TbPager],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './management.html',
 })
@@ -82,6 +84,13 @@ export class ManagementPage implements OnInit {
 
   /** "salles" or "droits" (ADMIN: users and groups). */
   protected readonly tab = signal<'rooms' | 'access'>('rooms');
+  private readonly router = inject(Router);
+  /** ?tab=access: the users and groups (the former Utilisateurs page leads there). */
+  readonly tabParam = input<string | undefined>(undefined, { alias: 'tab' });
+  private readonly followTab = effect(() => {
+    const t = this.tabParam();
+    untracked(() => this.tab.set(t === 'access' && this.auth.admin() ? 'access' : 'rooms'));
+  });
 
   // Filters
   protected readonly search = signal('');
@@ -109,17 +118,95 @@ export class ManagementPage implements OnInit {
     return offSetpoint(l.state) || (l.device && !l.n.attached);
   }
 
+  // ---------------------------------------------------------------- filters
+
+  /** Building the elements are in (NO_BUILDING: in none), null for all. */
+  protected readonly buildingFilter = signal<number | null>(null);
+  /** State of the temperature (tone), null for all. */
+  protected readonly stateFilter = signal<RoomState['tone'] | null>(null);
+  /** Setpoint: its own, inherited from above, none at all; null for all. */
+  protected readonly setpointFilter = signal<'own' | 'inherited' | 'none' | null>(null);
+  /** Only what is not attached (devices, elements left out of the tree). */
+  protected readonly unattachedOnly = signal(false);
+  protected readonly filtersOpen = signal(false);
+  /** The boxes of one building / floor / room (its « wifi » count tapped), null: no such filter. */
+  protected readonly devicesOf = signal<Row['n'] | null>(null);
+  private readonly devicesOfIds = computed(() => {
+    const n = this.devicesOf();
+    return n ? new Set(this.store.descendants(n.id).filter((d) => d.kind === 'DEVICE').map((d) => d.id)) : null;
+  });
+
+  protected clearDevicesOf(): void {
+    this.setFilter(() => this.devicesOf.set(null));
+  }
+
+  /** Shows the boxes of [l] (the « wifi » count of its row). */
+  protected showDevices(l: Row): void {
+    this.setFilter(() => {
+      this.devicesOf.set(l.n);
+      this.type.set(null);
+      this.search.set('');
+    });
+    this.sheetOpen.set(false);
+  }
+  protected readonly NO_BUILDING = NO_BUILDING;
+  protected readonly buildings = computed(() => [...this.store.buildings()].sort((a, b) => normalize(a.name).localeCompare(normalize(b.name), 'fr')));
+  protected readonly stateChoices = [STATES.TOO_HOT, STATES.HEATING, STATES.STABLE, STATES.UNKNOWN];
+  /** How many of the filters above are set (the badge of « Filtres »). */
+  protected readonly activeFilters = computed(
+    () => [this.buildingFilter() != null, this.stateFilter() != null, this.setpointFilter() != null, this.unattachedOnly()].filter(Boolean).length,
+  );
+
+  protected setFilter(apply: () => void): void {
+    this.flip.animate(() => {
+      apply();
+      this.page.set(0);
+      this.phoneLimit.set(50);
+    });
+  }
+
+  protected clearFilters(): void {
+    this.setFilter(() => {
+      this.buildingFilter.set(null);
+      this.stateFilter.set(null);
+      this.setpointFilter.set(null);
+      this.unattachedOnly.set(false);
+      this.devicesOf.set(null);
+    });
+  }
+
+  private matchesFilters(l: Row): boolean {
+    const b = this.buildingFilter();
+    if (b != null) {
+      const building = l.n.kind === 'BUILDING' ? l.n : this.store.buildingOf(l.n.id);
+      if (b === NO_BUILDING ? building != null : building?.id !== b) return false;
+    }
+    const st = this.stateFilter();
+    if (st != null && l.state.tone !== st) return false;
+    const sp = this.setpointFilter();
+    if (sp != null) {
+      if (l.device) return false;
+      const c = l.n.setpoint;
+      if (sp === 'none' ? c != null : sp === 'own' ? !c || c.inherited : !c?.inherited) return false;
+    }
+    if (this.unattachedOnly() && l.n.attached) return false;
+    const ids = this.devicesOfIds();
+    if (ids && !ids.has(l.n.id)) return false;
+    return true;
+  }
+
   protected readonly visible = computed(() => {
     const word = normalize(this.search().trim());
     return this.rows().filter(
       (l) =>
         (this.type() == null || l.n.kind === this.type()) &&
         (!word || normalize(`${l.n.name} ${l.path}`).includes(word)) &&
-        (!this.onlyToHandle() || this.toHandle(l)),
+        (!this.onlyToHandle() || this.toHandle(l)) &&
+        this.matchesFilters(l),
     );
   });
   protected readonly pages = computed(() => Math.max(1, Math.ceil(this.visible().length / PER_PAGE)));
-  protected readonly pageNumbers = computed(() => Array.from({ length: this.pages() }, (_, i) => i));
+  protected readonly PER_PAGE = PER_PAGE;
   protected readonly pageRows = computed(() => {
     const p = Math.min(this.page(), this.pages() - 1);
     return this.visible().slice(p * PER_PAGE, p * PER_PAGE + PER_PAGE);
@@ -153,6 +240,7 @@ export class ManagementPage implements OnInit {
 
   protected openTab(o: 'rooms' | 'access'): void {
     this.tab.set(o === 'access' && this.auth.admin() ? 'access' : 'rooms');
+    void this.router.navigate([], { queryParams: { tab: this.tab() === 'access' ? 'access' : null }, queryParamsHandling: 'merge', replaceUrl: true });
   }
 
   // ---------------------------------------------------------------- phones
@@ -166,7 +254,7 @@ export class ManagementPage implements OnInit {
    * the one that contains it (building → floor → room → device), indented, and folded on demand.
    * A flat list sorted by place showed a building's floors after the other buildings.
    */
-  protected readonly asTree = computed(() => this.phone() && !this.search().trim() && this.type() == null && !this.onlyToHandle());
+  protected readonly asTree = computed(() => this.phone() && !this.search().trim() && this.type() == null && !this.onlyToHandle() && !this.activeFilters() && !this.devicesOf());
   /** Folded elements (their content hidden). */
   protected readonly folded = signal<Set<number>>(new Set());
   protected readonly treeRows = computed<Row[]>(() => {
@@ -345,20 +433,72 @@ export class ManagementPage implements OnInit {
     this.inputs.update((m) => new Map(m).set(id, v));
   }
 
-  /** Setpoint of one row, typed in its field. */
+  /**
+   * The rows a setpoint typed on [l] goes to: [l] alone, or, when [l] is ticked with others, all
+   * the ticked buildings, floors and rooms at once.
+   */
+  protected targetsOf(l: Row): Row[] {
+    if (!this.selection().has(l.n.id)) return [l];
+    const sel = this.selectedRows().filter((r) => !r.device);
+    return sel.length > 1 ? sel : [l];
+  }
+
+  /** Row whose setpoint is being typed (one at a time: the others show their value). */
+  protected readonly editing = signal<number | null>(null);
+
+  protected openEditor(l: Row): void {
+    this.editing.set(l.n.id);
+  }
+
+  /** The field loses the focus to something outside it, nothing typed: back to the value. */
+  protected closeEditor(l: Row, e: FocusEvent): void {
+    const to = e.relatedTarget as HTMLElement | null;
+    if (to && (e.currentTarget as HTMLElement).contains(to)) return;
+    if (!(this.inputs().get(l.n.id) ?? '').trim() && this.sending() !== l.n.id) this.editing.update((id) => (id === l.n.id ? null : id));
+  }
+
+  /** Rows whose own setpoint replaces those of what they contain (their « force » button). */
+  protected readonly forced = signal<Set<number>>(new Set());
+
+  protected toggleForce(l: Row): void {
+    const ids = this.targetsOf(l).map((r) => r.n.id);
+    const on = !this.forced().has(l.n.id);
+    this.forced.update((s) => {
+      const r = new Set(s);
+      for (const id of ids) {
+        if (on) r.add(id);
+        else r.delete(id);
+      }
+      return r;
+    });
+  }
+
+  /** Contains other elements whose own setpoints a forced setpoint replaces. */
+  protected canForce(l: Row): boolean {
+    return !l.device && (this.store.children().get(l.n.id)?.length ?? 0) > 0;
+  }
+
+  /** Setpoint typed in the field of a row: for it, or for all the ticked rows when it is one of them. */
   protected async apply(l: Row): Promise<void> {
     const input = parseNumber(this.inputs().get(l.n.id));
     if (input == null) {
       this.toasts.warn(`Indique une consigne pour « ${l.n.name} »`);
       return;
     }
+    const targets = this.targetsOf(l);
     this.sending.set(l.n.id);
-    if (await this.send([l], input, false)) {
+    if (await this.send(targets, input, this.forced().has(l.n.id))) {
       this.inputs.update((m) => {
         const r = new Map(m);
         r.delete(l.n.id);
         return r;
       });
+      this.forced.update((s) => {
+        const r = new Set(s);
+        for (const t of targets) r.delete(t.n.id);
+        return r;
+      });
+      this.editing.set(null);
     }
     this.sending.set(null);
   }
@@ -559,6 +699,12 @@ export class ManagementPage implements OnInit {
   }
 
   /** Main action of the page (header button): a new element or a new group. */
+  protected readonly accessView = computed(() => this.accessTab()?.view() ?? 'users');
+
+  protected newUser(): void {
+    this.accessTab()?.newUser();
+  }
+
   protected newGroup(): void {
     this.accessTab()?.newGroup();
   }

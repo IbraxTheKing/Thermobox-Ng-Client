@@ -3,12 +3,18 @@
   salles du groupe. Un utilisateur qui voit tout n'est pas limité par ses groupes.
 </p>
 
+<!-- Users or groups: one at a time, the groups no longer at the bottom of hundreds of users -->
+<div class="tb-segmented tb-access-tabs" role="tablist" aria-label="Utilisateurs ou groupes">
+  <button type="button" role="tab" [class.tb-seg-on]="view() === 'users'" [attr.aria-selected]="view() === 'users'" (click)="view.set('users')">
+    <i class="pi pi-user"></i>Utilisateurs <span class="tb-chip-n">{{ access.users().length }}</span>
+  </button>
+  <button type="button" role="tab" [class.tb-seg-on]="view() === 'groups'" [attr.aria-selected]="view() === 'groups'" (click)="view.set('groups')">
+    <i class="pi pi-users"></i>Groupes <span class="tb-chip-n">{{ access.groups().length }}</span>
+  </button>
+</div>
+
+@if (view() === 'users') {
 <section class="tb-section">
-  <h2 class="tb-section-title">
-    <span class="tb-section-icon"><i class="pi pi-user"></i></span>
-    Utilisateurs
-    <span class="tb-section-meta">{{ access.users().length }}</span>
-  </h2>
 
   <div class="tb-toolbar">
     <span class="tb-search">
@@ -16,6 +22,26 @@
       <input class="tb-input" type="search" placeholder="Rechercher un utilisateur ou un groupe…" autocomplete="off" aria-label="Rechercher"
              [value]="search()" (input)="onSearch($any($event.target).value)" />
     </span>
+    <button type="button" class="tb-select tb-filter tb-group-filter" [class.tb-filter-on]="groupFilter().size" [attr.aria-expanded]="groupsOpen()" (click)="groupsOpen.set(!groupsOpen())">
+      <i class="pi pi-users"></i><span>{{ groupFilterText() }}</span>
+    </button>
+  </div>
+  @if (groupsOpen()) {
+    <div class="tb-filters tb-group-filters" animate.enter="tb-menu-enter">
+      <tb-choice-multiple [options]="groupChoices()" [(value)]="groupFilter" placeholder="Rechercher un groupe…" empty="Tous les groupes" />
+      <span class="tb-muted">Un utilisateur s'affiche s'il est dans l'un des groupes cochés.</span>
+    </div>
+  }
+  <!-- Types of account: several at once -->
+  <div class="tb-summary">
+    @for (r of roles; track r) {
+      <button type="button" class="tb-summary-chip tb-role-chip tb-role-{{ r }}" [class.tb-chip-on]="roleFilter().has(r)" [attr.aria-pressed]="roleFilter().has(r)" (click)="toggleRole(r)">
+        <i class="pi pi-check tb-chip-check"></i>{{ roleName(r) }}<span class="tb-chip-n">{{ count(r) }}</span>
+      </button>
+    }
+    @if (filtering()) {
+      <button type="button" class="tb-btn tb-flat tb-btn-sm" (click)="clearUserFilters()"><i class="pi pi-times"></i>Effacer les filtres</button>
+    }
   </div>
 
   <p class="tb-muted tb-mgmt-tip">
@@ -57,7 +83,7 @@
         <li class="tb-mgmt-empty tb-muted">{{ access.loaded() ? 'Aucun utilisateur ne correspond' : 'Chargement…' }}</li>
       }
     </ul>
-    <tb-more [total]="visible().length" [shown]="shownRows().length" (more)="shown.more()" label="Afficher d'autres utilisateurs" />
+    <tb-pager [total]="visible().length" [size]="pageSize" [(page)]="page" />
   } @else {
   <div class="tb-table tb-mgmt-table tb-access-table">
     <table>
@@ -68,6 +94,7 @@
           <th class="tb-col-role">Rôle</th>
           <th class="tb-col-access">Accès</th>
           <th class="tb-col-groups">Groupes</th>
+          <th class="tb-col-actions">Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -91,63 +118,132 @@
                 }
               </select>
             </td>
-            <td class="tb-col-access"><span [class.tb-access-without]="noAccess(l)"><i class="pi pi-key"></i> {{ summary(l) }}</span></td>
-            <td class="tb-col-groups">
-              @for (g of l.groups; track g) {
-                <span class="tb-chip-group">{{ g }}</span>
-              } @empty {
-                <span class="tb-muted">—</span>
+            <td class="tb-col-access">
+              @if (l.user.type === 'ADMIN') {
+                <span><i class="pi pi-key"></i> {{ summary(l) }}</span>
+              } @else {
+                <button type="button" class="tb-access-link" [class.tb-access-without]="noAccess(l)" [title]="'Changer les accès de ' + l.user.username" (click)="accessSheet().open(l)">
+                  <i class="pi pi-key"></i> {{ summary(l) }}<i class="pi pi-pencil tb-access-edit" aria-hidden="true"></i>
+                </button>
               }
+            </td>
+            <td class="tb-col-groups">
+              <button type="button" class="tb-groups-link" [title]="'Changer les groupes de ' + l.user.username" (click)="groupsSheet().open(l)">
+                @for (g of l.groups; track g) {
+                  <span class="tb-chip-group">{{ g }}</span>
+                } @empty {
+                  <span class="tb-chip-group tb-chip-add"><i class="pi pi-plus"></i>Groupe</span>
+                }
+                <i class="pi pi-pencil tb-access-edit" aria-hidden="true"></i>
+              </button>
+            </td>
+            <td class="tb-col-actions">
+              <button type="button" class="tb-btn tb-icon tb-flat" [title]="'Modifier ' + l.user.username" (click)="editUser(l)"><i class="pi pi-pencil"></i></button>
+              <button type="button" class="tb-btn tb-icon tb-flat tb-btn-danger" [title]="'Supprimer ' + l.user.username" [disabled]="auth.isMe(l.user)" (click)="removeUser(l)"><i class="pi pi-trash"></i></button>
             </td>
           </tr>
         } @empty {
-          <tr class="tb-empty-row"><td colspan="5">{{ access.loaded() ? 'Aucun utilisateur ne correspond' : 'Chargement…' }}</td></tr>
+          <tr class="tb-empty-row"><td colspan="6">{{ access.loaded() ? 'Aucun utilisateur ne correspond' : 'Chargement…' }}</td></tr>
         }
       </tbody>
     </table>
-    <tb-more [total]="visible().length" [shown]="shownRows().length" (more)="shown.more()" label="Afficher d'autres utilisateurs" />
+    <tb-pager [total]="visible().length" [size]="pageSize" [(page)]="page" />
   </div>
   }
 </section>
-
+} @else {
 <section class="tb-section">
-  <h2 class="tb-section-title">
-    <span class="tb-section-icon"><i class="pi pi-users"></i></span>
-    Groupes
-    <span class="tb-section-meta">{{ access.groups().length }}</span>
-  </h2>
-  <div class="tb-groups">
-    @for (g of access.groups(); track g.id) {
-      <article class="tb-card tb-group" (click)="phone() && editGroup(g)">
-        <div class="tb-group-head">
-          <span class="tb-section-icon"><i class="pi pi-users"></i></span>
-          <div class="tb-group-title">
-            <strong>{{ g.name }}</strong>
-            @if (g.description) {
-              <span class="tb-muted">{{ g.description }}</span>
-            }
-          </div>
-          <button type="button" class="tb-btn tb-icon tb-flat" [title]="'Modifier ' + g.name" (click)="editGroup(g)"><i class="pi pi-pencil"></i></button>
-          <button type="button" class="tb-btn tb-icon tb-flat tb-btn-danger" [title]="'Supprimer ' + g.name" (click)="deleteGroup(g)"><i class="pi pi-trash"></i></button>
-        </div>
-        <div class="tb-group-row">
-          <span class="tb-group-label"><i class="pi pi-user"></i> {{ g.members.length }} membre(s)</span>
-          @for (m of g.members; track m.id) {
-            <span class="tb-chip-group">{{ m.username }}</span>
-          }
-        </div>
-        <div class="tb-group-row">
-          <span class="tb-group-label"><i class="pi pi-key"></i> {{ g.elements.length }} élément(s)</span>
-          @for (e of g.elements; track e.id) {
-            <span class="tb-chip-group tb-chip-element">{{ e.name }}</span>
-          }
-        </div>
-      </article>
-    } @empty {
-      <div class="tb-empty tb-empty-sm">Aucun groupe. Un groupe donne les mêmes accès à plusieurs utilisateurs : « Nouveau groupe ».</div>
-    }
+  <div class="tb-toolbar">
+    <span class="tb-search">
+      <i class="pi pi-search"></i>
+      <input class="tb-input" type="search" placeholder="Rechercher un groupe ou un membre…" autocomplete="off" aria-label="Rechercher un groupe"
+             [value]="groupSearch()" (input)="groupSearch.set($any($event.target).value)" />
+    </span>
   </div>
+  @if (phone()) {
+    <ul class="tb-list-mgmt">
+      @for (g of shownGroups(); track g.id) {
+        <li>
+          <button type="button" class="tb-mgmt-row" (click)="editGroup(g)">
+            <span class="tb-mgmt-icon"><i class="pi pi-users"></i></span>
+            <span class="tb-mgmt-text">
+              <strong>{{ g.name }}</strong>
+              <span class="tb-muted">{{ g.members.length }} membre(s) · {{ g.elements.length }} élément(s)</span>
+              @if (g.members.length) {
+                <span class="tb-muted tb-group-names">{{ firstNames(g, 3) }}</span>
+              }
+            </span>
+            <i class="pi pi-angle-right tb-list-continuation" aria-hidden="true"></i>
+          </button>
+        </li>
+      } @empty {
+        <li class="tb-mgmt-empty tb-muted">{{ access.groups().length ? 'Aucun groupe ne correspond' : 'Aucun groupe. Un groupe donne les mêmes accès à plusieurs utilisateurs : « Nouveau groupe ».' }}</li>
+      }
+    </ul>
+  } @else {
+    <div class="tb-table tb-mgmt-table tb-groups-table">
+      <table>
+        <thead>
+          <tr>
+            <th class="tb-col-room">Groupe</th>
+            <th class="tb-col-members">Membres</th>
+            <th class="tb-col-access">Donne accès à</th>
+            <th class="tb-col-actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (g of shownGroups(); track g.id) {
+            <tr>
+              <td class="tb-col-room">
+                <div class="tb-mgmt-name">
+                  <span class="tb-section-icon"><i class="pi pi-users"></i></span>
+                  <span class="tb-mgmt-name-text">
+                    <strong>{{ g.name }}</strong>
+                    @if (g.description) { <span class="tb-muted">{{ g.description }}</span> }
+                  </span>
+                </div>
+              </td>
+              <td class="tb-col-members">
+                <button type="button" class="tb-groups-link" [title]="'Membres de ' + g.name" (click)="editGroup(g)">
+                  @for (m of g.members.slice(0, MEMBERS_SHOWN); track m.id) {
+                    <span class="tb-chip-group">{{ m.username }}</span>
+                  } @empty {
+                    <span class="tb-chip-group tb-chip-add"><i class="pi pi-plus"></i>Membres</span>
+                  }
+                  @if (g.members.length > MEMBERS_SHOWN) {
+                    <span class="tb-chip-group tb-chip-more">+{{ g.members.length - MEMBERS_SHOWN }}</span>
+                  }
+                </button>
+              </td>
+              <td class="tb-col-access">
+                @for (e of g.elements.slice(0, 3); track e.id) {
+                  <span class="tb-chip-group tb-chip-element">{{ e.name }}</span>
+                } @empty {
+                  <span class="tb-muted tb-access-without">Rien</span>
+                }
+                @if (g.elements.length > 3) {
+                  <span class="tb-chip-group tb-chip-more">+{{ g.elements.length - 3 }}</span>
+                }
+              </td>
+              <td class="tb-col-actions">
+                <button type="button" class="tb-btn tb-icon tb-flat" [title]="'Modifier ' + g.name" (click)="editGroup(g)"><i class="pi pi-pencil"></i></button>
+                <button type="button" class="tb-btn tb-icon tb-flat tb-btn-danger" [title]="'Supprimer ' + g.name" (click)="deleteGroup(g)"><i class="pi pi-trash"></i></button>
+              </td>
+            </tr>
+          } @empty {
+            <tr class="tb-empty-row"><td colspan="4">{{ access.groups().length ? 'Aucun groupe ne correspond' : 'Aucun groupe. Un groupe donne les mêmes accès à plusieurs utilisateurs : « Nouveau groupe ».' }}</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+  <tb-pager [total]="visibleGroups().length" [size]="pageSize" [(page)]="groupPage" />
 </section>
+}
+
+<tb-user-access-sheet (saved)="load()" />
+<tb-user-form-sheet (saved)="load()" />
+<tb-user-groups-sheet [canCreate]="true" (create)="newGroupWith($event)" (saved)="load()" />
 
 <tb-sheet [(open)]="dlgRole" title="Rôle des utilisateurs sélectionnés" [width]="400">
   <p class="tb-muted">Votre propre compte reste administrateur.</p>
@@ -245,7 +341,13 @@
       </div>
     </div>
     <div class="tb-actions">
-      <button type="button" class="tb-btn tb-tonal" (click)="groupsOf(l)"><i class="pi pi-users"></i>Ajouter ou retirer d'un groupe</button>
+      <button type="button" class="tb-btn tb-tonal" (click)="groupsOf(l)"><i class="pi pi-users"></i>Groupes</button>
+    </div>
+    <div class="tb-actions">
+      @if (!auth.isMe(l.user)) {
+        <button type="button" class="tb-btn tb-flat tb-btn-danger tb-actions-start" (click)="removeUser(l)"><i class="pi pi-trash"></i>Supprimer</button>
+      }
+      <button type="button" class="tb-btn tb-flat" (click)="editUser(l)"><i class="pi pi-pencil"></i>Nom, rôle, mot de passe</button>
     </div>
   }
 </tb-sheet>

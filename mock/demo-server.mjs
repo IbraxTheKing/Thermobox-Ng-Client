@@ -22,6 +22,7 @@
 import { createServer } from 'node:http';
 import { randomBytes } from 'node:crypto';
 import { gzipSync } from 'node:zlib';
+import os from 'node:os';
 import { readFile, stat } from 'node:fs/promises';
 import { extname, join, normalize, resolve } from 'node:path';
 
@@ -952,6 +953,36 @@ route('PUT', '/api/v2/server/logo', 'ADMIN', ({ body, req }) => {
 });
 route('DELETE', '/api/v2/server/logo', 'ADMIN', () => ((logo = null), ok(serverInfo())));
 route('GET', '/api/v2/server/limits', 'auth', () => ok(limits));
+// What this process uses (26.12, ADMIN): the figures of Node, as the server gives those of its JVM
+let cpuBefore = { usage: process.cpuUsage(), at: process.hrtime.bigint() };
+let gcCount = 0;
+let gcTimeMs = 0;
+route('GET', '/api/v2/server/metrics', 'ADMIN', () => {
+  const now = process.hrtime.bigint();
+  const usage = process.cpuUsage();
+  const elapsedUs = Number(now - cpuBefore.at) / 1000;
+  const used = usage.user - cpuBefore.usage.user + usage.system - cpuBefore.usage.system;
+  const cpus = os.cpus().length;
+  cpuBefore = { usage, at: now };
+  const mem = process.memoryUsage();
+  const load = os.loadavg()[0] / cpus;
+  // A collection now and then, a few milliseconds each
+  if (Math.random() < 0.4) (gcCount++, (gcTimeMs += Math.round(2 + Math.random() * 12)));
+  const mb = (b) => Math.round(b / 1048576);
+  return ok({
+    processCpu: Math.round(Math.min(100, (used / elapsedUs / cpus) * 100) * 10) / 10,
+    systemCpu: Math.round(Math.min(100, load * 100) * 10) / 10,
+    processors: cpus,
+    heapUsedMb: mb(mem.heapUsed),
+    heapCommittedMb: mb(mem.heapTotal),
+    heapMaxMb: 768,
+    nonHeapUsedMb: mb(mem.rss - mem.heapTotal),
+    threads: 18 + Math.round(Math.random() * 6),
+    gcCount,
+    gcTimeMs,
+    uptimeSeconds: Math.round(process.uptime()),
+  });
+});
 route('PUT', '/api/v2/server/limits', 'ADMIN', ({ body }) => {
   const c = json(body) ?? {};
   const next = structuredClone(limits);

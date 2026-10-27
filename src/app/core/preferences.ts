@@ -17,6 +17,8 @@ interface Stored {
   /** Computers: the side bar folded into a rail of icons. */
   sidebarCollapsed?: boolean;
   homeColors?: HomeColors;
+  /** 'default' (ThermoBox green), 'system' or the id of a palette (AccentService). */
+  accent?: string;
   tolerance?: number;
   cardSize?: number;
   buildingOrder?: string[];
@@ -63,6 +65,8 @@ export class PreferencesService {
   /** Order of the buildings on the dashboard, as arranged by hand (keys of its sections). */
   readonly buildingOrder = signal<string[]>(this.stored.buildingOrder ?? []);
   readonly style = signal<StyleSite>('glass');
+  /** Accent colour: the ThermoBox green, the system's, or a palette (AccentService applies it). */
+  readonly accent = signal<string>(this.stored.accent ?? 'default');
 
   /** The system asks for less motion: no transitions between pages, nothing slides or pops. */
   readonly reducedMotion = signal(this.motionQuery.matches);
@@ -91,6 +95,7 @@ export class PreferencesService {
         keyboard: this.keyboard(),
         sidebarCollapsed: this.sidebarCollapsed(),
         homeColors: this.homeColors(),
+        accent: this.accent(),
         tolerance: this.tolerance(),
         cardSize: this.cardSize(),
         buildingOrder: this.buildingOrder(),
