@@ -510,3 +510,68 @@ button.tb-group-filter.tb-filter-on { border-color: var(--md-primary); color: va
 @media (hover: none) { .tb-sp-edit { opacity: .6; } }
 .tb-col-setpoint .tb-entry.tb-entry-inline { margin: 0; height: 34px; }
 .tb-entry-inline input { width: 4.5em; }
+
+/* Updates: the last installation, one line once finished, unfolded on demand */
+button.tb-update-installation-head { display: flex; align-items: center; gap: 12px; width: 100%; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+button.tb-update-installation-head:disabled { cursor: default; opacity: 1; }
+.tb-update-installation-title { display: flex; flex-direction: column; gap: 2px; flex: 1 1 auto; min-width: 0; }
+.tb-update-installation-title h2 { margin: 0; }
+.tb-update-installation-fold { color: var(--md-on-surface-variant); transition: transform var(--tb-medium) var(--tb-ease); }
+button.tb-update-installation-head[aria-expanded="true"] .tb-update-installation-fold { transform: rotate(180deg); }
+.tb-update-installation.tb-update-installation-done { padding-top: 12px; padding-bottom: 12px; }
+.tb-update-installation-done .tb-section-icon { width: 34px; height: 34px; }
+.tb-update-installation-body { margin-top: 12px; }
+.tb-update-earlier-title { margin-top: 32px; }
+.tb-update-earlier-text { margin: 0 0 4px; }
+
+/* Release channels: rc a strong orange (nearly stable), beta the orange of a test */
+.tb-channel-rc { --canal: #e8590c; --canal-container: #ffd8bf; --canal-on: #8f3204; }
+:root[data-theme="dark"] .tb-channel-rc { --canal: #ff8a3d; --canal-container: #5c2a0c; --canal-on: #ffd2b3; }
+
+/* Updates: the finished installation, one line with its own padding */
+button.tb-update-installation-head.tb-card-head { margin-bottom: 0; }
+
+/* Updates by monthly series */
+.tb-update-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin-bottom: 4px; }
+.tb-update-tools .tb-summary { margin: 0; }
+.tb-update-series { margin-top: 22px; }
+.tb-update-series-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; padding: 0 4px; }
+.tb-update-series-title { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.tb-update-series-title strong { font-size: 1.15rem; }
+.tb-update-series .tb-update-version-card { margin-top: 10px; }
+.tb-update-series-more { margin-top: 8px; }
+.tb-update-series-more > summary { display: inline-flex; align-items: center; gap: 8px; padding: 6px 4px; color: var(--md-primary); font-weight: 600; cursor: pointer; list-style: none; }
+.tb-update-series-more > summary::-webkit-details-marker { display: none; }
+.tb-update-series-more > summary::before { content: "\e956"; font-family: primeicons; font-size: .8rem; transition: transform var(--tb-fast); }
+.tb-update-series-more[open] > summary::before { transform: rotate(90deg); }
+.tb-update-series-older .tb-update-series-title strong { color: var(--md-on-surface-variant); }
+
+/* Release notes: the whole of GitHub Markdown */
+:is(.tb-update-notes, .tb-update-migration, .tb-update-check) {
+    & :is(ul, ol) { margin: 6px 0; padding-left: 22px; }
+    & li > :is(ul, ol) { margin: 2px 0; }
+    & li:has(> input[type="checkbox"]) { list-style: none; margin-left: -20px; }
+    & input[type="checkbox"] { margin: 0 6px 0 0; vertical-align: -2px; accent-color: var(--md-primary); }
+    & h3 { font-size: 1.1rem; }
+    & a { color: var(--md-primary); text-underline-offset: 2px; }
+    & del { opacity: .7; }
+    & hr { margin: 14px 0; border: 0; border-top: 1px solid var(--md-outline-variant); }
+    & img { max-width: 100%; height: auto; border-radius: var(--tb-shape-sm); }
+    & pre { margin: 8px 0; padding: 10px 12px; overflow-x: auto; border-radius: var(--tb-shape-sm); background: var(--md-surface-container-high); font-size: .86em; line-height: 1.45; }
+    & pre code { padding: 0; background: none; font-size: inherit; }
+    & blockquote { margin: 8px 0; padding: 4px 0 4px 14px; border-left: 3px solid var(--md-outline-variant); color: var(--md-on-surface-variant); }
+    & .tb-md-table { margin: 8px 0; overflow-x: auto; border: 1px solid var(--md-outline-variant); border-radius: var(--tb-shape-sm); }
+    & table { width: 100%; border-collapse: collapse; font-size: .92em; overflow-wrap: normal; }
+    & :is(th, td) { padding: 7px 10px; border-bottom: 1px solid var(--md-outline-variant); text-align: left; vertical-align: top; }
+    & th { background: var(--md-surface-container-high); font-weight: 650; white-space: nowrap; }
+    & tr:last-child td { border-bottom: 0; }
+    & tbody tr:nth-child(even) td { background: color-mix(in srgb, var(--md-on-surface) 3%, transparent); }
+}
+/* GitHub alerts: > [!NOTE], > [!WARNING]… */
+.tb-md-alert { --alert: var(--md-primary); border-left-color: var(--alert) !important; color: var(--md-on-surface) !important; }
+.tb-md-alert-title { margin: 0 0 2px !important; color: var(--alert); font-weight: 700; }
+.tb-md-alert-note { --alert: #3d7ad6; }
+.tb-md-alert-tip { --alert: var(--tb-stable); }
+.tb-md-alert-important { --alert: #8a5bb0; }
+.tb-md-alert-warning { --alert: var(--tb-heating); }
+.tb-md-alert-caution { --alert: var(--md-error); }

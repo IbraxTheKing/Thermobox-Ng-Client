@@ -6,12 +6,14 @@ import { errorMessage } from '../../core/api.config';
 import { UpdateNoticeService } from '../../core/update-notice';
 import { long } from '../../core/dates';
 import { markdownToHtml } from '../../core/markdown';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ToastService } from '../../core/messages';
 import { FlipService } from '../../core/flip';
 import { UpdatesState, Preparation, AvailableVersion } from '../../models/models';
 import { UpdateService } from '../../services/update.service';
 import { TbSheet } from '../../ui/sheet';
-import { updateTypeLabel } from '../../core/version';
+import { Version, updateTypeLabel } from '../../core/version';
+import { Rollback, rollbackOf } from '../../core/release-notes';
 
 /** A channel filter; [couleur] is the tb-channel-* class. */
 interface ChannelChip {
@@ -19,6 +21,17 @@ interface ChannelChip {
   label: string;
   count: number;
   color: string;
+}
+
+/** The versions of one monthly series (« 26.11 »), the most recent first. */
+interface Series {
+  key: string;
+  latest: AvailableVersion;
+  others: AvailableVersion[];
+  /** The series of the version installed. */
+  installed: boolean;
+  /** Older than the version installed: going back. */
+  older: boolean;
 }
 
 /**
@@ -44,6 +57,8 @@ export class UpdatesPage implements OnInit, OnDestroy {
   protected readonly checking = signal(false);
   /** Channel chip picked ("rc", "beta", "nightly", "stable"), null for all. */
   protected readonly channelFilter = signal<string | null>(null);
+  /** The last installation, once finished: its steps unfolded. */
+  protected readonly installationOpen = signal(false);
 
   // Installation dialog
   protected readonly preparation = signal<Preparation | null>(null);
@@ -76,6 +91,92 @@ export class UpdatesPage implements OnInit, OnDestroy {
   protected readonly available = computed(() => this.filtered(this.state()?.available ?? []));
   protected readonly earlier = computed(() => this.filtered(this.state()?.olderVersions ?? []));
 
+  // ---------------------------------------------------------------- by series
+
+  /** One card per monthly series (its most recent version), or every version. */
+  protected readonly bySeries = signal(true);
+
+  protected readonly series = computed<Series[]>(() => {
+    const installed = Version.read(this.state()?.installedVersion);
+    const groups = new Map<string, AvailableVersion[]>();
+    for (const v of [...this.available(), ...this.earlier()]) {
+      const k = Version.read(v.version)?.series ?? v.version;
+      groups.set(k, [...(groups.get(k) ?? []), v]);
+    }
+    return [...groups.entries()]
+      .map(([k, l]) => {
+        const sorted = [...l].sort((a, b) => compareTags(b.version, a.version));
+        return { key: k, latest: sorted[0], others: sorted.slice(1), installed: installed?.series === k, older: sorted[0].older };
+      })
+      .sort((a, b) => compareTags(b.latest.version, a.latest.version));
+  });
+
+  // ---------------------------------------------------------------- going back
+
+  /** What the notes of a version say about going back to an older one afterwards. */
+  protected rollback(v: AvailableVersion): Rollback {
+    return rollbackOf(v.notes);
+  }
+
+  /**
+   * The notes of the version installed (the server does not list it): read from GitHub, once,
+   * when there are older versions to judge. The server may give it itself (installedRollback).
+   */
+  private readonly installedNotes = signal<string | null>(null);
+  private readonly installedRollback = computed<Rollback>(() => {
+    const e = this.state();
+    if (e?.installedRollback != null) return e.installedRollback ? 'yes' : 'no';
+    return rollbackOf(e?.installedNotes ?? this.installedNotes());
+  });
+
+  /**
+   * An older version that can no longer be installed: a version between it and the installed one
+   * (included) says in its notes that there is no going back. Its tag, null if none.
+   */
+  protected blockedBy(v: AvailableVersion): string | null {
+    const e = this.state();
+    if (!e || !v.older) return null;
+    const between = (e.olderVersions ?? []).filter((z) => compareTags(z.version, v.version) > 0).sort((a, b) => compareTags(a.version, b.version));
+    const z = between.find((x) => rollbackOf(x.notes) === 'no');
+    if (z) return z.version;
+    return this.installedRollback() === 'no' ? e.installedVersion : null;
+  }
+
+  private notesAsked = false;
+
+  /** Release notes of the version installed, from the GitHub API (public, no account). */
+  private async readInstalledNotes(e: UpdatesState): Promise<void> {
+    if (this.notesAsked || !e.installedVersion || !e.olderVersions?.length || e.installedRollback != null || e.installedNotes != null) return;
+    const sample = e.olderVersions[0];
+    const m = /github\.com\/([^/]+)\/([^/]+)\/releases(?:\/tag\/([^/?#]+))?/.exec(sample.url ?? '');
+    if (!m) return;
+    this.notesAsked = true;
+    const prefix = m[3] && m[3].startsWith('v') && !sample.version.startsWith('v') ? 'v' : '';
+    const cacheKey = `tb-notes-${e.installedVersion}`;
+    try {
+      const cached = sessionStorage.getItem(cacheKey);
+      if (cached != null) {
+        this.installedNotes.set(cached);
+        return;
+      }
+    } catch {
+      /* private browsing */
+    }
+    try {
+      const r = await fetch(`https://api.github.com/repos/${m[1]}/${m[2]}/releases/tags/${prefix}${e.installedVersion}`, { headers: { Accept: 'application/vnd.github+json' } });
+      if (!r.ok) return;
+      const body = ((await r.json()) as { body?: string }).body ?? '';
+      this.installedNotes.set(body);
+      try {
+        sessionStorage.setItem(cacheKey, body);
+      } catch {
+        /* private browsing */
+      }
+    } catch {
+      /* offline, or GitHub out of reach: the notes of the versions listed still count */
+    }
+  }
+
   async ngOnInit(): Promise<void> {
     await this.refresh(false);
   }
@@ -86,8 +187,10 @@ export class UpdatesPage implements OnInit, OnDestroy {
 
   private async refresh(quiet: boolean): Promise<void> {
     try {
-      this.state.set(await firstValueFrom(this.api.state(quiet)));
+      const e = await firstValueFrom(this.api.state(quiet));
+      this.state.set(e);
       this.restart.set(false);
+      void this.readInstalledNotes(e);
     } catch (e) {
       // While the server restarts on the new version
       if (this.tracking()) this.restart.set(true);
@@ -115,6 +218,7 @@ export class UpdatesPage implements OnInit, OnDestroy {
     try {
       const e = await firstValueFrom(this.api.check());
       this.state.set(e);
+      void this.readInstalledNotes(e);
       this.notice.state.set(e);
       if (e.error) this.toasts.error('Vérification impossible', e.error);
       else if (e.updateAvailable) this.toasts.info('Nouvelle version disponible', e.available[0]?.version);
@@ -158,7 +262,22 @@ export class UpdatesPage implements OnInit, OnDestroy {
 
   // ---------------------------------------------------------------- formats
 
-  protected notes = markdownToHtml;
+  /**
+   * Notes as HTML, already cleaned by DOMPurify (markdownToHtml): trusted as they are, so the
+   * alignment of table cells and the boxes of task lists stay. One object per text, so the page
+   * does not rewrite them at each check.
+   */
+  private readonly sanitizer = inject(DomSanitizer);
+  private readonly notesHtml = new Map<string, SafeHtml>();
+  protected notes = (text: string | null | undefined): SafeHtml => {
+    const k = text ?? '';
+    let h = this.notesHtml.get(k);
+    if (!h) {
+      h = this.sanitizer.bypassSecurityTrustHtml(markdownToHtml(text));
+      this.notesHtml.set(k, h);
+    }
+    return h;
+  };
   protected date = (iso: string | null | undefined) => long(iso ?? null);
   protected channel = (v: AvailableVersion) => color(key(v));
   protected channelLabel = (v: AvailableVersion) => label(key(v));
@@ -186,19 +305,23 @@ export class UpdatesPage implements OnInit, OnDestroy {
   }
 }
 
+/** Newest first when sorted with (b, a): the order of the server (Version.kt). */
+function compareTags(a: string, b: string): number {
+  const x = Version.read(a);
+  const y = Version.read(b);
+  return x && y ? x.compare(y) : a.localeCompare(b);
+}
+
 function key(v: AvailableVersion): string {
   return v.prerelease ? v.channel || 'test' : 'stable';
 }
 
-/** Colour of a version: stable (green), alpha (blue), beta / rc (orange), nightly (violet). */
+/**
+ * Colour of a version, warmer as it nears a stable one: nightly (violet), alpha (blue), beta
+ * (orange), rc (a strong orange: nearly stable), stable (green).
+ */
 function color(c: string): string {
-  return c === 'stable'
-    ? 'stable'
-    : c === 'alpha'
-      ? 'alpha'
-      : c === 'nightly'
-        ? 'nightly'
-        : 'test';
+  return c === 'stable' ? 'stable' : c === 'nightly' ? 'nightly' : c === 'alpha' ? 'alpha' : c === 'rc' ? 'rc' : 'test';
 }
 
 function label(c: string): string {

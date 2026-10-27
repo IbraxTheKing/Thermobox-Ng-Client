@@ -248,6 +248,13 @@ export interface UpdatesState {
   automaticInstall: boolean | null;
   installMode: string | null;
   installation: Installation | null;
+  /**
+   * Can the version installed be left for an older one (its notes: « Rétrocompatibilité : non »)?
+   * Optional, from the server; otherwise the client reads the notes of that version on GitHub.
+   */
+  installedRollback?: boolean | null;
+  /** Release notes of the version installed (optional, see installedRollback). */
+  installedNotes?: string | null;
 }
 
 export interface UpdateCheck {

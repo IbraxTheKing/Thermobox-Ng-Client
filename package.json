@@ -29,6 +29,8 @@
     "@fontsource/ibm-plex-sans": "^5.3.0",
     "@fontsource/ibm-plex-sans-condensed": "^5.3.0",
     "chart.js": "^4.5.1",
+    "dompurify": "^3.4.17",
+    "marked": "^18.1.2",
     "primeicons": "^8.0.2",
     "rxjs": "~7.8.0",
     "thermobox-native": "file:plugins/thermobox-native",

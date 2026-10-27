@@ -71,19 +71,19 @@
         <div class="tb-server-charts">
           <section class="tb-card tb-server-chart">
             <div class="tb-card-head"><span class="tb-section-icon"><i class="pi pi-microchip"></i></span><h2>Processeur</h2></div>
-            <div class="tb-chart"><tb-chart-view [labels]="labels()" [series]="cpu()" valueUnit="%" [yMin]="0" description="Processeur du serveur" /></div>
+            <div class="tb-chart"><tb-chart-view live [labels]="labels()" [series]="cpu()" valueUnit="%" [yMin]="0" description="Processeur du serveur" /></div>
           </section>
           <section class="tb-card tb-server-chart">
             <div class="tb-card-head"><span class="tb-section-icon"><i class="pi pi-database"></i></span><h2>Mémoire Java</h2></div>
-            <div class="tb-chart"><tb-chart-view [labels]="labels()" [series]="memory()" valueUnit="Mo" [yMin]="0" description="Mémoire du serveur" /></div>
+            <div class="tb-chart"><tb-chart-view live [labels]="labels()" [series]="memory()" valueUnit="Mo" [yMin]="0" description="Mémoire du serveur" /></div>
           </section>
           <section class="tb-card tb-server-chart">
             <div class="tb-card-head"><span class="tb-section-icon"><i class="pi pi-sitemap"></i></span><h2>Threads</h2></div>
-            <div class="tb-chart"><tb-chart-view [labels]="labels()" [series]="threads()" valueUnit="" [yMin]="0" description="Threads du serveur" /></div>
+            <div class="tb-chart"><tb-chart-view live [labels]="labels()" [series]="threads()" valueUnit="" [yMin]="0" description="Threads du serveur" /></div>
           </section>
           <section class="tb-card tb-server-chart">
             <div class="tb-card-head"><span class="tb-section-icon"><i class="pi pi-pause"></i></span><h2>Pauses du ramasse-miettes</h2></div>
-            <div class="tb-chart"><tb-chart-view [labels]="labels()" [series]="gc()" valueUnit="ms" [yMin]="0" description="Pauses du ramasse-miettes" /></div>
+            <div class="tb-chart"><tb-chart-view live [labels]="labels()" [series]="gc()" valueUnit="ms" [yMin]="0" description="Pauses du ramasse-miettes" /></div>
           </section>
         </div>
       }

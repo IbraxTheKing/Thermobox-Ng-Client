@@ -1,4 +1,4 @@
-import {
+import { booleanAttribute,
   ChangeDetectionStrategy,
   Component,
   DOCUMENT,
@@ -139,6 +139,11 @@ export class TbChart implements OnDestroy {
   readonly valueUnit = input<string | null>(null);
   /** Lowest value of the vertical axis (0 for a percentage), none by default. */
   readonly yMin = input<number | null>(null);
+  /**
+   * Values that keep coming (the resources of the server, every few seconds): once drawn, the
+   * curves are only extended, without animating again from the bottom.
+   */
+  readonly live = input(false, { transform: booleanAttribute });
   /** A curve was shown or hidden from the legend. */
   readonly toggled = output<{ index: number; visible: boolean }>();
 
@@ -312,6 +317,14 @@ export class TbChart implements OnDestroy {
     });
     const options = this.options(mobile, series.length);
     const visible = this.chart ? this.chart.data.datasets.map((_, i) => this.chart!.isDatasetVisible(i)) : [];
+    if (this.live() && this.chart && this.chart.data.datasets.length === datasets.length) {
+      // Same datasets, new values: no animation, the reading under the pointer stays
+      this.chart.data.labels = labels;
+      datasets.forEach((d, i) => Object.assign(this.chart!.data.datasets[i], { data: d.data, borderColor: d.borderColor, backgroundColor: d.backgroundColor, pointBackgroundColor: d.pointBackgroundColor }));
+      this.chart.options = options;
+      this.chart.update('none');
+      return;
+    }
     if (this.chart && this.chart.data.datasets.length === datasets.length) {
       this.chart.data.labels = labels;
       this.chart.data.datasets = datasets;
