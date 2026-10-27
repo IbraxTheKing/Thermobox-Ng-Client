@@ -107,11 +107,14 @@
               }
             </td>
             <td class="tb-col-groups">
-              @for (g of l.groups; track g) {
-                <span class="tb-chip-group">{{ g }}</span>
-              } @empty {
-                <span class="tb-muted">—</span>
-              }
+              <button type="button" class="tb-groups-link" [title]="'Changer les groupes de ' + l.user.username" (click)="groupsSheet().open(l)">
+                @for (g of l.groups; track g) {
+                  <span class="tb-chip-group">{{ g }}</span>
+                } @empty {
+                  <span class="tb-chip-group tb-chip-add"><i class="pi pi-plus"></i>Groupe</span>
+                }
+                <i class="pi pi-pencil tb-access-edit" aria-hidden="true"></i>
+              </button>
             </td>
           </tr>
         } @empty {
@@ -160,6 +163,7 @@
 }
 
 <tb-user-access-sheet (saved)="load()" />
+<tb-user-groups-sheet [canCreate]="true" (create)="newGroupWith($event)" (saved)="load()" />
 
 <tb-sheet [(open)]="dlgRole" title="Rôle des utilisateurs sélectionnés" [width]="400">
   <p class="tb-muted">Votre propre compte reste administrateur.</p>

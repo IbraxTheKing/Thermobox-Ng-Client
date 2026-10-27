@@ -47,6 +47,16 @@
             <i class="pi pi-key"></i>{{ summary(l) }}<i class="pi pi-pencil tb-access-edit" aria-hidden="true"></i>
           </button>
         }
+        @if (l.user.type !== 'ADMIN' || l.groups.length) {
+        <button type="button" class="tb-groups-link tb-user-groups" [title]="'Changer les groupes de ' + l.user.username" (click)="groupsSheet.open(l)">
+          @for (g of l.groups; track g) {
+            <span class="tb-chip-group">{{ g }}</span>
+          } @empty {
+            <span class="tb-chip-group tb-chip-add"><i class="pi pi-plus"></i>Groupe</span>
+          }
+          <i class="pi pi-pencil tb-access-edit" aria-hidden="true"></i>
+        </button>
+        }
       </div>
       <div class="tb-user-actions">
         @if (l.user.type !== 'ADMIN') {
@@ -100,3 +110,6 @@
 
 <!-- Accesses of a user: everything, or only the ticked buildings / floors / rooms -->
 <tb-user-access-sheet (saved)="afterAccess()" />
+
+<!-- Groups of a user: tapping their groups, or « + Groupe » -->
+<tb-user-groups-sheet #groupsSheet (saved)="afterAccess()" />

@@ -687,6 +687,17 @@ public class ThermoboxNativePlugin extends Plugin {
 
     @Nullable private OnBackPressedCallback back;
 
+    /** Android 12+: the Material You accent drawn from the wallpaper, as #rrggbb (nothing before). */
+    @PluginMethod
+    public void systemAccent(PluginCall call) {
+        JSObject r = new JSObject();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            int c = getContext().getColor(android.R.color.system_accent1_500);
+            r.put("color", String.format("#%06x", 0xFFFFFF & c));
+        }
+        call.resolve(r);
+    }
+
     /** active: the page takes the back gesture and button (otherwise: the activity, i.e. Capacitor). */
     @PluginMethod
     public void enableBack(PluginCall call) {

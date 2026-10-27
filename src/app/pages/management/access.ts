@@ -15,6 +15,7 @@ import { Option, TbMultipleChoice } from '../../ui/multiple-choice';
 import { TbSheet } from '../../ui/sheet';
 import { TbPager } from '../../ui/pager';
 import { TbUserAccessSheet } from '../../ui/user-access-sheet';
+import { TbUserGroupsSheet } from '../../ui/user-groups-sheet';
 import { TbSwitch } from '../../ui/controls';
 import { PlatformService } from '../../core/platform';
 import { FlipService } from '../../core/flip';
@@ -30,7 +31,7 @@ const PAGE = 20;
 
 @Component({
   selector: 'tb-access',
-  imports: [TbSheet, TbSwitch, TbMultipleChoice, TbAccessTree, TbPager, TbUserAccessSheet],
+  imports: [TbSheet, TbSwitch, TbMultipleChoice, TbAccessTree, TbPager, TbUserAccessSheet, TbUserGroupsSheet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './access.html',
 })
@@ -79,6 +80,7 @@ export class AccessTab implements OnInit {
   protected readonly pageSize = PAGE;
   protected readonly shownRows = computed(() => this.visible().slice(this.page() * PAGE, this.page() * PAGE + PAGE));
   protected readonly accessSheet = viewChild.required(TbUserAccessSheet);
+  protected readonly groupsSheet = viewChild.required(TbUserGroupsSheet);
   protected readonly selectedRows = computed(() => this.access.users().filter((l) => this.selection().has(l.user.id!)));
   protected readonly allChecked = computed(() => this.visible().length > 0 && this.visible().every((l) => this.selection().has(l.user.id!)));
 
@@ -125,10 +127,14 @@ export class AccessTab implements OnInit {
 
   /** Group membership of this user (same window as for a selection). */
   protected groupsOf(l: UserRow): void {
-    this.selection.set(new Set([l.user.id!]));
-    this.targetGroupId.set(null);
     this.userSheet.set(false);
-    this.dlgMembers.set(true);
+    this.groupsSheet().open(l);
+  }
+
+  /** « Nouveau groupe » from the groups of a user: the group form, with them in it. */
+  protected async newGroupWith(l: UserRow): Promise<void> {
+    await this.newGroup();
+    this.formMembers.set(new Set([l.user.id!]));
   }
 
   protected check(id: number, isChecked: boolean): void {

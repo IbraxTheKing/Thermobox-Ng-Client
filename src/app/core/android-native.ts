@@ -46,6 +46,8 @@ interface ThermoboxNativePlugin {
   addListener(e: 'fab', f: () => void): Promise<PluginListenerHandle>;
   addListener(e: 'size', f: (d: { height: number; width?: number; visible: boolean }) => void): Promise<PluginListenerHandle>;
   enableBack(o: { active: boolean }): Promise<void>;
+  /** Android 12+: the Material You accent of the wallpaper, #rrggbb (none before). */
+  systemAccent(): Promise<{ color?: string }>;
   addListener(e: 'back', f: (d: BackStep) => void): Promise<PluginListenerHandle>;
 }
 
@@ -72,6 +74,16 @@ if (Capacitor.getPlatform() === 'android' && Capacitor.isNativePlatform() && !AN
 }
 
 const plugin = ANDROID_NATIVE ? registerPlugin<ThermoboxNativePlugin>('ThermoboxNative') : null;
+
+/** The Material You accent of the wallpaper (Android 12+, native app), #rrggbb; null elsewhere. */
+export async function androidSystemAccent(): Promise<string | null> {
+  if (!plugin) return null;
+  try {
+    return (await plugin.systemAccent()).color ?? null;
+  } catch {
+    return null;
+  }
+}
 
 /** PrimeIcons of the page → drawables of the plugin. */
 const ICONS: Record<string, string> = {
@@ -227,7 +239,7 @@ export class AndroidNativeService {
       if (this.last) this.configureBar(...this.last);
       this.fabConfig = '';
       this.scheduleFab();
-    }).observe(this.root, { attributes: true, attributeFilter: ['data-theme', 'data-tone', 'data-style', 'data-tint', 'data-background'] });
+    }).observe(this.root, { attributes: true, attributeFilter: ['data-theme', 'data-tone', 'data-style', 'data-tint', 'data-background', 'data-accent'] });
   }
 
   /** Called by the shell whenever its tabs, the current page or the theme change. */

@@ -52,9 +52,27 @@ export class TbMultipleChoice {
   protected readonly search = signal('');
   /** Hundreds of users: a part at a time; the search looks through all of them. */
   protected readonly shown = new ShownCount(60);
-  protected readonly visible = computed(() => this.options().filter((o) => !this.search().trim() || matches(o.label, this.search())));
+  /**
+   * What was chosen when the list was given (opening a form): first in the list, so the members of
+   * a group are not lost among hundreds of users. Ticking or unticking does not move a line.
+   */
+  private readonly pinned = signal<Set<number>>(new Set());
+  private ownChange = false;
+  protected readonly visible = computed(() => {
+    const word = this.search().trim();
+    const pinned = this.pinned();
+    const list = this.options().filter((o) => !word || matches(o.label, word));
+    return pinned.size ? [...list.filter((o) => pinned.has(o.id)), ...list.filter((o) => !pinned.has(o.id))] : list;
+  });
 
   constructor() {
+    effect(() => {
+      const v = this.value();
+      untracked(() => {
+        if (!this.ownChange) this.pinned.set(new Set(v));
+        this.ownChange = false;
+      });
+    });
     effect(() => {
       this.search();
       untracked(() => this.shown.reset());
@@ -65,6 +83,7 @@ export class TbMultipleChoice {
     const s = new Set(this.value());
     if (checked) s.add(id);
     else s.delete(id);
+    this.ownChange = true;
     this.value.set(s);
   }
 }

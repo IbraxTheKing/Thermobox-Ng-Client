@@ -16,6 +16,7 @@ import { TbPassword } from '../../ui/controls';
 import { TbSheet } from '../../ui/sheet';
 import { TbPager } from '../../ui/pager';
 import { TbUserAccessSheet } from '../../ui/user-access-sheet';
+import { TbUserGroupsSheet } from '../../ui/user-groups-sheet';
 import { bytes } from '../auth/register';
 
 /** Utilisateurs (users.xhtml), ADMIN: accounts, their role and what they may see. */
@@ -24,7 +25,7 @@ const PAGE = 24;
 
 @Component({
   selector: 'tb-users-page',
-  imports: [RouterLink, TbSheet, TbPassword, TbPager, TbUserAccessSheet],
+  imports: [RouterLink, TbSheet, TbPassword, TbPager, TbUserAccessSheet, TbUserGroupsSheet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './users.html',
 })

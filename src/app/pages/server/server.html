@@ -25,6 +25,7 @@
     <tb-updates-page embedded />
   }
   @case ('settings') {
+    <tb-style-setting />
     @if (features.v2()) {
       <tb-server-settings />
     } @else {

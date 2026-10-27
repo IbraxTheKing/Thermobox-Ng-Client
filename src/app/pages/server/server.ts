@@ -10,6 +10,7 @@ import { ChartSeries, TbChart } from '../../ui/chart';
 import { TbServerLogo } from '../../ui/server-logo';
 import { UpdatesPage } from '../updates/updates';
 import { ServerSettings } from './server-settings';
+import { TbStyleSetting } from './style-setting';
 
 type Tab = 'resources' | 'updates' | 'settings';
 
@@ -21,7 +22,7 @@ type Tab = 'resources' | 'updates' | 'settings';
  */
 @Component({
   selector: 'tb-server-page',
-  imports: [NgTemplateOutlet, TbChart, TbServerLogo, UpdatesPage, ServerSettings],
+  imports: [NgTemplateOutlet, TbChart, TbServerLogo, UpdatesPage, ServerSettings, TbStyleSetting],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './server.html',
 })

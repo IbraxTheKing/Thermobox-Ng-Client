@@ -401,3 +401,42 @@ button.tb-access-link:hover .tb-access-edit, button.tb-access-link:focus-visible
   .tb-server-stats { grid-template-columns: 1fr 1fr; gap: 10px; }
   .tb-server-stats .tb-stat { padding: 16px; gap: 10px; }
 }
+
+/* Groups of a user: tap to change them; « + Groupe » when they have none */
+button.tb-groups-link { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px; max-width: 100%; padding: 3px 6px; margin: 0 -6px; border: 0; border-radius: 8px; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+button.tb-groups-link:hover { background: color-mix(in srgb, var(--md-on-surface) 7%, transparent); }
+.tb-groups-link .tb-access-edit { margin-left: 2px; font-size: .7rem; opacity: 0; transition: opacity .15s; }
+button.tb-groups-link:hover .tb-access-edit, button.tb-groups-link:focus-visible .tb-access-edit { opacity: .7; }
+@media (hover: none) { .tb-groups-link .tb-access-edit { opacity: .55; } }
+.tb-chip-group.tb-chip-add { display: inline-flex; align-items: center; gap: 4px; border: 1px dashed var(--md-outline); background: transparent; color: var(--md-on-surface-variant); }
+.tb-chip-add .pi { font-size: .65rem; }
+.tb-user-groups { margin-top: 2px; }
+.tb-actions .tb-actions-start { margin-right: auto; }
+
+/* The search of a multiple choice: its own height in the column, not the page search's 320 px */
+:root body .tb-choice-multiple > .tb-search.tb-choice-search { flex: none; }
+
+/* Accent colour: round swatches, the chosen one ticked */
+.tb-accent-name { margin-left: 6px; color: var(--md-on-surface-variant); font-weight: 500; }
+.tb-accents { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 12px; }
+.tb-accent {
+    --accent: var(--md-outline);
+    position: relative; display: grid; place-items: center; width: 34px; height: 34px; padding: 0;
+    border: 0; border-radius: 50%; background: var(--accent); color: #fff; cursor: pointer;
+    box-shadow: inset 0 0 0 1px rgb(0 0 0 / .12);
+    transition: transform var(--tb-fast) var(--tb-ease), box-shadow var(--tb-fast);
+}
+.tb-accent:hover:not(:disabled) { transform: scale(1.08); }
+.tb-accent .pi-check { font-size: .8rem; opacity: 0; transition: opacity var(--tb-fast); }
+.tb-accent[aria-checked="true"] { box-shadow: 0 0 0 2px var(--tb-glass), 0 0 0 4px var(--accent); }
+.tb-accent[aria-checked="true"] .pi-check { opacity: 1; }
+.tb-accent:focus-visible { outline: 2px solid var(--md-on-surface); outline-offset: 4px; }
+/* The system's: its colour when known, a split disc otherwise */
+.tb-accent-system { background: conic-gradient(from 45deg, #3b6fd1, #8a5bb0, #c94a35, #c98200, #2c7a4b, #3b6fd1); }
+.tb-accent-system[style*="--accent"] { background: var(--accent); }
+.tb-accent-system .pi-desktop { position: absolute; font-size: .8rem; }
+.tb-accent-system[aria-checked="true"] .pi-desktop { opacity: 0; }
+.tb-accent:disabled { cursor: not-allowed; opacity: .35; filter: grayscale(1); }
+.tb-accents-sep { width: 1px; height: 22px; margin: 0 2px; background: var(--md-outline-variant); }
+:root[data-style="panel"] .tb-accent { border-radius: var(--tb-shape-sm); }
+tb-style-setting { display: block; margin-bottom: 16px; }

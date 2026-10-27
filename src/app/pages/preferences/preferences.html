@@ -24,6 +24,36 @@
           }
         </div>
       </div>
+      <!-- Accent colour: the ThermoBox green, the system's, or a palette; the page and the buttons follow -->
+      <div class="tb-pref tb-pref-accent">
+        <span class="tb-section-icon"><i class="pi pi-palette"></i></span>
+        <div class="tb-pref-text">
+          <strong>Accent de couleur <span class="tb-accent-name">{{ accentName() }}</span></strong>
+          <span class="tb-muted">Teinte du fond, des surfaces et des boutons. Les couleurs des états et des courbes ne changent pas.</span>
+          <div class="tb-accents" role="radiogroup" aria-label="Accent de couleur">
+            <button type="button" role="radio" class="tb-accent" title="ThermoBox" aria-label="ThermoBox"
+                    [attr.aria-checked]="prefs.accent() === 'default'" [style.--accent]="defaultSwatch" (click)="prefs.accent.set('default')">
+              <i class="pi pi-check"></i>
+            </button>
+            <button type="button" role="radio" class="tb-accent tb-accent-system" [title]="accent.systemAvailable() ? 'Couleur du système' : accent.systemWhy" aria-label="Couleur du système"
+                    [attr.aria-checked]="prefs.accent() === 'system'" [disabled]="!accent.systemAvailable()" [style.--accent]="accent.systemColor() ?? null" (click)="prefs.accent.set('system')">
+              <i class="pi pi-desktop"></i><i class="pi pi-check"></i>
+            </button>
+            <span class="tb-accents-sep" aria-hidden="true"></span>
+            @for (p of palettes; track p.id) {
+              <button type="button" role="radio" class="tb-accent" [title]="p.label" [attr.aria-label]="p.label"
+                      [attr.aria-checked]="prefs.accent() === p.id" [style.--accent]="swatch(p)" (click)="prefs.accent.set(p.id)">
+                <i class="pi pi-check"></i>
+              </button>
+            }
+          </div>
+          @if (!accent.systemAvailable()) {
+            <span class="tb-pref-note"><i class="pi pi-info-circle"></i> Couleur du système : {{ accent.systemWhy }}</span>
+          } @else if (prefs.accent() === 'system') {
+            <span class="tb-pref-note"><i class="pi pi-info-circle"></i> Suit la couleur d'accent de l'appareil, aussi quand elle change.</span>
+          }
+        </div>
+      </div>
       <!-- The panel style keeps its enamel everywhere: the tint of the page has no effect there -->
       <div class="tb-pref" [class.tb-pref-off]="panel()">
         <span class="tb-section-icon"><i class="pi pi-palette"></i></span>
@@ -123,22 +153,7 @@
 
   <!-- Every user's look, chosen by an ADMIN -->
   @if (auth.admin()) {
-    <section class="tb-panel tb-pref-admin">
-      <div class="tb-prefs">
-        <div class="tb-pref">
-          <span class="tb-section-icon"><i class="pi pi-th-large"></i></span>
-          <div class="tb-pref-text">
-            <strong>Style panneau de configuration</strong>
-            <span class="tb-muted">
-              Pour tous les utilisateurs : surfaces unies, sans effet de verre, de flou ni de fond coloré, coins plus droits. Le thème clair
-              ou sombre de chacun est conservé.
-            </span>
-          </div>
-          <tb-switch [checked]="panel()" [disabled]="styleSaving()" (checkedChange)="changeStyle($event)" label="Style panneau de configuration" />
-        </div>
-      </div>
-      <p class="tb-muted tb-pref-scope"><i class="pi pi-shield"></i> Réglage administrateur : s'applique à tout le monde, sur tous les appareils.</p>
-    </section>
+    <tb-style-setting />
 
     <!-- The server itself: its resources, updates, logo and limits have their own page -->
     <a routerLink="/app/server" class="tb-list-group tb-pref-about">
