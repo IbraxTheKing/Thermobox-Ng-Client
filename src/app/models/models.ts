@@ -207,7 +207,13 @@ export interface AvailableVersion {
   url: string;
   notes: string;
   migration: string | null;
+  /** The notes announce an incompatibility; for an older version, also when [blockedBy] is set. */
   incompatible: boolean;
+  /**
+   * Older version only (server 26.12): the version, up to the installed one, whose notes forbid
+   * going back past it (« Rétrocompatibilité : non »); null if none. Absent from older servers.
+   */
+  blockedBy?: string | null;
 }
 
 export interface InstallationStep {
@@ -249,8 +255,9 @@ export interface UpdatesState {
   installMode: string | null;
   installation: Installation | null;
   /**
-   * Can the version installed be left for an older one (its notes: « Rétrocompatibilité : non »)?
-   * Optional, from the server; otherwise the client reads the notes of that version on GitHub.
+   * Can the version installed be left for an older one (its notes: « Rétrocompatibilité : oui /
+   * non »)? null: they don't say. Server 26.12; with an older server (field absent), the client
+   * reads the notes of that version on GitHub.
    */
   installedRollback?: boolean | null;
   /** Release notes of the version installed (optional, see installedRollback). */

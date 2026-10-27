@@ -882,6 +882,7 @@ const patchVersion = {
   notes: '## Fixes\n- Inherited setpoints show in **Manage**\n- MQTT devices: reconnect after a broker outage\n\nSee https://github.com/IbraxTheKing/ThermoBox/pull/52',
   migration: null,
   incompatible: false,
+  blockedBy: null,
 };
 const updateState = {
   component: 'REST',
@@ -898,6 +899,9 @@ const updateState = {
   automaticInstall: false,
   installMode: 'Demo server: nothing is installed.',
   installation: null,
+  // 26.12: what the notes of the installed version say about going back
+  installedRollback: true,
+  installedNotes: '## Corrections\n- Consignes héritées dans **Gérer**\n\nRétrocompatibilité : oui',
 };
 route('GET', '/api/v2/updates', 'auth', ({ user }) => ok(user.type === 'ADMIN' ? updateState : { ...updateState, error: null, automaticInstall: null, installMode: null, installation: null }));
 route('POST', '/api/v2/updates/check', 'ADMIN', () => ok({ ...updateState, lastCheck: new Date().toISOString() }));

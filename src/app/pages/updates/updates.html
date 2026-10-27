@@ -16,12 +16,28 @@
     <span class="tb-section-icon"><i class="pi pi-server"></i></span>
     <div class="tb-update-installed-text">
       <span class="tb-eyebrow">{{ componentLabel(e.component) }} · version installée</span>
-      <strong class="tb-update-version">{{ e.installedVersion ?? 'Développement' }}</strong>
+      <span class="tb-update-installed-line">
+        <strong class="tb-update-version">{{ e.installedVersion ?? 'Développement' }}</strong>
+        @switch (installedRollback()) {
+          @case ('no') {
+            <span class="tb-tag tb-tag-danger" title="Ses notes l'annoncent : revenir à une version plus ancienne n'est plus possible sans restaurer une sauvegarde."><i class="pi pi-lock"></i>Sans retour arrière</span>
+          }
+          @case ('yes') {
+            <span class="tb-tag tb-tag-success" title="Ses notes l'annoncent : revenir à la version précédente reste possible."><i class="pi pi-replay"></i>Rétrocompatible</span>
+          }
+        }
+      </span>
       <span class="tb-muted">
         Dernière vérification : {{ date(e.lastCheck) }} ·
         {{ e.dailyCheck ? 'vérification quotidienne' : 'vérification automatique désactivée' }} ·
         {{ e.channel === 'PRERELEASE' ? 'versions stables et de test' : 'versions stables' }}
       </span>
+      @if (e.installedNotes) {
+        <details class="tb-update-notes">
+          <summary>Notes de cette version</summary>
+          <div [innerHTML]="notes(e.installedNotes)"></div>
+        </details>
+      }
     </div>
   </div>
 

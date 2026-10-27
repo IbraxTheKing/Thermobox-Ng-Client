@@ -119,11 +119,12 @@ export class UpdatesPage implements OnInit, OnDestroy {
   }
 
   /**
-   * The notes of the version installed (the server does not list it): read from GitHub, once,
-   * when there are older versions to judge. The server may give it itself (installedRollback).
+   * What the version installed says about going back: given by the server (26.12:
+   * installedRollback, installedNotes); with an older server, its notes are read from GitHub, once,
+   * when there are older versions to judge.
    */
   private readonly installedNotes = signal<string | null>(null);
-  private readonly installedRollback = computed<Rollback>(() => {
+  protected readonly installedRollback = computed<Rollback>(() => {
     const e = this.state();
     if (e?.installedRollback != null) return e.installedRollback ? 'yes' : 'no';
     return rollbackOf(e?.installedNotes ?? this.installedNotes());
@@ -136,6 +137,8 @@ export class UpdatesPage implements OnInit, OnDestroy {
   protected blockedBy(v: AvailableVersion): string | null {
     const e = this.state();
     if (!e || !v.older) return null;
+    // Server 26.12: it knows every release on GitHub, not only the older versions it lists
+    if (v.blockedBy !== undefined) return v.blockedBy ?? null;
     const between = (e.olderVersions ?? []).filter((z) => compareTags(z.version, v.version) > 0).sort((a, b) => compareTags(a.version, b.version));
     const z = between.find((x) => rollbackOf(x.notes) === 'no');
     if (z) return z.version;
@@ -146,7 +149,8 @@ export class UpdatesPage implements OnInit, OnDestroy {
 
   /** Release notes of the version installed, from the GitHub API (public, no account). */
   private async readInstalledNotes(e: UpdatesState): Promise<void> {
-    if (this.notesAsked || !e.installedVersion || !e.olderVersions?.length || e.installedRollback != null || e.installedNotes != null) return;
+    // Server 26.12 gives them (the fields are there, even null): nothing to ask GitHub
+    if (this.notesAsked || !e.installedVersion || !e.olderVersions?.length || 'installedRollback' in e || 'installedNotes' in e) return;
     const sample = e.olderVersions[0];
     const m = /github\.com\/([^/]+)\/([^/]+)\/releases(?:\/tag\/([^/?#]+))?/.exec(sample.url ?? '');
     if (!m) return;
