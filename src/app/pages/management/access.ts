@@ -47,6 +47,10 @@ export class AccessTab implements OnInit {
       this.groupFilter();
       untracked(() => this.page.set(0));
     });
+    effect(() => {
+      this.groupSearch();
+      untracked(() => this.groupPage.set(0));
+    });
     // The accesses of the users shown, as they are shown
     effect(() => {
       const ids = this.shownRows().map((l) => l.user.id!);
@@ -74,22 +78,35 @@ export class AccessTab implements OnInit {
   protected readonly search = signal('');
   protected readonly selection = signal<Set<number>>(new Set());
 
-  /** Role chip picked, null for all. */
-  protected readonly roleFilter = signal<UserRole | null>(null);
-  /** Group picked: its id, NO_GROUP for the users in none, null for all. */
-  protected readonly groupFilter = signal<number | null>(null);
+  /** Roles ticked (none: all). */
+  protected readonly roleFilter = signal<Set<UserRole>>(new Set());
+  /** Groups ticked, NO_GROUP for the users in none (none ticked: all). A user in any of them shows. */
+  protected readonly groupFilter = signal<Set<number>>(new Set());
+  protected readonly groupsOpen = signal(false);
   protected readonly NO_GROUP = NO_GROUP;
+  protected readonly groupChoices = computed<Option[]>(() => [
+    { id: NO_GROUP, label: 'Sans groupe' },
+    ...this.access.groups().map((g) => ({ id: g.id, label: g.name, detail: `${g.members.length}` })),
+  ]);
+  protected readonly filtering = computed(() => this.roleFilter().size > 0 || this.groupFilter().size > 0);
+  /** « Équipe 1, Équipe 2 », « 4 groupes ». */
+  protected readonly groupFilterText = computed(() => {
+    const ids = [...this.groupFilter()];
+    if (!ids.length) return 'Tous les groupes';
+    const names = ids.map((id) => (id === NO_GROUP ? 'Sans groupe' : this.access.groups().find((g) => g.id === id)?.name ?? '?'));
+    return names.length <= 2 ? names.join(', ') : `${names.length} groupes`;
+  });
 
   protected readonly visible = computed(() => {
     const word = this.search().trim().toLowerCase();
-    const role = this.roleFilter();
+    const roles = this.roleFilter();
     const gf = this.groupFilter();
-    const members = gf != null && gf !== NO_GROUP ? new Set(this.access.groups().find((g) => g.id === gf)?.members.map((m) => m.id) ?? []) : null;
+    const members = new Set(this.access.groups().filter((g) => gf.has(g.id)).flatMap((g) => g.members.map((m) => m.id)));
     return this.access.users().filter(
       (l) =>
         (!word || l.user.username.toLowerCase().includes(word) || l.groups.some((g) => g.toLowerCase().includes(word))) &&
-        (role == null || l.user.type === role) &&
-        (gf == null || (gf === NO_GROUP ? !l.groups.length : members!.has(l.user.id!))),
+        (!roles.size || roles.has(l.user.type!)) &&
+        (!gf.size || members.has(l.user.id!) || (gf.has(NO_GROUP) && !l.groups.length)),
     );
   });
 
@@ -98,11 +115,38 @@ export class AccessTab implements OnInit {
   }
 
   protected toggleRole(r: UserRole): void {
-    this.roleFilter.update((x) => (x === r ? null : r));
+    this.flip.animate(() =>
+      this.roleFilter.update((x) => {
+        const s = new Set(x);
+        if (s.has(r)) s.delete(r);
+        else s.add(r);
+        return s;
+      }),
+    );
   }
 
-  protected setGroupFilter(v: string): void {
-    this.groupFilter.set(v === '' ? null : +v);
+  protected clearUserFilters(): void {
+    this.roleFilter.set(new Set());
+    this.groupFilter.set(new Set());
+  }
+
+  // ---------------------------------------------------------------- groups: a list
+
+  protected readonly MEMBERS_SHOWN = 5;
+  protected readonly groupSearch = signal('');
+  protected readonly groupPage = signal(0);
+  protected readonly visibleGroups = computed(() => {
+    const word = this.groupSearch().trim().toLowerCase();
+    return this.access
+      .groups()
+      .filter((g) => !word || g.name.toLowerCase().includes(word) || (g.description ?? '').toLowerCase().includes(word) || g.members.some((m) => (m.username ?? "").toLowerCase().includes(word)));
+  });
+  protected readonly shownGroups = computed(() => this.visibleGroups().slice(this.groupPage() * PAGE, this.groupPage() * PAGE + PAGE));
+
+  /** « user021, user022, user023 et 12 autres » */
+  protected firstNames(g: Group, n: number): string {
+    const names = g.members.slice(0, n).map((m) => m.username).join(', ');
+    return g.members.length > n ? `${names} et ${g.members.length - n} autre(s)` : names;
   }
 
   // ---------------------------------------------------------------- accounts

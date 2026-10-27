@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Directive, ElementRef, booleanAttribute, computed, effect, inject, input, model, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Directive, ElementRef, afterNextRender, booleanAttribute, computed, effect, inject, input, model, signal } from '@angular/core';
 
 import { PlatformService } from '../core/platform';
 import { PreferencesService } from '../core/preferences';
@@ -186,4 +186,13 @@ export class TbPassword {
   readonly invalid = input(false);
   readonly required = input(false, { transform: booleanAttribute });
   protected visible = false;
+}
+
+/** Focused once drawn: a field that appears because it was asked for (tap on a value to change it). */
+@Directive({ selector: '[tbAutofocus]' })
+export class TbAutofocus {
+  constructor() {
+    const el = inject<ElementRef<HTMLElement>>(ElementRef);
+    afterNextRender(() => el.nativeElement.focus());
+  }
 }

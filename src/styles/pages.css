@@ -442,3 +442,71 @@ button.tb-groups-link:hover .tb-access-edit, button.tb-groups-link:focus-visible
 tb-style-setting { display: block; margin-bottom: 16px; }
 .tb-toolbar .tb-group-filter { flex: 0 1 240px; min-width: 160px; }
 :root body .tb-access-table td.tb-col-actions { width: 96px; white-space: nowrap; text-align: right; }
+
+/* Gérer: « force » at the start of a row's setpoint field, the field for all the ticked rows */
+.tb-entry > button.tb-entry-force { width: 30px; min-width: 30px; border-left: 0; border-right: 1px solid var(--md-outline-variant); background: transparent; color: var(--md-on-surface-variant); }
+.tb-entry > button.tb-entry-force .pi { font-size: .8rem; }
+.tb-entry > button.tb-entry-force:hover { background: color-mix(in srgb, var(--md-on-surface) 7%, transparent); color: var(--md-on-surface); }
+.tb-entry > button.tb-entry-force.tb-on { background: var(--tb-heating-container); color: var(--tb-on-heating-container); }
+.tb-entry.tb-entry-many { border-color: color-mix(in srgb, var(--md-primary) 55%, transparent); }
+/* The boxes of a building / room: its count, a button */
+button.tb-mgmt-devices { padding: 2px 6px; border: 0; border-radius: 6px; background: none; color: var(--md-on-surface-variant); font: inherit; font-size: .8rem; cursor: pointer; }
+button.tb-mgmt-devices:hover { background: color-mix(in srgb, var(--md-primary) 12%, transparent); color: var(--md-primary); }
+.tb-devices-of { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; padding: 8px 8px 8px 14px; border-radius: var(--tb-shape-md); background: var(--md-primary-container); color: var(--md-on-primary-container); }
+.tb-devices-of span { flex: 1; }
+.tb-devices-of .tb-btn { color: inherit; }
+/* Groups as a list: a few members, then « +12 » */
+.tb-chip-group.tb-chip-more { background: var(--md-primary-container); color: var(--md-on-primary-container); }
+:root body .tb-groups-table td.tb-col-members { width: 46%; }
+:root body .tb-groups-table td.tb-col-actions { width: 96px; white-space: nowrap; text-align: right; }
+.tb-group-names { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tb-group-filters { flex-direction: column; align-items: stretch; gap: 8px; }
+.tb-group-filters tb-choice-multiple { max-width: 520px; }
+button.tb-group-filter { display: inline-flex; align-items: center; gap: 8px; text-align: left; cursor: pointer; }
+button.tb-group-filter span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+button.tb-group-filter.tb-filter-on { border-color: var(--md-primary); color: var(--md-primary); }
+
+/* Salles: what is attached to nothing, in a column on the right of the tree, to drag into it */
+.tb-rooms-layout.tb-with-side { display: grid; grid-template-columns: minmax(0, 1fr) minmax(260px, 320px); align-items: start; gap: 16px; }
+.tb-rooms-side {
+    position: sticky; top: 16px; display: flex; flex-direction: column; gap: 10px; max-height: calc(100dvh - 32px);
+    padding: 14px; border: 1px dashed var(--md-outline); border-radius: var(--tb-shape-xl); background: var(--tb-glass);
+    transition: border-color var(--tb-fast), background-color var(--tb-fast);
+}
+.tb-rooms-side.tb-hover { border-color: var(--md-primary); background: color-mix(in srgb, var(--md-primary) 10%, var(--tb-glass)); }
+.tb-rooms-side-head { display: flex; flex-direction: column; gap: 4px; }
+.tb-rooms-side-head strong { display: flex; align-items: center; gap: 8px; }
+.tb-rooms-side-head .tb-muted { font-size: .82rem; }
+:root body .tb-rooms-side .tb-rooms-side-search { flex: none; }
+:root body .tb-rooms-side .tb-rooms-side-search > .tb-input { height: 40px; padding-left: 40px; }
+:root body .tb-rooms-side .tb-rooms-side-search > .pi { left: 14px; }
+.tb-rooms-side-list { flex: 1 1 auto; min-height: 0; margin: 0; padding: 0; overflow-y: auto; list-style: none; overscroll-behavior: contain; }
+.tb-rooms-side-item { display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 4px 4px 4px 6px; border-radius: var(--tb-shape-md); cursor: grab; }
+.tb-rooms-side-item:hover { background: var(--md-secondary-container); }
+.tb-rooms-side-item:active { cursor: grabbing; }
+.tb-rooms-side-item.tb-slide { opacity: .45; }
+.tb-rooms-side-grip { color: var(--md-outline); font-size: .75rem; }
+.tb-rooms-side-text { display: flex; flex-direction: column; flex: 1 1 auto; min-width: 0; }
+.tb-rooms-side-text .tb-node-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tb-rooms-side-text .tb-muted { font-size: .8rem; }
+.tb-rooms-side-empty { padding: 8px; }
+@media (max-width: 840px) { .tb-rooms-layout.tb-with-side { display: block; } .tb-rooms-side { display: none; } }
+
+/* Gérer: the setpoint of a row on one line, a button; tapped, the field in its place */
+:root body .tb-mgmt-table td.tb-col-setpoint { min-width: 220px; }
+.tb-sp {
+    display: inline-flex; align-items: center; gap: 8px; max-width: 100%; min-height: 34px; padding: 4px 10px; margin-left: -10px;
+    border: 1px solid transparent; border-radius: var(--tb-shape-md); background: none; color: var(--md-on-surface);
+    font: inherit; font-variant-numeric: tabular-nums; text-align: left; cursor: text;
+    transition: border-color var(--tb-fast), background-color var(--tb-fast);
+}
+.tb-sp:hover, .tb-sp:focus-visible { border-color: var(--md-outline-variant); background: var(--tb-field); }
+.tb-sp-value { font-weight: 600; white-space: nowrap; }
+.tb-sp-inherited .tb-sp-value, .tb-sp-none .tb-sp-value { font-weight: 400; color: var(--md-on-surface-variant); }
+.tb-sp-from { display: inline-flex; align-items: center; gap: 4px; min-width: 0; overflow: hidden; color: var(--md-on-surface-variant); font-size: .8rem; white-space: nowrap; text-overflow: ellipsis; }
+.tb-sp-from .pi { font-size: .65rem; }
+.tb-sp-edit { font-size: .75rem; color: var(--md-on-surface-variant); opacity: 0; transition: opacity var(--tb-fast); }
+.tb-sp:hover .tb-sp-edit, .tb-sp:focus-visible .tb-sp-edit { opacity: 1; }
+@media (hover: none) { .tb-sp-edit { opacity: .6; } }
+.tb-col-setpoint .tb-entry.tb-entry-inline { margin: 0; height: 34px; }
+.tb-entry-inline input { width: 4.5em; }

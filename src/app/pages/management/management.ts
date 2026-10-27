@@ -21,7 +21,7 @@ import { HierarchyService } from '../../services/hierarchy.service';
 import { RoomService } from '../../services/room.service';
 import { UserService } from '../../services/user.service';
 import { Option, TbMultipleChoice } from '../../ui/multiple-choice';
-import { TbStepper, TbSwitch } from '../../ui/controls';
+import { TbAutofocus, TbStepper, TbSwitch } from '../../ui/controls';
 import { TbSheet } from '../../ui/sheet';
 import { TbMore } from '../../ui/more';
 import { TbPager } from '../../ui/pager';
@@ -53,7 +53,7 @@ const NO_BUILDING = -1;
  */
 @Component({
   selector: 'tb-management',
-  imports: [RouterLink, TbSheet, TbSwitch, TbStepper, TbMultipleChoice, ElementDialog, AccessTab, TbMore, TbPager],
+  imports: [RouterLink, TbSheet, TbSwitch, TbStepper, TbAutofocus, TbMultipleChoice, ElementDialog, AccessTab, TbMore, TbPager],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './management.html',
 })
@@ -129,6 +129,26 @@ export class ManagementPage implements OnInit {
   /** Only what is not attached (devices, elements left out of the tree). */
   protected readonly unattachedOnly = signal(false);
   protected readonly filtersOpen = signal(false);
+  /** The boxes of one building / floor / room (its « wifi » count tapped), null: no such filter. */
+  protected readonly devicesOf = signal<Row['n'] | null>(null);
+  private readonly devicesOfIds = computed(() => {
+    const n = this.devicesOf();
+    return n ? new Set(this.store.descendants(n.id).filter((d) => d.kind === 'DEVICE').map((d) => d.id)) : null;
+  });
+
+  protected clearDevicesOf(): void {
+    this.setFilter(() => this.devicesOf.set(null));
+  }
+
+  /** Shows the boxes of [l] (the « wifi » count of its row). */
+  protected showDevices(l: Row): void {
+    this.setFilter(() => {
+      this.devicesOf.set(l.n);
+      this.type.set(null);
+      this.search.set('');
+    });
+    this.sheetOpen.set(false);
+  }
   protected readonly NO_BUILDING = NO_BUILDING;
   protected readonly buildings = computed(() => [...this.store.buildings()].sort((a, b) => normalize(a.name).localeCompare(normalize(b.name), 'fr')));
   protected readonly stateChoices = [STATES.TOO_HOT, STATES.HEATING, STATES.STABLE, STATES.UNKNOWN];
@@ -151,6 +171,7 @@ export class ManagementPage implements OnInit {
       this.stateFilter.set(null);
       this.setpointFilter.set(null);
       this.unattachedOnly.set(false);
+      this.devicesOf.set(null);
     });
   }
 
@@ -169,6 +190,8 @@ export class ManagementPage implements OnInit {
       if (sp === 'none' ? c != null : sp === 'own' ? !c || c.inherited : !c?.inherited) return false;
     }
     if (this.unattachedOnly() && l.n.attached) return false;
+    const ids = this.devicesOfIds();
+    if (ids && !ids.has(l.n.id)) return false;
     return true;
   }
 
@@ -231,7 +254,7 @@ export class ManagementPage implements OnInit {
    * the one that contains it (building → floor → room → device), indented, and folded on demand.
    * A flat list sorted by place showed a building's floors after the other buildings.
    */
-  protected readonly asTree = computed(() => this.phone() && !this.search().trim() && this.type() == null && !this.onlyToHandle() && !this.activeFilters());
+  protected readonly asTree = computed(() => this.phone() && !this.search().trim() && this.type() == null && !this.onlyToHandle() && !this.activeFilters() && !this.devicesOf());
   /** Folded elements (their content hidden). */
   protected readonly folded = signal<Set<number>>(new Set());
   protected readonly treeRows = computed<Row[]>(() => {
@@ -410,20 +433,72 @@ export class ManagementPage implements OnInit {
     this.inputs.update((m) => new Map(m).set(id, v));
   }
 
-  /** Setpoint of one row, typed in its field. */
+  /**
+   * The rows a setpoint typed on [l] goes to: [l] alone, or, when [l] is ticked with others, all
+   * the ticked buildings, floors and rooms at once.
+   */
+  protected targetsOf(l: Row): Row[] {
+    if (!this.selection().has(l.n.id)) return [l];
+    const sel = this.selectedRows().filter((r) => !r.device);
+    return sel.length > 1 ? sel : [l];
+  }
+
+  /** Row whose setpoint is being typed (one at a time: the others show their value). */
+  protected readonly editing = signal<number | null>(null);
+
+  protected openEditor(l: Row): void {
+    this.editing.set(l.n.id);
+  }
+
+  /** The field loses the focus to something outside it, nothing typed: back to the value. */
+  protected closeEditor(l: Row, e: FocusEvent): void {
+    const to = e.relatedTarget as HTMLElement | null;
+    if (to && (e.currentTarget as HTMLElement).contains(to)) return;
+    if (!(this.inputs().get(l.n.id) ?? '').trim() && this.sending() !== l.n.id) this.editing.update((id) => (id === l.n.id ? null : id));
+  }
+
+  /** Rows whose own setpoint replaces those of what they contain (their « force » button). */
+  protected readonly forced = signal<Set<number>>(new Set());
+
+  protected toggleForce(l: Row): void {
+    const ids = this.targetsOf(l).map((r) => r.n.id);
+    const on = !this.forced().has(l.n.id);
+    this.forced.update((s) => {
+      const r = new Set(s);
+      for (const id of ids) {
+        if (on) r.add(id);
+        else r.delete(id);
+      }
+      return r;
+    });
+  }
+
+  /** Contains other elements whose own setpoints a forced setpoint replaces. */
+  protected canForce(l: Row): boolean {
+    return !l.device && (this.store.children().get(l.n.id)?.length ?? 0) > 0;
+  }
+
+  /** Setpoint typed in the field of a row: for it, or for all the ticked rows when it is one of them. */
   protected async apply(l: Row): Promise<void> {
     const input = parseNumber(this.inputs().get(l.n.id));
     if (input == null) {
       this.toasts.warn(`Indique une consigne pour « ${l.n.name} »`);
       return;
     }
+    const targets = this.targetsOf(l);
     this.sending.set(l.n.id);
-    if (await this.send([l], input, false)) {
+    if (await this.send(targets, input, this.forced().has(l.n.id))) {
       this.inputs.update((m) => {
         const r = new Map(m);
         r.delete(l.n.id);
         return r;
       });
+      this.forced.update((s) => {
+        const r = new Set(s);
+        for (const t of targets) r.delete(t.n.id);
+        return r;
+      });
+      this.editing.set(null);
     }
     this.sending.set(null);
   }

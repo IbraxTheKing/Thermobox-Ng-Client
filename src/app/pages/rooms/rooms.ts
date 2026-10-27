@@ -127,6 +127,23 @@ export class RoomsPage implements OnInit, OnDestroy {
   /** Phones: the content of the folder opened, a part at a time. */
   protected readonly shownContent = new ShownCount(BRANCH);
 
+  // ---------------------------------------------------------------- not attached (ADMIN, wide screens)
+
+  /**
+   * Elements attached to nothing (boxes found on the network, floors and rooms left out): in a
+   * column on the right of the tree, to drag where they belong rather than from the bottom of it.
+   */
+  protected readonly unattached = computed(() => this.store.roots().filter((n) => n.kind !== 'BUILDING' && !n.attached));
+  protected readonly side = computed(() => this.auth.admin() && this.unattached().length > 0);
+  protected readonly sideSearch = signal('');
+  protected readonly sideShown = new ShownCount(BRANCH);
+  protected readonly sideList = computed(() => {
+    const w = this.sideSearch().trim().toLowerCase();
+    return this.unattached().filter((n) => !w || (n.name ?? "").toLowerCase().includes(w) || LABELS[n.kind].toLowerCase().includes(w));
+  });
+  /** The top level of the tree: without what the column on the right shows. */
+  protected readonly treeRoots = computed(() => (this.side() ? this.store.roots().filter((n) => n.kind === 'BUILDING' || n.attached) : this.store.roots()));
+
   protected icon(n: Node): string {
     return ICONS[n.kind];
   }
@@ -230,6 +247,8 @@ export class RoomsPage implements OnInit, OnDestroy {
   }
 
   protected slideEnd(): void {
+    clearTimeout(this.unfoldTimer);
+    this.unfoldOver = null;
     this.slide.set(null);
     this.hover.set(null);
   }
@@ -238,10 +257,27 @@ export class RoomsPage implements OnInit, OnDestroy {
     const id = this.slide();
     if (id == null) return;
     if (target !== 'root' && (target.id === id || this.store.descendants(id).some((d) => d.id === target.id))) return;
+    // Held over a folded element: it opens, to drop deeper (a box over a building, into one of its rooms)
+    if (target !== 'root' && this.unfoldOver !== target.id) {
+      this.unfoldOver = target.id;
+      clearTimeout(this.unfoldTimer);
+      if (this.isFolded(target.id) && this.children(target.id).length) {
+        this.unfoldTimer = setTimeout(() => this.unfoldOver === target.id && this.isFolded(target.id) && this.toggle(target.id), 700);
+      }
+    }
+    // Only where it may go: a box into a room, a room into a floor or a building…
+    const kind = this.store.byId().get(id)?.kind;
+    if (target !== 'root' && (!kind || !CHILDREN[target.kind].includes(kind))) {
+      if (this.hover() !== 'root') this.hover.set(null);
+      return;
+    }
     e.preventDefault();
     if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
     this.hover.set(target === 'root' ? 'root' : target.id);
   }
+
+  private unfoldOver: number | null = null;
+  private unfoldTimer?: ReturnType<typeof setTimeout>;
 
   /**
    * Moves the element on the server first: a refused move never shows. Dropping on the top zone

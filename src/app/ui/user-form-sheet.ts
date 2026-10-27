@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, output, signal, viewChild } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 
 import { errorMessage } from '../core/api.config';
@@ -6,8 +6,13 @@ import { AuthService } from '../core/auth';
 import { ConfirmService, ToastService } from '../core/messages';
 import { ROLES, User, UserRole } from '../models/models';
 import { UserService } from '../services/user.service';
+import { AccessStore } from '../services/access.store';
+import { GroupService } from '../services/group.service';
+import { TreeStore } from '../services/tree.store';
 import { bytes } from '../pages/auth/register';
+import { TbAccessTree } from './access-tree';
 import { TbPassword } from './controls';
+import { TbMultipleChoice } from './multiple-choice';
 import { TbSheet } from './sheet';
 
 /**
@@ -18,10 +23,10 @@ import { TbSheet } from './sheet';
  */
 @Component({
   selector: 'tb-user-form-sheet',
-  imports: [TbSheet, TbPassword],
+  imports: [TbSheet, TbPassword, TbMultipleChoice, TbAccessTree],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <tb-sheet [(open)]="shown" [title]="creation() ? 'Nouvel utilisateur' : 'Modifier l\\'utilisateur'" [width]="420">
+    <tb-sheet [(open)]="shown" [title]="creation() ? 'Nouvel utilisateur' : 'Modifier l\\'utilisateur'" [width]="creation() ? 560 : 420">
       <form (submit)="save($event)" novalidate>
         <div class="tb-field">
           <label class="tb-label" for="tb-u-name">Nom d'utilisateur</label>
@@ -50,6 +55,29 @@ import { TbSheet } from './sheet';
             <span class="tb-field-error">{{ e }}</span>
           }
         </div>
+        @if (creation()) {
+          <!-- From the start: its groups and what it may see -->
+          @if (access.groups().length) {
+            <div class="tb-field">
+              <span class="tb-label">Groupes (facultatif)</span>
+              <tb-choice-multiple [options]="groupOptions()" [(value)]="groups" placeholder="Rechercher un groupe…" empty="Aucun groupe" />
+            </div>
+          }
+          @if (role() !== 'ADMIN') {
+            <div class="tb-field">
+              <span class="tb-label">Accès</span>
+              <div class="tb-access-mode" role="radiogroup" aria-label="Accès">
+                <label class="tb-choice"><input type="radio" name="tb-new-access" [checked]="!restricted()" (change)="restricted.set(false)" />Tout ThermoBox</label>
+                <label class="tb-choice"><input type="radio" name="tb-new-access" [checked]="restricted()" (change)="restricted.set(true)" />Seulement les éléments cochés{{ groups().size ? ' (en plus de ses groupes)' : '' }}</label>
+              </div>
+              @if (restricted()) {
+                <tb-tree-access [nodes]="tree.nodes()" [(checked)]="checked" />
+              }
+            </div>
+          } @else {
+            <p class="tb-muted"><i class="pi pi-shield"></i> Un administrateur voit tout ThermoBox.</p>
+          }
+        }
         <div class="tb-actions">
           @if (!creation() && !isMe()) {
             <button type="button" class="tb-btn tb-flat tb-btn-danger tb-actions-start" (click)="removeShown()"><i class="pi pi-trash"></i>Supprimer</button>
@@ -66,6 +94,16 @@ export class TbUserFormSheet {
   private readonly users = inject(UserService);
   private readonly toasts = inject(ToastService);
   private readonly confirm = inject(ConfirmService);
+  protected readonly access = inject(AccessStore);
+  protected readonly tree = inject(TreeStore);
+  private readonly groupsApi = inject(GroupService);
+  private readonly accessTree = viewChild(TbAccessTree);
+
+  /** Creation: the groups it joins, and whether it sees everything or only what is ticked. */
+  protected readonly groups = signal<Set<number>>(new Set());
+  protected readonly restricted = signal(true);
+  protected readonly checked = signal<Set<number>>(new Set());
+  protected readonly groupOptions = computed(() => this.access.groups().map((g) => ({ id: g.id, label: g.name, detail: `${g.members.length} membre(s)` })));
 
   /** An account was created, changed or deleted. */
   readonly saved = output<void>();
@@ -100,6 +138,10 @@ export class TbUserFormSheet {
   }
 
   create(): void {
+    this.groups.set(new Set());
+    this.restricted.set(true);
+    this.checked.set(new Set());
+    if (!this.tree.tree()) void this.tree.load().catch(() => undefined);
     this.fill({ username: '' }, 'VIEWER');
   }
 
@@ -129,8 +171,14 @@ export class TbUserFormSheet {
         // A new account is a VIEWER: its role is then set as chosen
         await firstValueFrom(this.users.add({ username: name, password: this.password() }));
         const created = await firstValueFrom(this.users.getByUsername(name));
-        if (created?.id != null && role !== 'VIEWER') await firstValueFrom(this.users.update(created.id, { type: role }));
-        this.toasts.info(`Utilisateur « ${name} » créé`, role === 'ADMIN' ? null : "Il n'a encore accès à aucune salle : touche ses accès pour lui en donner.");
+        const id = created?.id;
+        if (id != null && role !== 'VIEWER') await firstValueFrom(this.users.update(id, { type: role }));
+        const extra = id != null ? await this.setUp(id, role) : [];
+        const nothing = role !== 'ADMIN' && this.restricted() && !(this.accessTree()?.kept().length ?? 0) && !this.groups().size;
+        this.toasts.info(
+          `Utilisateur « ${name} » créé`,
+          extra.length ? extra.join(', ') : nothing ? "Il n'a encore accès à aucune salle : touche ses accès pour lui en donner." : null,
+        );
       } else if (u?.id != null) {
         const update = await firstValueFrom(this.users.update(u.id, { username: name, type: role, ...(this.password() ? { password: this.password() } : {}) }));
         if (this.auth.isMe(u)) this.auth.updateUser(update);
@@ -144,6 +192,34 @@ export class TbUserFormSheet {
     } finally {
       this.saving.set(false);
     }
+  }
+
+  /** The groups and accesses chosen in the form, for the account just created. */
+  private async setUp(id: number, role: UserRole): Promise<string[]> {
+    const done: string[] = [];
+    const ids = this.groups();
+    for (const g of this.access.groups().filter((x) => ids.has(x.id))) {
+      const req = GroupService.query(g);
+      req.members = [...new Set([...req.members, id])];
+      try {
+        await firstValueFrom(this.groupsApi.edit(g.id, req));
+      } catch (e) {
+        this.toasts.error(`Ajout à « ${g.name} » impossible`, errorMessage(e));
+      }
+    }
+    if (ids.size) done.push(`dans ${ids.size} groupe(s)`);
+    if (role !== 'ADMIN') {
+      const elements = this.restricted() ? (this.accessTree()?.kept() ?? []) : [];
+      if (!this.restricted() || elements.length) {
+        try {
+          await firstValueFrom(this.users.setAccess(id, this.restricted(), elements));
+          done.push(this.restricted() ? `accès à ${elements.length} élément(s)` : 'accès à tout');
+        } catch (e) {
+          this.toasts.error('Accès non enregistrés', errorMessage(e));
+        }
+      }
+    }
+    return done;
   }
 
   protected async removeShown(): Promise<void> {
