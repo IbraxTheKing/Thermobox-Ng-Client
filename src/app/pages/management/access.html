@@ -22,6 +22,24 @@
       <input class="tb-input" type="search" placeholder="Rechercher un utilisateur ou un groupe…" autocomplete="off" aria-label="Rechercher"
              [value]="search()" (input)="onSearch($any($event.target).value)" />
     </span>
+    <select class="tb-select tb-filter tb-group-filter" aria-label="Groupe" (change)="setGroupFilter($any($event.target).value)">
+      <option value="" [selected]="groupFilter() == null">Tous les groupes</option>
+      <option [value]="NO_GROUP" [selected]="groupFilter() === NO_GROUP">Sans groupe</option>
+      @for (g of access.groups(); track g.id) {
+        <option [value]="g.id" [selected]="groupFilter() === g.id">{{ g.name }} ({{ g.members.length }})</option>
+      }
+    </select>
+  </div>
+  <!-- Type of account -->
+  <div class="tb-summary">
+    @for (r of roles; track r) {
+      <button type="button" class="tb-summary-chip tb-role-chip tb-role-{{ r }}" [class.tb-chip-on]="roleFilter() === r" [attr.aria-pressed]="roleFilter() === r" (click)="toggleRole(r)">
+        <i class="pi pi-check tb-chip-check"></i>{{ roleName(r) }}<span class="tb-chip-n">{{ count(r) }}</span>
+      </button>
+    }
+    @if (roleFilter() != null || groupFilter() != null) {
+      <button type="button" class="tb-btn tb-flat tb-btn-sm" (click)="roleFilter.set(null); groupFilter.set(null)"><i class="pi pi-times"></i>Effacer les filtres</button>
+    }
   </div>
 
   <p class="tb-muted tb-mgmt-tip">
@@ -74,6 +92,7 @@
           <th class="tb-col-role">Rôle</th>
           <th class="tb-col-access">Accès</th>
           <th class="tb-col-groups">Groupes</th>
+          <th class="tb-col-actions">Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -116,9 +135,13 @@
                 <i class="pi pi-pencil tb-access-edit" aria-hidden="true"></i>
               </button>
             </td>
+            <td class="tb-col-actions">
+              <button type="button" class="tb-btn tb-icon tb-flat" [title]="'Modifier ' + l.user.username" (click)="editUser(l)"><i class="pi pi-pencil"></i></button>
+              <button type="button" class="tb-btn tb-icon tb-flat tb-btn-danger" [title]="'Supprimer ' + l.user.username" [disabled]="auth.isMe(l.user)" (click)="removeUser(l)"><i class="pi pi-trash"></i></button>
+            </td>
           </tr>
         } @empty {
-          <tr class="tb-empty-row"><td colspan="5">{{ access.loaded() ? 'Aucun utilisateur ne correspond' : 'Chargement…' }}</td></tr>
+          <tr class="tb-empty-row"><td colspan="6">{{ access.loaded() ? 'Aucun utilisateur ne correspond' : 'Chargement…' }}</td></tr>
         }
       </tbody>
     </table>
@@ -163,6 +186,7 @@
 }
 
 <tb-user-access-sheet (saved)="load()" />
+<tb-user-form-sheet (saved)="load()" />
 <tb-user-groups-sheet [canCreate]="true" (create)="newGroupWith($event)" (saved)="load()" />
 
 <tb-sheet [(open)]="dlgRole" title="Rôle des utilisateurs sélectionnés" [width]="400">
@@ -261,7 +285,13 @@
       </div>
     </div>
     <div class="tb-actions">
-      <button type="button" class="tb-btn tb-tonal" (click)="groupsOf(l)"><i class="pi pi-users"></i>Ajouter ou retirer d'un groupe</button>
+      <button type="button" class="tb-btn tb-tonal" (click)="groupsOf(l)"><i class="pi pi-users"></i>Groupes</button>
+    </div>
+    <div class="tb-actions">
+      @if (!auth.isMe(l.user)) {
+        <button type="button" class="tb-btn tb-flat tb-btn-danger tb-actions-start" (click)="removeUser(l)"><i class="pi pi-trash"></i>Supprimer</button>
+      }
+      <button type="button" class="tb-btn tb-flat" (click)="editUser(l)"><i class="pi pi-pencil"></i>Nom, rôle, mot de passe</button>
     </div>
   }
 </tb-sheet>

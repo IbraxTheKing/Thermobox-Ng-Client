@@ -8,7 +8,6 @@ import { ThemeChoice, PreferencesService } from '../../core/preferences';
 import { ServerFeaturesService } from '../../services/server-features.service';
 import { TbSwitch } from '../../ui/controls';
 import { AccentService, DEFAULT_SWATCH, PALETTES, swatch } from '../../core/accent';
-import { TbStyleSetting } from '../server/style-setting';
 
 /**
  * Preferences (preferences.xhtml): theme, colours following the state, unit, keyboard shortcuts
@@ -17,7 +16,7 @@ import { TbStyleSetting } from '../server/style-setting';
  */
 @Component({
   selector: 'tb-preferences',
-  imports: [TbSwitch, RouterLink, TbStyleSetting],
+  imports: [TbSwitch, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './preferences.html',
 })

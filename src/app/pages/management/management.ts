@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, effect, inject, signal, viewChild } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, effect, inject, input, signal, untracked, viewChild } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
 import { errorMessage } from '../../core/api.config';
@@ -84,6 +84,13 @@ export class ManagementPage implements OnInit {
 
   /** "salles" or "droits" (ADMIN: users and groups). */
   protected readonly tab = signal<'rooms' | 'access'>('rooms');
+  private readonly router = inject(Router);
+  /** ?tab=access: the users and groups (the former Utilisateurs page leads there). */
+  readonly tabParam = input<string | undefined>(undefined, { alias: 'tab' });
+  private readonly followTab = effect(() => {
+    const t = this.tabParam();
+    untracked(() => this.tab.set(t === 'access' && this.auth.admin() ? 'access' : 'rooms'));
+  });
 
   // Filters
   protected readonly search = signal('');
@@ -210,6 +217,7 @@ export class ManagementPage implements OnInit {
 
   protected openTab(o: 'rooms' | 'access'): void {
     this.tab.set(o === 'access' && this.auth.admin() ? 'access' : 'rooms');
+    void this.router.navigate([], { queryParams: { tab: this.tab() === 'access' ? 'access' : null }, queryParamsHandling: 'merge', replaceUrl: true });
   }
 
   // ---------------------------------------------------------------- phones
@@ -616,6 +624,12 @@ export class ManagementPage implements OnInit {
   }
 
   /** Main action of the page (header button): a new element or a new group. */
+  protected readonly accessView = computed(() => this.accessTab()?.view() ?? 'users');
+
+  protected newUser(): void {
+    this.accessTab()?.newUser();
+  }
+
   protected newGroup(): void {
     this.accessTab()?.newGroup();
   }

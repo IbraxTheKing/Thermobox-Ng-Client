@@ -4,7 +4,11 @@
     <h1>Gestion des salles</h1>
   </div>
   @if (auth.admin() && tab() === 'access') {
-    <button type="button" class="tb-btn tb-btn-lg tb-fab" (click)="newGroup()"><i class="pi pi-users"></i>Nouveau groupe</button>
+    @if (accessView() === 'groups') {
+      <button type="button" class="tb-btn tb-btn-lg tb-fab" (click)="newGroup()"><i class="pi pi-users"></i>Nouveau groupe</button>
+    } @else {
+      <button type="button" class="tb-btn tb-btn-lg tb-fab" (click)="newUser()"><i class="pi pi-user-plus"></i>Nouvel utilisateur</button>
+    }
   }
   @if (auth.admin() && tab() === 'rooms' && !selectionMode()) {
     <button type="button" class="tb-btn tb-btn-lg tb-fab" (click)="createNew()"><i class="pi pi-plus"></i>Nouvel élément</button>

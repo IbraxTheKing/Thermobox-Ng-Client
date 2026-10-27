@@ -39,12 +39,8 @@ export const routes: Routes = [
         canActivate: [managerGuard],
         loadComponent: () => import('./pages/management/management').then((m) => m.ManagementPage),
       },
-      {
-        path: 'users',
-        title: 'Utilisateurs',
-        canActivate: [adminGuard],
-        loadComponent: () => import('./pages/users/users').then((m) => m.UsersPage),
-      },
+      // The users are managed in Gérer › Utilisateurs et groupes
+      { path: 'users', redirectTo: () => inject(Router).parseUrl('/app/management?tab=access') },
       {
         path: 'server',
         title: 'Serveur',
