@@ -38,7 +38,54 @@
       <input class="tb-input" type="search" placeholder="Rechercher un élément ou un emplacement…" autocomplete="off" aria-label="Rechercher"
              [value]="search()" (input)="onSearch($any($event.target).value)" />
     </span>
+    <button type="button" class="tb-btn tb-tonal tb-filters-btn" [class.tb-filters-on]="filtersOpen() || activeFilters()" [attr.aria-expanded]="filtersOpen()"
+            (click)="filtersOpen.set(!filtersOpen())">
+      <i class="pi pi-filter"></i>Filtres
+      @if (activeFilters()) {
+        <span class="tb-chip-n">{{ activeFilters() }}</span>
+      }
+    </button>
   </div>
+
+  <!-- Filters: building, state, setpoint, attachment (with the type chips and the search) -->
+  @if (filtersOpen()) {
+    <div class="tb-filters" animate.enter="tb-menu-enter">
+      <label class="tb-filter-field">
+        <span>Bâtiment</span>
+        <select class="tb-select" (change)="setFilter(() => buildingFilter.set($any($event.target).value === '' ? null : +$any($event.target).value))">
+          <option value="" [selected]="buildingFilter() == null">Tous</option>
+          @for (b of buildings(); track b.id) {
+            <option [value]="b.id" [selected]="buildingFilter() === b.id">{{ b.name }}</option>
+          }
+          <option [value]="NO_BUILDING" [selected]="buildingFilter() === NO_BUILDING">Sans bâtiment</option>
+        </select>
+      </label>
+      <label class="tb-filter-field">
+        <span>État</span>
+        <select class="tb-select" (change)="setFilter(() => stateFilter.set($any($event.target).value || null))">
+          <option value="" [selected]="stateFilter() == null">Tous</option>
+          @for (e of stateChoices; track e.key) {
+            <option [value]="e.tone" [selected]="stateFilter() === e.tone">{{ e.label }}</option>
+          }
+        </select>
+      </label>
+      <label class="tb-filter-field">
+        <span>Consigne</span>
+        <select class="tb-select" (change)="setFilter(() => setpointFilter.set($any($event.target).value || null))">
+          <option value="" [selected]="setpointFilter() == null">Toutes</option>
+          <option value="own" [selected]="setpointFilter() === 'own'">Propre à l'élément</option>
+          <option value="inherited" [selected]="setpointFilter() === 'inherited'">Héritée</option>
+          <option value="none" [selected]="setpointFilter() === 'none'">Aucune</option>
+        </select>
+      </label>
+      <label class="tb-choice tb-filter-check">
+        <input type="checkbox" [checked]="unattachedOnly()" (change)="setFilter(() => unattachedOnly.set($any($event.target).checked))" />Non rattachés seulement
+      </label>
+      @if (activeFilters()) {
+        <button type="button" class="tb-text-btn tb-filters-clear" (click)="clearFilters()"><i class="pi pi-times"></i>Effacer les filtres</button>
+      }
+    </div>
+  }
 
   <div class="tb-summary tb-summary-scrolled">
     <button type="button" class="tb-summary-chip" [class.tb-chip-on]="type() == null && !onlyToHandle()" (click)="filterType(null)">
@@ -216,15 +263,7 @@
         }
       </tbody>
     </table>
-    @if (pages() > 1) {
-      <div class="tb-pagination">
-        <button type="button" [disabled]="page() === 0" (click)="page.set(page() - 1)" aria-label="Page précédente"><i class="pi pi-angle-left"></i></button>
-        @for (p of pageNumbers(); track p) {
-          <button type="button" [class.tb-page-on]="p === page()" (click)="page.set(p)">{{ p + 1 }}</button>
-        }
-        <button type="button" [disabled]="page() + 1 >= pages()" (click)="page.set(page() + 1)" aria-label="Page suivante"><i class="pi pi-angle-right"></i></button>
-      </div>
-    }
+    <tb-pager [total]="visible().length" [size]="PER_PAGE" [(page)]="page" />
   </div>
   }
 }

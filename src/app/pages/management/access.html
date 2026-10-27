@@ -3,12 +3,18 @@
   salles du groupe. Un utilisateur qui voit tout n'est pas limité par ses groupes.
 </p>
 
+<!-- Users or groups: one at a time, the groups no longer at the bottom of hundreds of users -->
+<div class="tb-segmented tb-access-tabs" role="tablist" aria-label="Utilisateurs ou groupes">
+  <button type="button" role="tab" [class.tb-seg-on]="view() === 'users'" [attr.aria-selected]="view() === 'users'" (click)="view.set('users')">
+    <i class="pi pi-user"></i>Utilisateurs <span class="tb-chip-n">{{ access.users().length }}</span>
+  </button>
+  <button type="button" role="tab" [class.tb-seg-on]="view() === 'groups'" [attr.aria-selected]="view() === 'groups'" (click)="view.set('groups')">
+    <i class="pi pi-users"></i>Groupes <span class="tb-chip-n">{{ access.groups().length }}</span>
+  </button>
+</div>
+
+@if (view() === 'users') {
 <section class="tb-section">
-  <h2 class="tb-section-title">
-    <span class="tb-section-icon"><i class="pi pi-user"></i></span>
-    Utilisateurs
-    <span class="tb-section-meta">{{ access.users().length }}</span>
-  </h2>
 
   <div class="tb-toolbar">
     <span class="tb-search">
@@ -57,7 +63,7 @@
         <li class="tb-mgmt-empty tb-muted">{{ access.loaded() ? 'Aucun utilisateur ne correspond' : 'Chargement…' }}</li>
       }
     </ul>
-    <tb-more [total]="visible().length" [shown]="shownRows().length" (more)="shown.more()" label="Afficher d'autres utilisateurs" />
+    <tb-pager [total]="visible().length" [size]="pageSize" [(page)]="page" />
   } @else {
   <div class="tb-table tb-mgmt-table tb-access-table">
     <table>
@@ -91,7 +97,15 @@
                 }
               </select>
             </td>
-            <td class="tb-col-access"><span [class.tb-access-without]="noAccess(l)"><i class="pi pi-key"></i> {{ summary(l) }}</span></td>
+            <td class="tb-col-access">
+              @if (l.user.type === 'ADMIN') {
+                <span><i class="pi pi-key"></i> {{ summary(l) }}</span>
+              } @else {
+                <button type="button" class="tb-access-link" [class.tb-access-without]="noAccess(l)" [title]="'Changer les accès de ' + l.user.username" (click)="accessSheet().open(l)">
+                  <i class="pi pi-key"></i> {{ summary(l) }}<i class="pi pi-pencil tb-access-edit" aria-hidden="true"></i>
+                </button>
+              }
+            </td>
             <td class="tb-col-groups">
               @for (g of l.groups; track g) {
                 <span class="tb-chip-group">{{ g }}</span>
@@ -105,17 +119,12 @@
         }
       </tbody>
     </table>
-    <tb-more [total]="visible().length" [shown]="shownRows().length" (more)="shown.more()" label="Afficher d'autres utilisateurs" />
+    <tb-pager [total]="visible().length" [size]="pageSize" [(page)]="page" />
   </div>
   }
 </section>
-
+} @else {
 <section class="tb-section">
-  <h2 class="tb-section-title">
-    <span class="tb-section-icon"><i class="pi pi-users"></i></span>
-    Groupes
-    <span class="tb-section-meta">{{ access.groups().length }}</span>
-  </h2>
   <div class="tb-groups">
     @for (g of access.groups(); track g.id) {
       <article class="tb-card tb-group" (click)="phone() && editGroup(g)">
@@ -148,6 +157,9 @@
     }
   </div>
 </section>
+}
+
+<tb-user-access-sheet (saved)="load()" />
 
 <tb-sheet [(open)]="dlgRole" title="Rôle des utilisateurs sélectionnés" [width]="400">
   <p class="tb-muted">Votre propre compte reste administrateur.</p>

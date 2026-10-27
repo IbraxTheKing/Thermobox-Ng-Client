@@ -580,3 +580,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .tb-sheet-native .tb-dialog { animation: none; }
 /* Rows of the native menu only */
 .tb-native-only { display: none !important; }
+.tb-pager { display: block; }
+.tb-pager[hidden] { display: none; }
+.tb-pager .tb-pagination { flex-wrap: wrap; border-top: 0; }
+.tb-pager-gap { min-width: 20px; text-align: center; }
+.tb-pagination button.tb-pager-n { min-width: 36px; font-variant-numeric: tabular-nums; }

@@ -12,16 +12,19 @@ import { ROLES, User, UserRole } from '../../models/models';
 import { TreeStore } from '../../services/tree.store';
 import { AccessStore, UserRow } from '../../services/access.store';
 import { UserService } from '../../services/user.service';
-import { TbAccessTree } from '../../ui/access-tree';
 import { TbPassword } from '../../ui/controls';
 import { TbSheet } from '../../ui/sheet';
-import { ShownCount, TbMore } from '../../ui/more';
+import { TbPager } from '../../ui/pager';
+import { TbUserAccessSheet } from '../../ui/user-access-sheet';
 import { bytes } from '../auth/register';
 
 /** Utilisateurs (users.xhtml), ADMIN: accounts, their role and what they may see. */
+/** Users per page. */
+const PAGE = 24;
+
 @Component({
   selector: 'tb-users-page',
-  imports: [RouterLink, TbSheet, TbPassword, TbAccessTree, TbMore],
+  imports: [RouterLink, TbSheet, TbPassword, TbPager, TbUserAccessSheet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './users.html',
 })
@@ -39,7 +42,6 @@ export class UsersPage implements OnInit {
   private readonly toasts = inject(ToastService);
   private readonly confirm = inject(ConfirmService);
 
-  private readonly accessTree = viewChild(TbAccessTree);
 
   protected readonly roles = ROLES;
   protected roleName(r: string | null | undefined): string {
@@ -54,9 +56,10 @@ export class UsersPage implements OnInit {
     return this.access.users().filter((l) => (!word || l.user.username.toLowerCase().includes(word)) && (this.roleFilter() == null || l.user.type === this.roleFilter()));
   });
 
-  /** Hundreds of accounts: a part at a time, their accesses read as they are shown. */
-  protected readonly shown = new ShownCount(50);
-  protected readonly shownRows = computed(() => this.visible().slice(0, this.shown.count()));
+  /** Hundreds of accounts: a page at a time, their accesses read as they are shown. */
+  protected readonly page = signal(0);
+  protected readonly pageSize = PAGE;
+  protected readonly shownRows = computed(() => this.visible().slice(this.page() * PAGE, this.page() * PAGE + PAGE));
 
   protected count(r: UserRole): number {
     return this.access.users().filter((l) => l.user.type === r).length;
@@ -70,7 +73,7 @@ export class UsersPage implements OnInit {
     effect(() => {
       this.search();
       this.roleFilter();
-      untracked(() => this.shown.reset());
+      untracked(() => this.page.set(0));
     });
     effect(() => {
       const ids = this.shownRows().map((l) => l.user.id!);
@@ -180,40 +183,14 @@ export class UsersPage implements OnInit {
 
   // ---------------------------------------------------------------- accesses
 
-  protected readonly dlgAccess = signal(false);
-  protected readonly userAccess = signal<UserRow | null>(null);
-  /** false: sees everything; true: only what is ticked. */
-  protected readonly restrictedAccess = signal(true);
-  protected readonly checkedAccess = signal<Set<number>>(new Set());
+  private readonly accessSheet = viewChild.required(TbUserAccessSheet);
 
-  protected async openAccess(l: UserRow): Promise<void> {
-    if (!this.tree.tree()) await this.tree.load().catch(() => undefined);
-    try {
-      const a = await firstValueFrom(this.users.getAccess(l.user.id!));
-      this.userAccess.set(l);
-      this.restrictedAccess.set(a.restricted);
-      this.checkedAccess.set(TbAccessTree.check(this.tree.nodes(), a.elements.map((e) => e.id)));
-      this.dlgAccess.set(true);
-    } catch (e) {
-      this.toasts.error('Impossible de lire les accès', errorMessage(e));
-    }
+  /** Tapping what a user may see: their accesses, to change. */
+  protected openAccess(l: UserRow): void {
+    void this.accessSheet().open(l);
   }
 
-  /**
-   * An element counts with everything it contains (and what will be added to it later) only if it
-   * is ticked with all its content; otherwise only its ticked content counts.
-   */
-  protected async saveAccess(): Promise<void> {
-    const l = this.userAccess();
-    if (!l) return;
-    const elements = this.restrictedAccess() ? (this.accessTree()?.kept() ?? []) : [];
-    try {
-      await firstValueFrom(this.users.setAccess(l.user.id!, this.restrictedAccess(), elements));
-      this.toasts.info(`Accès de « ${l.user.username} » enregistrés`, this.restrictedAccess() ? `${elements.length} élément(s) et leur contenu` : 'Accès à tout');
-      this.dlgAccess.set(false);
-      await this.load();
-    } catch (e) {
-      this.toasts.error('Enregistrement impossible', errorMessage(e));
-    }
+  protected async afterAccess(): Promise<void> {
+    await this.load();
   }
 }

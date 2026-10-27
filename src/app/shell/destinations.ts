@@ -33,7 +33,8 @@ export function destinationsOf(auth: AuthService, home = false): Destination[] {
   if (auth.manager()) d.push({ link: '/app/management', icon: 'pi-sliders-h', label: 'Gérer' });
   if (auth.admin()) {
     d.push({ link: '/app/users', icon: 'pi-users', label: 'Utilisateurs' });
-    d.push({ link: '/app/updates', icon: 'pi-cloud-download', label: 'Mises à jour', badge: true });
+    // Its resources, its updates (the badge: a version is out), its settings
+    d.push({ link: '/app/server', icon: 'pi-server', label: 'Serveur', badge: true });
   }
   return d;
 }

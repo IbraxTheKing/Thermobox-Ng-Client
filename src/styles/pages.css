@@ -360,3 +360,44 @@ button.tb-drill-crumb, button.tb-drill-main { border: 0; background: none; font:
 .tb-cell-wait::after { content: ""; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 20%, color-mix(in srgb, var(--md-surface-container-lowest) 70%, transparent) 50%, transparent 80%); transform: translateX(-100%); animation: tb-shimmer 1.4s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .tb-cell-wait::after { display: none; } }
 :root[data-motion="off"] .tb-cell-wait::after { display: none; }
+/* What a user may see: tap it to change it */
+button.tb-access-link { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; padding: 2px 6px; margin: 0 -6px; border: 0; border-radius: 6px; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+button.tb-access-link:hover { background: color-mix(in srgb, var(--md-on-surface) 7%, transparent); }
+.tb-access-link .tb-access-edit { font-size: .7rem; opacity: 0; transition: opacity .15s; }
+button.tb-access-link:hover .tb-access-edit, button.tb-access-link:focus-visible .tb-access-edit { opacity: .7; }
+@media (hover: none) { .tb-access-link .tb-access-edit { opacity: .55; } }
+
+/* ============================== Gérer: filters ============================== */
+.tb-filters-btn { flex: none; }
+.tb-filters-btn.tb-filters-on { background: var(--md-secondary-container); color: var(--md-on-secondary-container); }
+.tb-filters { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 16px; margin: 0 0 14px; padding: 14px 16px; border-radius: var(--tb-shape-lg); background: color-mix(in srgb, var(--md-on-surface) 4%, transparent); }
+.tb-filter-field { display: flex; flex-direction: column; gap: 4px; min-width: 170px; flex: 1 1 170px; font-size: .82rem; color: var(--md-on-surface-variant); }
+.tb-filter-field .tb-select { min-height: 40px; }
+.tb-filter-check { min-height: 40px; align-items: center; }
+.tb-filters-clear { margin-left: auto; align-self: center; }
+@media (max-width: 640px) { .tb-filter-field { flex-basis: 100%; } }
+/* A preference with no effect in the current look: greyed, its switch off */
+.tb-pref.tb-pref-off > :not(.tb-pref-text) { opacity: .45; }
+.tb-pref.tb-pref-off .tb-pref-text > strong, .tb-pref.tb-pref-off .tb-pref-text > .tb-muted { opacity: .55; }
+.tb-pref-note.tb-pref-note-off { color: var(--md-on-surface-variant); }
+
+/* ============================== Serveur ============================== */
+.tb-server-title { display: flex; align-items: center; gap: 12px; }
+.tb-server-title .tb-server-logo { width: 34px; height: 34px; border-radius: 9px; }
+.tb-server-tabs, .tb-access-tabs { margin-bottom: 18px; }
+.tb-server-tabs button { position: relative; }
+.tb-tab-badge { position: static; display: inline-block; width: 8px; height: 8px; margin-left: 2px; }
+.tb-server-stats { margin-bottom: 16px; }
+.tb-server-uptime { font-size: clamp(1.6rem, 1.2rem + 1vw, 2.2rem); }
+.tb-server-charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); gap: 16px; }
+.tb-server-chart .tb-chart { height: 230px; }
+.tb-server-wait .tb-spark-loading { height: 180px; margin: 0; }
+.tb-page-head.tb-page-head-embedded { justify-content: flex-end; margin-top: -8px; }
+.tb-groups-tools { margin-bottom: 14px; }
+
+/* Server resources: four tiles on one row when there is room, two on phones. */
+.tb-server-stats { grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); }
+@media (max-width: 600px) {
+  .tb-server-stats { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .tb-server-stats .tb-stat { padding: 16px; gap: 10px; }
+}

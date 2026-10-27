@@ -13,7 +13,8 @@ import { UserService } from '../../services/user.service';
 import { TbAccessTree } from '../../ui/access-tree';
 import { Option, TbMultipleChoice } from '../../ui/multiple-choice';
 import { TbSheet } from '../../ui/sheet';
-import { ShownCount, TbMore } from '../../ui/more';
+import { TbPager } from '../../ui/pager';
+import { TbUserAccessSheet } from '../../ui/user-access-sheet';
 import { TbSwitch } from '../../ui/controls';
 import { PlatformService } from '../../core/platform';
 import { FlipService } from '../../core/flip';
@@ -24,9 +25,12 @@ import { followSelectionBar } from '../../ui/selection-bar';
  * and accesses of several users at once, and groups of users that give access to buildings, floors
  * and rooms.
  */
+/** Users per page. */
+const PAGE = 20;
+
 @Component({
   selector: 'tb-access',
-  imports: [TbSheet, TbSwitch, TbMultipleChoice, TbAccessTree, TbMore],
+  imports: [TbSheet, TbSwitch, TbMultipleChoice, TbAccessTree, TbPager, TbUserAccessSheet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './access.html',
 })
@@ -35,7 +39,7 @@ export class AccessTab implements OnInit {
     followSelectionBar(() => this.selection().size > 0 && !this.phone());
     effect(() => {
       this.search();
-      untracked(() => this.shown.reset());
+      untracked(() => this.page.set(0));
     });
     // The accesses of the users shown, as they are shown
     effect(() => {
@@ -68,9 +72,13 @@ export class AccessTab implements OnInit {
     const word = this.search().trim().toLowerCase();
     return this.access.users().filter((l) => !word || l.user.username.toLowerCase().includes(word) || l.groups.some((g) => g.toLowerCase().includes(word)));
   });
-  /** Hundreds of accounts: a part at a time, their accesses read as they are shown. */
-  protected readonly shown = new ShownCount(50);
-  protected readonly shownRows = computed(() => this.visible().slice(0, this.shown.count()));
+  /** Users or groups shown. */
+  protected readonly view = signal<'users' | 'groups'>('users');
+  /** Hundreds of accounts: a page at a time, their accesses read as they are shown. */
+  protected readonly page = signal(0);
+  protected readonly pageSize = PAGE;
+  protected readonly shownRows = computed(() => this.visible().slice(this.page() * PAGE, this.page() * PAGE + PAGE));
+  protected readonly accessSheet = viewChild.required(TbUserAccessSheet);
   protected readonly selectedRows = computed(() => this.access.users().filter((l) => this.selection().has(l.user.id!)));
   protected readonly allChecked = computed(() => this.visible().length > 0 && this.visible().every((l) => this.selection().has(l.user.id!)));
 
@@ -82,7 +90,7 @@ export class AccessTab implements OnInit {
     await this.load();
   }
 
-  private async load(): Promise<void> {
+  protected async load(): Promise<void> {
     try {
       await this.access.load();
       // Keep the selection on what still exists

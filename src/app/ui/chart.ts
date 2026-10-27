@@ -132,6 +132,13 @@ export class TbChart implements OnDestroy {
   readonly labels = input.required<string[]>();
   readonly series = input.required<ChartSeries[]>();
   readonly description = input('Graphique des températures');
+  /**
+   * Values in this unit as they are (« % », « Mo »…), not temperatures: no conversion to the unit
+   * of the Preferences page. null: temperatures in Celsius.
+   */
+  readonly valueUnit = input<string | null>(null);
+  /** Lowest value of the vertical axis (0 for a percentage), none by default. */
+  readonly yMin = input<number | null>(null);
   /** A curve was shown or hidden from the legend. */
   readonly toggled = output<{ index: number; visible: boolean }>();
 
@@ -150,6 +157,8 @@ export class TbChart implements OnDestroy {
       this.prefs.tint();
       this.prefs.animate();
       this.unit.fahrenheit();
+      this.valueUnit();
+      this.yMin();
       this.phone();
       this.draw(labels, series);
     });
@@ -207,7 +216,7 @@ export class TbChart implements OnDestroy {
       k = labels.length - 1;
       while (k > 0 && datasets.every((d) => d.data[k!] == null)) k--;
     }
-    const symbol = this.unit.symbol();
+    const symbol = this.valueUnit() ?? this.unit.symbol();
     this.reading.set({
       title: i == null ? 'Dernières valeurs' : (labels[k] ?? ''),
       values: datasets.map((d, index) => {
@@ -284,7 +293,7 @@ export class TbChart implements OnDestroy {
       const color = this.color(s.color);
       const ds: ChartDataset<'line', (number | null)[]> & { tbOrigin?: string; tbSetpoint?: boolean } = {
         label: s.label,
-        data: s.values.map((v) => (v == null ? null : Math.round(this.unit.fromCelsius(v) * 10) / 10)),
+        data: s.values.map((v) => (v == null ? null : Math.round((this.valueUnit() != null ? v : this.unit.fromCelsius(v)) * 10) / 10)),
         borderColor: color,
         backgroundColor: color,
         pointBackgroundColor: color,
@@ -325,7 +334,7 @@ export class TbChart implements OnDestroy {
     const text = this.color('--md-on-surface-variant');
     const grid = this.color('--md-outline-variant');
     const font = { family: 'Manrope, "Segoe UI", system-ui, sans-serif', size: mobile ? 11 : 13 };
-    const symbol = this.unit.symbol();
+    const symbol = this.valueUnit() ?? this.unit.symbol();
     const animate = this.prefs.animate();
     return {
       responsive: true,
@@ -416,8 +425,9 @@ export class TbChart implements OnDestroy {
             mirror: mobile,
             z: 1,
             maxTicksLimit: mobile ? 6 : 7,
-            callback: (v) => `${Number(v).toLocaleString('fr-FR', { maximumFractionDigits: 1 })}°`,
+            callback: (v) => `${Number(v).toLocaleString('fr-FR', { maximumFractionDigits: 1 })}${this.valueUnit() != null ? ' ' + this.valueUnit() : '°'}`,
           },
+          ...(this.yMin() != null ? { min: this.yMin()! } : {}),
         },
       },
     };

@@ -1,5 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, booleanAttribute, computed, inject, input, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 
 import { errorMessage } from '../../core/api.config';
@@ -32,6 +32,9 @@ interface ChannelChip {
   templateUrl: './updates.html',
 })
 export class UpdatesPage implements OnInit, OnDestroy {
+  /** A tab of the Serveur page: no title of its own. */
+  readonly embedded = input(false, { transform: booleanAttribute });
+
   private readonly api = inject(UpdateService);
   private readonly notice = inject(UpdateNoticeService);
   private readonly toasts = inject(ToastService);

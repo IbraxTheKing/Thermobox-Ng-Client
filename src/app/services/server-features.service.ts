@@ -33,6 +33,8 @@ export class ServerFeaturesService {
     const base = this.server.base();
     return base ? (this.versions.known()[base] ?? null) : null;
   });
+  /** API base of the current server. */
+  readonly base = computed(() => this.server.base());
   /** The server answers the v2 API (26.12 or later). */
   readonly v2 = computed(() => !!this.api()?.v2);
   /** Name, version, logo of the server (26.11 or later). */

@@ -81,6 +81,7 @@ const ICONS: Record<string, string> = {
   'pi-sliders-h': 'manage',
   'pi-users': 'users',
   'pi-cloud-download': 'updates',
+  'pi-server': 'server',
   'pi-ellipsis-h': 'more',
   'pi-user': 'account',
   'pi-home': 'home',

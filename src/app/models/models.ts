@@ -296,3 +296,22 @@ export interface TemperatureLimits {
   measurement: TemperatureRange;
   setpoint: TemperatureRange;
 }
+
+/** GET /api/v2/server/metrics (ADMIN, 26.12): what the server process uses right now. */
+export interface ServerMetrics {
+  /** CPU of the server process, % of the processors it may use; null if unknown. */
+  processCpu: number | null;
+  /** CPU of the whole machine (or container). */
+  systemCpu: number | null;
+  processors: number;
+  heapUsedMb: number;
+  heapCommittedMb: number;
+  /** -1 when unbounded. */
+  heapMaxMb: number;
+  nonHeapUsedMb: number;
+  threads: number;
+  /** Collections since the start, and the time the server was paused by them. */
+  gcCount: number;
+  gcTimeMs: number;
+  uptimeSeconds: number;
+}

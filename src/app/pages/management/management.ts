@@ -4,7 +4,7 @@ import { firstValueFrom } from 'rxjs';
 
 import { errorMessage } from '../../core/api.config';
 import { AuthService } from '../../core/auth';
-import { RoomState, stateOf, offSetpoint } from '../../core/state';
+import { RoomState, STATES, stateOf, offSetpoint } from '../../core/state';
 import { ConfirmService, ToastService } from '../../core/messages';
 import { FlipService } from '../../core/flip';
 import { followSelectionBar } from '../../ui/selection-bar';
@@ -24,6 +24,7 @@ import { Option, TbMultipleChoice } from '../../ui/multiple-choice';
 import { TbStepper, TbSwitch } from '../../ui/controls';
 import { TbSheet } from '../../ui/sheet';
 import { TbMore } from '../../ui/more';
+import { TbPager } from '../../ui/pager';
 import { ElementDialog } from '../rooms/element-dialog';
 import { AccessTab } from './access';
 
@@ -39,6 +40,7 @@ interface Row {
 }
 
 const PER_PAGE = 50;
+const NO_BUILDING = -1;
 
 /**
  * Room management (gestion.xhtml), MANAGER and ADMIN: every building, floor, room and box
@@ -51,7 +53,7 @@ const PER_PAGE = 50;
  */
 @Component({
   selector: 'tb-management',
-  imports: [RouterLink, TbSheet, TbSwitch, TbStepper, TbMultipleChoice, ElementDialog, AccessTab, TbMore],
+  imports: [RouterLink, TbSheet, TbSwitch, TbStepper, TbMultipleChoice, ElementDialog, AccessTab, TbMore, TbPager],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './management.html',
 })
@@ -109,17 +111,72 @@ export class ManagementPage implements OnInit {
     return offSetpoint(l.state) || (l.device && !l.n.attached);
   }
 
+  // ---------------------------------------------------------------- filters
+
+  /** Building the elements are in (NO_BUILDING: in none), null for all. */
+  protected readonly buildingFilter = signal<number | null>(null);
+  /** State of the temperature (tone), null for all. */
+  protected readonly stateFilter = signal<RoomState['tone'] | null>(null);
+  /** Setpoint: its own, inherited from above, none at all; null for all. */
+  protected readonly setpointFilter = signal<'own' | 'inherited' | 'none' | null>(null);
+  /** Only what is not attached (devices, elements left out of the tree). */
+  protected readonly unattachedOnly = signal(false);
+  protected readonly filtersOpen = signal(false);
+  protected readonly NO_BUILDING = NO_BUILDING;
+  protected readonly buildings = computed(() => [...this.store.buildings()].sort((a, b) => normalize(a.name).localeCompare(normalize(b.name), 'fr')));
+  protected readonly stateChoices = [STATES.TOO_HOT, STATES.HEATING, STATES.STABLE, STATES.UNKNOWN];
+  /** How many of the filters above are set (the badge of « Filtres »). */
+  protected readonly activeFilters = computed(
+    () => [this.buildingFilter() != null, this.stateFilter() != null, this.setpointFilter() != null, this.unattachedOnly()].filter(Boolean).length,
+  );
+
+  protected setFilter(apply: () => void): void {
+    this.flip.animate(() => {
+      apply();
+      this.page.set(0);
+      this.phoneLimit.set(50);
+    });
+  }
+
+  protected clearFilters(): void {
+    this.setFilter(() => {
+      this.buildingFilter.set(null);
+      this.stateFilter.set(null);
+      this.setpointFilter.set(null);
+      this.unattachedOnly.set(false);
+    });
+  }
+
+  private matchesFilters(l: Row): boolean {
+    const b = this.buildingFilter();
+    if (b != null) {
+      const building = l.n.kind === 'BUILDING' ? l.n : this.store.buildingOf(l.n.id);
+      if (b === NO_BUILDING ? building != null : building?.id !== b) return false;
+    }
+    const st = this.stateFilter();
+    if (st != null && l.state.tone !== st) return false;
+    const sp = this.setpointFilter();
+    if (sp != null) {
+      if (l.device) return false;
+      const c = l.n.setpoint;
+      if (sp === 'none' ? c != null : sp === 'own' ? !c || c.inherited : !c?.inherited) return false;
+    }
+    if (this.unattachedOnly() && l.n.attached) return false;
+    return true;
+  }
+
   protected readonly visible = computed(() => {
     const word = normalize(this.search().trim());
     return this.rows().filter(
       (l) =>
         (this.type() == null || l.n.kind === this.type()) &&
         (!word || normalize(`${l.n.name} ${l.path}`).includes(word)) &&
-        (!this.onlyToHandle() || this.toHandle(l)),
+        (!this.onlyToHandle() || this.toHandle(l)) &&
+        this.matchesFilters(l),
     );
   });
   protected readonly pages = computed(() => Math.max(1, Math.ceil(this.visible().length / PER_PAGE)));
-  protected readonly pageNumbers = computed(() => Array.from({ length: this.pages() }, (_, i) => i));
+  protected readonly PER_PAGE = PER_PAGE;
   protected readonly pageRows = computed(() => {
     const p = Math.min(this.page(), this.pages() - 1);
     return this.visible().slice(p * PER_PAGE, p * PER_PAGE + PER_PAGE);
@@ -166,7 +223,7 @@ export class ManagementPage implements OnInit {
    * the one that contains it (building → floor → room → device), indented, and folded on demand.
    * A flat list sorted by place showed a building's floors after the other buildings.
    */
-  protected readonly asTree = computed(() => this.phone() && !this.search().trim() && this.type() == null && !this.onlyToHandle());
+  protected readonly asTree = computed(() => this.phone() && !this.search().trim() && this.type() == null && !this.onlyToHandle() && !this.activeFilters());
   /** Folded elements (their content hidden). */
   protected readonly folded = signal<Set<number>>(new Set());
   protected readonly treeRows = computed<Row[]>(() => {

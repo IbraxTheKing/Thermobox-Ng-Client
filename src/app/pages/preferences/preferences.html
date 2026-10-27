@@ -24,7 +24,8 @@
           }
         </div>
       </div>
-      <div class="tb-pref">
+      <!-- The panel style keeps its enamel everywhere: the tint of the page has no effect there -->
+      <div class="tb-pref" [class.tb-pref-off]="panel()">
         <span class="tb-section-icon"><i class="pi pi-palette"></i></span>
         <div class="tb-pref-text">
           <strong>Couleurs selon l'état</strong>
@@ -32,8 +33,11 @@
             La page prend la teinte de ce qui est affiché : verte pour une salle stable, orange en chauffe, rouge trop chaude.
             Désactivées, les couleurs restent les mêmes partout.
           </span>
+          @if (panel()) {
+            <span class="tb-pref-note tb-pref-note-off"><i class="pi pi-info-circle"></i> Sans effet avec le style panneau de configuration choisi par l'administrateur.</span>
+          }
         </div>
-        <tb-switch [checked]="prefs.tint()" (checkedChange)="prefs.tint.set($event)" label="Couleurs selon l'état" />
+        <tb-switch [checked]="prefs.tint() && !panel()" [disabled]="panel()" (checkedChange)="prefs.tint.set($event)" label="Couleurs selon l'état" />
       </div>
       @if (!panel()) {
         <div class="tb-pref">
@@ -136,56 +140,14 @@
       <p class="tb-muted tb-pref-scope"><i class="pi pi-shield"></i> Réglage administrateur : s'applique à tout le monde, sur tous les appareils.</p>
     </section>
 
-    <!-- The server itself (26.12, API v2): its logo and the temperatures it accepts -->
-    @if (features.v2()) {
-      <section class="tb-panel tb-pref-admin tb-pref-server" aria-labelledby="server-title">
-        <h2 class="tb-panel-title" id="server-title">Serveur ThermoBox</h2>
-        <div class="tb-prefs">
-          <div class="tb-pref tb-pref-logo">
-            <span class="tb-server-logo-preview">
-              @if (features.logo(); as l) { <img [src]="l" alt="Logo du serveur" /> } @else { <i class="pi pi-server"></i> }
-            </span>
-            <div class="tb-pref-text">
-              <strong>Logo</strong>
-              <span class="tb-muted">{{ logoSource() }} Affiché à côté du serveur dans la liste des comptes de chacun.</span>
-            </div>
-            <div class="tb-pref-actions">
-              <label class="tb-btn tb-tonal" [class.tb-disabled]="logoSaving()">
-                <i class="pi pi-upload"></i>Changer
-                <input type="file" accept="image/png,image/jpeg,image/gif,image/svg+xml" hidden [disabled]="logoSaving()" (change)="changeLogo($event)" />
-              </label>
-              @if (features.info()?.logoSource === 'custom') {
-                <button type="button" class="tb-btn tb-flat" [disabled]="logoSaving()" (click)="resetLogo()">Automatique</button>
-              }
-            </div>
-          </div>
-          <form class="tb-pref tb-pref-limits" (submit)="saveLimits($event)">
-            <span class="tb-section-icon"><i class="pi pi-sliders-h"></i></span>
-            <div class="tb-pref-text">
-              <strong>Températures acceptées</strong>
-              <span class="tb-muted">
-                Une consigne hors de ces bornes est refusée ; une mesure hors bornes est prise pour une erreur de capteur et ignorée.
-              </span>
-              <div class="tb-limits">
-                @for (l of limitRows; track l.key) {
-                  <fieldset class="tb-limits-row">
-                    <legend>{{ l.label }}</legend>
-                    <label>de <input class="tb-input" type="number" inputmode="decimal" step="0.5" [value]="limitValue(l.key, 'min')" (input)="setLimit(l.key, 'min', $event)" [attr.aria-label]="l.label + ' minimale'" /></label>
-                    <label>à <input class="tb-input" type="number" inputmode="decimal" step="0.5" [value]="limitValue(l.key, 'max')" (input)="setLimit(l.key, 'max', $event)" [attr.aria-label]="l.label + ' maximale'" /></label>
-                    <span class="tb-muted">{{ unit.symbol() }}</span>
-                  </fieldset>
-                }
-              </div>
-              @if (limitsError(); as e) { <span class="tb-field-error">{{ e }}</span> }
-              <div class="tb-limits-actions">
-                <button type="submit" class="tb-btn" [disabled]="limitsSaving() || !limitsChanged()">Enregistrer</button>
-                <button type="button" class="tb-btn tb-flat" [disabled]="limitsSaving()" (click)="resetLimits()">Valeurs par défaut</button>
-              </div>
-            </div>
-          </form>
-        </div>
-      </section>
-    }
+    <!-- The server itself: its resources, updates, logo and limits have their own page -->
+    <a routerLink="/app/server" class="tb-list-group tb-pref-about">
+      <span class="tb-list-row">
+        <span class="tb-list-icon"><i class="pi pi-server"></i></span>
+        <span class="tb-list-text"><strong>Serveur ThermoBox</strong><span class="tb-muted">Ressources, mises à jour, températures acceptées, logo</span></span>
+        <i class="pi pi-angle-right tb-list-continuation"></i>
+      </span>
+    </a>
   }
   <!-- Versions, repositories and credits (also behind « Plus » on phones) -->
   <a routerLink="/app/about" class="tb-list-group tb-pref-about">

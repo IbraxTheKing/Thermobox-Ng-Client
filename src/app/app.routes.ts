@@ -1,11 +1,12 @@
-import { Routes } from '@angular/router';
+import { inject } from '@angular/core';
+import { Router, Routes } from '@angular/router';
 
 import { adminGuard, loggedInGuard, managerGuard, publicGuard } from './core/http';
 
 /**
  * Pages of the JSF interface, same order:
  * login / register → overview (dashboard) · rooms · room/:id · measurements · management (MANAGER,
- * ADMIN) · users, updates (ADMIN) · profile · preferences. The French addresses of earlier
+ * ADMIN) · users, server (ADMIN: resources, updates, settings) · profile · preferences. The French addresses of earlier
  * versions (apercu, salles…) redirect to them.
  */
 export const routes: Routes = [
@@ -45,11 +46,13 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/users/users').then((m) => m.UsersPage),
       },
       {
-        path: 'updates',
-        title: 'Mises à jour',
+        path: 'server',
+        title: 'Serveur',
         canActivate: [adminGuard],
-        loadComponent: () => import('./pages/updates/updates').then((m) => m.UpdatesPage),
+        loadComponent: () => import('./pages/server/server').then((m) => m.ServerPage),
       },
+      // The updates are a tab of the Serveur page
+      { path: 'updates', redirectTo: () => inject(Router).parseUrl('/app/server?tab=updates') },
       { path: 'profile', title: 'Mon profil', loadComponent: () => import('./pages/profile/profile').then((m) => m.ProfilePage) },
       { path: 'about', title: 'À propos', loadComponent: () => import('./pages/about/about').then((m) => m.AboutPage) },
       { path: 'more', title: 'Plus', loadComponent: () => import('./pages/more/more').then((m) => m.MorePage) },
@@ -57,7 +60,7 @@ export const routes: Routes = [
     ],
   },
   // Addresses of the versions before 26.12 (bookmarks, shortcuts on a home screen)
-  ...Object.entries({ apercu: 'overview', salles: 'rooms', mesures: 'measurements', gestion: 'management', utilisateurs: 'users', 'mises-a-jour': 'updates', profil: 'profile', 'a-propos': 'about', plus: 'more' }).map(
+  ...Object.entries({ apercu: 'overview', salles: 'rooms', mesures: 'measurements', gestion: 'management', utilisateurs: 'users', 'mises-a-jour': 'server', profil: 'profile', 'a-propos': 'about', plus: 'more' }).map(
     ([old, path]) => ({ path: `app/${old}`, redirectTo: `app/${path}` }),
   ),
   { path: 'app/salle/:id', redirectTo: 'app/room/:id' },

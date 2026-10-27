@@ -92,6 +92,7 @@ public class ThermoboxNativePlugin extends Plugin {
         ICONS.put("manage", R.drawable.tb_manage);
         ICONS.put("users", R.drawable.tb_users);
         ICONS.put("updates", R.drawable.tb_updates);
+        ICONS.put("server", R.drawable.tb_server);
         ICONS.put("more", R.drawable.tb_more);
         ICONS.put("account", R.drawable.tb_account);
         ICONS.put("add", R.drawable.tb_add);

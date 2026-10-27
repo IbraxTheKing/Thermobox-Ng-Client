@@ -1,8 +1,10 @@
-<header class="tb-page-head">
-  <div class="tb-page-title">
-    <span class="tb-eyebrow">Administration</span>
-    <h1>Mises à jour</h1>
-  </div>
+<header class="tb-page-head" [class.tb-page-head-embedded]="embedded()">
+  @if (!embedded()) {
+    <div class="tb-page-title">
+      <span class="tb-eyebrow">Administration</span>
+      <h1>Mises à jour</h1>
+    </div>
+  }
   <button type="button" class="tb-btn tb-tonal" data-action="refresh" [class.tb-busy]="checking()" [disabled]="tracking() || checking()" (click)="check()">
     <i class="pi pi-refresh"></i>Rechercher maintenant
   </button>

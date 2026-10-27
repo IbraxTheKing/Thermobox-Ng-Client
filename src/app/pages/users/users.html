@@ -13,7 +13,7 @@
       <strong>Nouvelle version de ThermoBox disponible</strong>
       <span>{{ notice.summary() }}</span>
     </div>
-    <a routerLink="/app/updates" class="tb-btn tb-flat">Voir <i class="pi pi-arrow-right"></i></a>
+    <a routerLink="/app/server" [queryParams]="{ tab: 'updates' }" class="tb-btn tb-flat">Voir <i class="pi pi-arrow-right"></i></a>
   </div>
 }
 
@@ -40,7 +40,13 @@
       <div class="tb-user-text">
         <strong>{{ l.user.username }} @if (auth.isMe(l.user)) { <span class="tb-tag tb-tag-info tb-ml">vous</span> }</strong>
         <span class="tb-role-tag tb-role-{{ l.user.type }}">{{ roleName(l.user.type) }}</span>
-        <span class="tb-user-access"><i class="pi pi-key"></i>{{ summary(l) }}</span>
+        @if (l.user.type === 'ADMIN') {
+          <span class="tb-user-access"><i class="pi pi-key"></i>{{ summary(l) }}</span>
+        } @else {
+          <button type="button" class="tb-user-access tb-access-link" [title]="'Changer les accès de ' + l.user.username" (click)="openAccess(l)">
+            <i class="pi pi-key"></i>{{ summary(l) }}<i class="pi pi-pencil tb-access-edit" aria-hidden="true"></i>
+          </button>
+        }
       </div>
       <div class="tb-user-actions">
         @if (l.user.type !== 'ADMIN') {
@@ -54,7 +60,7 @@
     <div class="tb-empty tb-empty-sm">{{ access.loaded() ? 'Aucun utilisateur ne correspond.' : 'Chargement…' }}</div>
   }
 </div>
-<tb-more [total]="visible().length" [shown]="shownRows().length" (more)="shown.more()" label="Afficher d'autres utilisateurs" />
+<tb-pager [total]="visible().length" [size]="pageSize" [(page)]="page" />
 
 <tb-sheet [(open)]="dlgUser" title="Utilisateur" [width]="420">
   <form (submit)="save($event)" novalidate>
@@ -93,25 +99,4 @@
 </tb-sheet>
 
 <!-- Accesses of a user: everything, or only the ticked buildings / floors / rooms -->
-<tb-sheet [(open)]="dlgAccess" title="Accès" [width]="520">
-  @if (userAccess(); as l) {
-    <p class="tb-muted tb-access-intro">
-      Ce que <strong>{{ l.user.username }}</strong> ({{ roleName(l.user.type) }}) peut consulter{{ l.user.type === 'MANAGER' ? ' et piloter' : '' }}.
-    </p>
-    <div class="tb-access-mode" role="radiogroup">
-      <label class="tb-choice"><input type="radio" name="tb-access-mode" [checked]="!restrictedAccess()" (change)="restrictedAccess.set(false)" />Tout ThermoBox</label>
-      <label class="tb-choice"><input type="radio" name="tb-access-mode" [checked]="restrictedAccess()" (change)="restrictedAccess.set(true)" />Seulement les éléments cochés</label>
-    </div>
-    @if (restrictedAccess()) {
-      <p class="tb-muted tb-access-rule">
-        Cocher un bâtiment ou un étage donne accès à tout ce qu'il contient, y compris ce qui y sera ajouté plus tard. Décocher une salle
-        limite l'accès aux autres.
-      </p>
-      <tb-tree-access [nodes]="tree.nodes()" [(checked)]="checkedAccess" />
-    }
-    <div class="tb-actions">
-      <button type="button" class="tb-btn tb-flat" (click)="dlgAccess.set(false)">Annuler</button>
-      <button type="button" class="tb-btn" (click)="saveAccess()"><i class="pi pi-check"></i>Enregistrer</button>
-    </div>
-  }
-</tb-sheet>
+<tb-user-access-sheet (saved)="afterAccess()" />
