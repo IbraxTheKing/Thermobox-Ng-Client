@@ -50,6 +50,8 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/mises-a-jour/mises-a-jour').then((m) => m.MisesAJourPage),
       },
       { path: 'profil', title: 'Mon profil', loadComponent: () => import('./pages/profil/profil').then((m) => m.ProfilPage) },
+      { path: 'a-propos', title: 'À propos', loadComponent: () => import('./pages/a-propos/a-propos').then((m) => m.AProposPage) },
+      { path: 'plus', title: 'Plus', loadComponent: () => import('./pages/plus/plus').then((m) => m.PlusPage) },
       { path: 'preferences', title: 'Préférences', loadComponent: () => import('./pages/preferences/preferences').then((m) => m.PreferencesPage) },
     ],
   },

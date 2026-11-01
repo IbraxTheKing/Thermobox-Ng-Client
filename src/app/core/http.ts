@@ -33,12 +33,14 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const token = auth.token();
   const versApi = req.url.startsWith(serveur.base());
   const login = req.url.endsWith('/auth/login');
-  const requete = token && versApi && !login ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } }) : req;
+  // A request that brings its own token (logging out another saved account) keeps it
+  const propre = req.headers.has('Authorization');
+  const requete = token && versApi && !login && !propre ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } }) : req;
   const discrete = req.context.get(DISCRETE);
   if (!discrete) activite.debut();
   return next(requete).pipe(
     catchError((err: unknown) => {
-      if (err instanceof HttpErrorResponse && err.status === 401 && versApi && !login) auth.expiree();
+      if (err instanceof HttpErrorResponse && err.status === 401 && versApi && !login && !propre) auth.expiree();
       return throwError(() => err);
     }),
     finalize(() => {
@@ -53,10 +55,14 @@ export const connecteGuard: CanActivateFn = () => {
   return auth.connecte() ? true : inject(Router).createUrlTree(['/login']);
 };
 
-/** Login and registration: no need to stay there once logged in. */
-export const publicGuard: CanActivateFn = () => {
+/**
+ * Login and registration: no need to stay there once logged in, unless to add another account
+ * (?ajout) or to log in again to a saved one (?compte=).
+ */
+export const publicGuard: CanActivateFn = (route) => {
   const auth = inject(AuthService);
-  return auth.connecte() ? inject(Router).createUrlTree(['/app/apercu']) : true;
+  if (!auth.connecte() || route.queryParamMap.has('ajout') || route.queryParamMap.has('compte')) return true;
+  return inject(Router).createUrlTree(['/app/apercu']);
 };
 
 /** GESTIONNAIRE and ADMIN (Gestion page); the others go back to the dashboard. */

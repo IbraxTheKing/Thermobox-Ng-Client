@@ -10,7 +10,8 @@ import { TbSheet } from './sheet';
   template: `
     <div class="tb-toasts" aria-live="polite">
       @for (t of toasts.toasts(); track t.id) {
-        <div class="tb-toast" [class.tb-toast-warn]="t.gravite === 'warn'" [class.tb-toast-error]="t.gravite === 'error'" role="status">
+        <!-- A tap anywhere on it closes it (phones have no × to aim at) -->
+        <div class="tb-toast" [class.tb-toast-warn]="t.gravite === 'warn'" [class.tb-toast-error]="t.gravite === 'error'" role="status" (click)="toasts.fermer(t.id)">
           <i class="pi" [class.pi-info-circle]="t.gravite === 'info'" [class.pi-exclamation-triangle]="t.gravite === 'warn'" [class.pi-times-circle]="t.gravite === 'error'"></i>
           <div class="tb-toast-text">
             <strong>{{ t.titre }}</strong>
@@ -18,7 +19,7 @@ import { TbSheet } from './sheet';
               <span>{{ t.detail }}</span>
             }
           </div>
-          <button type="button" (click)="toasts.fermer(t.id)" aria-label="Fermer"><i class="pi pi-times"></i></button>
+          <button type="button" class="tb-toast-fermer" (click)="toasts.fermer(t.id)" aria-label="Fermer"><i class="pi pi-times"></i></button>
         </div>
       }
     </div>
