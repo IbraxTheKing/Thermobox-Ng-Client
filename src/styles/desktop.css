@@ -58,28 +58,62 @@
     display: flex;
     align-items: center;
     height: var(--tb-chrome-top);
-    padding-left: 16px;
-    /* Over the page: what scrolls under it is blurred (acrylic of Windows 11) */
-    background: color-mix(in srgb, var(--tb-background) 72%, transparent);
-    -webkit-backdrop-filter: blur(22px) saturate(160%);
-    backdrop-filter: blur(22px) saturate(160%);
-    border-bottom: 1px solid transparent;
+    padding-left: 4px;
+    /* The backdrop of the window (Acrylic, or the Mica grey of the page) */
+    background: transparent;
     color: var(--md-on-surface);
     font: 12px / 16px "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
     user-select: none;
     -webkit-user-select: none;
-    transition: background-color .2s ease, border-color .2s ease;
 }
-.tb-titlebar.tb-titlebar-scrolled {
-    background: color-mix(in srgb, var(--tb-background) 58%, transparent);
+/* Above the page (right of the side bar), once it has scrolled under the bar: what goes under it
+   is blurred, as the acrylic of Windows 11 */
+.tb-titlebar::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 0 var(--wf-pane, 0px);
+    z-index: -1;
+    border-bottom: 1px solid transparent;
+    background: transparent;
+    -webkit-backdrop-filter: blur(30px) saturate(150%);
+    backdrop-filter: blur(30px) saturate(150%);
+    pointer-events: none;
+    transition: background-color .167s linear, border-color .167s linear;
+}
+.tb-titlebar.tb-titlebar-scrolled::before {
+    background: color-mix(in srgb, var(--tb-background) 70%, transparent);
     border-bottom-color: var(--md-outline-variant);
 }
+/* Back and the button of the side bar (TitleBar of WinUI 3) */
+.tb-titlebar-btn {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 40px;
+    height: 28px;
+    margin-right: 2px;
+    padding: 0;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--md-on-surface);
+    font: 12px / 1 "Segoe Fluent Icons", "Segoe MDL2 Assets";
+    cursor: default;
+    transition: background-color .083s linear;
+}
+.tb-titlebar-btn:hover:not(:disabled) { background: var(--tb-caption-hover); }
+.tb-titlebar-btn:active:not(:disabled) { background: var(--tb-caption-press); color: color-mix(in srgb, var(--md-on-surface) 60%, transparent); }
+.tb-titlebar-btn:disabled { color: color-mix(in srgb, var(--md-on-surface) 36%, transparent); }
+.tb-titlebar-btn + .tb-titlebar-icon { margin-left: 10px; }
+/* No side bar to fold: phones' bar at the bottom */
+@media (max-width: 840px) { .tb-titlebar-pane { display: none; } }
+
 /* Only the bar itself starts a drag (data-tauri-drag-region): its texts let the pointer through */
 .tb-titlebar-icon, .tb-titlebar-title { pointer-events: none; }
 .tb-titlebar-icon {
     width: 16px;
     height: 16px;
-    margin-right: 16px;
+    margin: 0 16px 0 12px;
     border-radius: 4px;
     background: url("/icons/icon-192.png") center / cover no-repeat;
 }
@@ -118,6 +152,35 @@
 :root[data-desktop="windows"] .tb-public .tb-main { min-height: calc(100dvh - var(--tb-chrome-top)); }
 /* A sheet or window of the page never covers the bar */
 :root[data-desktop="windows"] :is(.tb-sheet, .tb-dialog) { max-height: calc(100dvh - var(--tb-chrome-top) - 24px); }
+
+/* The scroll bar of WinUI over the page, under the title bar (TbDesktopChrome): the page's own is
+   hidden, it ran along the title bar and pushed it aside when it appeared */
+:root[data-desktop="windows"] { scrollbar-width: none; }
+:root[data-desktop="windows"]::-webkit-scrollbar { display: none; }
+.tb-scrollbar {
+    position: fixed;
+    top: calc(var(--tb-chrome-top) + 2px);
+    right: 0;
+    bottom: 2px;
+    z-index: 2900;
+    width: 12px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .3s ease;
+}
+.tb-scrollbar.tb-scrollbar-on { pointer-events: auto; }
+.tb-scrollbar.tb-scrollbar-on.tb-scrollbar-active, .tb-scrollbar.tb-scrollbar-on:hover { opacity: 1; }
+.tb-scrollbar-thumb {
+    position: absolute;
+    top: 0;
+    right: 3px;
+    width: 3px;
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--md-on-surface) 45%, transparent);
+    transition: width .15s ease, right .15s ease, background-color .15s ease;
+}
+.tb-scrollbar:hover .tb-scrollbar-thumb { right: 2px; width: 6px; background: color-mix(in srgb, var(--md-on-surface) 60%, transparent); }
+.tb-scrollbar:hover { background: color-mix(in srgb, var(--tb-background) 70%, transparent); }
 
 /* ============================== macOS: under the traffic lights */
 

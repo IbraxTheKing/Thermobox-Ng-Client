@@ -28,6 +28,7 @@ import {
 
 import { PlatformService } from '../core/platform';
 import { PreferencesService } from '../core/preferences';
+import { DESKTOP_OS } from '../core/tauri';
 import { UnitService } from '../core/unit';
 
 declare module 'chart.js' {
@@ -346,9 +347,11 @@ export class TbChart implements OnDestroy {
   private options(mobile: boolean, n: number): ChartOptions<'line'> {
     const text = this.color('--md-on-surface-variant');
     const grid = this.color('--md-outline-variant');
-    const font = { family: 'Manrope, "Segoe UI", system-ui, sans-serif', size: mobile ? 11 : 13 };
+    // Windows app: the type of Windows, and the curves are there at once, as in a native app
+    const windows = DESKTOP_OS === 'windows';
+    const font = { family: windows ? '"Segoe UI Variable Text", "Segoe UI", sans-serif' : 'Manrope, "Segoe UI", system-ui, sans-serif', size: mobile ? 11 : 12 + (windows ? 0 : 1) };
     const symbol = this.valueUnit() ?? this.unit.symbol();
-    const animate = this.prefs.animate();
+    const animate = this.prefs.animate() && !windows;
     return {
       responsive: true,
       maintainAspectRatio: false,

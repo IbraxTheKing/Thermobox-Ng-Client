@@ -1,8 +1,10 @@
 //! Windows only.
 //!
-//! Windows 11 shows its snap layouts when the pointer rests on the maximize button of a native
-//! title bar. The title bar here is the page's: the same panel is asked for with Win + Z, then
-//! a press of Alt hides the numbers it shows for the keyboard.
+//! - Windows 11 shows its snap layouts when the pointer rests on the maximize button of a native
+//!   title bar. The title bar here is the page's: the same panel is asked for with Win + Z, then
+//!   a press of Alt hides the numbers it shows for the keyboard.
+//! - The accent colour of the system, the build of Windows (the backdrop of the window), the dark
+//!   or light frame of the window.
 
 use windows_sys::Win32::UI::Input::KeyboardAndMouse::{
     SendInput, INPUT, INPUT_0, INPUT_KEYBOARD, KEYBDINPUT, KEYEVENTF_KEYUP, VIRTUAL_KEY, VK_LWIN, VK_MENU,
@@ -52,4 +54,46 @@ pub fn accent() -> Option<String> {
         )
     };
     (status == ERROR_SUCCESS).then(|| format!("#{:02x}{:02x}{:02x}", value & 0xff, (value >> 8) & 0xff, (value >> 16) & 0xff))
+}
+
+/// Build of Windows (22000 and up: Windows 11), 0 if unknown.
+pub fn build() -> u32 {
+    use windows_sys::Win32::Foundation::ERROR_SUCCESS;
+    use windows_sys::Win32::System::Registry::{RegGetValueW, HKEY_LOCAL_MACHINE, RRF_RT_REG_SZ};
+    let wide = |s: &str| s.encode_utf16().chain(Some(0)).collect::<Vec<u16>>();
+    let key = wide("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion");
+    let name = wide("CurrentBuildNumber");
+    let mut value = [0u16; 32];
+    let mut size = std::mem::size_of_val(&value) as u32;
+    let status = unsafe {
+        RegGetValueW(
+            HKEY_LOCAL_MACHINE,
+            key.as_ptr(),
+            name.as_ptr(),
+            RRF_RT_REG_SZ,
+            std::ptr::null_mut(),
+            value.as_mut_ptr() as *mut core::ffi::c_void,
+            &mut size,
+        )
+    };
+    if status != ERROR_SUCCESS {
+        return 0;
+    }
+    let end = value.iter().position(|&c| c == 0).unwrap_or(value.len());
+    String::from_utf16_lossy(&value[..end]).trim().parse().unwrap_or(0)
+}
+
+/// Dark or light frame and backdrop for the window, whatever the theme of the system (the
+/// attribute that set_theme also sets: set again here, the Acrylic is redrawn with it).
+pub fn dark_mode(hwnd: *mut core::ffi::c_void, dark: bool) {
+    use windows_sys::Win32::Graphics::Dwm::{DwmSetWindowAttribute, DWMWA_USE_IMMERSIVE_DARK_MODE};
+    let value: i32 = dark as i32;
+    unsafe {
+        DwmSetWindowAttribute(
+            hwnd,
+            DWMWA_USE_IMMERSIVE_DARK_MODE as u32,
+            &value as *const i32 as *const core::ffi::c_void,
+            std::mem::size_of::<i32>() as u32,
+        );
+    }
 }

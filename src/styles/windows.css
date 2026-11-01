@@ -1,0 +1,603 @@
+/*
+ * Windows app (Tauri) only: html[data-desktop="windows"]. The look of a native Windows 11 app
+ * (Fluent 2, WinUI 3), over both looks of ThermoBox, « Maison » and « Panneau de configuration »:
+ *
+ * - Segoe UI Variable, text at 14 px; the figures in Segoe UI Variable Display
+ * - the Mica greys of Windows for the page and its layers, cards with a hairline stroke, no
+ *   shadow; corners of 4 px (controls) and 8 px (cards, dialogs)
+ * - standard / accent / subtle buttons, text boxes with their bottom line, ToggleSwitch,
+ *   NavigationView (the side bar: the page shown marked by a pill of the accent colour)
+ * - the focus rectangle of Windows
+ *
+ * An accent palette chosen in Préférences still colours the page (AccentService: its rules come
+ * after these); the colours of the states (stable, en chauffe, trop chaud) stay ThermoBox's.
+ */
+
+/* ============================== Tokens */
+
+:root[data-desktop="windows"] {
+    --tb-font: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+    --tb-font-figures: "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+    --tb-figure-weight: 300;
+    --tb-title-weight: 600;
+    --tb-title-space: 0;
+
+    --tb-shape-xs: 4px;
+    --tb-shape-sm: 4px;
+    --tb-shape-md: 4px;
+    --tb-shape-lg: 8px;
+    --tb-shape-xl: 8px;
+    --tb-shape-xxl: 8px;
+
+    /* Mica (light) */
+    --tb-background: #f3f3f3;
+    --md-surface-container-lowest: #ffffff;
+    --md-surface-container-low: #f9f9f9;
+    --md-surface-container: #f6f6f6;
+    --md-surface-container-high: #ececec;
+    --md-surface-container-highest: #e5e5e5;
+    --md-on-surface: #1b1b1b;
+    --md-on-surface-variant: #616161;
+    --md-outline: #8a8a8a;
+    --md-outline-variant: rgb(0 0 0 / .0803);
+    --md-secondary-container: rgb(0 0 0 / .0373);
+    --md-on-secondary-container: #1b1b1b;
+    --tb-glass: #fbfbfb;
+    --tb-glass-solid: #fbfbfb;
+    --tb-glass-hover: #f6f6f6;
+    --tb-glass-line: rgb(0 0 0 / .0578);
+    --tb-glass-shadow: none;
+    --tb-glass-shadow-hover: none;
+    --tb-field: rgb(255 255 255 / .7);
+    --tb-field-hover: #f9f9f9;
+    --tb-field-line: rgb(0 0 0 / .0578);
+    --tb-tile: #f9f9f9;
+
+    --tb-raised-1: 0 2px 4px rgb(0 0 0 / .04);
+    --tb-raised-2: 0 8px 16px rgb(0 0 0 / .14);
+    --tb-raised-3: 0 32px 64px rgb(0 0 0 / .1876), 0 2px 21px rgb(0 0 0 / .1474);
+
+    /* Fluent control colours */
+    --wf-control: rgb(255 255 255 / .7);
+    --wf-control-hover: rgb(249 249 249 / .5);
+    --wf-control-press: rgb(249 249 249 / .3);
+    --wf-stroke: rgb(0 0 0 / .0578);
+    --wf-stroke-bottom: rgb(0 0 0 / .1622);
+    --wf-stroke-strong: rgb(0 0 0 / .4458);
+    --wf-subtle-hover: rgb(0 0 0 / .0373);
+    --wf-subtle-press: rgb(0 0 0 / .0241);
+    --wf-text-secondary: #616161;
+    --wf-switch-off: rgb(0 0 0 / .6063);
+    --wf-layer: rgb(255 255 255 / .5);
+}
+:root[data-desktop="windows"][data-theme="dark"] {
+    /* Mica (dark) */
+    --tb-background: #202020;
+    --md-surface-container-lowest: #1c1c1c;
+    --md-surface-container-low: #282828;
+    --md-surface-container: #2b2b2b;
+    --md-surface-container-high: #323232;
+    --md-surface-container-highest: #3a3a3a;
+    --md-on-surface: #ffffff;
+    --md-on-surface-variant: #c5c5c5;
+    --md-outline: #9a9a9a;
+    --md-outline-variant: rgb(255 255 255 / .0837);
+    --md-secondary-container: rgb(255 255 255 / .0605);
+    --md-on-secondary-container: #ffffff;
+    --tb-glass: #2b2b2b;
+    --tb-glass-solid: #2b2b2b;
+    --tb-glass-hover: #323232;
+    --tb-glass-line: rgb(255 255 255 / .0698);
+    --tb-field: rgb(255 255 255 / .0605);
+    --tb-field-hover: rgb(255 255 255 / .0837);
+    --tb-field-line: rgb(255 255 255 / .0698);
+    --tb-tile: #2b2b2b;
+
+    --tb-raised-1: 0 2px 4px rgb(0 0 0 / .26);
+    --tb-raised-2: 0 8px 16px rgb(0 0 0 / .26);
+    --tb-raised-3: 0 32px 64px rgb(0 0 0 / .37), 0 2px 21px rgb(0 0 0 / .37);
+
+    --wf-control: rgb(255 255 255 / .0605);
+    --wf-control-hover: rgb(255 255 255 / .0837);
+    --wf-control-press: rgb(255 255 255 / .0326);
+    --wf-stroke: rgb(255 255 255 / .0698);
+    --wf-stroke-bottom: rgb(255 255 255 / .0465);
+    --wf-stroke-strong: rgb(255 255 255 / .5442);
+    --wf-subtle-hover: rgb(255 255 255 / .0605);
+    --wf-subtle-press: rgb(255 255 255 / .0419);
+    --wf-text-secondary: #c5c5c5;
+    --wf-switch-off: rgb(255 255 255 / .786);
+    --wf-layer: rgb(58 58 58 / .3);
+}
+/* « Panneau de configuration »: the condensed figures of the desk, at the weight of Segoe */
+:root[data-desktop="windows"][data-style="panel"] { --tb-figure-weight: 600; }
+
+/* ============================== Type */
+
+:root[data-desktop="windows"] body { font-family: var(--tb-font); font-size: 14px; -webkit-font-smoothing: auto; }
+:root[data-desktop="windows"] :is(.tb-page-title h1, .tb-auth-name) { font-family: "Segoe UI Variable Display", "Segoe UI", sans-serif; font-weight: 600; letter-spacing: 0; }
+:root[data-desktop="windows"] .tb-page-title h1 { font-size: 28px; line-height: 36px; }
+:root[data-desktop="windows"] :is(.tb-panel-title, .tb-card-head h2, .tb-dialog-head h2, .tb-section-title) { font-weight: 600; letter-spacing: 0; }
+:root[data-desktop="windows"] .tb-eyebrow { letter-spacing: 0; text-transform: none; font-weight: 600; font-size: 12px; }
+
+/* ============================== Focus: the rectangle of Windows */
+
+:root[data-desktop="windows"] :is(button, a, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid var(--md-on-surface);
+    outline-offset: 1px;
+    box-shadow: none;
+}
+
+/* ============================== Buttons */
+
+/* Accent button (the main action) */
+:root[data-desktop="windows"] .tb-btn {
+    min-height: 32px;
+    padding: 5px 12px;
+    gap: 8px;
+    border: 1px solid rgb(255 255 255 / .08);
+    border-bottom-color: rgb(0 0 0 / .4);
+    border-radius: 4px;
+    background: var(--md-primary);
+    color: var(--md-on-primary);
+    box-shadow: none;
+    font-size: 14px;
+    font-weight: 400;
+    transform: none;
+    transition: background-color .083s linear, color .083s linear;
+}
+:root[data-desktop="windows"] .tb-btn:hover { background: color-mix(in srgb, var(--md-primary) 90%, var(--tb-background)); box-shadow: none; }
+:root[data-desktop="windows"] .tb-btn:active { background: color-mix(in srgb, var(--md-primary) 80%, var(--tb-background)); color: color-mix(in srgb, var(--md-on-primary) 78%, transparent); transform: none; }
+:root[data-desktop="windows"] .tb-btn.tb-btn-lg { min-height: 36px; padding: 7px 16px; border-radius: 4px; font-size: 14px; }
+:root[data-desktop="windows"] .tb-btn .pi { font-size: 14px; }
+/* Standard button */
+:root[data-desktop="windows"] .tb-btn.tb-tonal {
+    border-color: var(--wf-stroke);
+    border-bottom-color: var(--wf-stroke-bottom);
+    background: var(--wf-control);
+    color: var(--md-on-surface);
+}
+:root[data-desktop="windows"] .tb-btn.tb-tonal:hover { background: var(--wf-control-hover); color: var(--md-on-surface); }
+:root[data-desktop="windows"] .tb-btn.tb-tonal:active { background: var(--wf-control-press); color: var(--wf-text-secondary); border-bottom-color: var(--wf-stroke); }
+/* Subtle button (text, icons) */
+:root[data-desktop="windows"] :is(.tb-btn.tb-flat, .tb-icon-btn, .tb-text-btn, .tb-rail-fold) { border-color: transparent; background: transparent; border-radius: 4px; }
+:root[data-desktop="windows"] .tb-btn.tb-flat { color: var(--md-primary); }
+:root[data-desktop="windows"] .tb-btn.tb-flat:active { color: color-mix(in srgb, var(--md-primary) 70%, transparent); }
+:root[data-desktop="windows"] .tb-btn.tb-icon.tb-flat { color: var(--md-on-surface-variant); }
+:root[data-desktop="windows"] .tb-btn.tb-icon.tb-flat:hover { color: var(--md-on-surface); }
+:root[data-desktop="windows"] .tb-btn.tb-btn-danger.tb-flat { color: var(--md-error); }
+:root[data-desktop="windows"] :is(.tb-btn.tb-flat, .tb-icon-btn, .tb-rail-fold):hover { background: var(--wf-subtle-hover); }
+:root[data-desktop="windows"] :is(.tb-btn.tb-flat, .tb-icon-btn, .tb-rail-fold):active { background: var(--wf-subtle-press); }
+:root[data-desktop="windows"] .tb-btn.tb-icon { width: 32px; min-width: 32px; height: 32px; }
+:root[data-desktop="windows"] .tb-btn.tb-btn-danger:not(.tb-flat) { background: #c42b1c; color: #fff; }
+:root[data-desktop="windows"] .tb-btn.tb-btn-danger:not(.tb-flat):hover { background: #b62d1f; }
+:root[data-desktop="windows"] .tb-btn:disabled { background: var(--wf-subtle-hover); color: color-mix(in srgb, var(--md-on-surface) 36%, transparent); border-color: transparent; }
+
+/* ============================== Text boxes, combo boxes */
+
+:root[data-desktop="windows"] :is(.tb-input, .tb-select) {
+    min-height: 32px;
+    padding: 5px 11px;
+    border: 1px solid var(--wf-stroke);
+    border-bottom-color: var(--wf-stroke-strong);
+    border-radius: 4px;
+    background-color: var(--wf-control);
+    box-shadow: none;
+    color: var(--md-on-surface);
+    font-size: 14px;
+}
+:root[data-desktop="windows"] :is(.tb-input, .tb-select):hover { background-color: var(--wf-control-hover); border-color: var(--wf-stroke); border-bottom-color: var(--wf-stroke-strong); }
+:root[data-desktop="windows"] :is(.tb-input, .tb-select):focus {
+    outline: none;
+    background-color: var(--md-surface-container-lowest);
+    border-color: var(--wf-stroke);
+    border-bottom: 2px solid var(--md-primary);
+    padding-bottom: 4px;
+    box-shadow: none;
+}
+:root[data-desktop="windows"] :is(.tb-input, .tb-select).tb-invalid { border-bottom: 2px solid #c42b1c; box-shadow: none; }
+/* Search boxes: the size of a text box, the icon inside */
+:root[data-desktop="windows"] body .tb-search > .tb-input { height: 32px; min-height: 32px; padding-left: 34px; border-radius: 4px; }
+:root[data-desktop="windows"] body .tb-search > i.pi { left: 12px; font-size: 13px; }
+:root[data-desktop="windows"] .tb-select.tb-filter { border-radius: 4px; height: 32px; }
+:root[data-desktop="windows"] :is(.tb-entry, .tb-stepper) { border-radius: 4px; border-color: var(--wf-stroke); border-bottom-color: var(--wf-stroke-strong); background: var(--wf-control); }
+:root[data-desktop="windows"] .tb-label { font-weight: 400; font-size: 14px; color: var(--md-on-surface); }
+:root[data-desktop="windows"] :is(input[type="checkbox"], input[type="radio"]) { accent-color: var(--md-primary); }
+
+/* ============================== ToggleSwitch */
+
+:root[data-desktop="windows"] .tb-switch {
+    width: 40px;
+    height: 20px;
+    border: 1px solid var(--wf-switch-off);
+    border-radius: 10px;
+    background: var(--wf-subtle-press);
+    box-shadow: none;
+    transition: background-color .083s linear, border-color .083s linear;
+}
+:root[data-desktop="windows"] .tb-switch::before {
+    top: 3px;
+    left: 3px;
+    width: 12px;
+    height: 12px;
+    background: var(--wf-switch-off);
+    box-shadow: none;
+    transition: transform .167s cubic-bezier(.1, .9, .2, 1), width .083s linear, height .083s linear, top .083s linear;
+}
+:root[data-desktop="windows"] .tb-switch:hover::before { top: 2px; width: 14px; height: 14px; }
+:root[data-desktop="windows"] .tb-switch[aria-checked="true"] { border-color: var(--md-primary); background: var(--md-primary); }
+:root[data-desktop="windows"] .tb-switch[aria-checked="true"]::before { background: var(--md-on-primary); transform: translateX(20px); }
+:root[data-desktop="windows"] .tb-switch[aria-checked="true"]:hover::before { transform: translateX(18px); }
+
+/* ============================== Segmented (SelectorBar) */
+
+:root[data-desktop="windows"] .tb-segmented { padding: 0; gap: 2px; border-radius: 4px; background: transparent; box-shadow: none; border: 0; }
+:root[data-desktop="windows"] .tb-segmented > button { position: relative; min-height: 32px; padding: 5px 12px; border-radius: 4px; font-weight: 400; font-size: 14px; color: var(--wf-text-secondary); }
+:root[data-desktop="windows"] .tb-segmented > button:hover { background: var(--wf-subtle-hover); color: var(--md-on-surface); }
+:root[data-desktop="windows"] .tb-segmented > button.tb-seg-on { background: transparent; box-shadow: none; color: var(--md-on-surface); font-weight: 600; }
+:root[data-desktop="windows"] .tb-segmented > button.tb-seg-on::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    width: 16px;
+    height: 3px;
+    margin-left: -8px;
+    border-radius: 2px;
+    background: var(--md-primary);
+}
+
+/* ============================== Cards, lists, tables, chips */
+
+:root[data-desktop="windows"] :is(.tb-panel, .tb-card, .tb-list-group, .tb-table, .tb-stat, .tb-banner, .tb-empty, .tb-user, .tb-tree-rooms, .tb-rooms-side, .tb-lights, .tb-filters) {
+    border: 1px solid var(--tb-glass-line);
+    border-radius: 8px;
+    box-shadow: none;
+}
+:root[data-desktop="windows"] :is(.tb-panel, .tb-card, .tb-list-group, .tb-table, .tb-stat, .tb-user, .tb-tree-rooms) { background: var(--tb-glass); }
+:root[data-desktop="windows"] :is(.tb-summary-chip, .tb-tag, .tb-chip-group, .tb-state, .tb-channel, .tb-role-tag) { border-radius: 4px; }
+:root[data-desktop="windows"] .tb-summary-chip { min-height: 32px; border: 1px solid var(--wf-stroke); background: var(--wf-control); font-weight: 400; }
+:root[data-desktop="windows"] .tb-summary-chip:hover { background: var(--wf-control-hover); }
+:root[data-desktop="windows"] .tb-summary-chip.tb-chip-on { border-color: var(--md-primary); background: var(--md-primary); color: var(--md-on-primary); }
+:root[data-desktop="windows"] .tb-table th { font-weight: 600; font-size: 12px; text-transform: none; letter-spacing: 0; }
+:root[data-desktop="windows"] .tb-node-row:hover, :root[data-desktop="windows"] .tb-list-row:hover { background: var(--wf-subtle-hover); }
+
+/* ============================== Dialogs (ContentDialog), menus, notifications */
+
+:root[data-desktop="windows"] .tb-scrim { background: rgb(0 0 0 / .3); }
+:root[data-desktop="windows"] .tb-dialog { border-radius: 8px; border-color: var(--tb-glass-line); background: var(--md-surface-container-lowest); box-shadow: var(--tb-raised-3); animation-duration: .25s; }
+:root[data-desktop="windows"][data-theme="dark"] .tb-dialog { background: #2b2b2b; }
+:root[data-desktop="windows"] .tb-dialog-head h2 { font-size: 20px; }
+:root[data-desktop="windows"] .tb-dialog-body .tb-actions { background: var(--tb-background); border-top: 1px solid var(--md-outline-variant); }
+:root[data-desktop="windows"] .tb-toast { border-radius: 8px; border: 1px solid var(--tb-glass-line); box-shadow: var(--tb-raised-2); }
+:root[data-desktop="windows"] .tb-accounts-menu { border-radius: 8px; box-shadow: var(--tb-raised-2); }
+
+/* ============================== NavigationView (the side bar) */
+
+/*
+ * As NavigationView of WinUI 3, PaneDisplayMode Left / LeftCompact: the pane is the backdrop of the
+ * window (the Acrylic of Windows 11, or the Mica grey), the page a layer over it with its rounded
+ * corner. Folded (the hamburger), or in a window less than 1200 px wide, it keeps only its icons:
+ * 48 px wide, the names in tooltips. Open: 280 px, the icon then the name of each page.
+ * --wf-pane: the width of the pane, 0 when the pages are in the bar at the bottom.
+ */
+:root[data-desktop="windows"] { --tb-rail: 48px; --wf-pane: 0px; }
+@media (min-width: 841px) {
+    :root[data-desktop="windows"] { --wf-pane: var(--tb-rail); }
+}
+@media (min-width: 1200px) and (not ((orientation: landscape) and (max-height: 520px))) {
+    :root[data-desktop="windows"]:not([data-sidebar="collapsed"]) { --tb-rail: 280px; }
+}
+
+@media (min-width: 841px) {
+    :root[data-desktop="windows"] .tb-rail {
+        inset: 0 auto 0 0;
+        width: var(--tb-rail);
+        margin: var(--tb-chrome-top) 0 0 0 !important;
+        padding: 8px 0 4px;
+        gap: 0;
+        align-items: stretch;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+    }
+    /* The page: a layer over the pane, its top left corner rounded */
+    :root[data-desktop="windows"] body.tb-app::before {
+        content: "";
+        position: fixed;
+        top: var(--tb-chrome-top);
+        right: 0;
+        bottom: 0;
+        left: var(--wf-pane);
+        z-index: -2;
+        border: 1px solid var(--tb-glass-line);
+        border-right: 0;
+        border-bottom: 0;
+        border-top-left-radius: 8px;
+        background: var(--wf-layer);
+        pointer-events: none;
+    }
+    /* The colour of a room (« Maison ») tints the page only, not the pane */
+    :root[data-desktop="windows"] .tb-app .tb-background-page {
+        inset: var(--tb-chrome-top) 0 0 var(--wf-pane);
+        border-top-left-radius: 8px;
+    }
+
+    :root[data-desktop="windows"] .tb-rail-brand { display: none; }
+    /* The hamburger is in the title bar (TbDesktopChrome) */
+    :root[data-desktop="windows"] .tb-rail-fold { display: none !important; }
+    :root[data-desktop="windows"] .tb-lens { display: none; }
+
+    :root[data-desktop="windows"] .tb-dests { align-items: stretch; gap: 4px; }
+    /* An item: 36 px high, 4 px from the edges of the pane; the icon in a 40 px square */
+    :root[data-desktop="windows"] .tb-dest,
+    :root[data-desktop="windows"][data-style="panel"] .tb-dest {
+        position: relative;
+        flex-direction: row;
+        align-items: center;
+        gap: 0;
+        width: auto;
+        min-height: 36px;
+        height: 36px;
+        margin: 0 4px;
+        padding: 0;
+        border-radius: 4px;
+        background: transparent;
+        box-shadow: none;
+        color: var(--md-on-surface);
+        font-size: 14px;
+        font-weight: 400;
+        letter-spacing: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        transition: background-color .083s linear;
+    }
+    :root[data-desktop="windows"] .tb-dest-icon {
+        flex: none;
+        width: 40px;
+        height: 36px;
+        border-radius: 0;
+        background: none !important;
+        color: inherit !important;
+        box-shadow: none !important;
+        animation: none !important;
+    }
+    :root[data-desktop="windows"] .tb-dest-icon .pi { font-size: 16px; }
+    :root[data-desktop="windows"] .tb-dest-badge { top: 6px; right: 8px; width: 8px; height: 8px; box-shadow: none; }
+    :root[data-desktop="windows"] .tb-dest-label { overflow: hidden; text-overflow: ellipsis; padding: 0 12px 0 2px; }
+    :root[data-desktop="windows"] .tb-dest:hover:not(.tb-dest-on) { background: var(--wf-subtle-hover); color: var(--md-on-surface); }
+    :root[data-desktop="windows"] .tb-dest:active:not(.tb-dest-on) { background: var(--wf-subtle-press); color: var(--wf-text-secondary); }
+    :root[data-desktop="windows"] .tb-dest.tb-dest-on,
+    :root[data-desktop="windows"][data-style="panel"] .tb-dest.tb-dest-on { background: var(--wf-subtle-hover); color: var(--md-on-surface); box-shadow: none; }
+    :root[data-desktop="windows"] .tb-dest.tb-dest-on:hover { background: var(--wf-subtle-press); }
+    /* The pill of the page shown, as NavigationView: it grows from its middle */
+    :root[data-desktop="windows"] .tb-dest.tb-dest-on::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 50%;
+        width: 3px;
+        height: 16px;
+        margin-top: -8px;
+        border-radius: 2px;
+        background: var(--md-primary);
+        animation: wf-pill .25s cubic-bezier(0, 0, 0, 1);
+    }
+
+    /* The foot of the pane: the account, Préférences, Déconnexion, as items */
+    :root[data-desktop="windows"] .tb-rail-end { gap: 4px; padding: 4px 0 0; border-top: 0; align-items: stretch; }
+    :root[data-desktop="windows"] .tb-rail-account {
+        width: auto;
+        min-height: 40px;
+        margin: 0 4px;
+        padding: 0;
+        gap: 0;
+        border-radius: 4px;
+        background: transparent;
+    }
+    :root[data-desktop="windows"] .tb-rail-account { overflow: hidden; white-space: nowrap; }
+    :root[data-desktop="windows"] .tb-rail-account:hover, :root[data-desktop="windows"] .tb-rail-account[aria-expanded="true"] { background: var(--wf-subtle-hover); }
+    :root[data-desktop="windows"] .tb-rail-account > .tb-avatar { width: 28px; height: 28px; margin: 0 6px; font-size: 12px; }
+    :root[data-desktop="windows"] .tb-rail-account .tb-server-logo-badge { width: 13px; height: 13px; right: -3px; bottom: -3px; }
+    :root[data-desktop="windows"] .tb-rail-account-text { padding: 0 8px 0 2px; line-height: 18px; }
+    :root[data-desktop="windows"] .tb-rail-account strong { font-weight: 400; font-size: 14px; }
+    :root[data-desktop="windows"] .tb-rail-account small { font-size: 12px; color: var(--wf-text-secondary); }
+    :root[data-desktop="windows"] .tb-rail-actions { display: flex; gap: 4px; margin: 0 4px; }
+    :root[data-desktop="windows"] .tb-rail-actions .tb-icon-btn { flex: 1 1 0; width: 40px; height: 36px; border-radius: 4px; color: var(--md-on-surface); }
+    :root[data-desktop="windows"] .tb-rail-actions .tb-icon-btn .pi { font-size: 16px; }
+    :root[data-desktop="windows"] .tb-prefs-btn.tb-prefs-on { background: var(--wf-subtle-hover); }
+    /* The menu of the accounts: a flyout beside the pane, or above the account when it is open */
+    :root[data-desktop="windows"] .tb-accounts-menu { left: calc(100% + 4px); bottom: 0; width: 320px; padding: 4px; border-color: var(--tb-glass-line); }
+}
+
+/* The menu of the accounts as a MenuFlyout: items of 14 px, 4 px corners */
+:root[data-desktop="windows"] .tb-accounts-menu .tb-sheet-item { min-height: 36px; padding: 0 12px; border-radius: 4px; font-size: 14px; font-weight: 400; }
+:root[data-desktop="windows"] .tb-accounts-menu .tb-sheet-item .pi { font-size: 16px; }
+:root[data-desktop="windows"] .tb-accounts-menu .tb-avatar { width: 32px; height: 32px; font-size: 13px; }
+:root[data-desktop="windows"] .tb-account { border-radius: 4px; }
+/* The page under the title bar: its corner straightens (TbDesktopChrome, html.tb-win-scrolled) */
+:root[data-desktop="windows"].tb-win-scrolled body.tb-app::before { border-top-left-radius: 0; border-top-color: transparent; }
+:root[data-desktop="windows"].tb-win-scrolled .tb-app .tb-background-page { border-top-left-radius: 0; }
+
+/* LeftCompact: the icons only (folded, or a window less than 1200 px wide) */
+@media (min-width: 841px) and (max-width: 1199px) {
+    :root[data-desktop="windows"] :is(.tb-dest-label, .tb-rail-account-text, .tb-rail-account-arrow) { display: none; }
+    :root[data-desktop="windows"] .tb-rail-actions { display: contents; }
+    :root[data-desktop="windows"] .tb-rail-actions .tb-icon-btn { flex: none; margin: 0 4px; }
+}
+@media (min-width: 1200px) {
+    :root[data-desktop="windows"][data-sidebar="collapsed"] :is(.tb-dest-label, .tb-rail-account-text, .tb-rail-account-arrow) { display: none; }
+    :root[data-desktop="windows"][data-sidebar="collapsed"] .tb-rail-actions { display: contents; }
+    :root[data-desktop="windows"][data-sidebar="collapsed"] .tb-rail-actions .tb-icon-btn { flex: none; margin: 0 4px; }
+    :root[data-desktop="windows"]:not([data-sidebar="collapsed"]) .tb-accounts-menu { left: 4px; bottom: calc(100% + 4px); width: calc(100% - 8px); }
+}
+
+/* LeftCompact, the hamburger pressed: the pane opens over the page, in the acrylic of the app */
+@media (min-width: 841px) and (max-width: 1199px) {
+    :root[data-desktop="windows"] .tb-rail.tb-pane-open {
+        z-index: 2950;
+        width: 280px;
+        border-right: 1px solid var(--tb-glass-line);
+        border-radius: 0 8px 8px 0;
+        background: color-mix(in srgb, var(--tb-background) 84%, transparent);
+        -webkit-backdrop-filter: blur(30px) saturate(125%);
+        backdrop-filter: blur(30px) saturate(125%);
+        box-shadow: var(--tb-raised-3);
+        animation: wf-pane-in .25s cubic-bezier(0, 0, 0, 1);
+    }
+    :root[data-desktop="windows"] .tb-pane-open .tb-dest-label { display: inline; }
+    :root[data-desktop="windows"] .tb-pane-open .tb-rail-account-text { display: flex; flex: 1 1 auto; flex-direction: column; min-width: 0; }
+    :root[data-desktop="windows"] .tb-pane-open .tb-rail-account-arrow { display: inline-block; margin: 0 10px 0 auto; }
+    :root[data-desktop="windows"] .tb-pane-open .tb-rail-actions { display: flex; }
+    :root[data-desktop="windows"] .tb-pane-open .tb-rail-actions .tb-icon-btn { flex: 1 1 0; margin: 0; }
+    :root[data-desktop="windows"] .tb-pane-open .tb-accounts-menu { left: 4px; bottom: calc(100% + 4px); width: calc(100% - 8px); }
+}
+@keyframes wf-pane-in { from { width: 48px; } }
+/* Open / folded (Left / LeftCompact): the pane and the page glide to their new width */
+@property --tb-rail { syntax: "<length>"; inherits: true; initial-value: 92px; }
+:root[data-desktop="windows"] { transition: --tb-rail .25s cubic-bezier(0, 0, 0, 1); }
+
+/* Narrow window: the bar at the bottom keeps its look, flat */
+@media (max-width: 840px) {
+    :root[data-desktop="windows"] .tb-rail { margin: 0 !important; inset: auto 0 0 0; background: var(--tb-background); border-top: 1px solid var(--md-outline-variant); box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+    :root[data-desktop="windows"] .tb-dest { font-size: 12px; font-weight: 400; }
+    :root[data-desktop="windows"] .tb-dest.tb-dest-on .tb-dest-icon { background: none; color: var(--md-primary); box-shadow: none; animation: none; }
+    :root[data-desktop="windows"] .tb-dest.tb-dest-on::before { content: ""; position: absolute; left: 50%; bottom: 2px; width: 16px; height: 3px; margin-left: -8px; border-radius: 2px; background: var(--md-primary); }
+}
+@keyframes wf-pill { from { transform: scaleY(0); } }
+
+/* ============================== Backdrop of the window */
+
+/*
+ * Without Acrylic (Windows 10): the page paints the whole window, in the Mica grey of its theme
+ * (html, tokens.css): the side bar shows it.
+ * With Acrylic (Windows 11 22H2 and up, html[data-backdrop="acrylic"]): the window is see-through,
+ * Windows draws its Acrylic behind it, in the theme of the page (main.rs, window_theme). Only the
+ * page itself (the layer right of the pane) is painted: the pane and the title bar are the Acrylic.
+ * The login pages stay painted.
+ */
+:root[data-desktop="windows"] { background-color: var(--tb-background); }
+/* The Acrylic of Windows is a thin veil: tinted here in the colour of the page (its theme, its
+   accent palette, the colour of the room shown in « Maison »), so the pane is as light or as dark
+   as the page and takes its hue */
+:root[data-desktop="windows"][data-backdrop="acrylic"]:has(body.tb-app) { background: transparent; }
+:root[data-desktop="windows"][data-backdrop="acrylic"] body.tb-app { --wf-acrylic-tint: var(--tb-tint-page, var(--tb-background)); }
+:root[data-desktop="windows"][data-backdrop="acrylic"]:is([data-tint="off"], [data-style="panel"]) body.tb-app { --wf-acrylic-tint: var(--tb-background); }
+:root[data-desktop="windows"][data-backdrop="acrylic"] body.tb-app::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -3;
+    background: color-mix(in srgb, var(--wf-acrylic-tint) 66%, transparent);
+    pointer-events: none;
+    transition: background-color .25s linear;
+}
+:root[data-desktop="windows"][data-backdrop="acrylic"][data-theme="dark"] body.tb-app::after { background: color-mix(in srgb, var(--wf-acrylic-tint) 80%, transparent); }
+:root[data-desktop="windows"][data-backdrop="acrylic"] body.tb-app::before { background: var(--tb-background); }
+@media (max-width: 840px) {
+    :root[data-desktop="windows"][data-backdrop="acrylic"] body.tb-app::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: -2;
+        background: var(--tb-background);
+        pointer-events: none;
+    }
+}
+/* The pane on the Acrylic: the hover of its items a little stronger, as WinUI on Acrylic */
+:root[data-desktop="windows"][data-backdrop="acrylic"] {
+    --wf-pane-hover: rgb(0 0 0 / .05);
+}
+:root[data-desktop="windows"][data-backdrop="acrylic"][data-theme="dark"] {
+    --wf-pane-hover: rgb(255 255 255 / .07);
+}
+@media (min-width: 841px) {
+    :root[data-desktop="windows"][data-backdrop="acrylic"] :is(.tb-dest:hover:not(.tb-dest-on), .tb-dest.tb-dest-on, .tb-rail-account:hover, .tb-rail-account[aria-expanded="true"], .tb-rail .tb-icon-btn:hover, .tb-rail-fold:hover, .tb-prefs-btn.tb-prefs-on) { background: var(--wf-pane-hover); }
+}
+
+/* ============================== Motion of WinUI */
+
+/*
+ * The motion of a WinUI 3 app, not the one of the web client:
+ * - curves of Fluent: decelerate cubic-bezier(0, 0, 0, 1), no overshoot; 83 ms for the states of a
+ *   control, 167 ms for a fade, 250 to 333 ms for what comes in;
+ * - a new page comes in as one block (as a Frame: it rises 40 px and fades in, TransitionsService,
+ *   html.tb-win-entering); nothing inside it comes one after the other, no curve draws itself;
+ * - ContentDialog: it fades in from a scale of 1.05; a flyout (menu) slides 8 px from its anchor;
+ * - nothing lifts, tilts or zooms under the pointer; a theme changes at once.
+ */
+:root[data-desktop="windows"] {
+    --tb-ease: cubic-bezier(0, 0, 0, 1);
+    --tb-spring: cubic-bezier(0, 0, 0, 1);
+    --tb-fast: .083s;
+    --tb-medium: .167s;
+}
+
+/* A page */
+:root[data-desktop="windows"].tb-win-entering .tb-main { animation: wf-page-in .333s cubic-bezier(0, 0, 0, 1) backwards; }
+@keyframes wf-page-in {
+    from { opacity: 0; transform: translateY(40px); }
+    50% { opacity: 1; }
+}
+
+/* What the web client animates and a Windows app doesn't */
+:root[data-desktop="windows"] :is(
+    .tb-spark-new svg, .tb-spark-new .tb-spark-fill, .tb-spark-new .tb-spark-caption, .tb-spark-new .tb-spark-dot, .tb-spark-empty.tb-spark-new,
+    .tb-empty-icon, .tb-public, .tb-auth .tb-logo-xl,
+    .tb-head-actions .tb-fav-on .pi, .tb-summary-chip.tb-chip-on, .tb-summary-chip.tb-chip-on .tb-chip-check, .tb-in-selection .tb-mgmt-check,
+    .tb-dial-center em.tb-dial-new, .tb-dial-adjusting .tb-dial-target, .tb-dial-step button.tb-held, .tb-ripple-wave
+) { animation: none; }
+:root[data-desktop="windows"] .tb-spark-dot::after,
+:root[data-desktop="windows"] .tb-tone-hot .tb-state::before { animation: none; }
+:root[data-desktop="windows"] :is(
+    .tb-summary-chip, .tb-summary-chip:hover, .tb-summary-chip:active, .tb-room:has(.tb-stretched:active), .tb-room:hover .tb-room-media img,
+    .tb-box:hover, .tb-series-chip:hover, .tb-dest:hover .tb-dest-icon, .tb-icon-btn:hover, .tb-icon-btn:active, .tb-section-toggle:hover .tb-section-icon,
+    .tb-btn:active, .tb-stepper button:active, .tb-accent:hover:not(:disabled), a:hover > .tb-logo, .tb-dial-step button:active,
+    .tb-room.tb-cell:has(.tb-stretched:active), .tb-room.tb-room-tile:has(.tb-stretched:active)
+) { transform: none; }
+/* Buttons that come into a row: they fade in */
+:root[data-desktop="windows"] .tb-enter { animation: wf-fade-in .167s linear both; }
+:root[data-desktop="windows"] .tb-sort { animation: wf-fade-out .083s linear both; }
+/* The selected option of a SelectorBar: its line, not a sliding pill */
+:root[data-desktop="windows"] .tb-seg-pill { display: none; }
+:root[data-desktop="windows"] .tb-segmented > button.tb-seg-on::after { animation: wf-line .25s cubic-bezier(0, 0, 0, 1); }
+@keyframes wf-line { from { transform: scaleX(0); } }
+/* Pictures of the rooms */
+:root[data-desktop="windows"] :is(.tb-photo > img, .tb-photo tb-photo-img > img) { animation: wf-fade-in .167s linear; }
+
+/* ContentDialog, with its smoke behind */
+:root[data-desktop="windows"] .tb-scrim { animation: wf-fade-in .167s linear; }
+:root[data-desktop="windows"] .tb-scrim.tb-scrim-closed { animation: wf-fade-out .083s linear forwards; }
+:root[data-desktop="windows"] .tb-scrim .tb-dialog { animation: wf-dialog-in .25s cubic-bezier(0, 0, 0, 1); }
+:root[data-desktop="windows"] .tb-scrim .tb-dialog.tb-closing { animation: wf-dialog-out .167s cubic-bezier(1, 0, 1, 1) forwards; }
+:root[data-desktop="windows"] .tb-sheet-native .tb-dialog { animation: none; }
+@keyframes wf-dialog-in { from { opacity: 0; transform: scale(1.05); } 40% { opacity: 1; } }
+@keyframes wf-dialog-out { to { opacity: 0; transform: scale(1.05); } }
+
+/* Flyouts (the menu of the accounts), notifications */
+:root[data-desktop="windows"] .tb-menu-enter { animation: wf-flyout-in .25s cubic-bezier(0, 0, 0, 1) both; }
+:root[data-desktop="windows"] .tb-menu-sort { animation: wf-fade-out .083s linear both; }
+@keyframes wf-flyout-in { from { opacity: 0; transform: translateY(8px); } 30% { opacity: 1; } }
+:root[data-desktop="windows"] .tb-toast { animation: wf-flyout-in .25s cubic-bezier(0, 0, 0, 1); }
+
+/* The room card that opens into its page: the connected animation of WinUI */
+:root[data-desktop="windows"]::view-transition-group(*.tb-card) { animation-duration: .333s; animation-timing-function: cubic-bezier(.1, .9, .2, 1); }
+:root[data-desktop="windows"]::view-transition-old(*.tb-card) { animation: tb-fade-out .167s linear both; }
+:root[data-desktop="windows"]::view-transition-new(*.tb-card) { animation: tb-fade-in .167s .083s linear both; }
+/* The colour of the page: a short cross-fade */
+:root[data-desktop="windows"].tb-tone-fade::view-transition-old(root) { animation: tb-kept .25s both; }
+:root[data-desktop="windows"].tb-tone-fade::view-transition-new(root) { animation: wf-fade-in .25s linear both; }
+
+@keyframes wf-fade-in { from { opacity: 0; } }
+@keyframes wf-fade-out { to { opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+    :root[data-desktop="windows"] :is(.tb-main, .tb-dialog, .tb-scrim, .tb-menu-enter, .tb-toast) { animation-duration: 1ms !important; }
+}
+
+/* ============================== Scroll bars of the lists inside the page */
+
+:root[data-desktop="windows"] * { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--md-on-surface) 40%, transparent) transparent; }

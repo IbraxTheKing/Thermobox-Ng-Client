@@ -2,7 +2,7 @@ import { DOCUMENT } from '@angular/common';
 import { Injectable, computed, effect, inject, signal } from '@angular/core';
 
 import { StyleSite } from '../models/models';
-import { TAURI } from './tauri';
+import { DESKTOP_OS, TAURI } from './tauri';
 import { HomeColors } from './colors';
 
 export type Theme = 'light' | 'dark';
@@ -146,7 +146,8 @@ export class PreferencesService {
     const before = this.theme();
     const after: Theme = choice === 'auto' ? (this.systemDark() ? 'dark' : 'light') : choice;
     const doc = this.doc as Document & { startViewTransition?: (f: () => void) => { finished: Promise<void> } };
-    if (before === after || !from || !doc.startViewTransition || this.reducedMotion()) {
+    // Windows app: the theme changes at once, as Windows does
+    if (before === after || !from || !doc.startViewTransition || this.reducedMotion() || DESKTOP_OS === 'windows') {
       this.themeChoice.set(choice);
       return;
     }

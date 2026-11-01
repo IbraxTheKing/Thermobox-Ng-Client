@@ -10,6 +10,7 @@ import {
   effect,
   inject,
   signal,
+  untracked,
   viewChild,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -202,6 +203,7 @@ export class Shell implements OnInit, OnDestroy {
     this.native.leave();
     removeEventListener('scroll', this.onScrolling);
     removeEventListener('resize', this.onResize);
+    this.doc.removeEventListener('pointerdown', this.closePane, { capture: true });
     clearInterval(this.timer);
   }
 
@@ -212,10 +214,37 @@ export class Shell implements OnInit, OnDestroy {
 
   protected onDestination(): void {
     this.platform.vibrate();
+    this.paneOpen.set(false);
   }
+
+  /**
+   * Windows app, window less than 1200 px wide: the pane of icons opens over the page with the
+   * names (NavigationView LeftCompact), until a page is chosen or the page clicked. Its button is
+   * in the title bar (TbDesktopChrome).
+   */
+  protected readonly paneOpen = signal(false);
+  private readonly paneButton = effect(() => {
+    if (this.desktop.paneToggles()) untracked(() => this.fold());
+  });
+  private readonly closePane = (e: Event) => {
+    if ((e.target as Element | null)?.closest?.('.tb-rail, .tb-titlebar-pane')) return;
+    this.paneOpen.set(false);
+    this.doc.removeEventListener('pointerdown', this.closePane, { capture: true });
+  };
 
   /** The side bar of computers: names and icons, or icons only (morphs where it can). */
   protected fold(): void {
+    if (this.desktop.windows) {
+      // As NavigationView: the pane opens or closes at once (windows.css), no picture morphing
+      if (innerWidth < 1200) {
+        this.paneOpen.update((o) => !o);
+        if (this.paneOpen()) setTimeout(() => this.doc.addEventListener('pointerdown', this.closePane, { capture: true }));
+        else this.doc.removeEventListener('pointerdown', this.closePane, { capture: true });
+        return;
+      }
+      this.prefs.sidebarCollapsed.update((r) => !r);
+      return;
+    }
     const change = () => this.prefs.sidebarCollapsed.update((r) => !r);
     const doc = this.doc as Document & { startViewTransition?: (f: () => void) => unknown };
     if (!doc.startViewTransition || !this.prefs.animate()) return change();

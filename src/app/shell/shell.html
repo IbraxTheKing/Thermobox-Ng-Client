@@ -9,7 +9,7 @@
 </header>
 
 <!-- Navigation rail (wide screens), bar at the bottom (phones) -->
-<nav class="tb-rail" [class.tb-lens-held]="input()" aria-label="Navigation principale" (transitionend)="placeLens()" [attr.data-tauri-drag-region]="desktop.mac ? '' : null">
+<nav class="tb-rail" [class.tb-lens-held]="input()" [class.tb-pane-open]="paneOpen()" aria-label="Navigation principale" (transitionend)="placeLens()" [attr.data-tauri-drag-region]="desktop.mac ? '' : null">
   <a routerLink="/app/overview" class="tb-rail-brand" title="Thermobox"><span class="tb-logo" aria-hidden="true"></span><span class="tb-rail-brand-name">Thermobox</span></a>
   <!-- Computers: the side bar folds into a rail of icons, and back -->
   <button type="button" class="tb-rail-fold" (click)="fold()"

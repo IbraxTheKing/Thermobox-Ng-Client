@@ -9,6 +9,7 @@
  * shell-ios.css      Liquid Glass on iOS
  * shell-android.css  Material 3 on Android
  * desktop.css    the desktop app (Tauri): title bar of Windows, macOS under the traffic lights
+ * windows.css    the Windows app: Fluent 2 / WinUI 3 look
  */
 
 /* Tailwind utilities stay available; its reset (preflight) is left out: the pages rely on the
@@ -31,3 +32,4 @@
 @import './styles/theme-pages.css';
 @import './styles/theme-ios.css';
 @import './styles/desktop.css';
+@import './styles/windows.css';

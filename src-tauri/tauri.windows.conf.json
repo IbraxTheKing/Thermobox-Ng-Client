@@ -11,7 +11,9 @@
         "minHeight": 560,
         "center": true,
         "dragDropEnabled": false,
-        "shadow": true
+        "decorations": false,
+        "shadow": true,
+        "transparent": true
       }
     ]
   }

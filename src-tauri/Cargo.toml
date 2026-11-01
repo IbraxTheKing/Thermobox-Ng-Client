@@ -25,7 +25,7 @@ serde_json = "1"
 [target.'cfg(windows)'.dependencies]
 # Snap layouts of Windows 11 from the maximize button of the title bar drawn by the page; the
 # accent colour of Windows (Préférences › Accent de couleur › Système)
-windows-sys = { version = "0.59", features = ["Win32_Foundation", "Win32_System_Registry", "Win32_UI_Input_KeyboardAndMouse"] }
+windows-sys = { version = "0.59", features = ["Win32_Foundation", "Win32_Graphics_Dwm", "Win32_System_Registry", "Win32_UI_Input_KeyboardAndMouse"] }
 
 [profile.release]
 codegen-units = 1

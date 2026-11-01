@@ -14,10 +14,17 @@ export type { DesktopOs } from './tauri';
  *   content between the tauri:// page of macOS / Linux and a server in plain http on the local
  *   network. The page's own files stay with the webview.
  * - the settings window (macOS) opens on index.html?view=settings: its page is /settings.
+ * - Windows 11: the window has the Acrylic backdrop of the system (main.rs): html[data-backdrop]
+ *   leaves the side bar and the title bar clear for it (windows.css).
  */
 export async function prepareDesktop(): Promise<void> {
   if (!TAURI) return;
   document.documentElement.dataset['desktop'] = DESKTOP_OS!;
+  if (DESKTOP_OS === 'windows') {
+    const { invoke } = await import('@tauri-apps/api/core');
+    const backdrop = await invoke<string | null>('window_backdrop').catch(() => null);
+    if (backdrop) document.documentElement.dataset['backdrop'] = backdrop;
+  }
   const view = new URLSearchParams(location.search).get('view');
   if (view === 'settings') {
     document.documentElement.dataset['desktopWindow'] = 'settings';
@@ -67,6 +74,13 @@ export class DesktopService {
   /** This window is the settings window (macOS). */
   readonly settingsWindow = this.doc.documentElement.dataset['desktopWindow'] === 'settings';
 
+  /** Windows: the button of the title bar that opens or folds the side bar (the shell listens). */
+  readonly paneToggles = signal(0);
+
+  togglePane(): void {
+    this.paneToggles.update((n) => n + 1);
+  }
+
   /** Windows: the window fills the screen (the maximize button becomes « restore »). */
   readonly maximized = signal(false);
   readonly name = computed(() => ({ macos: 'macOS', windows: 'Windows', linux: 'Linux' })[this.os ?? 'linux']);
@@ -85,14 +99,19 @@ export class DesktopService {
       if (e.payload === 'about') void this.router.navigateByUrl(this.auth.user() ? '/app/about' : '/about');
     });
     if (this.windows) {
+      // (index.html has already told main.rs that the page draws its title bar)
       const { getCurrentWindow } = await import('@tauri-apps/api/window');
       const w = getCurrentWindow();
-      // The native title bar until here: a page that could not load leaves a window that can still
-      // be moved and closed. Now the page draws its own (TbDesktopChrome).
-      await w.setDecorations(false);
       this.maximized.set(await w.isMaximized());
       await w.onResized(async () => this.maximized.set(await w.isMaximized()));
     }
+  }
+
+  /** Windows: the theme shown by the page for the window (the tint of its Acrylic). */
+  async windowTheme(theme: 'light' | 'dark'): Promise<void> {
+    if (!this.windows) return;
+    const { invoke } = await import('@tauri-apps/api/core');
+    await invoke('window_theme', { theme });
   }
 
   /** The settings: their window on macOS, the page elsewhere. */
