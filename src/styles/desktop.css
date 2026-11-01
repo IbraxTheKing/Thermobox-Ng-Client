@@ -1,0 +1,140 @@
+/*
+ * The desktop app (Tauri): html[data-desktop="windows|macos|linux"] (src/app/core/desktop.ts).
+ *
+ * - Windows: the title bar of WinUI 3, drawn by the page (TbDesktopChrome). 32 px, the page
+ *   scrolls under it, blurred, as the Mica Alt / acrylic title bars of Windows 11.
+ * - macOS: the page is under the title bar (titleBarStyle Overlay); the traffic lights sit in the
+ *   top left corner of the side bar, a strip lets the window be dragged.
+ * - Linux: the desktop draws the title bar: nothing here.
+ */
+
+/* ============================== Pages outside the app: login settings, About, settings window */
+
+.tb-auth-corner {
+    position: fixed;
+    top: calc(14px + var(--tb-chrome-top, 0px) + env(safe-area-inset-top));
+    right: calc(18px + env(safe-area-inset-right));
+    z-index: 20;
+    display: flex;
+    gap: 4px;
+}
+.tb-auth-corner-btn { min-height: 36px; padding: 0 12px; color: var(--md-on-surface-variant); }
+.tb-auth-corner-btn:hover { color: var(--md-on-surface); }
+@media (max-width: 520px) {
+    .tb-auth-corner-btn span { display: none; }
+    .tb-auth-corner-btn { width: 40px; padding: 0; justify-content: center; }
+}
+
+:root body .tb-main.tb-standalone {
+    display: block;
+    max-width: 820px;
+    min-height: 0;
+    margin: 0 auto;
+    padding: 24px 28px 64px;
+}
+.tb-standalone-back { margin: 0 0 4px -10px; }
+.tb-standalone .tb-narrow { max-width: none; }
+/* The settings window of macOS: the window is the page, its title under the traffic lights */
+:root body .tb-main.tb-standalone-window { padding-top: 38px; }
+
+/* ============================== Windows: WinUI 3 title bar */
+
+:root[data-desktop="windows"] {
+    --tb-chrome-top: 32px;
+    --tb-caption-hover: rgb(0 0 0 / .0373);
+    --tb-caption-press: rgb(0 0 0 / .0241);
+}
+:root[data-desktop="windows"][data-theme="dark"] {
+    --tb-caption-hover: rgb(255 255 255 / .0605);
+    --tb-caption-press: rgb(255 255 255 / .0419);
+}
+/* The page starts under the bar, and scrolls under it */
+:root[data-desktop="windows"] body { padding-top: var(--tb-chrome-top); }
+
+.tb-titlebar {
+    position: fixed;
+    inset: 0 0 auto 0;
+    z-index: 3000;
+    display: flex;
+    align-items: center;
+    height: var(--tb-chrome-top);
+    padding-left: 16px;
+    /* Over the page: what scrolls under it is blurred (acrylic of Windows 11) */
+    background: color-mix(in srgb, var(--tb-background) 72%, transparent);
+    -webkit-backdrop-filter: blur(22px) saturate(160%);
+    backdrop-filter: blur(22px) saturate(160%);
+    border-bottom: 1px solid transparent;
+    color: var(--md-on-surface);
+    font: 12px / 16px "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: background-color .2s ease, border-color .2s ease;
+}
+.tb-titlebar.tb-titlebar-scrolled {
+    background: color-mix(in srgb, var(--tb-background) 58%, transparent);
+    border-bottom-color: var(--md-outline-variant);
+}
+/* Only the bar itself starts a drag (data-tauri-drag-region): its texts let the pointer through */
+.tb-titlebar-icon, .tb-titlebar-title { pointer-events: none; }
+.tb-titlebar-icon {
+    width: 16px;
+    height: 16px;
+    margin-right: 16px;
+    border-radius: 4px;
+    background: url("/icons/icon-192.png") center / cover no-repeat;
+}
+.tb-titlebar-title { flex: 1 1 auto; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.tb-titlebar-page { color: var(--md-on-surface-variant); }
+.tb-titlebar-buttons { display: flex; align-self: stretch; }
+.tb-caption {
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: var(--md-on-surface);
+    font: 10px / 1 "Segoe Fluent Icons", "Segoe MDL2 Assets";
+    cursor: default;
+    transition: background-color .1s linear, color .1s linear;
+}
+.tb-caption:hover { background: var(--tb-caption-hover); }
+.tb-caption:active { background: var(--tb-caption-press); color: color-mix(in srgb, var(--md-on-surface) 60%, transparent); }
+.tb-caption-close:hover { background: #c42b1c; color: #fff; }
+.tb-caption-close:active { background: rgb(196 43 28 / .9); color: rgb(255 255 255 / .7); }
+.tb-caption:focus-visible { outline: 2px solid var(--md-on-surface); outline-offset: -2px; }
+/* Window in the background: the texts and glyphs fade, as WinUI 3 */
+.tb-titlebar-inactive .tb-titlebar-title, .tb-titlebar-inactive .tb-caption:not(:hover) { color: color-mix(in srgb, var(--md-on-surface) 40%, transparent); }
+
+/* What is fixed to the top of the window goes under the bar */
+:root[data-desktop="windows"] .tb-rail { margin-top: var(--tb-chrome-top); }
+@media (min-width: 1200px) and (not ((orientation: landscape) and (max-height: 520px))) {
+    :root[data-desktop="windows"]:not([data-sidebar="collapsed"]) .tb-rail { margin-top: calc(14px + var(--tb-chrome-top)); }
+}
+:root[data-desktop="windows"] .tb-topbar { top: var(--tb-chrome-top); }
+:root[data-desktop="windows"] .tb-toasts { top: calc(20px + var(--tb-chrome-top)); }
+:root[data-desktop="windows"] .tb-public .tb-main { min-height: calc(100dvh - var(--tb-chrome-top)); }
+/* A sheet or window of the page never covers the bar */
+:root[data-desktop="windows"] :is(.tb-sheet, .tb-dialog) { max-height: calc(100dvh - var(--tb-chrome-top) - 24px); }
+
+/* ============================== macOS: under the traffic lights */
+
+.tb-mac-drag {
+    position: fixed;
+    inset: 0 0 auto 0;
+    z-index: 40;
+    height: 28px;
+}
+/* The traffic lights (about 70 × 28 px from the top left corner) inside the side bar */
+:root[data-desktop="macos"] .tb-rail { padding-top: 44px; }
+:root[data-desktop="macos"] .tb-rail-fold { top: 44px; }
+@media (min-width: 1200px) and (not ((orientation: landscape) and (max-height: 520px))) {
+    :root[data-desktop="macos"]:not([data-sidebar="collapsed"]) .tb-rail { padding-top: 48px; }
+    :root[data-desktop="macos"]:not([data-sidebar="collapsed"]) .tb-rail-fold { top: 46px; }
+}
+:root[data-desktop="macos"] .tb-topbar { padding-left: 84px; }
+:root[data-desktop="macos"] .tb-auth-corner { top: 10px; }
+/* The fonts of the system on a Mac app, the figures stay ThermoBox's */
+:root[data-desktop="macos"] body { -webkit-font-smoothing: antialiased; }

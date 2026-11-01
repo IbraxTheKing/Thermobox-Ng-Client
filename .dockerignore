@@ -12,3 +12,6 @@ dist
 coverage
 npm-debug.log*
 .DS_Store
+
+# Desktop app (Tauri): not part of the web image
+src-tauri

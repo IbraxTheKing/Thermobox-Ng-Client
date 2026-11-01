@@ -1,0 +1,18 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "Thermobox",
+        "width": 1280,
+        "height": 820,
+        "minWidth": 380,
+        "minHeight": 560,
+        "center": true,
+        "dragDropEnabled": false,
+        "shadow": true
+      }
+    ]
+  }
+}

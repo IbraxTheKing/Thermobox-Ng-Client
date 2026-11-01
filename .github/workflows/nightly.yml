@@ -29,6 +29,9 @@ concurrency:
 jobs:
   nightly:
     runs-on: ubuntu-latest
+    outputs:
+      build: ${{ steps.version.outputs.build }}
+      tag: ${{ steps.version.outputs.tag }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -146,3 +149,12 @@ jobs:
             --prerelease \
             --title "$tag ($(date -u +%Y-%m-%d), ${{ steps.version.outputs.branch }})" \
             --generate-notes
+
+  # Windows, macOS and Linux apps, added to the same pre-release (desktop.yml)
+  desktop:
+    needs: nightly
+    if: needs.nightly.outputs.build == 'true'
+    uses: ./.github/workflows/desktop.yml
+    with:
+      tag: ${{ needs.nightly.outputs.tag }}
+    secrets: inherit

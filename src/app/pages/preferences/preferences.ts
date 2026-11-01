@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ChangeDetectionStrategy, Component, booleanAttribute, computed, inject, input } from '@angular/core';
+import { NgTemplateOutlet, Location } from '@angular/common';
+import { Router, RouterLink } from '@angular/router';
 
 import { AuthService } from '../../core/auth';
 import { KeyboardService } from '../../core/keyboard';
@@ -7,6 +8,7 @@ import { PlatformService } from '../../core/platform';
 import { ThemeChoice, PreferencesService } from '../../core/preferences';
 import { ServerFeaturesService } from '../../services/server-features.service';
 import { TbSwitch } from '../../ui/controls';
+import { DesktopService } from '../../core/desktop';
 import { AccentService, DEFAULT_SWATCH, PALETTES, swatch } from '../../core/accent';
 
 /**
@@ -16,7 +18,7 @@ import { AccentService, DEFAULT_SWATCH, PALETTES, swatch } from '../../core/acce
  */
 @Component({
   selector: 'tb-preferences',
-  imports: [TbSwitch, RouterLink],
+  imports: [TbSwitch, RouterLink, NgTemplateOutlet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './preferences.html',
 })
@@ -27,6 +29,24 @@ export class PreferencesPage {
   protected readonly platform = inject(PlatformService);
   protected readonly accent = inject(AccentService);
   protected readonly features = inject(ServerFeaturesService);
+  protected readonly desktop = inject(DesktopService);
+  private readonly router = inject(Router);
+  private readonly location = inject(Location);
+
+  /**
+   * Outside the app (route data): from the login page, or the settings window of macOS. The
+   * settings of this device only: no About, no server.
+   */
+  readonly standalone = input(false, { transform: booleanAttribute });
+  /** « Réglages » on a Mac, as its apps name them; « Paramètres » from the login page (its button). */
+  protected get heading(): string {
+    return this.desktop.mac ? 'Réglages' : this.standalone() ? 'Paramètres' : 'Préférences';
+  }
+
+  protected back(): void {
+    if (history.length > 1) this.location.back();
+    else void this.router.navigateByUrl('/login');
+  }
 
   protected readonly themes: { id: ThemeChoice; label: string; icon: string }[] = [
     { id: 'light', label: 'Clair', icon: 'pi-sun' },
@@ -46,6 +66,8 @@ export class PreferencesPage {
   protected readonly hasKeyboard = matchMedia('(hover: hover) and (pointer: fine)').matches;
   /** The side bar of computers (the web on a wide screen). */
   protected readonly hasSidebar = this.platform.platform === 'web' && this.hasKeyboard;
-  protected readonly platformName = { ios: 'iOS (Liquid Glass)', android: 'Android (Material 3)', web: 'Web (ThermoBox)' }[this.platform.platform];
+  protected readonly platformName = this.desktop.active
+    ? `Application ${this.desktop.name()}`
+    : { ios: 'iOS (Liquid Glass)', android: 'Android (Material 3)', web: 'Web (ThermoBox)' }[this.platform.platform];
 
 }

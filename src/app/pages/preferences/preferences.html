@@ -1,8 +1,24 @@
+<!--
+  The same page three ways: in the app (/app/preferences), from the login page (/settings, with a
+  way back) and in the settings window of macOS (/settings, the window is the page).
+-->
+@if (standalone()) {
+  <main class="tb-main tb-standalone" [class.tb-standalone-window]="desktop.settingsWindow">
+    @if (!desktop.settingsWindow) {
+      <button type="button" class="tb-btn tb-flat tb-standalone-back" (click)="back()"><i class="pi pi-arrow-left"></i>Retour</button>
+    }
+    <ng-container [ngTemplateOutlet]="page" />
+  </main>
+} @else {
+  <ng-container [ngTemplateOutlet]="page" />
+}
+
+<ng-template #page>
 <div class="tb-narrow">
   <header class="tb-page-head">
     <div class="tb-page-title">
       <span class="tb-eyebrow">Mon expérience</span>
-      <h1>Préférences</h1>
+      <h1>{{ heading }}</h1>
     </div>
   </header>
 
@@ -152,7 +168,7 @@
   }
 
   <!-- Every user's look, chosen by an ADMIN -->
-  @if (auth.admin()) {
+  @if (auth.admin() && !standalone()) {
 
     <!-- The server itself: its resources, updates, logo and limits have their own page -->
     <a routerLink="/app/server" class="tb-list-group tb-pref-about">
@@ -163,7 +179,9 @@
       </span>
     </a>
   }
-  <!-- Versions, repositories and credits (also behind « Plus » on phones) -->
+  <!-- Versions, repositories and credits (also behind « Plus » on phones); not in the settings of
+       the login page nor in the settings window: « À propos » has its own button there -->
+  @if (!standalone()) {
   <a routerLink="/app/about" class="tb-list-group tb-pref-about">
     <span class="tb-list-row">
       <span class="tb-list-icon"><i class="pi pi-info-circle"></i></span>
@@ -171,4 +189,6 @@
       <i class="pi pi-angle-right tb-list-continuation"></i>
     </span>
   </a>
+  }
 </div>
+</ng-template>

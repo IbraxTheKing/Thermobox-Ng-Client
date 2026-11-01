@@ -3,6 +3,7 @@ import { Injectable, InjectionToken, computed, inject, signal } from '@angular/c
 import { Capacitor } from '@capacitor/core';
 
 import { environment } from '../../environments/environment';
+import { TAURI } from './tauri';
 
 /**
  * Default address of the ThermoBox REST API, before the user has chosen one on the login page.
@@ -11,7 +12,8 @@ import { environment } from '../../environments/environment';
  */
 export const API_BASE_URL = new InjectionToken<string>('API_BASE_URL', {
   providedIn: 'root',
-  factory: () => (Capacitor.isNativePlatform() ? environment.apiNative : environment.apiWeb),
+  // The apps (iOS, Android, desktop) have no server next to them: the address is asked
+  factory: () => (Capacitor.isNativePlatform() || TAURI ? environment.apiNative : environment.apiWeb),
 });
 
 const KEY = 'tb-server';
@@ -118,6 +120,8 @@ export function toInstant(value: Date | string): string {
 /** Message to show for a failed request: the server's when it gave one. */
 export function errorMessage(err: unknown, fallback = 'Erreur inattendue'): string {
   if (err instanceof HttpErrorResponse) {
+    // No answer at all (offline, wrong address, refused): the network error says nothing more
+    if (err.status === 0 && (err.error == null || err.error instanceof Error || err.error instanceof ProgressEvent)) return 'Le serveur ThermoBox ne répond pas';
     const body = err.error as { error?: string; message?: string } | string | null;
     if (body && typeof body === 'object') {
       if (body.error) return body.error;

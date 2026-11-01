@@ -23,6 +23,20 @@ export const routes: Routes = [
     canActivate: [publicGuard],
     loadComponent: () => import('./pages/auth/register').then((m) => m.RegisterPage),
   },
+  // Without an account (the buttons of the login page; the settings window of macOS): the
+  // settings of this device, and À propos
+  {
+    path: 'settings',
+    title: 'Paramètres',
+    data: { standalone: true },
+    loadComponent: () => import('./pages/preferences/preferences').then((m) => m.PreferencesPage),
+  },
+  {
+    path: 'about',
+    title: 'À propos',
+    data: { standalone: true },
+    loadComponent: () => import('./pages/about/about').then((m) => m.AboutPage),
+  },
   {
     path: 'app',
     canActivate: [loggedInGuard],

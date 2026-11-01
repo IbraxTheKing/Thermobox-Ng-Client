@@ -2,10 +2,13 @@
 
 Mobile-first client of **[ThermoBox](https://github.com/IbraxTheKing/ThermoBox)** (temperature
 monitoring per building, floor and room): the former JSF client of the server, redone in Angular on
-top of its REST API. One app for the web, the PWA and the iOS / Android apps.
+top of its REST API. One app for the web, the PWA, the iOS / Android apps and the Windows / macOS /
+Linux apps.
 
 - Angular 22: standalone components, no zone.js, signals, `OnPush`, lazy-loaded routes
 - PWA (service worker, manifest, icons) **and** native apps with Capacitor 8
+- Desktop apps for Windows, macOS and Linux with Tauri 2 (`src-tauri/`, [docs/desktop.md](docs/desktop.md)):
+  WinUI 3 style title bar on Windows, settings in the menu bar and their own window on macOS
 - A ThermoBox interface whose "shell" (tab bar, top bar, sheets, notifications) takes the style of
   the platform, detected automatically:
   - **iOS**: Liquid Glass (glass capsule tab bar, a lens that can be held and slid, a bar that
@@ -140,6 +143,8 @@ Same workflows as the server (`.github/workflows`):
 - **Nightly** (`nightly.yml`): every night, builds `dev/<series>`, else `dev`, and publishes
   `<series>.0-nightly.N` when there are new commits. The cron only reads the file on the default
   branch (`main`)
+- **Desktop apps** (`desktop.yml`): the Windows, macOS and Linux apps, added to each of these
+  releases (and built on each change of `src-tauri/`); see [docs/desktop.md](docs/desktop.md)
 
 ## Production
 
@@ -267,21 +272,22 @@ installed app is shown separately in **About**.
 ```
 scripts/          build.mjs (build with the version), version.mjs, android.mjs (Android project)
 plugins/          thermobox-native: native Material 3 components of the Android app
+src-tauri/        desktop app (Tauri 2): window, menu bar of macOS, title bar of Windows
 src/app/core      session, HTTP, API v1 / v2, preferences, platform, transitions and animations, versions, units…
 src/app/services  access to the REST API
 src/app/ui        sheets, notifications, switches, chart, access tree, server logo…
 src/app/shell     shell: navigation suited to the platform, "More" tab
 src/app/pages     login, overview, rooms, room, measurements, management, users, updates,
                   profile, preferences, more, about
-src/styles        tokens and base styles, iOS / Android layers, phone, motion
+src/styles        tokens and base styles, iOS / Android / desktop layers, phone, motion
 mock/             demo REST server (v1 and v2)
 nginx/, Dockerfile, compose.yaml   production image
-.github/          workflows (check, release, beta / rc, nightly, Docker), android action
+.github/          workflows (check, release, beta / rc, nightly, desktop, Docker), android action
 ```
 
 ## Credits
 
 ThermoBox is designed and developed by [ib · IbraxTheKing](https://github.com/IbraxTheKing).
-This client uses Angular, Capacitor, Chart.js, PrimeIcons, the Manrope font (SIL Open Font License)
+This client uses Angular, Capacitor, Tauri, Chart.js, PrimeIcons, the Manrope font (SIL Open Font License)
 and Tailwind CSS. The server is in the [ThermoBox](https://github.com/IbraxTheKing/ThermoBox)
 repository (MIT license).

@@ -9,7 +9,7 @@
 </header>
 
 <!-- Navigation rail (wide screens), bar at the bottom (phones) -->
-<nav class="tb-rail" [class.tb-lens-held]="input()" aria-label="Navigation principale" (transitionend)="placeLens()">
+<nav class="tb-rail" [class.tb-lens-held]="input()" aria-label="Navigation principale" (transitionend)="placeLens()" [attr.data-tauri-drag-region]="desktop.mac ? '' : null">
   <a routerLink="/app/overview" class="tb-rail-brand" title="Thermobox"><span class="tb-logo" aria-hidden="true"></span><span class="tb-rail-brand-name">Thermobox</span></a>
   <!-- Computers: the side bar folds into a rail of icons, and back -->
   <button type="button" class="tb-rail-fold" (click)="fold()"
@@ -74,9 +74,12 @@
       <tb-accounts mode="menu" [(open)]="accounts" />
     </div>
     <div class="tb-rail-actions">
-      <a routerLink="/app/preferences" class="tb-icon-btn tb-prefs-btn" routerLinkActive="tb-prefs-on" title="Préférences" aria-label="Préférences">
-        <i class="pi pi-sliders-v"></i>
-      </a>
+      <!-- macOS app: the settings are in the menu bar (Thermobox › Réglages…) -->
+      @if (!desktop.settingsInMenu) {
+        <a routerLink="/app/preferences" class="tb-icon-btn tb-prefs-btn" routerLinkActive="tb-prefs-on" title="Préférences" aria-label="Préférences">
+          <i class="pi pi-sliders-v"></i>
+        </a>
+      }
       <button type="button" class="tb-icon-btn tb-logout" (click)="logout()" title="Déconnexion" aria-label="Déconnexion">
         <i class="pi pi-sign-out"></i>
       </button>

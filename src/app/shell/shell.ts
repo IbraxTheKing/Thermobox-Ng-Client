@@ -23,6 +23,7 @@ import { KeyboardService } from '../core/keyboard';
 import { ActivityService } from '../core/http';
 import { PlatformService } from '../core/platform';
 import { PreferencesService } from '../core/preferences';
+import { DesktopService } from '../core/desktop';
 import { TitleService } from '../core/title';
 import { TransitionsService } from '../core/transitions';
 import { SettingsService } from '../services/settings.service';
@@ -72,6 +73,7 @@ export class Shell implements OnInit, OnDestroy {
   protected readonly notice = inject(UpdateNoticeService);
   protected readonly activity = inject(ActivityService);
   protected readonly title = inject(TitleService);
+  protected readonly desktop = inject(DesktopService);
   protected readonly keyboard = inject(KeyboardService);
   private readonly settings = inject(SettingsService);
   private readonly transitions = inject(TransitionsService);

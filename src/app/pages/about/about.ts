@@ -1,4 +1,6 @@
-import { ChangeDetectionStrategy, Component, VERSION, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, VERSION, booleanAttribute, computed, inject, input, signal } from '@angular/core';
+import { Location, NgTemplateOutlet } from '@angular/common';
+import { Router } from '@angular/router';
 import { App as AppNative } from '@capacitor/app';
 import { firstValueFrom } from 'rxjs';
 
@@ -10,6 +12,8 @@ import { UpdatesState } from '../../models/models';
 import { UpdateService } from '../../services/update.service';
 import { ClientUpdateService } from '../../core/client-update';
 import { COMMIT_CLIENT, VERSION_CLIENT } from '../../core/version';
+import { AuthService } from '../../core/auth';
+import { DesktopService } from '../../core/desktop';
 
 interface Link {
   name: string;
@@ -24,7 +28,7 @@ interface Link {
  */
 @Component({
   selector: 'tb-about',
-  imports: [TbServerLogo],
+  imports: [TbServerLogo, NgTemplateOutlet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './about.html',
 })
@@ -33,13 +37,27 @@ export class AboutPage {
   private readonly platform = inject(PlatformService);
   protected readonly serverUrl = inject(ServerService);
   protected readonly features = inject(ServerFeaturesService);
+  protected readonly desktop = inject(DesktopService);
+  protected readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
+  private readonly location = inject(Location);
+
+  /** From the login page (route data): no account, so no server to ask; a way back. */
+  readonly standalone = input(false, { transform: booleanAttribute });
+
+  protected back(): void {
+    if (history.length > 1) this.location.back();
+    else void this.router.navigateByUrl('/login');
+  }
 
   /** GitHub tag that was built (scripts/build.mjs), "dev" in development. */
   protected readonly versionClient = VERSION_CLIENT;
   protected readonly commitClient = COMMIT_CLIENT;
   protected readonly updateClient = inject(ClientUpdateService);
   protected readonly versionAngular = VERSION.full;
-  protected readonly platformName = { ios: 'iOS · Liquid Glass', android: 'Android · Material 3', web: 'Web' }[this.platform.platform];
+  protected readonly platformName = this.desktop.active
+    ? `Application ${this.desktop.name()}`
+    : { ios: 'iOS · Liquid Glass', android: 'Android · Material 3', web: 'Web' }[this.platform.platform];
   protected readonly native = this.platform.native;
   /** Version of the installed app (App Store / Play Store build), native app only. */
   protected readonly versionNative = signal<string | null>(null);
@@ -59,7 +77,7 @@ export class AboutPage {
     },
     {
       name: 'Thermobox-Ng-Client',
-      detail: 'Ce client : web, PWA, iOS et Android',
+      detail: 'Ce client : web, PWA, iOS, Android, Windows, macOS et Linux',
       url: 'https://github.com/IbraxTheKing/Thermobox-Ng-Client',
       icon: 'pi-mobile',
     },
@@ -68,6 +86,7 @@ export class AboutPage {
   protected readonly libraries = computed<{ name: string; role: string; url: string }[]>(() => [
     { name: 'Angular', role: 'application', url: 'https://angular.dev' },
     { name: 'Capacitor', role: 'applications iOS et Android', url: 'https://capacitorjs.com' },
+    { name: 'Tauri', role: 'applications Windows, macOS et Linux', url: 'https://tauri.app' },
     { name: 'Chart.js', role: 'courbes', url: 'https://www.chartjs.org' },
     { name: 'PrimeIcons', role: 'icônes', url: 'https://primeng.org/icons' },
     { name: 'Manrope', role: 'police (SIL Open Font License)', url: 'https://github.com/sharanda/manrope' },
@@ -82,6 +101,11 @@ export class AboutPage {
 
   private async load(): Promise<void> {
     void this.updateClient.check();
+    // Not signed in (from the login page): no server to ask
+    if (!this.auth.user()) {
+      this.serverError.set(true);
+      return;
+    }
     try {
       this.server.set(await firstValueFrom(this.updates.state(true)));
     } catch {

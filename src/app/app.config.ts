@@ -10,6 +10,7 @@ import { apiVersionInterceptor } from './core/api-version';
 import { authInterceptor } from './core/http';
 import { PageTitleStrategy } from './core/title';
 import { TransitionsService } from './core/transitions';
+import { TAURI } from './core/tauri';
 
 registerLocaleData(localeFr);
 
@@ -30,9 +31,10 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withFetch(), withInterceptors([authInterceptor, apiVersionInterceptor])),
     { provide: TitleStrategy, useClass: PageTitleStrategy },
     { provide: LOCALE_ID, useValue: 'fr-FR' },
-    // Installed web app (PWA): the shell works offline, the data always comes from the server
+    // Installed web app (PWA): the shell works offline, the data always comes from the server.
+    // Not in the desktop app: its files are in it already.
     provideServiceWorker('ngsw-worker.js', {
-      enabled: !isDevMode(),
+      enabled: !isDevMode() && !TAURI,
       registrationStrategy: 'registerWhenStable:30000',
     }),
   ],

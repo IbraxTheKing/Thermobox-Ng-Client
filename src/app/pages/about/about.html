@@ -1,3 +1,13 @@
+@if (standalone()) {
+  <main class="tb-main tb-standalone">
+    <button type="button" class="tb-btn tb-flat tb-standalone-back" (click)="back()"><i class="pi pi-arrow-left"></i>Retour</button>
+    <ng-container [ngTemplateOutlet]="page" />
+  </main>
+} @else {
+  <ng-container [ngTemplateOutlet]="page" />
+}
+
+<ng-template #page>
 <div class="tb-narrow">
   <header class="tb-page-head">
     <div class="tb-page-title">
@@ -47,6 +57,7 @@
         <span class="tb-list-text"><strong>Versions du client</strong><span class="tb-muted">{{ err }}</span></span>
       </div>
     }
+    @if (auth.user()) {
     <div class="tb-list-row tb-list-info">
       <span class="tb-list-icon"><tb-server-logo [base]="serverUrl.base()" /></span>
       <span class="tb-list-text">
@@ -63,7 +74,8 @@
       </span>
       <span class="tb-about-version">{{ server()?.installedVersion ?? (server() ? 'sources' : '—') }}</span>
     </div>
-    @if (jsf()) {
+    }
+    @if (jsf() && auth.user()) {
       <div class="tb-list-row tb-list-info">
         <span class="tb-list-icon"><i class="pi pi-desktop"></i></span>
         <span class="tb-list-text">
@@ -115,3 +127,4 @@
   </div>
   <p class="tb-muted tb-about-license">ThermoBox est distribué sous licence MIT. © 2026 ib.</p>
 </div>
+</ng-template>

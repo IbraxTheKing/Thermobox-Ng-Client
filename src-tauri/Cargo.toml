@@ -1,0 +1,35 @@
+[package]
+name = "thermobox-desktop"
+# The version of the app is the one of tauri.conf.json (set from the tag by the workflows)
+version = "0.0.0"
+description = "Thermobox for Windows, macOS and Linux"
+authors = ["IbraxTheKing"]
+license = "MIT"
+edition = "2021"
+rust-version = "1.77.2"
+publish = false
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2.12", features = [] }
+# API calls to the ThermoBox servers: through Rust, not the webview (no mixed content with a
+# server in plain http on the local network, from the tauri:// page of macOS and Linux)
+tauri-plugin-http = "2.8"
+# Links of the page (GitHub, release notes) in the browser of the system
+tauri-plugin-opener = "2.7"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[target.'cfg(windows)'.dependencies]
+# Snap layouts of Windows 11 from the maximize button of the title bar drawn by the page; the
+# accent colour of Windows (Préférences › Accent de couleur › Système)
+windows-sys = { version = "0.59", features = ["Win32_Foundation", "Win32_System_Registry", "Win32_UI_Input_KeyboardAndMouse"] }
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+panic = "abort"
+strip = true

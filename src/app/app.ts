@@ -10,12 +10,15 @@ import { WindowColorService } from './core/window-color';
 import { AccentService } from './core/accent';
 import { ServerFeaturesService } from './services/server-features.service';
 import { TbConfirm, TbToasts } from './ui/hosts';
+import { TbDesktopChrome } from './ui/desktop-chrome';
+import { DesktopService } from './core/desktop';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, TbToasts, TbConfirm],
+  imports: [RouterOutlet, TbToasts, TbConfirm, TbDesktopChrome],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
+    <tb-desktop-chrome />
     <router-outlet />
     <tb-toasts />
     <tb-confirm />
@@ -33,6 +36,8 @@ export class App {
     // The title bar of the installed app (and the browser bars) in the colour of the page
     inject(AccentService).start();
     inject(WindowColorService).start();
+    // Desktop app (Tauri): menu bar of macOS, links in the browser, the title bar of Windows
+    inject(DesktopService).start();
     const auth = inject(AuthService);
     const body = inject(DOCUMENT).body;
     effect(() => {
