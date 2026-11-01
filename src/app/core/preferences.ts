@@ -2,6 +2,7 @@ import { DOCUMENT } from '@angular/common';
 import { Injectable, computed, effect, inject, signal } from '@angular/core';
 
 import { StyleSite } from '../models/models';
+import { DESKTOP_OS, TAURI } from './tauri';
 import { HomeColors } from './colors';
 
 export type Theme = 'light' | 'dark';
@@ -88,7 +89,7 @@ export class PreferencesService {
       // The colour of the window / of the browser bars follows: WindowColorService
     });
     effect(() => {
-      write({
+      const json = JSON.stringify({
         theme: this.themeChoice(),
         tint: this.tint(),
         unit: this.unit(),
@@ -99,8 +100,42 @@ export class PreferencesService {
         tolerance: this.tolerance(),
         cardSize: this.cardSize(),
         buildingOrder: this.buildingOrder(),
-      });
+      } satisfies Stored);
+      // Only what changed here: a reload from another window writes nothing back
+      if (json === this.written) return;
+      this.written = json;
+      write(json);
+      if (TAURI) void import('@tauri-apps/api/event').then((e) => e.emit('tb-preferences'));
     });
+    // Another window of the app (the settings window of macOS), or another tab: applied here
+    addEventListener('storage', (e) => e.key === KEY && this.reload());
+    if (TAURI) void import('@tauri-apps/api/event').then((e) => e.listen('tb-preferences', () => this.reload()));
+  }
+
+  /** What was written last (or read at start): the stored text of these preferences. */
+  private written = JSON.stringify(this.stored);
+
+  /** The preferences as stored now, after another window changed them. */
+  reload(): void {
+    let raw: string | null = null;
+    try {
+      raw = localStorage.getItem(KEY);
+    } catch {
+      return;
+    }
+    if (raw == null || raw === this.written) return;
+    const p = read();
+    this.written = raw;
+    if (p.theme) this.themeChoice.set(p.theme);
+    if (p.tint != null) this.tint.set(p.tint);
+    if (p.unit) this.unit.set(p.unit);
+    if (p.keyboard != null) this.keyboard.set(p.keyboard);
+    if (p.sidebarCollapsed != null) this.sidebarCollapsed.set(p.sidebarCollapsed);
+    if (p.homeColors) this.homeColors.set(p.homeColors);
+    if (p.accent) this.accent.set(p.accent);
+    if (p.tolerance != null) this.tolerance.set(p.tolerance);
+    if (p.cardSize != null) this.cardSize.set(p.cardSize);
+    if (p.buildingOrder) this.buildingOrder.set(p.buildingOrder);
   }
 
   /**
@@ -111,7 +146,8 @@ export class PreferencesService {
     const before = this.theme();
     const after: Theme = choice === 'auto' ? (this.systemDark() ? 'dark' : 'light') : choice;
     const doc = this.doc as Document & { startViewTransition?: (f: () => void) => { finished: Promise<void> } };
-    if (before === after || !from || !doc.startViewTransition || this.reducedMotion()) {
+    // Windows app: the theme changes at once, as Windows does
+    if (before === after || !from || !doc.startViewTransition || this.reducedMotion() || DESKTOP_OS === 'windows') {
       this.themeChoice.set(choice);
       return;
     }
@@ -141,9 +177,9 @@ function read(): Stored {
   }
 }
 
-function write(p: Stored): void {
+function write(json: string): void {
   try {
-    localStorage.setItem(KEY, JSON.stringify(p));
+    localStorage.setItem(KEY, json);
   } catch {
     /* private browsing */
   }

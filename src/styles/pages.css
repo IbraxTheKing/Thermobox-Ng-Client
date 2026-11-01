@@ -575,3 +575,6 @@ button.tb-update-installation-head.tb-card-head { margin-bottom: 0; }
 .tb-md-alert-important { --alert: #8a5bb0; }
 .tb-md-alert-warning { --alert: var(--tb-heating); }
 .tb-md-alert-caution { --alert: var(--md-error); }
+.tb-update-installed-line { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+.tb-update-installed .tb-update-notes { margin-top: 8px; }
+.tb-card.tb-update-installed:has(.tb-update-notes[open]) { align-items: flex-start; }

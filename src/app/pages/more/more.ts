@@ -5,6 +5,7 @@ import { AuthService } from '../../core/auth';
 import { UpdateNoticeService } from '../../core/update-notice';
 import { PlatformService } from '../../core/platform';
 import { PreferencesService } from '../../core/preferences';
+import { DesktopService } from '../../core/desktop';
 import { destinationsOf, barSlots } from '../../shell/destinations';
 import { ServerService } from '../../core/api.config';
 import { TbServerLogo } from '../../ui/server-logo';
@@ -63,6 +64,8 @@ import { TbAccounts } from '../../ui/accounts';
         </nav>
       }
 
+      <!-- macOS app: the settings are in the menu bar -->
+      @if (!desktop.settingsInMenu) {
       <nav class="tb-list-group" aria-label="Compte">
         <a class="tb-list-row" routerLink="/app/preferences">
           <span class="tb-list-icon"><i class="pi pi-sliders-v"></i></span>
@@ -70,6 +73,7 @@ import { TbAccounts } from '../../ui/accounts';
           <i class="pi pi-angle-right tb-list-continuation"></i>
         </a>
       </nav>
+      }
 
       <nav class="tb-list-group" aria-label="Thermobox">
         <a class="tb-list-row" routerLink="/app/about">
@@ -90,6 +94,7 @@ import { TbAccounts } from '../../ui/accounts';
 })
 export class MorePage {
   protected readonly auth = inject(AuthService);
+  protected readonly desktop = inject(DesktopService);
   protected readonly server = inject(ServerService);
   protected readonly notice = inject(UpdateNoticeService);
 

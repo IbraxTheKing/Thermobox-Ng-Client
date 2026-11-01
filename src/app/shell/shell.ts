@@ -1,3 +1,4 @@
+import { NgTemplateOutlet } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -10,6 +11,7 @@ import {
   effect,
   inject,
   signal,
+  untracked,
   viewChild,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -23,6 +25,7 @@ import { KeyboardService } from '../core/keyboard';
 import { ActivityService } from '../core/http';
 import { PlatformService } from '../core/platform';
 import { PreferencesService } from '../core/preferences';
+import { DesktopService } from '../core/desktop';
 import { TitleService } from '../core/title';
 import { TransitionsService } from '../core/transitions';
 import { SettingsService } from '../services/settings.service';
@@ -51,7 +54,7 @@ const SLIDE = 8;
  */
 @Component({
   selector: 'tb-shell',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, TbSheet, TbAccounts, TbServerLogo],
+  imports: [NgTemplateOutlet, RouterOutlet, RouterLink, RouterLinkActive, TbSheet, TbAccounts, TbServerLogo],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './shell.html',
   host: {
@@ -72,6 +75,7 @@ export class Shell implements OnInit, OnDestroy {
   protected readonly notice = inject(UpdateNoticeService);
   protected readonly activity = inject(ActivityService);
   protected readonly title = inject(TitleService);
+  protected readonly desktop = inject(DesktopService);
   protected readonly keyboard = inject(KeyboardService);
   private readonly settings = inject(SettingsService);
   private readonly transitions = inject(TransitionsService);
@@ -200,6 +204,7 @@ export class Shell implements OnInit, OnDestroy {
     this.native.leave();
     removeEventListener('scroll', this.onScrolling);
     removeEventListener('resize', this.onResize);
+    this.doc.removeEventListener('pointerdown', this.closePane, { capture: true });
     clearInterval(this.timer);
   }
 
@@ -210,10 +215,37 @@ export class Shell implements OnInit, OnDestroy {
 
   protected onDestination(): void {
     this.platform.vibrate();
+    this.paneOpen.set(false);
   }
+
+  /**
+   * Windows app, window less than 1200 px wide: the pane of icons opens over the page with the
+   * names (NavigationView LeftCompact), until a page is chosen or the page clicked. Its button is
+   * in the title bar (TbDesktopChrome).
+   */
+  protected readonly paneOpen = signal(false);
+  private readonly paneButton = effect(() => {
+    if (this.desktop.paneToggles()) untracked(() => this.fold());
+  });
+  private readonly closePane = (e: Event) => {
+    if ((e.target as Element | null)?.closest?.('.tb-rail, .tb-titlebar-pane')) return;
+    this.paneOpen.set(false);
+    this.doc.removeEventListener('pointerdown', this.closePane, { capture: true });
+  };
 
   /** The side bar of computers: names and icons, or icons only (morphs where it can). */
   protected fold(): void {
+    if (this.desktop.windows) {
+      // As NavigationView: the pane opens or closes at once (windows.css), no picture morphing
+      if (innerWidth < 1200) {
+        this.paneOpen.update((o) => !o);
+        if (this.paneOpen()) setTimeout(() => this.doc.addEventListener('pointerdown', this.closePane, { capture: true }));
+        else this.doc.removeEventListener('pointerdown', this.closePane, { capture: true });
+        return;
+      }
+      this.prefs.sidebarCollapsed.update((r) => !r);
+      return;
+    }
     const change = () => this.prefs.sidebarCollapsed.update((r) => !r);
     const doc = this.doc as Document & { startViewTransition?: (f: () => void) => unknown };
     if (!doc.startViewTransition || !this.prefs.animate()) return change();

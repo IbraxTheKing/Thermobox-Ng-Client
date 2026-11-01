@@ -1,0 +1,193 @@
+name: Desktop apps
+
+# The desktop app (Tauri, src-tauri/): the client in a native window of Windows, macOS and Linux.
+#
+#   macOS    universal (Apple silicon and Intel): .dmg, the .app inside. Signed ad hoc (it opens
+#            after a right click › Ouvrir the first time) unless the APPLE_* secrets give a
+#            Developer ID certificate, then notarized too.
+#   Windows  x64 installer (NSIS, for the current user, no administrator rights): -setup.exe.
+#   Linux    .deb, .rpm and .AppImage, x86_64. GTK 3 / WebKitGTK 4.1: the toolkit of Tauri (it has
+#            no GTK 4 version, Tauri 3 included).
+#
+# When:
+#   - a version published by hand (release: published), the files are added to it;
+#   - called by nightly.yml and prerelease.yml with the tag they publish (a release created by a
+#     workflow starts no other workflow);
+#   - by hand (Actions › Desktop apps › Run workflow), with a tag to complete, or without one to
+#     only build;
+#   - a push or pull request touching src-tauri/: built only, the files kept a week in the run.
+#
+# Version of the app: the tag (26.12.0, 26.12.0-beta.1…), written into the client too
+# (THERMOBOX_VERSION, scripts/build.mjs); 0.0.0-dev.<run> otherwise.
+
+on:
+  release:
+    types: [published]
+  workflow_call:
+    inputs:
+      tag:
+        description: Version published (e.g. 26.12.0-nightly.4)
+        type: string
+        required: true
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Tag of the version to complete (empty = build only)
+        required: false
+  push:
+    branches: [main, dev]
+    paths: ['src-tauri/**', '.github/workflows/desktop.yml']
+  pull_request:
+    branches: [main, dev]
+    paths: ['src-tauri/**', '.github/workflows/desktop.yml']
+
+permissions:
+  contents: write          # add the files to the release
+
+concurrency:
+  group: desktop-${{ github.ref }}-${{ inputs.tag || github.event.release.tag_name || 'build' }}
+  cancel-in-progress: ${{ github.event_name == 'push' || github.event_name == 'pull_request' }}
+
+jobs:
+  desktop:
+    name: ${{ matrix.name }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macOS
+            os: macos-latest
+            args: --target universal-apple-darwin --bundles app,dmg
+            rust-targets: aarch64-apple-darwin,x86_64-apple-darwin
+            target-dir: universal-apple-darwin/release
+          - name: Windows
+            os: windows-latest
+            args: --bundles nsis
+            rust-targets: ''
+            target-dir: release
+          - name: Linux
+            # The oldest supported Ubuntu: the AppImage and the .deb then run on older systems too
+            os: ubuntu-22.04
+            args: --bundles deb,appimage
+            rust-targets: ''
+            target-dir: release
+    runs-on: ${{ matrix.os }}
+    env:
+      TAG: ${{ inputs.tag || github.event.release.tag_name }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG || github.sha }}
+          fetch-depth: 0
+
+      - name: Version
+        id: version
+        run: |
+          if [ -n "$TAG" ]; then
+            version="${TAG#v}"
+          else
+            version="0.0.0-dev.${GITHUB_RUN_NUMBER}"
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Desktop app $version (${{ matrix.name }})"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust-targets }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+
+      - name: Libraries of Linux (WebKitGTK 4.1, GTK 3)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev libsoup-3.0-dev patchelf rpm
+
+      - name: Install
+        run: npm ci
+
+      # Developer ID certificate and notarization, when given (else signed ad hoc: tauri.conf.json)
+      - name: Signing of macOS
+        if: runner.os == 'macOS'
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          if [ -n "$APPLE_CERTIFICATE" ] && [ -n "$APPLE_SIGNING_IDENTITY" ]; then
+            {
+              echo "APPLE_CERTIFICATE=$APPLE_CERTIFICATE"
+              echo "APPLE_CERTIFICATE_PASSWORD=$APPLE_CERTIFICATE_PASSWORD"
+              echo "APPLE_SIGNING_IDENTITY=$APPLE_SIGNING_IDENTITY"
+            } >> "$GITHUB_ENV"
+            if [ -n "$APPLE_ID" ] && [ -n "$APPLE_PASSWORD" ] && [ -n "$APPLE_TEAM_ID" ]; then
+              { echo "APPLE_ID=$APPLE_ID"; echo "APPLE_PASSWORD=$APPLE_PASSWORD"; echo "APPLE_TEAM_ID=$APPLE_TEAM_ID"; } >> "$GITHUB_ENV"
+            else
+              echo "::notice::Signed with the Developer ID certificate, not notarized (APPLE_ID, APPLE_PASSWORD, APPLE_TEAM_ID missing)."
+            fi
+          else
+            echo "::notice::No APPLE_CERTIFICATE / APPLE_SIGNING_IDENTITY secrets: signed ad hoc."
+          fi
+
+      # The client is built by beforeBuildCommand (npm run build), with the version of the tag
+      - name: Build
+        env:
+          THERMOBOX_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          npx tauri build ${{ matrix.args }} --config "{\"version\":\"${{ steps.version.outputs.version }}\"}"
+
+      # RPM refuses a dash in a version: a prerelease 26.12.0-beta.1 becomes version 26.12.0,
+      # release 0.beta.1 (sorted before the stable 26.12.0-1), the convention of Fedora. Same binary.
+      - name: RPM package
+        if: runner.os == 'Linux'
+        run: |
+          v="${{ steps.version.outputs.version }}"
+          base="${v%%-*}"
+          if [ "$base" = "$v" ]; then release=1; else release="0.${v#*-}"; release="${release//-/.}"; fi
+          npx tauri bundle --bundles rpm --config "{\"version\":\"$base\",\"bundle\":{\"linux\":{\"rpm\":{\"release\":\"$release\"}}}}"
+
+      - name: Files of the app
+        run: |
+          v="${{ steps.version.outputs.version }}"
+          b="src-tauri/target/${{ matrix.target-dir }}/bundle"
+          mkdir -p deliverables
+          case "${{ runner.os }}" in
+            macOS)
+              cp "$b"/dmg/*.dmg "deliverables/thermobox-$v-macos-universal.dmg"
+              ;;
+            Windows)
+              cp "$b"/nsis/*-setup.exe "deliverables/thermobox-$v-windows-x64-setup.exe"
+              ;;
+            Linux)
+              cp "$b"/deb/*.deb "deliverables/thermobox-$v-linux-amd64.deb"
+              cp "$b"/rpm/*.rpm "deliverables/thermobox-$v-linux-x86_64.rpm"
+              cp "$b"/appimage/*.AppImage "deliverables/thermobox-$v-linux-x86_64.AppImage"
+              ;;
+          esac
+          ls -l deliverables
+
+      - name: Keep the files
+        uses: actions/upload-artifact@v4
+        with:
+          name: thermobox-desktop-${{ matrix.name }}
+          path: deliverables/*
+          retention-days: 7
+
+      - name: Add to the release
+        if: env.TAG != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$TAG" deliverables/* --clobber

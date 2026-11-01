@@ -1,4 +1,15 @@
 <main class="tb-main">
+  <!-- Desktop app, before any account: the settings of this device (macOS: in the menu bar only) and
+       À propos in the bottom right corner, the version of the app in the middle of the bottom -->
+  @if (desktop.active) {
+    <p class="tb-auth-version">Thermobox {{ desktop.name() }} {{ version }}</p>
+    <nav class="tb-auth-corner" aria-label="Application">
+      @if (!desktop.settingsInMenu) {
+        <a routerLink="/settings" class="tb-btn tb-flat tb-auth-corner-btn" title="Paramètres de cet appareil : thème, couleurs, unité"><i class="pi pi-cog"></i><span>Paramètres</span></a>
+      }
+      <a routerLink="/about" class="tb-btn tb-flat tb-auth-corner-btn" title="Versions, code source, crédits"><i class="pi pi-info-circle"></i><span>À propos</span></a>
+    </nav>
+  }
   <div class="tb-auth">
     <div class="tb-auth-brand">
       <span class="tb-logo tb-logo-xl" aria-hidden="true"></span>

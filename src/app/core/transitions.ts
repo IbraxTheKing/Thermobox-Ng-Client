@@ -4,6 +4,7 @@ import { ActivatedRouteSnapshot, ViewTransitionInfo } from '@angular/router';
 
 import { PlatformService } from './platform';
 import { PreferencesService } from './preferences';
+import { DESKTOP_OS } from './tauri';
 
 /** State whose colour the page takes (« Couleurs selon l'état »). */
 export type Tone = 'stable' | 'heating' | 'hot' | 'unknown';
@@ -29,6 +30,10 @@ type Doc = Document & { startViewTransition?: (f: () => void | Promise<void>) =>
  *   cross-fade of two pictures of the page, done by the compositor, instead of animating the
  *   colours of every element on every frame (which made phones stutter and went through other
  *   hues on the way). A change during a page transition joins it; after it, waits for its end.
+ *
+ * The Windows app moves as a WinUI 3 app instead (windows.css): the new page comes in as one
+ * block, as a Frame (html.tb-win-entering: it rises a little and fades in, a third of a second),
+ * its parts don't come one after the other.
  *
  * Nothing moves when the system asks for less motion.
  */
@@ -201,6 +206,15 @@ export class TransitionsService {
   /** Entrance of the page (CSS under html.tb-entering). */
   private entrance(): void {
     if (this.prefs.reducedMotion()) return;
+    if (DESKTOP_OS === 'windows') {
+      clearTimeout(this.timer);
+      this.root.classList.remove('tb-win-entering');
+      void this.root.offsetWidth;
+      this.root.classList.add('tb-win-entering');
+      // Only while it runs: a transform left on the page would hold what is fixed inside it
+      this.timer = setTimeout(() => this.root.classList.remove('tb-win-entering'), 420);
+      return;
+    }
     clearTimeout(this.timer);
     this.root.classList.remove('tb-entering');
     // Restart the animations of a page entered again quickly

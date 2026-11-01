@@ -3,6 +3,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 
 import { PreferencesService } from './preferences';
+import { DesktopService } from './desktop';
 
 export interface Shortcut {
   group: string;
@@ -22,6 +23,7 @@ export class KeyboardService {
   private readonly doc = inject(DOCUMENT);
   private readonly router = inject(Router);
   private readonly prefs = inject(PreferencesService);
+  private readonly desktop = inject(DesktopService);
 
   /** The "?" panel is open. */
   readonly help = signal(false);
@@ -32,7 +34,10 @@ export class KeyboardService {
     { group: 'Partout', keys: ['R'], text: 'Actualiser les données de la page', key: 'r', act: () => this.click('.tb-page-head [data-action="refresh"]') },
     { group: 'Partout', keys: ['N'], text: 'Action principale de la page (nouvel élément, nouvel utilisateur…)', key: 'n', act: () => this.click('.tb-page-head .tb-fab') },
     { group: 'Partout', keys: ['T'], text: 'Passer du thème clair au thème sombre', key: 't', act: () => (this.prefs.changeTheme(this.prefs.theme() === 'dark' ? 'light' : 'dark'), true) },
-    { group: 'Partout', keys: ['P'], text: 'Ouvrir les Préférences', key: 'p', act: () => this.forward('/app/preferences') },
+    // macOS app: its settings window (as ⌘, of the menu bar)
+    this.desktop.settingsInMenu
+      ? { group: 'Partout', keys: ['P'], text: 'Ouvrir les Réglages (comme ⌘,)', key: 'p', act: () => (void this.desktop.openSettings(), true) }
+      : { group: 'Partout', keys: ['P'], text: 'Ouvrir les Préférences', key: 'p', act: () => this.forward('/app/preferences') },
     { group: 'Partout', keys: ['?'], text: 'Afficher ou cacher cette liste', key: '?', act: () => (this.help.update((v) => !v), true) },
     { group: 'Partout', keys: ['Échap'], text: 'Fermer cette liste', key: null },
     { group: "Page d'une salle", keys: ['Espace'], text: "Revenir à l'aperçu", key: ' ', when: () => this.page('/app/room/'), act: () => this.back() },

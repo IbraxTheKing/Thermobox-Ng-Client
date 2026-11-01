@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal } from '@angular/core';
 
 import { ApiVersionService } from '../core/api-version';
+import { TAURI, imageSource } from '../core/tauri';
 
 /**
  * The logo of a ThermoBox server (GET /api/v2/server/logo, since 26.12): next to its address in
@@ -16,7 +17,9 @@ import { ApiVersionService } from '../core/api-version';
   host: { class: 'tb-server-logo', '[class.tb-server-logo-badge]': 'badge()', '[class.tb-server-logo-none]': '!src()', '[attr.aria-hidden]': 'true' },
   template: `
     @if (src(); as s) {
-      <img [src]="s" alt="" decoding="async" loading="lazy" (error)="failed.set(s)" />
+      @if (shown(); as u) {
+        <img [src]="u" alt="" decoding="async" loading="lazy" (error)="failed.set(s)" />
+      }
     } @else if (!badge()) {
       <i class="pi pi-server"></i>
     }
@@ -37,8 +40,22 @@ export class TbServerLogo {
     return url && url !== this.failed() ? url : null;
   });
 
+  /** What the <img> shows: the address, or in the desktop app the image fetched through Rust. */
+  protected readonly shown = signal<string | null>(null);
+
   constructor() {
     // Asked once per launch and per server: the logo appears when the answer comes
     effect(() => void this.versions.api(this.base()));
+    effect(() => {
+      const s = this.src();
+      if (!TAURI || !s) {
+        this.shown.set(s);
+        return;
+      }
+      imageSource(s).then(
+        (u) => this.src() === s && this.shown.set(u),
+        () => this.failed.set(s),
+      );
+    });
   }
 }

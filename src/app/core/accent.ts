@@ -3,6 +3,7 @@ import { Injectable, computed, effect, inject, signal } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 
 import { androidSystemAccent } from './android-native';
+import { DESKTOP_OS } from './tauri';
 
 import { PreferencesService } from './preferences';
 
@@ -54,7 +55,9 @@ export class AccentService {
     ? "iOS ne donne pas sa couleur d'accent aux applications."
     : Capacitor.getPlatform() === 'android'
       ? "Couleurs du fond d'écran à partir d'Android 12."
-      : "Ce navigateur ne donne pas la couleur d'accent du système (Firefox et Safari la donnent).";
+      : DESKTOP_OS
+        ? "Ce système ne donne pas sa couleur d'accent à l'application."
+        : "Ce navigateur ne donne pas la couleur d'accent du système (Firefox et Safari la donnent).";
 
   /** Hue and chroma shown, null for the ThermoBox colours. */
   readonly seed = computed<{ h: number; c: number } | null>(() => {
@@ -81,6 +84,16 @@ export class AccentService {
   private async readSystem(): Promise<void> {
     if (Capacitor.isNativePlatform()) {
       this.systemColor.set(await androidSystemAccent());
+      return;
+    }
+    // Desktop app on Windows: the colour of Settings › Personalisation (WebView2 has no AccentColor)
+    if (DESKTOP_OS === 'windows') {
+      try {
+        const { invoke } = await import('@tauri-apps/api/core');
+        this.systemColor.set(await invoke<string | null>('system_accent'));
+      } catch {
+        this.systemColor.set(null);
+      }
       return;
     }
     if (!CSS.supports('color', 'AccentColor')) return;

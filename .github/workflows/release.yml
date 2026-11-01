@@ -5,6 +5,7 @@ name: Release assets
 # the archive of the site, and the Android app (APK / AAB signed when the key is in the ANDROID_*
 # secrets, else a debug APK; .github/actions/android).
 # The release notes stay those written by hand.
+# The Windows, macOS and Linux apps are added by desktop.yml (same trigger).
 # The nightlies have their own workflow.
 
 on:
