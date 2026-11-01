@@ -262,6 +262,170 @@
 :root[data-desktop="windows"] .tb-table th { font-weight: 600; font-size: 12px; text-transform: none; letter-spacing: 0; }
 :root[data-desktop="windows"] .tb-node-row:hover, :root[data-desktop="windows"] .tb-list-row:hover { background: var(--wf-subtle-hover); }
 
+/* ============================== Lists and tables (Gérer…), filters */
+
+/*
+ * The tables of the app as the lists of WinUI 3 (ListView, the details view of the Explorer):
+ * rows of 40 px, a hairline between them, the row under the pointer lightly filled; a row ticked
+ * filled too, with the pill of the accent colour on its left edge. Headers in 12 px, the colour
+ * of secondary text. CheckBox, filters as ToggleButtons, small tags as InfoBadges.
+ */
+:root[data-desktop="windows"] body .tb-table :is(th, td) { padding: 6px 12px; }
+:root[data-desktop="windows"] body .tb-table th {
+    height: 32px;
+    padding-top: 0;
+    padding-bottom: 0;
+    border-bottom: 1px solid var(--wf-stroke);
+    color: var(--wf-text-secondary);
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 0;
+    text-transform: none;
+}
+:root[data-desktop="windows"] body .tb-table td { height: 44px; border-bottom: 1px solid var(--wf-stroke); font-size: 14px; }
+:root[data-desktop="windows"] body .tb-table tbody tr { transition: background-color .083s linear; }
+:root[data-desktop="windows"] body .tb-table tbody tr:is(:hover, .tb-row-on) { background: transparent; }
+:root[data-desktop="windows"] body .tb-table tbody tr:is(:hover, .tb-row-on) > td { background: var(--wf-subtle-hover); }
+:root[data-desktop="windows"] body .tb-table tbody tr.tb-row-on:hover > td { background: var(--wf-subtle-press); }
+:root[data-desktop="windows"] body .tb-table tbody tr.tb-row-on > td:first-child { position: relative; }
+:root[data-desktop="windows"] body .tb-table tbody tr.tb-row-on > td:first-child::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 3px;
+    height: 16px;
+    margin-top: -8px;
+    border-radius: 2px;
+    background: var(--md-primary);
+}
+:root[data-desktop="windows"] body .tb-table :is(td, th).tb-col-check { width: 44px; padding-right: 0; }
+:root[data-desktop="windows"] .tb-mgmt-name { gap: 10px; }
+:root[data-desktop="windows"] .tb-mgmt-name .tb-section-icon { width: 32px; height: 32px; border-radius: 4px; background: transparent; font-size: 16px; }
+:root[data-desktop="windows"] .tb-mgmt-name-text { gap: 0; }
+:root[data-desktop="windows"] .tb-mgmt-name-text strong { font-weight: 400; font-size: 14px; }
+:root[data-desktop="windows"] .tb-mgmt-name-text .tb-muted { font-size: 12px; color: var(--wf-text-secondary); }
+:root[data-desktop="windows"] .tb-mgmt-table td.tb-col-num { font-weight: 600; }
+:root[data-desktop="windows"] .tb-avatar.tb-user-avatar { width: 32px; height: 32px; font-size: 13px; }
+/* Action buttons of a row: subtle 32 px squares */
+:root[data-desktop="windows"] .tb-table .tb-col-actions .tb-btn { width: 32px; min-width: 32px; height: 32px; min-height: 32px; padding: 0; }
+
+/* CheckBox */
+:root[data-desktop="windows"] input[type="checkbox"]:not(.tb-switch) {
+    -webkit-appearance: none;
+    appearance: none;
+    flex: none;
+    width: 20px;
+    height: 20px;
+    margin: 0;
+    border: 1px solid var(--wf-stroke-strong);
+    border-radius: 4px;
+    background: var(--wf-subtle-press) center / 12px no-repeat;
+    cursor: default;
+    vertical-align: middle;
+    transition: background-color .083s linear, border-color .083s linear;
+}
+:root[data-desktop="windows"] input[type="checkbox"]:not(.tb-switch):hover { background-color: var(--wf-subtle-hover); }
+:root[data-desktop="windows"] input[type="checkbox"]:not(.tb-switch):is(:checked, :indeterminate) {
+    border-color: var(--md-primary);
+    background-color: var(--md-primary);
+}
+:root[data-desktop="windows"] input[type="checkbox"]:not(.tb-switch):checked {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 6.3 4.7 9 10 3.2' fill='none' stroke='%23fff' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+:root[data-desktop="windows"] input[type="checkbox"]:not(.tb-switch):indeterminate {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6h7' stroke='%23fff' stroke-width='1.4' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+:root[data-desktop="windows"][data-theme="dark"] input[type="checkbox"]:not(.tb-switch):checked {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 6.3 4.7 9 10 3.2' fill='none' stroke='%23000' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+:root[data-desktop="windows"] input[type="checkbox"]:not(.tb-switch):is(:checked, :indeterminate):hover { background-color: color-mix(in srgb, var(--md-primary) 90%, var(--tb-background)); }
+:root[data-desktop="windows"] input[type="checkbox"]:not(.tb-switch):disabled { opacity: .4; }
+/* RadioButton */
+:root[data-desktop="windows"] input[type="radio"] {
+    -webkit-appearance: none;
+    appearance: none;
+    flex: none;
+    width: 20px;
+    height: 20px;
+    margin: 0;
+    border: 1px solid var(--wf-stroke-strong);
+    border-radius: 50%;
+    background: var(--wf-subtle-press);
+    vertical-align: middle;
+    transition: border-width .083s linear, background-color .083s linear;
+}
+:root[data-desktop="windows"] input[type="radio"]:hover { background: var(--wf-subtle-hover); }
+:root[data-desktop="windows"] input[type="radio"]:checked { border: 5px solid var(--md-primary); background: var(--md-on-primary); }
+
+/* Filters: ToggleButtons; their count an InfoBadge */
+:root[data-desktop="windows"] .tb-summary-chip,
+:root[data-desktop="windows"] .tb-summary-chip:hover { box-shadow: none; }
+:root[data-desktop="windows"] .tb-summary-chip {
+    gap: 8px;
+    height: 32px;
+    min-height: 32px;
+    padding: 0 8px 0 12px;
+    border: 1px solid var(--wf-stroke);
+    border-bottom-color: var(--wf-stroke-bottom);
+    border-radius: 4px;
+    background: var(--wf-control);
+    color: var(--md-on-surface);
+    font-size: 14px;
+    font-weight: 400;
+    transition: background-color .083s linear;
+}
+:root[data-desktop="windows"] .tb-summary-chip:hover { background: var(--wf-control-hover); }
+:root[data-desktop="windows"] .tb-summary-chip:active { background: var(--wf-control-press); color: var(--wf-text-secondary); }
+:root[data-desktop="windows"] .tb-summary-chip.tb-chip-on { border-color: transparent; background: var(--md-primary); color: var(--md-on-primary); }
+:root[data-desktop="windows"] .tb-summary-chip.tb-chip-on:hover { background: color-mix(in srgb, var(--md-primary) 90%, var(--tb-background)); }
+:root[data-desktop="windows"] .tb-summary-chip .tb-chip-check { display: none; }
+:root[data-desktop="windows"] .tb-chip-n {
+    min-width: 16px;
+    height: 16px;
+    margin: 0;
+    padding: 0 5px;
+    border-radius: 8px;
+    background: var(--wf-subtle-hover);
+    color: var(--wf-text-secondary);
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 16px;
+}
+:root[data-desktop="windows"] .tb-chip-on .tb-chip-n { background: color-mix(in srgb, var(--md-on-primary) 22%, transparent); color: inherit; }
+
+/* The states and tags: small InfoBadges, no outline */
+:root[data-desktop="windows"] .tb-state { height: 22px; padding: 0 8px; gap: 6px; border: 0; border-radius: 4px; font-size: 12px; font-weight: 600; }
+:root[data-desktop="windows"] .tb-state::before { width: 6px; height: 6px; }
+:root[data-desktop="windows"] .tb-tag { border-radius: 4px; font-size: 12px; font-weight: 400; }
+:root[data-desktop="windows"] .tb-chip-group { margin: 2px 4px 2px 0; padding: 1px 8px; border-radius: 4px; background: var(--wf-subtle-hover); font-size: 12px; font-weight: 400; }
+/* « + Groupe »: a HyperlinkButton, not a dashed chip */
+:root[data-desktop="windows"] .tb-chip-group.tb-chip-add { border: 0; background: transparent; color: var(--md-primary); }
+:root[data-desktop="windows"] .tb-chip-group.tb-chip-add:hover,
+:root[data-desktop="windows"] :hover > .tb-chip-group.tb-chip-add { background: var(--wf-subtle-hover); }
+
+/* The bar of a selection: a CommandBar flyout */
+:root[data-desktop="windows"] .tb-bar {
+    gap: 4px 12px;
+    padding: 4px 4px 4px 16px;
+    border: 1px solid var(--tb-glass-line);
+    border-radius: 8px;
+    background: var(--md-surface-container-lowest);
+    box-shadow: var(--tb-raised-2);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    transition: transform .25s cubic-bezier(0, 0, 0, 1), opacity .167s linear, visibility 0s .25s;
+}
+:root[data-desktop="windows"][data-theme="dark"] .tb-bar { background: #2c2c2c; }
+:root[data-desktop="windows"] .tb-bar.tb-bar-on { transition: transform .25s cubic-bezier(0, 0, 0, 1), opacity .167s linear; }
+:root[data-desktop="windows"] .tb-bar-account { font-weight: 600; color: var(--md-on-surface); }
+:root[data-desktop="windows"] .tb-bar-actions { gap: 2px; }
+:root[data-desktop="windows"] .tb-bar .tb-btn.tb-flat { color: var(--md-on-surface); }
+:root[data-desktop="windows"] .tb-bar .tb-btn.tb-flat .pi { color: var(--md-on-surface); }
+
+/* Hints under the tools of a page: secondary text of 12 px */
+:root[data-desktop="windows"] .tb-mgmt-tip { font-size: 12px; color: var(--wf-text-secondary); }
+
 /* ============================== Dialogs (ContentDialog), menus, notifications */
 
 :root[data-desktop="windows"] .tb-scrim { background: rgb(0 0 0 / .3); }
@@ -409,6 +573,35 @@
     :root[data-desktop="windows"] .tb-rail-actions .tb-icon-btn { flex: 1 1 0; width: 40px; height: 36px; border-radius: 4px; color: var(--md-on-surface); }
     :root[data-desktop="windows"] .tb-rail-actions .tb-icon-btn .pi { font-size: 16px; }
     :root[data-desktop="windows"] .tb-prefs-btn.tb-prefs-on { background: var(--wf-subtle-hover); }
+    /* Desktop app: Préférences is an item of the foot (as Settings in NavigationView), the account under it */
+    :root[data-desktop="windows"] .tb-rail-end-desktop .tb-rail-actions { flex-direction: column; margin: 0; }
+    :root[data-desktop="windows"] .tb-rail-end-desktop .tb-prefs-btn {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        flex: none;
+        width: auto;
+        height: 36px;
+        margin: 0 4px;
+        overflow: hidden;
+        white-space: nowrap;
+        font: 14px / 20px var(--tb-font);
+    }
+    :root[data-desktop="windows"] .tb-rail-end-desktop .tb-prefs-btn > .pi { flex: none; width: 40px; text-align: center; }
+    :root[data-desktop="windows"] .tb-rail-action-label { display: inline; padding: 0 12px 0 2px; }
+    :root[data-desktop="windows"] .tb-rail-end-desktop .tb-prefs-btn.tb-prefs-on::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 50%;
+        width: 3px;
+        height: 16px;
+        margin-top: -8px;
+        border-radius: 2px;
+        background: var(--md-primary);
+    }
+    :root[data-desktop="windows"] .tb-rail-end-desktop .tb-rail-account { margin-bottom: 0; }
     /* The menu of the accounts: a flyout beside the pane, or above the account when it is open */
     :root[data-desktop="windows"] .tb-accounts-menu { left: calc(100% + 4px); bottom: 0; width: 320px; padding: 4px; border-color: var(--tb-glass-line); }
 }
@@ -424,12 +617,12 @@
 
 /* LeftCompact: the icons only (folded, or a window less than 1200 px wide) */
 @media (min-width: 841px) and (max-width: 1199px) {
-    :root[data-desktop="windows"] :is(.tb-dest-label, .tb-rail-account-text, .tb-rail-account-arrow) { display: none; }
+    :root[data-desktop="windows"] :is(.tb-dest-label, .tb-rail-account-text, .tb-rail-account-arrow, .tb-rail-action-label) { display: none; }
     :root[data-desktop="windows"] .tb-rail-actions { display: contents; }
     :root[data-desktop="windows"] .tb-rail-actions .tb-icon-btn { flex: none; margin: 0 4px; }
 }
 @media (min-width: 1200px) {
-    :root[data-desktop="windows"][data-sidebar="collapsed"] :is(.tb-dest-label, .tb-rail-account-text, .tb-rail-account-arrow) { display: none; }
+    :root[data-desktop="windows"][data-sidebar="collapsed"] :is(.tb-dest-label, .tb-rail-account-text, .tb-rail-account-arrow, .tb-rail-action-label) { display: none; }
     :root[data-desktop="windows"][data-sidebar="collapsed"] .tb-rail-actions { display: contents; }
     :root[data-desktop="windows"][data-sidebar="collapsed"] .tb-rail-actions .tb-icon-btn { flex: none; margin: 0 4px; }
     :root[data-desktop="windows"]:not([data-sidebar="collapsed"]) .tb-accounts-menu { left: 4px; bottom: calc(100% + 4px); width: calc(100% - 8px); }
@@ -448,10 +641,11 @@
         box-shadow: var(--tb-raised-3);
         animation: wf-pane-in .25s cubic-bezier(0, 0, 0, 1);
     }
-    :root[data-desktop="windows"] .tb-pane-open .tb-dest-label { display: inline; }
+    :root[data-desktop="windows"] .tb-pane-open :is(.tb-dest-label, .tb-rail-action-label) { display: inline; }
     :root[data-desktop="windows"] .tb-pane-open .tb-rail-account-text { display: flex; flex: 1 1 auto; flex-direction: column; min-width: 0; }
     :root[data-desktop="windows"] .tb-pane-open .tb-rail-account-arrow { display: inline-block; margin: 0 10px 0 auto; }
     :root[data-desktop="windows"] .tb-pane-open .tb-rail-actions { display: flex; }
+    :root[data-desktop="windows"] .tb-pane-open .tb-rail-end-desktop .tb-prefs-btn { margin: 0 4px; }
     :root[data-desktop="windows"] .tb-pane-open .tb-rail-actions .tb-icon-btn { flex: 1 1 0; margin: 0; }
     :root[data-desktop="windows"] .tb-pane-open .tb-accounts-menu { left: 4px; bottom: calc(100% + 4px); width: calc(100% - 8px); }
 }

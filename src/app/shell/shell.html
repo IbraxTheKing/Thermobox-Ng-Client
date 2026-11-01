@@ -62,8 +62,12 @@
     </a>
   </div>
 
-  <!-- Wide screens: the account at the foot of the rail; a click drops the menu of the saved accounts -->
-  <div class="tb-rail-end">
+  <!-- Wide screens: the account at the foot of the rail; a click drops the menu of the saved accounts.
+       Desktop app: Préférences first, the account last, at the very bottom, its menu with the logout -->
+  <div class="tb-rail-end" [class.tb-rail-end-desktop]="desktop.active">
+    @if (desktop.active) {
+      <ng-container *ngTemplateOutlet="railActions" />
+    }
     <div class="tb-rail-account-zone">
       <button type="button" class="tb-rail-account" data-accounts-opener aria-haspopup="dialog" [attr.aria-expanded]="accounts()"
               [title]="'Comptes (' + auth.user()?.username + ' · ' + auth.address() + ')'" (click)="accounts.set(!accounts())">
@@ -71,20 +75,27 @@
         <span class="tb-rail-account-text"><strong>{{ auth.user()?.username }}</strong><small>{{ auth.address() }}</small></span>
         <i class="pi pi-chevron-up tb-rail-account-arrow" aria-hidden="true"></i>
       </button>
-      <tb-accounts mode="menu" [(open)]="accounts" />
+      <tb-accounts mode="menu" [(open)]="accounts" [logoutHere]="desktop.active" />
     </div>
+    @if (!desktop.active) {
+      <ng-container *ngTemplateOutlet="railActions" />
+    }
+  </div>
+  <ng-template #railActions>
     <div class="tb-rail-actions">
       <!-- macOS app: the settings are in the menu bar (Thermobox › Réglages…) -->
       @if (!desktop.settingsInMenu) {
         <a routerLink="/app/preferences" class="tb-icon-btn tb-prefs-btn" routerLinkActive="tb-prefs-on" title="Préférences" aria-label="Préférences">
-          <i class="pi pi-sliders-v"></i>
+          <i class="pi pi-sliders-v"></i>@if (desktop.active) {<span class="tb-rail-action-label">Préférences</span>}
         </a>
       }
-      <button type="button" class="tb-icon-btn tb-logout" (click)="logout()" title="Déconnexion" aria-label="Déconnexion">
-        <i class="pi pi-sign-out"></i>
-      </button>
+      @if (!desktop.active) {
+        <button type="button" class="tb-icon-btn tb-logout" (click)="logout()" title="Déconnexion" aria-label="Déconnexion">
+          <i class="pi pi-sign-out"></i>
+        </button>
+      }
     </div>
-  </div>
+  </ng-template>
 </nav>
 
 <main class="tb-main">

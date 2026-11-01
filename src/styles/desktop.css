@@ -12,11 +12,24 @@
 
 .tb-auth-corner {
     position: fixed;
-    top: calc(14px + var(--tb-chrome-top, 0px) + env(safe-area-inset-top));
-    right: calc(18px + env(safe-area-inset-right));
+    right: calc(16px + env(safe-area-inset-right));
+    bottom: calc(12px + env(safe-area-inset-bottom));
     z-index: 20;
     display: flex;
     gap: 4px;
+}
+/* The version of the app, in the middle of the bottom of the login page */
+.tb-auth-version {
+    position: fixed;
+    left: 50%;
+    bottom: calc(18px + env(safe-area-inset-bottom));
+    z-index: 19;
+    margin: 0;
+    transform: translateX(-50%);
+    color: var(--md-on-surface-variant);
+    font-size: .8rem;
+    white-space: nowrap;
+    pointer-events: none;
 }
 .tb-auth-corner-btn { min-height: 36px; padding: 0 12px; color: var(--md-on-surface-variant); }
 .tb-auth-corner-btn:hover { color: var(--md-on-surface); }
@@ -36,6 +49,11 @@
 .tb-standalone .tb-narrow { max-width: none; }
 /* The settings window of macOS: the window is the page, its title under the traffic lights */
 :root body .tb-main.tb-standalone-window { padding-top: 38px; }
+
+/* The side bar of the desktop app: Préférences, then the account at the very bottom (its menu has
+   « Se déconnecter »); the name of Préférences only on Windows (windows.css) */
+.tb-rail-action-label { display: none; }
+.tb-rail-end-desktop .tb-rail-actions { order: 0; }
 
 /* ============================== Windows: WinUI 3 title bar */
 
@@ -75,12 +93,12 @@
     z-index: -1;
     border-bottom: 1px solid transparent;
     background: transparent;
-    -webkit-backdrop-filter: blur(30px) saturate(150%);
-    backdrop-filter: blur(30px) saturate(150%);
     pointer-events: none;
     transition: background-color .167s linear, border-color .167s linear;
 }
 .tb-titlebar.tb-titlebar-scrolled::before {
+    -webkit-backdrop-filter: blur(30px) saturate(150%);
+    backdrop-filter: blur(30px) saturate(150%);
     background: color-mix(in srgb, var(--tb-background) 70%, transparent);
     border-bottom-color: var(--md-outline-variant);
 }
@@ -198,6 +216,5 @@
     :root[data-desktop="macos"]:not([data-sidebar="collapsed"]) .tb-rail-fold { top: 46px; }
 }
 :root[data-desktop="macos"] .tb-topbar { padding-left: 84px; }
-:root[data-desktop="macos"] .tb-auth-corner { top: 10px; }
 /* The fonts of the system on a Mac app, the figures stay ThermoBox's */
 :root[data-desktop="macos"] body { -webkit-font-smoothing: antialiased; }

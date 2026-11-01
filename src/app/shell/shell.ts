@@ -1,3 +1,4 @@
+import { NgTemplateOutlet } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -53,7 +54,7 @@ const SLIDE = 8;
  */
 @Component({
   selector: 'tb-shell',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, TbSheet, TbAccounts, TbServerLogo],
+  imports: [NgTemplateOutlet, RouterOutlet, RouterLink, RouterLinkActive, TbSheet, TbAccounts, TbServerLogo],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './shell.html',
   host: {

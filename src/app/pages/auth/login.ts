@@ -1,4 +1,5 @@
 import { DesktopService } from '../../core/desktop';
+import { VERSION_CLIENT } from '../../core/version';
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 
@@ -30,6 +31,8 @@ export class LoginPage {
   protected readonly prefs = inject(PreferencesService);
   protected readonly platform = inject(PlatformService);
   protected readonly desktop = inject(DesktopService);
+  /** Version of this client (desktop app, foot of the page). */
+  protected readonly version = VERSION_CLIENT;
 
   // Query parameters (withComponentInputBinding)
   readonly deletedAccount = input<string>();

@@ -64,6 +64,10 @@ const ROLE: Record<string, string> = { ADMIN: 'Administrateur', MANAGER: 'Gestio
           <div class="tb-accounts-menu-foot">
             <button type="button" class="tb-sheet-item tb-account-adding" (click)="add()"><i class="pi pi-user-plus"></i>Ajouter un compte</button>
             <a routerLink="/app/profile" class="tb-sheet-item" (click)="open.set(false)"><i class="pi pi-user"></i>Mon profil</a>
+            <!-- Desktop app: the account is the last item of the side bar, its menu has the logout -->
+            @if (logoutHere()) {
+              <button type="button" class="tb-sheet-item tb-account-logout" (click)="logout()"><i class="pi pi-sign-out"></i>Se déconnecter</button>
+            }
           </div>
         </div>
       }
@@ -84,6 +88,8 @@ export class TbAccounts {
 
   readonly open = model(false);
   readonly mode = input<'sheet' | 'menu'>('sheet');
+  /** The menu also offers « Se déconnecter » (desktop app: no logout button in the side bar). */
+  readonly logoutHere = input(false);
 
   constructor() {
     // The menu: a click outside it (and outside what opened it) or Escape closes it
@@ -136,6 +142,11 @@ export class TbAccounts {
     if (!ok) return;
     if (current) this.open.set(false);
     await this.auth.forgetAccount(c.key);
+  }
+
+  protected logout(): void {
+    this.open.set(false);
+    void this.auth.logout();
   }
 
   protected add(): void {
