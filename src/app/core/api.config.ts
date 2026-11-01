@@ -34,6 +34,14 @@ export class ServeurService {
   /** What the user typed, as shown in the field ("thermobox.exemple.fr"). */
   readonly saisie = computed(() => this.choisi() ?? '');
 
+  /** The server as people read it: « thermobox.exemple.fr », or this site's host for "/api". */
+  readonly lisible = computed(() => adresseLisible(this.base()));
+
+  /** The default address (this site on the web; none in the mobile app). */
+  get defaut(): string {
+    return this.parDefaut;
+  }
+
   url(chemin: string): string {
     return this.base() + chemin;
   }
@@ -43,18 +51,40 @@ export class ServeurService {
    * "https://thermobox.lan:8080/api" ("http://" kept when typed); empty goes back to the default.
    */
   definir(saisie: string): void {
-    const brut = saisie.trim();
-    if (!brut) {
-      this.choisi.set(null);
-      ecrire(null);
-      return;
-    }
-    let url = /^https?:\/\//i.test(brut) ? brut : `https://${brut}`;
-    url = url.replace(/\/+$/, '');
-    if (!/\/api$/i.test(url)) url += '/api';
-    this.choisi.set(url);
-    ecrire(url);
+    this.utiliser(versBase(saisie));
   }
+
+  /** Talks to [base] from now on (an API base as base() gives it; null or empty: the default). */
+  utiliser(base: string | null): void {
+    const v = base && base !== this.parDefaut ? base : null;
+    this.choisi.set(v);
+    ecrire(v);
+  }
+
+  /** Base of the API for what the user typed; empty: the default one. */
+  baseDe(saisie: string): string {
+    return versBase(saisie) ?? this.parDefaut;
+  }
+}
+
+/**
+ * API base for an address typed by the user: "thermobox.lan:8080" becomes
+ * "https://thermobox.lan:8080/api" ("http://" kept when typed); null when empty.
+ */
+export function versBase(saisie: string): string | null {
+  const brut = saisie.trim();
+  if (!brut) return null;
+  let url = /^https?:\/\//i.test(brut) ? brut : `https://${brut}`;
+  url = url.replace(/\/+$/, '');
+  if (!/\/api$/i.test(url)) url += '/api';
+  return url;
+}
+
+/** « thermobox.exemple.fr:8080 » for "https://thermobox.exemple.fr:8080/api"; this site for "/api". */
+export function adresseLisible(base: string | null | undefined): string {
+  if (!base) return '';
+  if (base.startsWith('/')) return location.host;
+  return base.replace(/^https:\/\//i, '').replace(/\/api$/i, '').replace(/\/+$/, '');
 }
 
 function lire(): string | null {

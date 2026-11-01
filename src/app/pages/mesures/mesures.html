@@ -1,7 +1,7 @@
 <header class="tb-page-head">
   <div class="tb-page-title">
     <span class="tb-eyebrow">{{ parBatiment() ? 'Tous les bâtiments' : 'Toutes les salles' }}</span>
-    <h1>Températures</h1>
+    <h1>{{ maison() ? 'Historique' : 'Températures' }}</h1>
   </div>
   <button type="button" class="tb-btn tb-icon tb-tonal" data-action="actualiser" title="Actualiser" aria-label="Actualiser" [class.tb-busy]="chargement()" (click)="actualiser()">
     <i class="pi pi-refresh"></i>

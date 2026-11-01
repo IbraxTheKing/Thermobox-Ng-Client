@@ -2,6 +2,11 @@ import { Injectable, inject, signal } from '@angular/core';
 import { Title } from '@angular/platform-browser';
 import { RouterStateSnapshot, TitleStrategy } from '@angular/router';
 
+import { PreferencesService } from './preferences';
+
+/** « Maison »: the words of a home for the same pages (as their headings). */
+const MAISON: Record<string, string> = { 'Aperçu': 'Maison', 'Bâtiments et salles': 'Pièces', 'Températures': 'Historique' };
+
 /**
  * Title of the current page: in the browser tab ("Thermobox – Aperçu") and in the top bar of
  * phones once the page title has scrolled away (iOS, Android). Routes give it with `title`; a page
@@ -21,8 +26,10 @@ export class TitreService {
 @Injectable({ providedIn: 'root' })
 export class TitreStrategie extends TitleStrategy {
   private readonly titres = inject(TitreService);
+  private readonly prefs = inject(PreferencesService);
 
   override updateTitle(snapshot: RouterStateSnapshot): void {
-    this.titres.definir(this.buildTitle(snapshot) ?? '');
+    const titre = this.buildTitle(snapshot) ?? '';
+    this.titres.definir(this.prefs.style() !== 'panneau' ? (MAISON[titre] ?? titre) : titre);
   }
 }

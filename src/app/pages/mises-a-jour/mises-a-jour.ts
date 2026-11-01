@@ -7,6 +7,7 @@ import { AvisMajService } from '../../core/avis-maj';
 import { longue } from '../../core/dates';
 import { markdownVersHtml } from '../../core/markdown';
 import { ToastService } from '../../core/messages';
+import { FlipService } from '../../core/flip';
 import { EtatMisesAJour, Preparation, VersionDisponible } from '../../models/models';
 import { UpdateService } from '../../services/update.service';
 import { TbSheet } from '../../ui/sheet';
@@ -33,6 +34,7 @@ export class MisesAJourPage implements OnInit, OnDestroy {
   private readonly api = inject(UpdateService);
   private readonly avis = inject(AvisMajService);
   private readonly toasts = inject(ToastService);
+  private readonly flip = inject(FlipService);
 
   protected readonly etat = signal<EtatMisesAJour | null>(null);
   protected readonly verification = signal(false);
@@ -61,7 +63,7 @@ export class MisesAJourPage implements OnInit, OnDestroy {
     const toutes = e ? [...e.available, ...e.olderVersions] : [];
     const parCle = new Map<string, number>();
     for (const v of toutes) parCle.set(cle(v), (parCle.get(cle(v)) ?? 0) + 1);
-    const ordre = ['rc', 'beta', 'nightly', 'stable'];
+    const ordre = ['alpha', 'beta', 'rc', 'nightly', 'stable'];
     return [...ordre, ...[...parCle.keys()].filter((k) => !ordre.includes(k)).sort()]
       .filter((k) => parCle.has(k))
       .map((k) => ({ cle: k, libelle: libelle(k), nombre: parCle.get(k)!, couleur: couleur(k) }));
@@ -97,7 +99,7 @@ export class MisesAJourPage implements OnInit, OnDestroy {
   }
 
   protected filtrerCanal(c: string): void {
-    this.canalFiltre.update((x) => (x === c ? null : c));
+    this.flip.animer(() => this.canalFiltre.update((x) => (x === c ? null : c)));
   }
 
   private filtrees(l: VersionDisponible[]): VersionDisponible[] {
@@ -182,9 +184,15 @@ function cle(v: VersionDisponible): string {
   return v.prerelease ? v.channel || 'test' : 'stable';
 }
 
-/** Colour of a version: stable (green), test for beta / rc (orange), nightly (violet). */
+/** Colour of a version: stable (green), alpha (blue), beta / rc (orange), nightly (violet). */
 function couleur(c: string): string {
-  return c === 'stable' ? 'stable' : c === 'nightly' ? 'nightly' : 'test';
+  return c === 'stable'
+    ? 'stable'
+    : c === 'alpha'
+      ? 'alpha'
+      : c === 'nightly'
+        ? 'nightly'
+        : 'test';
 }
 
 function libelle(c: string): string {

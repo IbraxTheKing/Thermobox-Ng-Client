@@ -43,3 +43,6 @@ __screenshots__/
 # System files
 .DS_Store
 Thumbs.db
+
+# Build output of the local Capacitor plugin (Gradle)
+/plugins/*/android/build

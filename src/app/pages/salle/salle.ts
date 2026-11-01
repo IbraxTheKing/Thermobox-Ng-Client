@@ -1,6 +1,6 @@
-import { ChangeDetectionStrategy, Component, OnDestroy, computed, effect, inject, input, signal, untracked } from '@angular/core';
-import { Location } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnDestroy, computed, effect, inject, input, signal, untracked } from '@angular/core';
+import { Location, NgTemplateOutlet } from '@angular/common';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
 import { messageErreur } from '../../core/api.config';
@@ -10,10 +10,17 @@ import { complet, jjmmAHHmm, jjmmHHmm, temps, versChamp } from '../../core/dates
 import { etatDe } from '../../core/etat';
 import { ConfirmService, ToastService } from '../../core/messages';
 import { PlateformeService } from '../../core/plateforme';
+import { PreferencesService } from '../../core/preferences';
+import { couleurEcartMaison, couleurPiece, couleurTemperature, teinteDouce, teinteForte } from '../../core/couleurs';
+import { FondService } from '../../core/fond';
 import { TitreService } from '../../core/titre';
+import { TransitionsService } from '../../core/transitions';
+import { FlipService } from '../../core/flip';
+import { RetourGesteService } from '../../core/retour-geste';
 import { UniteService } from '../../core/unite';
 import { DetailElement, Historique, Noeud, Point } from '../../models/models';
 import { ArbreStore, LIBELLES } from '../../services/arbre.store';
+import { CacheCourbes, fraicheur } from '../../core/cache-courbes';
 import { ClimatService } from '../../services/climat.service';
 import { FavoriService } from '../../services/favori.service';
 import { HierarchieService } from '../../services/hierarchie.service';
@@ -22,6 +29,7 @@ import { SalleService } from '../../services/salle.service';
 import { TbStepper, TbSwitch, TbWatch } from '../../ui/controles';
 import { SerieGraphique, TbGraphique } from '../../ui/graphique';
 import { TbPhotoImg } from '../../ui/photo';
+import { TbMolette } from '../../ui/molette';
 
 /** One colour per box or salle, defined by the theme (light and dark differ). */
 const PALETTE = Array.from({ length: 8 }, (_, i) => `--tb-serie-${i + 1}`);
@@ -34,7 +42,7 @@ const TAILLE_MAX_PHOTO = 10 * 1024 * 1024;
  */
 @Component({
   selector: 'tb-salle',
-  imports: [RouterLink, TbStepper, TbSwitch, TbWatch, TbGraphique, TbPhotoImg],
+  imports: [RouterLink, NgTemplateOutlet, TbStepper, TbSwitch, TbWatch, TbGraphique, TbPhotoImg, TbMolette],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './salle.html',
 })
@@ -42,11 +50,17 @@ export class SallePage implements OnDestroy {
   protected readonly auth = inject(AuthService);
   protected readonly unite = inject(UniteService);
   private readonly climat = inject(ClimatService);
+  private readonly cache = inject(CacheCourbes);
   private readonly salles = inject(SalleService);
   private readonly hierarchie = inject(HierarchieService);
   private readonly favoris = inject(FavoriService);
   private readonly images = inject(ImagesService);
   private readonly store = inject(ArbreStore);
+  private readonly transitions = inject(TransitionsService);
+  private readonly flip = inject(FlipService);
+  protected readonly tel = inject(PlateformeService).telephone;
+  /** Phones: the « Du / Au » fields are shown. */
+  protected readonly plagePerso = signal(false);
   private readonly toasts = inject(ToastService);
   private readonly confirm = inject(ConfirmService);
   private readonly titre = inject(TitreService);
@@ -86,6 +100,52 @@ export class SallePage implements OnDestroy {
   protected readonly salleSimple = computed(() => this.kind() === 'SALLE');
   protected readonly etat = computed(() => etatDe(this.element()?.temperature, this.element()?.consigne?.value));
   protected readonly derniereMesure = computed(() => this.element()?.derniereMesure ?? null);
+
+  // Look of the site (tokens.css)
+  private readonly prefs = inject(PreferencesService);
+  private readonly fond = inject(FondService);
+  protected readonly panneau = computed(() => this.prefs.style() === 'panneau');
+  private readonly sombre = computed(() => this.prefs.theme() === 'dark');
+  /** Maison: the colour of the temperature itself (the dial, the page behind it). */
+  protected readonly couleurMaison = computed(() => teinteForte(this.couleurBase(), this.sombre()));
+  /**
+   * Maison: the colour of the room (its gap to the consigne, or its temperature: Préférences).
+   * While the dial is being turned, the page previews the consigne asked for: by gap, the room
+   * against that consigne; by temperature, the temperature asked for.
+   */
+  private readonly couleurBase = computed(() => {
+    const e = this.element();
+    const mode = this.prefs.couleursMaison();
+    const tolerance = this.prefs.tolerance();
+    if (this.consigneModifiee() && this.auth.peutReglerConsigne()) {
+      const nouvelle = this.unite.saisieVersCelsius(this.nouvelleConsigne()!);
+      return mode === 'ecart' && e?.temperature != null ? couleurEcartMaison(e.temperature - nouvelle, tolerance) : couleurTemperature(nouvelle);
+    }
+    return couleurPiece(e?.temperature, e?.consigne?.value, mode, tolerance);
+  });
+  /** Panneau: the gap to the consigne, written beside the state. */
+  protected readonly ecart = computed(() => {
+    const e = this.element();
+    return e?.temperature != null && e.consigne?.value != null ? e.temperature - e.consigne.value : null;
+  });
+  /** Maison: the dial was turned away from the current consigne. */
+  protected readonly consigneModifiee = computed(() => {
+    const v = this.nouvelleConsigne();
+    const c = this.element()?.consigne?.value;
+    return v != null && (c == null || Math.abs(this.unite.saisieVersCelsius(v) - c) >= 0.05);
+  });
+  /** Maison: what the room is doing, in a sentence. */
+  protected readonly phraseMaison = computed(() => {
+    const e = this.element();
+    if (!e || this.boitier()) return '';
+    const c = e.consigne?.value;
+    switch (this.etat().ton) {
+      case 'stable': return 'Il fait bon.';
+      case 'chauffe': return `Chauffe pour atteindre ${this.unite.t(c)} ${this.unite.symbole()}.`;
+      case 'chaud': return `Un peu chaud : ${this.unite.ecart(this.ecart()).replace('+', '')} au-dessus de l'objectif.`;
+      default: return e.temperature == null ? 'Pas encore de mesure.' : "Pas d'objectif réglé.";
+    }
+  });
 
   /** « Étage 1 (19,0 °C), Everest (22,5 °C) » */
   protected readonly consignesPropresLabel = computed(() =>
@@ -127,6 +187,27 @@ export class SallePage implements OnDestroy {
   protected readonly pagesConsignes = computed(() => Math.max(1, Math.ceil(this.consignesPeriode().length / 10)));
 
   constructor() {
+    // The page takes the colour of the state of the salle, at once from what the dashboard
+    // already knows (it then comes with the card that morphs into this page)
+    const idDepart = Number(inject(ActivatedRoute).snapshot.paramMap.get('id'));
+    const connu = this.store.parId().get(idDepart);
+    if (connu) this.transitions.definirTon(etatDe(connu.temperature, connu.consigne?.value).ton);
+    // Before the first render: the card of the dashboard morphs into this page, its picture is
+    // taken right after that render (an effect could come one render too late)
+    this.amorcer(idDepart);
+    // Phones: swipe the page to the right to go back (TbRetourGeste)
+    inject(RetourGesteService).activer(() => this.retour());
+    effect(() => {
+      const e = this.element();
+      if (e) this.transitions.definirTon(this.etat().ton);
+    });
+    inject(DestroyRef).onDestroy(() => this.transitions.definirTon(null));
+    // Maison: the page takes the soft colour of the temperature
+    effect(() => {
+      const e = this.element();
+      this.fond.teinter(e && !this.panneau() ? teinteDouce(this.couleurBase(), this.sombre()) : null);
+    });
+    inject(DestroyRef).onDestroy(() => this.fond.teinter(null));
     effect(() => {
       const id = Number(this.id());
       untracked(() => void this.ouvrir(id));
@@ -139,9 +220,11 @@ export class SallePage implements OnDestroy {
 
   private async ouvrir(id: number): Promise<void> {
     clearInterval(this.minuterie);
-    this.detail.set(null);
+    // Already shown from the dashboard's data (constructor): kept until the server answers
+    if (this.detail()?.element.id !== id) this.amorcer(id);
     this.introuvable.set(false);
-    this.historique.set(null);
+    // The last 24 h of this salle, if already read: there at once
+    this.historique.set(isNaN(id) ? null : (this.cache.lire<Historique>(`salle|${id}|24`)?.valeur ?? null));
     this.nouvelleConsigne.set(null);
     this.forcer.set(false);
     this.periode(24, false);
@@ -153,6 +236,27 @@ export class SallePage implements OnDestroy {
     if (!this.detail()) return;
     void this.chargerHistorique();
     this.minuterie = setInterval(() => void this.rafraichir(id, true), 30_000);
+  }
+
+  /**
+   * What the dashboard already knows (name, temperature, consigne, place): the page is there at
+   * once, so the card has a page to morph into; the rest comes with the server's answer.
+   */
+  private amorcer(id: number): void {
+    const connu = isNaN(id) ? undefined : this.store.parId().get(id);
+    if (!connu) {
+      this.detail.set(null);
+      return;
+    }
+    this.detail.set({
+      element: connu,
+      ancetres: this.store.chemin(id).map((a) => ({ id: a.id, name: a.name, kind: a.kind, accessible: a.accessible })),
+      enfants: [],
+      mesures: [],
+      consignesPropres: [],
+      salles: [],
+    });
+    this.titre.definir(connu.name ?? 'Salle');
   }
 
   private async rafraichir(id: number, discret: boolean): Promise<void> {
@@ -172,6 +276,7 @@ export class SallePage implements OnDestroy {
         }
         return;
       }
+      this.detail.set(null);
       this.introuvable.set(true);
       this.titre.definir('Élément introuvable');
     }
@@ -182,8 +287,8 @@ export class SallePage implements OnDestroy {
   }
 
   /** Back to where we came from (the dashboard card returns to its place), else to the dashboard. */
-  protected retour(e: Event): void {
-    e.preventDefault();
+  protected retour(e?: Event): void {
+    e?.preventDefault();
     const etat = this.location.getState() as { navigationId?: number } | null;
     if (etat?.navigationId && etat.navigationId > 1) this.location.back();
     else void this.router.navigateByUrl('/app/apercu');
@@ -195,7 +300,8 @@ export class SallePage implements OnDestroy {
     const d = this.detail();
     if (!d) return;
     const favori = !d.element.favori;
-    this.majElement({ ...d.element, favori });
+    // Its star spins (FlipService)
+    this.flip.animer(() => this.majElement({ ...d.element, favori }));
     this.plateforme.vibrer();
     try {
       await firstValueFrom(favori ? this.favoris.ajouter(d.element.id) : this.favoris.retirer(d.element.id));
@@ -241,9 +347,18 @@ export class SallePage implements OnDestroy {
       const texte = details.charAt(0).toUpperCase() + details.slice(1);
       if (r.echecs.length) this.toasts.warn(titre, `${texte}. Non transmise à : ${r.echecs.map((x) => x.name).join(', ')}`);
       else this.toasts.info(titre, texte);
+      // The colours follow at once, here and on the dashboard: the element takes its new consigne
+      // before the server's answer, the tree (and what inherits from it) is read again
+      const consigne = { value: celsius, date: new Date().toISOString(), heritee: false, sourceId: e.id, sourceName: e.name };
+      const d = this.detail();
+      if (d) this.detail.set({ ...d, element: { ...d.element, consigne } });
+      this.store.remplacer({ ...e, consigne });
+      void this.store.charger(true).catch(() => undefined);
       this.nouvelleConsigne.set(null);
       this.forcer.set(false);
       await this.rafraichir(e.id, true);
+      // The new consigne is in the history: read again, for every period
+      this.cache.oublier(`salle|${e.id}|`);
       void this.chargerHistorique();
     } catch (err) {
       this.toasts.error('Consigne refusée', messageErreur(err));
@@ -257,6 +372,7 @@ export class SallePage implements OnDestroy {
   /** Shortcuts 24 h / 7 j / 30 j */
   protected periode(heures: number, charger = true): void {
     this.periodeHeures.set(heures);
+    this.plagePerso.set(false);
     const fin = new Date();
     fin.setSeconds(0, 0);
     this.fin.set(versChamp(fin));
@@ -279,11 +395,25 @@ export class SallePage implements OnDestroy {
       this.toasts.error('La date de début doit précéder la date de fin');
       return;
     }
+    // A period of the shortcuts (24 h, 7 j, 30 j): kept in memory, shown at once when coming back;
+    // read again only when it is no longer recent
+    const heures = this.periodeHeures();
+    const cle = heures != null ? `salle|${e.id}|${heures}` : null;
+    const garde = cle ? this.cache.lire<Historique>(cle) : null;
+    if (garde) {
+      if (this.historique() !== garde.valeur) this.pageConsignes.set(0);
+      this.historique.set(garde.valeur);
+      if (garde.age < fraicheur(heures!)) return;
+    }
     try {
-      this.historique.set(await firstValueFrom(this.climat.historique(e.id, debut, fin)));
-      this.pageConsignes.set(0);
+      const h = await firstValueFrom(this.climat.historique(e.id, debut, fin));
+      // Still the page and the period asked for
+      if (this.element()?.id !== e.id || this.periodeHeures() !== heures) return;
+      this.historique.set(h);
+      if (!garde) this.pageConsignes.set(0);
+      if (cle) this.cache.ecrire(cle, h);
     } catch (err) {
-      this.toasts.error("Impossible de charger l'historique", messageErreur(err));
+      if (!garde) this.toasts.error("Impossible de charger l'historique", messageErreur(err));
     }
   }
 

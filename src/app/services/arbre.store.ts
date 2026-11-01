@@ -2,6 +2,7 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 
 import { messageErreur } from '../core/api.config';
+import { surChangementDeCompte } from '../core/auth';
 import { Arbre, Noeud, SalleKind } from '../models/models';
 import { normaliser } from '../core/texte';
 import { HierarchieService } from './hierarchie.service';
@@ -55,6 +56,15 @@ export class ArbreStore {
   private readonly api = inject(HierarchieService);
 
   readonly arbre = signal<Arbre | null>(null);
+
+  constructor() {
+    // Another account (or none): its tree is not this one
+    surChangementDeCompte(() => {
+      this.arbre.set(null);
+      this.erreur.set(null);
+    });
+  }
+
   readonly erreur = signal<string | null>(null);
   readonly chargement = signal(false);
 
