@@ -5,6 +5,7 @@ import { ToastService } from '../../core/messages';
 import { UnitService, parseNumber } from '../../core/unit';
 import { TemperatureLimits } from '../../models/models';
 import { ABSOLUTE_LIMITS, ServerFeaturesService } from '../../services/server-features.service';
+import { TrPipe } from '../../ui/tr.pipe';
 
 /**
  * The settings of the server itself (ADMIN, 26.12): its logo, and the temperatures it accepts
@@ -12,49 +13,50 @@ import { ABSOLUTE_LIMITS, ServerFeaturesService } from '../../services/server-fe
  */
 @Component({
   selector: 'tb-server-settings',
+  imports: [TrPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="tb-panel tb-pref-server">
     <div class="tb-prefs">
       <div class="tb-pref tb-pref-logo">
         <span class="tb-server-logo-preview">
-          @if (features.logo(); as l) { <img [src]="l" alt="Logo du serveur" /> } @else { <i class="pi pi-server"></i> }
+          @if (features.logo(); as l) { <img [src]="l" i18n-alt alt="Logo du serveur" /> } @else { <i class="pi pi-server"></i> }
         </span>
         <div class="tb-pref-text">
-          <strong>Logo</strong>
-          <span class="tb-muted">{{ logoSource() }} Affiché à côté du serveur dans la liste des comptes de chacun.</span>
+          <strong i18n>Logo</strong>
+          <span i18n class="tb-muted">{{ logoSource() }} Affiché à côté du serveur dans la liste des comptes de chacun.</span>
         </div>
         <div class="tb-pref-actions">
-          <label class="tb-btn tb-tonal" [class.tb-disabled]="logoSaving()">
+          <label i18n class="tb-btn tb-tonal" [class.tb-disabled]="logoSaving()">
             <i class="pi pi-upload"></i>Changer
             <input type="file" accept="image/png,image/jpeg,image/gif,image/svg+xml" hidden [disabled]="logoSaving()" (change)="changeLogo($event)" />
           </label>
           @if (features.info()?.logoSource === 'custom') {
-            <button type="button" class="tb-btn tb-flat" [disabled]="logoSaving()" (click)="resetLogo()">Automatique</button>
+            <button i18n type="button" class="tb-btn tb-flat" [disabled]="logoSaving()" (click)="resetLogo()">Automatique</button>
           }
         </div>
       </div>
       <form class="tb-pref tb-pref-limits" (submit)="saveLimits($event)">
         <span class="tb-section-icon"><i class="pi pi-sliders-h"></i></span>
         <div class="tb-pref-text">
-          <strong>Températures acceptées</strong>
-          <span class="tb-muted">
+          <strong i18n>Températures acceptées</strong>
+          <span i18n class="tb-muted">
             Une consigne hors de ces bornes est refusée ; une mesure hors bornes est prise pour une erreur de capteur et ignorée.
           </span>
           <div class="tb-limits">
             @for (l of limitRows; track l.key) {
               <fieldset class="tb-limits-row">
                 <legend>{{ l.label }}</legend>
-                <label>de <input class="tb-input" type="number" inputmode="decimal" step="0.5" [value]="limitValue(l.key, 'min')" (input)="setLimit(l.key, 'min', $event)" [attr.aria-label]="l.label + ' minimale'" /></label>
-                <label>à <input class="tb-input" type="number" inputmode="decimal" step="0.5" [value]="limitValue(l.key, 'max')" (input)="setLimit(l.key, 'max', $event)" [attr.aria-label]="l.label + ' maximale'" /></label>
+                <label i18n>de <input class="tb-input" type="number" inputmode="decimal" step="0.5" [value]="limitValue(l.key, 'min')" (input)="setLimit(l.key, 'min', $event)" [attr.aria-label]="l.label + (' minimale' | tr)" /></label>
+                <label i18n>à <input class="tb-input" type="number" inputmode="decimal" step="0.5" [value]="limitValue(l.key, 'max')" (input)="setLimit(l.key, 'max', $event)" [attr.aria-label]="l.label + (' maximale' | tr)" /></label>
                 <span class="tb-muted">{{ unit.symbol() }}</span>
               </fieldset>
             }
           </div>
           @if (limitsError(); as e) { <span class="tb-field-error">{{ e }}</span> }
           <div class="tb-limits-actions">
-            <button type="submit" class="tb-btn" [disabled]="limitsSaving() || !limitsChanged()">Enregistrer</button>
-            <button type="button" class="tb-btn tb-flat" [disabled]="limitsSaving()" (click)="resetLimits()">Valeurs par défaut</button>
+            <button i18n type="submit" class="tb-btn" [disabled]="limitsSaving() || !limitsChanged()">Enregistrer</button>
+            <button i18n type="button" class="tb-btn tb-flat" [disabled]="limitsSaving()" (click)="resetLimits()">Valeurs par défaut</button>
           </div>
         </div>
       </form>
@@ -70,12 +72,12 @@ export class ServerSettings {
 
   protected readonly logoSaving = signal(false);
   protected readonly logoSource = computed(
-    () => ({ custom: 'Choisi par un administrateur.', site: 'Celui du site du serveur.', default: 'Celui de ThermoBox.' })[this.features.info()?.logoSource ?? 'default'] ?? '',
+    () => ({ custom: $localize`Choisi par un administrateur.`, site: $localize`Celui du site du serveur.`, default: $localize`Celui de ThermoBox.` })[this.features.info()?.logoSource ?? 'default'] ?? '',
   );
 
   protected readonly limitRows: { key: keyof TemperatureLimits; label: string }[] = [
-    { key: 'setpoint', label: 'Consigne' },
-    { key: 'measurement', label: 'Mesure' },
+    { key: 'setpoint', label: $localize`Consigne` },
+    { key: 'measurement', label: $localize`Mesure` },
   ];
   /** Typed values (in the unit shown), until saved. */
   private readonly typed = signal<Partial<Record<`${keyof TemperatureLimits}.${'min' | 'max'}`, number | null>>>({});
@@ -103,13 +105,13 @@ export class ServerSettings {
     const limits = structuredClone(current);
     for (const [path, v] of Object.entries(this.typed())) {
       const [k, b] = path.split('.') as [keyof TemperatureLimits, 'min' | 'max'];
-      if (v == null) return this.limitsError.set('Chaque borne doit être un nombre');
+      if (v == null) return this.limitsError.set($localize`Chaque borne doit être un nombre`);
       limits[k][b] = this.unit.inputToCelsius(v);
     }
     for (const l of this.limitRows) {
-      if (limits[l.key].min >= limits[l.key].max) return this.limitsError.set(`${l.label} : le minimum doit être plus bas que le maximum`);
+      if (limits[l.key].min >= limits[l.key].max) return this.limitsError.set($localize`${l.label} : le minimum doit être plus bas que le maximum`);
       if (limits[l.key].min < ABSOLUTE_LIMITS.min || limits[l.key].max > ABSOLUTE_LIMITS.max)
-        return this.limitsError.set(`Les bornes restent entre ${this.unit.withSymbol(ABSOLUTE_LIMITS.min)} et ${this.unit.withSymbol(ABSOLUTE_LIMITS.max)}`);
+        return this.limitsError.set($localize`Les bornes restent entre ${this.unit.withSymbol(ABSOLUTE_LIMITS.min)} et ${this.unit.withSymbol(ABSOLUTE_LIMITS.max)}`);
     }
     this.limitsSaving.set(true);
     try {

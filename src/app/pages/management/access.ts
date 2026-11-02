@@ -21,6 +21,7 @@ import { TbSwitch } from '../../ui/controls';
 import { PlatformService } from '../../core/platform';
 import { FlipService } from '../../core/flip';
 import { followSelectionBar } from '../../ui/selection-bar';
+import { TrPipe } from '../../ui/tr.pipe';
 
 /**
  * « Utilisateurs et groupes » tab of the Gestion page (ADMIN only, gestion-droits.xhtml): roles
@@ -34,7 +35,7 @@ const NO_GROUP = -1;
 
 @Component({
   selector: 'tb-access',
-  imports: [TbSheet, TbSwitch, TbMultipleChoice, TbAccessTree, TbPager, TbUserAccessSheet, TbUserGroupsSheet, TbUserFormSheet],
+  imports: [TrPipe, TbSheet, TbSwitch, TbMultipleChoice, TbAccessTree, TbPager, TbUserAccessSheet, TbUserGroupsSheet, TbUserFormSheet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './access.html',
 })
@@ -85,15 +86,15 @@ export class AccessTab implements OnInit {
   protected readonly groupsOpen = signal(false);
   protected readonly NO_GROUP = NO_GROUP;
   protected readonly groupChoices = computed<Option[]>(() => [
-    { id: NO_GROUP, label: 'Sans groupe' },
+    { id: NO_GROUP, label: $localize`Sans groupe` },
     ...this.access.groups().map((g) => ({ id: g.id, label: g.name, detail: `${g.members.length}` })),
   ]);
   protected readonly filtering = computed(() => this.roleFilter().size > 0 || this.groupFilter().size > 0);
   /** « Équipe 1, Équipe 2 », « 4 groupes ». */
   protected readonly groupFilterText = computed(() => {
     const ids = [...this.groupFilter()];
-    if (!ids.length) return 'Tous les groupes';
-    const names = ids.map((id) => (id === NO_GROUP ? 'Sans groupe' : this.access.groups().find((g) => g.id === id)?.name ?? '?'));
+    if (!ids.length) return $localize`Tous les groupes`;
+    const names = ids.map((id) => (id === NO_GROUP ? $localize`Sans groupe` : this.access.groups().find((g) => g.id === id)?.name ?? '?'));
     return names.length <= 2 ? names.join(', ') : `${names.length} groupes`;
   });
 
@@ -146,7 +147,7 @@ export class AccessTab implements OnInit {
   /** « user021, user022, user023 et 12 autres » */
   protected firstNames(g: Group, n: number): string {
     const names = g.members.slice(0, n).map((m) => m.username).join(', ');
-    return g.members.length > n ? `${names} et ${g.members.length - n} autre(s)` : names;
+    return g.members.length > n ? $localize`${names} et ${g.members.length - n} autre(s)` : names;
   }
 
   // ---------------------------------------------------------------- accounts
@@ -196,7 +197,7 @@ export class AccessTab implements OnInit {
   }
 
   protected roleName(r: UserRole | null | undefined): string {
-    return r ? ({ ADMIN: 'Admin', MANAGER: 'Gestionnaire', VIEWER: 'Lecteur' }[r] ?? r) : '';
+    return r ? ({ ADMIN: $localize`Admin`, MANAGER: $localize`Gestionnaire`, VIEWER: $localize`Lecteur` }[r] ?? r) : '';
   }
 
   // ---------------------------------------------------------------- phones: one user in a sheet
@@ -268,7 +269,7 @@ export class AccessTab implements OnInit {
     for (const l of targets) {
       // Never lock oneself out of administration
       if (this.auth.isMe(l.user) && role !== 'ADMIN') {
-        ignored.push(`${l.user.username} (votre propre compte)`);
+        ignored.push($localize`${l.user.username} (votre propre compte)`);
         continue;
       }
       if (l.user.type === role) continue;
@@ -279,7 +280,7 @@ export class AccessTab implements OnInit {
         ignored.push(`${l.user.username} (${errorMessage(e)})`);
       }
     }
-    if (n > 0) this.toasts.info(`Rôle ${role} pour ${n} utilisateur(s)`, role !== 'ADMIN' ? "Un ancien administrateur n'a plus accès à rien tant que vous ne lui en donnez pas." : null);
+    if (n > 0) this.toasts.info($localize`Rôle ${role} pour ${n} utilisateur(s)`, role !== 'ADMIN' ? $localize`Un ancien administrateur n'a plus accès à rien tant que vous ne lui en donnez pas.` : null);
     if (ignored.length) this.toasts.warn('Non modifié', ignored.join(', '));
     await this.load();
   }
@@ -296,10 +297,10 @@ export class AccessTab implements OnInit {
         await firstValueFrom(this.users.setAccess(l.user.id!, !all, all ? [] : (l.access?.elements ?? []).map((e) => e.id)));
         n++;
       } catch (e) {
-        this.toasts.error(`Accès de ${l.user.username} non modifiés`, errorMessage(e));
+        this.toasts.error($localize`Accès de ${l.user.username} non modifiés`, errorMessage(e));
       }
     }
-    this.toasts.info(all ? `${n} utilisateur(s) voient tout ThermoBox` : `${n} utilisateur(s) limités à leurs accès et groupes`);
+    this.toasts.info(all ? $localize`${n} utilisateur(s) voient tout ThermoBox` : $localize`${n} utilisateur(s) limités à leurs accès et groupes`);
     await this.load();
   }
 
@@ -319,7 +320,7 @@ export class AccessTab implements OnInit {
     req.members = add ? [...new Set([...req.members, ...ids])] : req.members.filter((m) => !ids.includes(m));
     try {
       await firstValueFrom(this.groupsApi.edit(g.id, req));
-      this.toasts.info(add ? `${ids.length} utilisateur(s) ajouté(s) à « ${g.name} »` : `${ids.length} utilisateur(s) retiré(s) de « ${g.name} »`);
+      this.toasts.info(add ? $localize`${ids.length} utilisateur(s) ajouté(s) à « ${g.name} »` : $localize`${ids.length} utilisateur(s) retiré(s) de « ${g.name} »`);
       this.dlgMembers.set(false);
       if (this.phone()) this.selection.set(new Set());
     } catch (e) {
@@ -378,7 +379,7 @@ export class AccessTab implements OnInit {
     try {
       const id = this.editingId();
       const g = id != null ? await firstValueFrom(this.groupsApi.edit(id, req)) : await firstValueFrom(this.groupsApi.create(req));
-      this.toasts.info(`Groupe « ${g.name} » enregistré`, `${req.members.length} membre(s), ${elements.length} élément(s) et leur contenu`);
+      this.toasts.info($localize`Groupe « ${g.name} » enregistré`, $localize`${req.members.length} membre(s), ${elements.length} élément(s) et leur contenu`);
       this.dlgGroup.set(false);
       await this.load();
     } catch (err) {
@@ -387,10 +388,10 @@ export class AccessTab implements OnInit {
   }
 
   protected async deleteGroup(g: Group): Promise<void> {
-    if (!(await this.confirm.ask('Supprimer', `Supprimer le groupe « ${g.name} » ? Ses membres gardent leurs propres accès.`, { confirm: 'Supprimer' }))) return;
+    if (!(await this.confirm.ask($localize`Supprimer`, $localize`Supprimer le groupe « ${g.name} » ? Ses membres gardent leurs propres accès.`, { confirm: $localize`Supprimer` }))) return;
     try {
       await firstValueFrom(this.groupsApi.remove(g.id));
-      this.toasts.info(`Groupe « ${g.name} » supprimé`, 'Ses membres gardent leurs propres accès.');
+      this.toasts.info($localize`Groupe « ${g.name} » supprimé`, 'Ses membres gardent leurs propres accès.');
     } catch (e) {
       this.toasts.error('Suppression impossible', errorMessage(e));
     }

@@ -9,6 +9,7 @@ import { ClimateService } from '../../services/climate.service';
 import { ChartSeries, TbChart } from '../../ui/chart';
 import { TbSheet } from '../../ui/sheet';
 import { RoomSummary } from './summary';
+import { TrPipe } from '../../ui/tr.pipe';
 
 const DAY = 24 * 3_600_000;
 
@@ -21,7 +22,7 @@ const DAY = 24 * 3_600_000;
  */
 @Component({
   selector: 'tb-overview-room',
-  imports: [TbSheet, TbChart, RouterLink],
+  imports: [TrPipe, TbSheet, TbChart, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <tb-sheet [(open)]="open" [title]="current()?.room?.name ?? ''" [width]="760">
@@ -33,39 +34,39 @@ const DAY = 24 * 3_600_000;
           </p>
 
           <dl class="tb-overview-room-figures">
-            <div><dt>Maintenant</dt><dd class="tb-figures">{{ unit.withSymbol(r.room.temperature) }}</dd></div>
-            <div><dt>Objectif</dt><dd class="tb-figures">{{ r.room.setpoint?.value != null ? unit.withSymbol(r.room.setpoint?.value) : '—' }}</dd></div>
-            <div><dt>Écart</dt><dd class="tb-figures">{{ r.delta != null ? unit.delta(r.delta) : '—' }}</dd></div>
-            <div><dt>Sur une heure</dt><dd class="tb-figures">{{ r.trend?.variation != null ? unit.delta(r.trend!.variation) : '—' }}</dd></div>
+            <div><dt i18n>Maintenant</dt><dd class="tb-figures">{{ unit.withSymbol(r.room.temperature) }}</dd></div>
+            <div><dt i18n>Objectif</dt><dd class="tb-figures">{{ r.room.setpoint?.value != null ? unit.withSymbol(r.room.setpoint?.value) : '—' }}</dd></div>
+            <div><dt i18n>Écart</dt><dd class="tb-figures">{{ r.delta != null ? unit.delta(r.delta) : '—' }}</dd></div>
+            <div><dt i18n>Sur une heure</dt><dd class="tb-figures">{{ r.trend?.variation != null ? unit.delta(r.trend!.variation) : '—' }}</dd></div>
           </dl>
 
           <div class="tb-chart tb-overview-room-curve">
             @if (chart(); as g) {
-              <tb-chart-view [labels]="g.labels" [series]="g.series" [description]="'Dernières 24 heures de ' + r.room.name" />
+              <tb-chart-view [labels]="g.labels" [series]="g.series" [description]="('Dernières 24 heures de ' | tr) + r.room.name" />
             } @else if (loading()) {
-              <div class="tb-overview-room-waiting" aria-busy="true"><i class="pi pi-spinner pi-spin"></i>Chargement des 24 dernières heures…</div>
+              <div i18n class="tb-overview-room-waiting" aria-busy="true"><i class="pi pi-spinner pi-spin"></i>Chargement des 24 dernières heures…</div>
             } @else {
-              <div class="tb-overview-room-waiting">Pas de mesure ces dernières 24 heures.</div>
+              <div i18n class="tb-overview-room-waiting">Pas de mesure ces dernières 24 heures.</div>
             }
           </div>
 
           <dl class="tb-overview-room-day">
-            <div><dt>Plus bas (24 h)</dt><dd class="tb-figures">{{ unit.withSymbol(day()?.min) }}</dd></div>
-            <div><dt>Plus haut (24 h)</dt><dd class="tb-figures">{{ unit.withSymbol(day()?.max) }}</dd></div>
-            <div><dt>Moyenne (24 h)</dt><dd class="tb-figures">{{ unit.withSymbol(day()?.average) }}</dd></div>
-            <div><dt>À l'objectif</dt><dd class="tb-figures">{{ target() != null ? percent(target()!) + ' du temps' : '—' }}</dd></div>
+            <div><dt i18n>Plus bas (24 h)</dt><dd class="tb-figures">{{ unit.withSymbol(day()?.min) }}</dd></div>
+            <div><dt i18n>Plus haut (24 h)</dt><dd class="tb-figures">{{ unit.withSymbol(day()?.max) }}</dd></div>
+            <div><dt i18n>Moyenne (24 h)</dt><dd class="tb-figures">{{ unit.withSymbol(day()?.average) }}</dd></div>
+            <div><dt i18n>À l'objectif</dt><dd class="tb-figures">{{ target() != null ? percent(target()!) + (' du temps' | tr) : '—' }}</dd></div>
           </dl>
 
           <p class="tb-overview-room-foot">
-            {{ r.room.devices }} {{ r.room.devices > 1 ? 'boîtiers' : 'boîtier' }}
-            @if (r.room.lastMeasurement) { · dernière mesure {{ ddmmAtHHmm(r.room.lastMeasurement) }} }
+            {{ r.room.devices }} {{ r.room.devices > 1 ? ('boîtiers' | tr) : ('boîtier' | tr) }}
+            @if (r.room.lastMeasurement) {<ng-container i18n> · dernière mesure {{ ddmmAtHHmm(r.room.lastMeasurement) }} </ng-container>}
           </p>
 
           <div class="tb-overview-room-actions">
             <button type="button" class="tb-btn tb-tonal" (click)="favorite.emit(r.room.id)">
-              <i class="pi" [class.pi-star-fill]="r.room.favorite" [class.pi-star]="!r.room.favorite"></i>{{ r.room.favorite ? 'Retirer des favoris' : 'Ajouter aux favoris' }}
+              <i class="pi" [class.pi-star-fill]="r.room.favorite" [class.pi-star]="!r.room.favorite"></i>{{ r.room.favorite ? ('Retirer des favoris' | tr) : ('Ajouter aux favoris' | tr) }}
             </button>
-            <a class="tb-btn" [routerLink]="['/app/room', r.room.id]" (click)="open.set(false)"><i class="pi pi-arrow-right"></i>Ouvrir</a>
+            <a i18n class="tb-btn" [routerLink]="['/app/room', r.room.id]" (click)="open.set(false)"><i class="pi pi-arrow-right"></i>Ouvrir</a>
           </div>
         </div>
       }
@@ -118,9 +119,9 @@ export class TbRoomOverview {
     if (!j || !r || !j.c.values.some((v) => v != null)) return null;
     const setpoint = r.room.setpoint?.value ?? null;
     const series: ChartSeries[] = [
-      { label: 'Température', color: '--tb-series-average', role: 'average', values: j.c.values },
+      { label: $localize`Température`, color: '--tb-series-average', role: 'average', values: j.c.values },
     ];
-    if (setpoint != null) series.push({ label: 'Objectif', color: '--tb-series-setpoint', role: 'setpoint', values: j.c.values.map(() => setpoint) });
+    if (setpoint != null) series.push({ label: $localize`Objectif`, color: '--tb-series-setpoint', role: 'setpoint', values: j.c.values.map(() => setpoint) });
     return { labels: j.time.map((t) => clockTime(new Date(t))), series };
   });
 

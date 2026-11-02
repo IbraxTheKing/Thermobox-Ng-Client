@@ -13,13 +13,13 @@ export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'app/overview' },
   {
     path: 'login',
-    title: 'Connexion',
+    title: $localize`Connexion`,
     canActivate: [publicGuard],
     loadComponent: () => import('./pages/auth/login').then((m) => m.LoginPage),
   },
   {
     path: 'register',
-    title: 'Inscription',
+    title: $localize`Inscription`,
     canActivate: [publicGuard],
     loadComponent: () => import('./pages/auth/register').then((m) => m.RegisterPage),
   },
@@ -27,13 +27,13 @@ export const routes: Routes = [
   // settings of this device, and À propos
   {
     path: 'settings',
-    title: 'Paramètres',
+    title: $localize`Paramètres`,
     data: { standalone: true },
     loadComponent: () => import('./pages/preferences/preferences').then((m) => m.PreferencesPage),
   },
   {
     path: 'about',
-    title: 'À propos',
+    title: $localize`À propos`,
     data: { standalone: true },
     loadComponent: () => import('./pages/about/about').then((m) => m.AboutPage),
   },
@@ -43,13 +43,13 @@ export const routes: Routes = [
     loadComponent: () => import('./shell/shell').then((m) => m.Shell),
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'overview' },
-      { path: 'overview', title: 'Aperçu', loadComponent: () => import('./pages/dashboard/dashboard').then((m) => m.DashboardPage) },
-      { path: 'rooms', title: 'Bâtiments et salles', loadComponent: () => import('./pages/rooms/rooms').then((m) => m.RoomsPage) },
-      { path: 'room/:id', title: 'Salle', loadComponent: () => import('./pages/room/room').then((m) => m.RoomPage) },
-      { path: 'measurements', title: 'Températures', loadComponent: () => import('./pages/measurements/measurements').then((m) => m.MeasurementsPage) },
+      { path: 'overview', title: $localize`Aperçu`, loadComponent: () => import('./pages/dashboard/dashboard').then((m) => m.DashboardPage) },
+      { path: 'rooms', title: $localize`Bâtiments et salles`, loadComponent: () => import('./pages/rooms/rooms').then((m) => m.RoomsPage) },
+      { path: 'room/:id', title: $localize`Salle`, loadComponent: () => import('./pages/room/room').then((m) => m.RoomPage) },
+      { path: 'measurements', title: $localize`Températures`, loadComponent: () => import('./pages/measurements/measurements').then((m) => m.MeasurementsPage) },
       {
         path: 'management',
-        title: 'Gestion des salles',
+        title: $localize`Gestion des salles`,
         canActivate: [managerGuard],
         loadComponent: () => import('./pages/management/management').then((m) => m.ManagementPage),
       },
@@ -57,16 +57,16 @@ export const routes: Routes = [
       { path: 'users', redirectTo: () => inject(Router).parseUrl('/app/management?tab=access') },
       {
         path: 'server',
-        title: 'Serveur',
+        title: $localize`Serveur`,
         canActivate: [adminGuard],
         loadComponent: () => import('./pages/server/server').then((m) => m.ServerPage),
       },
       // The updates are a tab of the Serveur page
       { path: 'updates', redirectTo: () => inject(Router).parseUrl('/app/server?tab=updates') },
-      { path: 'profile', title: 'Mon profil', loadComponent: () => import('./pages/profile/profile').then((m) => m.ProfilePage) },
-      { path: 'about', title: 'À propos', loadComponent: () => import('./pages/about/about').then((m) => m.AboutPage) },
-      { path: 'more', title: 'Plus', loadComponent: () => import('./pages/more/more').then((m) => m.MorePage) },
-      { path: 'preferences', title: 'Préférences', loadComponent: () => import('./pages/preferences/preferences').then((m) => m.PreferencesPage) },
+      { path: 'profile', title: $localize`Mon profil`, loadComponent: () => import('./pages/profile/profile').then((m) => m.ProfilePage) },
+      { path: 'about', title: $localize`À propos`, loadComponent: () => import('./pages/about/about').then((m) => m.AboutPage) },
+      { path: 'more', title: $localize`Plus`, loadComponent: () => import('./pages/more/more').then((m) => m.MorePage) },
+      { path: 'preferences', title: $localize`Préférences`, loadComponent: () => import('./pages/preferences/preferences').then((m) => m.PreferencesPage) },
     ],
   },
   // Addresses of the versions before 26.12 (bookmarks, shortcuts on a home screen)

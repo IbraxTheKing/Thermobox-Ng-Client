@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, effect, input, model, sig
 
 import { matches } from '../core/text';
 import { ShownCount, TbMore } from './more';
+import { TrPipe } from './tr.pipe';
 
 export interface Option {
   id: number;
@@ -15,7 +16,7 @@ export interface Option {
  */
 @Component({
   selector: 'tb-choice-multiple',
-  imports: [TbMore],
+  imports: [TrPipe, TbMore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="tb-choice-multiple">
@@ -40,15 +41,15 @@ export interface Option {
           <li><tb-more [total]="visible().length" [shown]="shown.count()" (more)="shown.more()" /></li>
         }
       </ul>
-      <span class="tb-muted tb-choice-account">{{ value().size ? value().size + ' choisi(s)' : empty() }}</span>
+      <span class="tb-muted tb-choice-account">{{ value().size ? value().size + (' choisi(s)' | tr) : empty() }}</span>
     </div>
   `,
 })
 export class TbMultipleChoice {
   readonly options = input.required<Option[]>();
   readonly value = model<Set<number>>(new Set());
-  readonly placeholder = input('Rechercher…');
-  readonly empty = input('Aucun');
+  readonly placeholder = input($localize`Rechercher…`);
+  readonly empty = input($localize`Aucun`);
   protected readonly search = signal('');
   /** Hundreds of users: a part at a time; the search looks through all of them. */
   protected readonly shown = new ShownCount(60);

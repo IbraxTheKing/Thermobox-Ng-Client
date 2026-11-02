@@ -11,6 +11,8 @@ import { TbServerLogo } from '../../ui/server-logo';
 import { UpdatesPage } from '../updates/updates';
 import { ServerSettings } from './server-settings';
 import { TbStyleSetting } from './style-setting';
+import { locale } from '../../core/i18n';
+import { TrPipe } from '../../ui/tr.pipe';
 
 type Tab = 'resources' | 'updates' | 'settings';
 
@@ -22,7 +24,7 @@ type Tab = 'resources' | 'updates' | 'settings';
  */
 @Component({
   selector: 'tb-server-page',
-  imports: [NgTemplateOutlet, TbChart, TbServerLogo, UpdatesPage, ServerSettings, TbStyleSetting],
+  imports: [TrPipe, NgTemplateOutlet, TbChart, TbServerLogo, UpdatesPage, ServerSettings, TbStyleSetting],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './server.html',
 })
@@ -74,19 +76,19 @@ export class ServerPage implements OnDestroy {
   }
 
   protected readonly cpu = computed<ChartSeries[]>(() => [
-    this.series((s) => s.processCpu, 'Serveur ThermoBox', '--tb-series-1', 'average'),
-    this.series((s) => s.systemCpu, 'Machine entière', '--tb-series-3'),
+    this.series((s) => s.processCpu, $localize`Serveur ThermoBox`, '--tb-series-1', 'average'),
+    this.series((s) => s.systemCpu, $localize`Machine entière`, '--tb-series-3'),
   ]);
   protected readonly memory = computed<ChartSeries[]>(() => {
     const l: ChartSeries[] = [
-      this.series((s) => s.heapUsedMb, 'Utilisée', '--tb-series-2', 'average'),
-      this.series((s) => s.heapCommittedMb, 'Réservée', '--tb-series-4'),
+      this.series((s) => s.heapUsedMb, $localize`Utilisée`, '--tb-series-2', 'average'),
+      this.series((s) => s.heapCommittedMb, $localize`Réservée`, '--tb-series-4'),
     ];
-    if ((this.metrics.last()?.heapMaxMb ?? -1) > 0) l.push({ ...this.series((s) => s.heapMaxMb, 'Maximum', '--tb-series-setpoint'), role: 'setpoint' });
+    if ((this.metrics.last()?.heapMaxMb ?? -1) > 0) l.push({ ...this.series((s) => s.heapMaxMb, $localize`Maximum`, '--tb-series-setpoint'), role: 'setpoint' });
     return l;
   });
-  protected readonly threads = computed<ChartSeries[]>(() => [this.series((s) => s.threads, 'Threads', '--tb-series-5', 'average')]);
-  protected readonly gc = computed<ChartSeries[]>(() => [this.series((s) => s.gcPauseMs, 'Pauses', '--tb-series-6', 'average')]);
+  protected readonly threads = computed<ChartSeries[]>(() => [this.series((s) => s.threads, $localize`Threads`, '--tb-series-5', 'average')]);
+  protected readonly gc = computed<ChartSeries[]>(() => [this.series((s) => s.gcPauseMs, $localize`Pauses`, '--tb-series-6', 'average')]);
 
   /** GC pauses over the curves shown, in ms. */
   protected readonly gcTotal = computed(() => this.metrics.samples().reduce((n, s) => n + (s.gcPauseMs ?? 0), 0));
@@ -96,7 +98,7 @@ export class ServerPage implements OnDestroy {
   });
 
   protected number(v: number | null | undefined, digits = 0): string {
-    return v == null ? '—' : v.toLocaleString('fr-FR', { minimumFractionDigits: digits, maximumFractionDigits: digits });
+    return v == null ? '—' : v.toLocaleString(locale(), { minimumFractionDigits: digits, maximumFractionDigits: digits });
   }
 
   /** « 3 j 4 h », « 2 h 05 », « 12 min ». */

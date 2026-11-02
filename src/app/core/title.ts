@@ -5,7 +5,7 @@ import { RouterStateSnapshot, TitleStrategy } from '@angular/router';
 import { PreferencesService } from './preferences';
 
 /** « Maison »: the words of a home for the same pages (as their headings). */
-const HOME: Record<string, string> = { 'Aperçu': 'Maison', 'Bâtiments et salles': 'Pièces', 'Températures': 'Historique' };
+const HOME: Record<string, string> = { 'Aperçu': $localize`Maison`, 'Bâtiments et salles': $localize`Pièces`, 'Températures': $localize`Historique` };
 
 /**
  * Title of the current page: in the browser tab ("Thermobox – Aperçu") and in the top bar of
@@ -19,7 +19,7 @@ export class TitleService {
 
   set(title: string): void {
     this.title.set(title);
-    this.browserTitle.setTitle(title ? `Thermobox – ${title}` : 'Thermobox');
+    this.browserTitle.setTitle(title ? `Thermobox – ${title}` : $localize`Thermobox`);
   }
 }
 

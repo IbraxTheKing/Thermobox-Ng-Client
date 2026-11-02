@@ -820,3 +820,6 @@
 :root[data-desktop="windows"][data-blur="off"] *::after { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
 :root[data-desktop="windows"][data-blur="off"] .tb-titlebar.tb-titlebar-scrolled::before { background: var(--tb-background); }
 :root[data-desktop="windows"][data-blur="off"] .tb-rail.tb-pane-open { background: var(--tb-background); }
+
+/* Préférences: the headers of the groups, as in the Settings of Windows */
+:root[data-desktop="windows"] .tb-pref-heading { margin-bottom: 8px; color: var(--md-on-surface); font-size: 14px; font-weight: 600; }

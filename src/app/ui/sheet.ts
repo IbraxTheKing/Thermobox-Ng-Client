@@ -71,7 +71,7 @@ const CLOSING_DURATION = 320;
           @if (title() || !noHeader()) {
             <header class="tb-dialog-head">
               <h2 [id]="titleId">{{ title() }}</h2>
-              <button type="button" class="tb-btn tb-icon tb-flat tb-dialog-close" (click)="close()" title="Fermer" aria-label="Fermer">
+              <button type="button" class="tb-btn tb-icon tb-flat tb-dialog-close" (click)="close()" i18n-title title="Fermer" i18n-aria-label aria-label="Fermer">
                 <i class="pi pi-times"></i>
               </button>
             </header>

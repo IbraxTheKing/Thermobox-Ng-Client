@@ -62,10 +62,10 @@ export class ConfirmService {
 
   ask(title: string, message: string, options: { confirm?: string; danger?: boolean } = {}): Promise<boolean> {
     // Android app: a Material dialog
-    if (nativeMessages) return nativeMessages.confirm(title, message, options.confirm ?? 'Confirmer', options.danger ?? true);
+    if (nativeMessages) return nativeMessages.confirm(title, message, options.confirm ?? $localize`Confirmer`, options.danger ?? true);
     this.current()?.resolve(false);
     return new Promise((resolve) => {
-      this.current.set({ title, message, confirm: options.confirm ?? 'Confirmer', danger: options.danger ?? true, resolve });
+      this.current.set({ title, message, confirm: options.confirm ?? $localize`Confirmer`, danger: options.danger ?? true, resolve });
     });
   }
 

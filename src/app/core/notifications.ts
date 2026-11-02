@@ -156,9 +156,9 @@ export class NotificationService {
       const reached = events.filter((e) => e.state === 'STABLE').length;
       const off = events.length - reached;
       const parts = [];
-      if (reached) parts.push(`${reached} ${reached > 1 ? 'ont atteint leur consigne' : 'a atteint sa consigne'}`);
-      if (off) parts.push(`${off} ${off > 1 ? "s'en sont éloignées" : "s'en est éloignée"}`);
-      return [{ title: `${events.length} salles ont changé`, body: parts.join(', ') + '.', roomId: null }];
+      if (reached) parts.push(`${reached} ${reached > 1 ? $localize`ont atteint leur consigne` : $localize`a atteint sa consigne`}`);
+      if (off) parts.push(`${off} ${off > 1 ? $localize`s'en sont éloignées` : $localize`s'en est éloignée`}`);
+      return [{ title: $localize`${events.length} salles ont changé`, body: parts.join(', ') + '.', roomId: null }];
     }
     return events.map((e) => {
       const t = `${this.unit.t(e.temperature)} ${this.unit.symbol()}`;
@@ -166,11 +166,11 @@ export class NotificationService {
       const where = e.place ? ` · ${e.place}` : '';
       switch (e.state) {
         case 'STABLE':
-          return { title: `${e.name} a atteint sa consigne`, body: `${t} pour ${sp}${where}`, roomId: e.roomId };
+          return { title: $localize`${e.name} a atteint sa consigne`, body: $localize`${t} pour ${sp}${where}`, roomId: e.roomId };
         case 'HEATING':
-          return { title: `${e.name} est sous sa consigne`, body: `${t} pour ${sp} (${this.unit.delta(e.temperature - e.setpoint)})${where}`, roomId: e.roomId };
+          return { title: $localize`${e.name} est sous sa consigne`, body: $localize`${t} pour ${sp} (${this.unit.delta(e.temperature - e.setpoint)})${where}`, roomId: e.roomId };
         default:
-          return { title: `${e.name} est trop chaude`, body: `${t} pour ${sp} (${this.unit.delta(e.temperature - e.setpoint)})${where}`, roomId: e.roomId };
+          return { title: $localize`${e.name} est trop chaude`, body: $localize`${t} pour ${sp} (${this.unit.delta(e.temperature - e.setpoint)})${where}`, roomId: e.roomId };
       }
     });
   }

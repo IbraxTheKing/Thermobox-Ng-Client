@@ -1,33 +1,33 @@
 <header class="tb-page-head">
   <div class="tb-page-title">
-    <span class="tb-eyebrow">Organisation</span>
-    <h1>{{ home() ? 'Pièces' : 'Bâtiments et salles' }}</h1>
+    <span i18n class="tb-eyebrow">Organisation</span>
+    <h1>{{ home() ? ('Pièces' | tr) : ('Bâtiments et salles' | tr) }}</h1>
   </div>
   @if (auth.manager()) {
-    <a routerLink="/app/management" class="tb-btn tb-tonal tb-hide-sm"><i class="pi pi-table"></i>Gérer en tableau</a>
+    <a i18n routerLink="/app/management" class="tb-btn tb-tonal tb-hide-sm"><i class="pi pi-table"></i>Gérer en tableau</a>
   }
   @if (auth.admin()) {
-    <button type="button" class="tb-btn tb-btn-lg tb-fab" (click)="create('BUILDING', null)"><i class="pi pi-plus"></i>Nouveau bâtiment</button>
+    <button i18n type="button" class="tb-btn tb-btn-lg tb-fab" (click)="create('BUILDING', null)"><i class="pi pi-plus"></i>Nouveau bâtiment</button>
   }
 </header>
 
 <p class="tb-lead">
-  @if (auth.seesDevices()) {
+  @if (auth.seesDevices()) {<ng-container i18n>
     Un bâtiment contient des étages ou directement des salles, une salle contient des boîtiers. La température d'une salle est la
     moyenne de ses boîtiers. Les boîtiers apparaissent ici d'eux-mêmes dès qu'ils se connectent.
-  } @else {
+  </ng-container>} @else {<ng-container i18n>
     Un bâtiment contient des étages ou directement des salles. Touche un élément pour voir sa température.
-  }
+  </ng-container>}
   @if (auth.admin()) {
-    <span class="tb-hide-sm"> Glisse un élément sur un autre pour l'y ranger, ou sur « Premier niveau » pour le détacher.</span>
-    <span class="tb-show-sm"> Touche un bâtiment ou un étage pour l'ouvrir, ⋮ pour ajouter, modifier, déplacer ou supprimer.</span>
+    <span i18n class="tb-hide-sm"> Glisse un élément sur un autre pour l'y ranger, ou sur « Premier niveau » pour le détacher.</span>
+    <span i18n class="tb-show-sm"> Touche un bâtiment ou un étage pour l'ouvrir, ⋮ pour ajouter, modifier, déplacer ou supprimer.</span>
   }
 </p>
 
 <!-- Phones: one level at a time, like a file browser (the tree is too wide and too deep) -->
 <div class="tb-drill">
-  <nav class="tb-drill-path" aria-label="Emplacement">
-    <button type="button" class="tb-drill-crumb" [class.tb-drill-crumb-on]="folderId() == null" (click)="open(null)"><i class="pi pi-sitemap"></i>Tout</button>
+  <nav class="tb-drill-path" i18n-aria-label aria-label="Emplacement">
+    <button i18n type="button" class="tb-drill-crumb" [class.tb-drill-crumb-on]="folderId() == null" (click)="open(null)"><i class="pi pi-sitemap"></i>Tout</button>
     @for (c of path(); track c.id) {
       <i class="pi pi-angle-right tb-drill-sep"></i>
       <button type="button" class="tb-drill-crumb" [class.tb-drill-crumb-on]="c.id === folderId()" (click)="open(c.id)">{{ c.name }}</button>
@@ -37,22 +37,22 @@
   <!-- Opened folder: back, its temperature, its page and its actions -->
   @if (folder(); as d) {
     <div class="tb-drill-head">
-      <button type="button" class="tb-btn tb-icon tb-flat tb-drill-back" title="Remonter" aria-label="Remonter" (click)="goUp()"><i class="pi pi-arrow-left"></i></button>
+      <button type="button" class="tb-btn tb-icon tb-flat tb-drill-back" i18n-title title="Remonter" i18n-aria-label aria-label="Remonter" (click)="goUp()"><i class="pi pi-arrow-left"></i></button>
       <div class="tb-drill-head-text">
         <strong>{{ d.name }}</strong>
         <span class="tb-muted">{{ label(d) }}@if (d.temperature != null) { · {{ unit.t(d.temperature) }} {{ unit.symbol() }} }</span>
       </div>
       @if (d.accessible) {
-        <a [routerLink]="['/app/room', d.id]" class="tb-btn tb-icon tb-flat" title="Voir le détail" aria-label="Voir le détail"><i class="pi pi-chart-line"></i></a>
+        <a [routerLink]="['/app/room', d.id]" class="tb-btn tb-icon tb-flat" i18n-title title="Voir le détail" i18n-aria-label aria-label="Voir le détail"><i class="pi pi-chart-line"></i></a>
       }
       @if (auth.admin()) {
-        <button type="button" class="tb-btn tb-icon tb-flat" title="Actions" aria-label="Actions" (click)="choose(d)"><i class="pi pi-ellipsis-v"></i></button>
+        <button type="button" class="tb-btn tb-icon tb-flat" i18n-title title="Actions" i18n-aria-label aria-label="Actions" (click)="choose(d)"><i class="pi pi-ellipsis-v"></i></button>
       }
     </div>
   }
 
   @if (!store.tree()) {
-    <div class="tb-skeleton" aria-busy="true" aria-label="Chargement des bâtiments et salles">
+    <div class="tb-skeleton" aria-busy="true" i18n-aria-label aria-label="Chargement des bâtiments et salles">
     @for (i of [1, 2, 3, 4, 5, 6]; track i) {
       <div class="tb-skeleton-row" [style.--w]="[62, 48, 70, 55, 66, 44][i - 1] + '%'"><span></span><span></span></div>
     }
@@ -71,7 +71,7 @@
           </a>
         }
         @if (auth.admin()) {
-          <button type="button" class="tb-btn tb-icon tb-flat tb-drill-more" title="Actions" aria-label="Actions" (click)="choose(n)"><i class="pi pi-ellipsis-v"></i></button>
+          <button type="button" class="tb-btn tb-icon tb-flat tb-drill-more" i18n-title title="Actions" i18n-aria-label aria-label="Actions" (click)="choose(n)"><i class="pi pi-ellipsis-v"></i></button>
         }
       </li>
     }
@@ -79,12 +79,12 @@
   <tb-more [total]="content().length" [shown]="shownContent.count()" (more)="shownContent.more()" />
 
   @if (store.tree() && !content().length) {
-    <div class="tb-empty tb-empty-sm">{{ folderId() == null ? 'Aucun bâtiment pour le moment.' : 'Rien ici pour le moment.' }}</div>
+    <div class="tb-empty tb-empty-sm">{{ folderId() == null ? ('Aucun bâtiment pour le moment.' | tr) : ('Rien ici pour le moment.' | tr) }}</div>
   }
 
   @if (auth.admin() && folder(); as d) {
     @if (childrenOf(d).length) {
-      <button type="button" class="tb-btn tb-tonal tb-drill-add" (click)="create(childrenOf(d)[0], d)">
+      <button i18n type="button" class="tb-btn tb-tonal tb-drill-add" (click)="create(childrenOf(d)[0], d)">
         <i class="pi pi-plus"></i>Ajouter dans « {{ d.name }} »
       </button>
     }
@@ -97,10 +97,10 @@
     <span class="tb-drill-name">{{ n.name }}</span>
     <span class="tb-drill-meta">
       {{ label(n) }}
-      @if (isFolder(n)) { · {{ children(n.id).length }} élément(s) }
-      @if (auth.seesDevices() && n.kind === 'ROOM' && n.devices > 0) { · {{ n.devices }} boîtier(s) }
+      @if (isFolder(n)) {<ng-container i18n> · {{ children(n.id).length }} élément(s) </ng-container>}
+      @if (auth.seesDevices() && n.kind === 'ROOM' && n.devices > 0) {<ng-container i18n> · {{ n.devices }} boîtier(s) </ng-container>}
       @if (!n.attached) {
-        <span class="tb-tag tb-tag-warning">Non rattaché</span>
+        <span i18n class="tb-tag tb-tag-warning">Non rattaché</span>
       }
     </span>
   </span>
@@ -116,9 +116,9 @@
 
 <!-- Wide screens: the whole tree, and what is attached to nothing on its right (ADMIN) -->
 <div class="tb-rooms-layout" [class.tb-with-side]="side()">
-<div class="tb-tree-rooms" role="tree" aria-label="Bâtiments et salles">
+<div class="tb-tree-rooms" role="tree" i18n-aria-label aria-label="Bâtiments et salles">
   @if (auth.admin()) {
-    <div
+    <div i18n
       class="tb-tree-root"
       [class.tb-hover]="hover() === 'root'"
       [class.tb-visible]="slide() != null"
@@ -130,7 +130,7 @@
     </div>
   }
   @if (!store.tree()) {
-    <div class="tb-skeleton" aria-busy="true" aria-label="Chargement des bâtiments et salles">
+    <div class="tb-skeleton" aria-busy="true" i18n-aria-label aria-label="Chargement des bâtiments et salles">
     @for (i of [1, 2, 3, 4, 5, 6]; track i) {
       <div class="tb-skeleton-row" [style.--w]="[62, 48, 70, 55, 66, 44][i - 1] + '%'"><span></span><span></span></div>
     }
@@ -138,26 +138,26 @@
   }
   <ng-container *ngTemplateOutlet="branch; context: { $implicit: shownChildren(-1, treeRoots()), parent: -1, total: treeRoots().length }" />
   @if (store.tree() && !store.roots().length) {
-    <div class="tb-empty tb-empty-sm">Aucun bâtiment pour le moment.</div>
+    <div i18n class="tb-empty tb-empty-sm">Aucun bâtiment pour le moment.</div>
   }
 </div>
 @if (side()) {
   <aside
     class="tb-rooms-side"
-    aria-label="Non rattachés"
+    i18n-aria-label aria-label="Non rattachés"
     [class.tb-hover]="hover() === 'root'"
     (dragover)="onHover($event, 'root')"
     (dragleave)="hover.set(null)"
     (drop)="drop($event, null)"
   >
     <div class="tb-rooms-side-head">
-      <strong><i class="pi pi-inbox"></i> Non rattachés <span class="tb-chip-n">{{ unattached().length }}</span></strong>
-      <span class="tb-muted">Glisse-les sur un bâtiment, un étage ou une salle. Garde-le au-dessus d'un élément replié pour l'ouvrir.</span>
+      <strong i18n><i class="pi pi-inbox"></i> Non rattachés <span class="tb-chip-n">{{ unattached().length }}</span></strong>
+      <span i18n class="tb-muted">Glisse-les sur un bâtiment, un étage ou une salle. Garde-le au-dessus d'un élément replié pour l'ouvrir.</span>
     </div>
     @if (unattached().length > 8) {
       <span class="tb-search tb-rooms-side-search">
         <i class="pi pi-search"></i>
-        <input class="tb-input" type="search" placeholder="Rechercher…" autocomplete="off" aria-label="Rechercher parmi les non rattachés"
+        <input class="tb-input" type="search" i18n-placeholder placeholder="Rechercher…" autocomplete="off" i18n-aria-label aria-label="Rechercher parmi les non rattachés"
                [value]="sideSearch()" (input)="sideSearch.set($any($event.target).value); sideShown.reset()" />
       </span>
     }
@@ -176,10 +176,10 @@
             <span class="tb-node-name">{{ n.name }}</span>
             <span class="tb-muted">{{ label(n) }}@if (n.temperature != null) { · {{ unit.t(n.temperature) }} {{ unit.symbol() }} }</span>
           </span>
-          <button type="button" class="tb-btn tb-icon tb-flat" [title]="'Ranger « ' + n.name + ' »'" (click)="edit(n)"><i class="pi pi-pencil"></i></button>
+          <button type="button" class="tb-btn tb-icon tb-flat" [title]="('Ranger « {name} »' | tr: { name: n.name })" (click)="edit(n)"><i class="pi pi-pencil"></i></button>
         </li>
       } @empty {
-        <li class="tb-muted tb-rooms-side-empty">Aucun ne correspond.</li>
+        <li i18n class="tb-muted tb-rooms-side-empty">Aucun ne correspond.</li>
       }
     </ul>
     <tb-more [total]="sideList().length" [shown]="sideShown.count()" (more)="sideShown.more()" />
@@ -204,7 +204,7 @@
           (click)="children(n.id).length && toggle(n.id)"
         >
           @if (children(n.id).length) {
-            <button type="button" class="tb-tree-toggler" [class.tb-open]="!isFolded(n.id)" [attr.aria-label]="(isFolded(n.id) ? 'Déplier ' : 'Replier ') + n.name" (click)="$event.stopPropagation(); toggle(n.id)">
+            <button type="button" class="tb-tree-toggler" [class.tb-open]="!isFolded(n.id)" [attr.aria-label]="(isFolded(n.id) ? ('Déplier ' | tr) : ('Replier ' | tr)) + n.name" (click)="$event.stopPropagation(); toggle(n.id)">
               <i class="pi pi-chevron-right"></i>
             </button>
           } @else {
@@ -216,7 +216,7 @@
               <span class="tb-node-name">{{ n.name }}</span>
               <span class="tb-muted">{{ label(n) }}</span>
               @if (!n.attached) {
-                <span class="tb-tag tb-tag-warning">Non rattaché</span>
+                <span i18n class="tb-tag tb-tag-warning">Non rattaché</span>
               }
             </span>
             <span class="tb-node-temp">
@@ -226,22 +226,22 @@
                 —
               }
               @if (auth.seesDevices() && n.kind !== 'DEVICE' && n.devices > 0) {
-                <span class="tb-muted">{{ n.devices }} boîtier(s)</span>
+                <span i18n class="tb-muted">{{ n.devices }} boîtier(s)</span>
               }
             </span>
             <span class="tb-node-actions" (click)="$event.stopPropagation()">
               @if (n.accessible) {
-                <a [routerLink]="['/app/room', n.id]" class="tb-btn tb-icon tb-flat tb-node-keep" title="Voir" aria-label="Voir"><i class="pi pi-eye"></i></a>
+                <a [routerLink]="['/app/room', n.id]" class="tb-btn tb-icon tb-flat tb-node-keep" i18n-title title="Voir" i18n-aria-label aria-label="Voir"><i class="pi pi-eye"></i></a>
               }
               @if (auth.admin()) {
                 @if (childrenOf(n).length) {
-                  <button type="button" class="tb-btn tb-icon tb-flat" [title]="'Ajouter dans « ' + n.name + ' »'" (click)="create(childrenOf(n)[0], n)"><i class="pi pi-plus"></i></button>
+                  <button type="button" class="tb-btn tb-icon tb-flat" [title]="('Ajouter dans « {name} »' | tr: { name: n.name })" (click)="create(childrenOf(n)[0], n)"><i class="pi pi-plus"></i></button>
                 }
-                <button type="button" class="tb-btn tb-icon tb-flat" title="Modifier / déplacer" (click)="edit(n)"><i class="pi pi-pencil"></i></button>
+                <button type="button" class="tb-btn tb-icon tb-flat" i18n-title title="Modifier / déplacer" (click)="edit(n)"><i class="pi pi-pencil"></i></button>
                 @if (n.attached && n.kind !== 'BUILDING') {
-                  <button type="button" class="tb-btn tb-icon tb-flat" title="Détacher" (click)="detach(n)"><i class="pi pi-link"></i></button>
+                  <button type="button" class="tb-btn tb-icon tb-flat" i18n-title title="Détacher" (click)="detach(n)"><i class="pi pi-link"></i></button>
                 }
-                <button type="button" class="tb-btn tb-icon tb-flat tb-btn-danger" title="Supprimer" (click)="remove(n)"><i class="pi pi-trash"></i></button>
+                <button type="button" class="tb-btn tb-icon tb-flat tb-btn-danger" i18n-title title="Supprimer" (click)="remove(n)"><i class="pi pi-trash"></i></button>
               }
             </span>
           </span>
@@ -259,7 +259,7 @@
     }
     @if (total > nodes.length) {
       <li class="tb-tree-more">
-        <button type="button" class="tb-btn tb-flat" (click)="moreChildren(parent)"><i class="pi pi-angle-down"></i>Afficher la suite ({{ total - nodes.length }} de plus)</button>
+        <button i18n type="button" class="tb-btn tb-flat" (click)="moreChildren(parent)"><i class="pi pi-angle-down"></i>Afficher la suite ({{ total - nodes.length }} de plus)</button>
       </li>
     }
   </ul>
@@ -277,16 +277,16 @@
     </div>
     <nav class="tb-sheet-list">
       @if (s.accessible) {
-        <a [routerLink]="['/app/room', s.id]" class="tb-sheet-item" (click)="selection.set(null)"><i class="pi pi-eye"></i>Voir le détail</a>
+        <a i18n [routerLink]="['/app/room', s.id]" class="tb-sheet-item" (click)="selection.set(null)"><i class="pi pi-eye"></i>Voir le détail</a>
       }
       @if (childrenOf(s).length) {
-        <button type="button" class="tb-sheet-item" (click)="create(childrenOf(s)[0], s)"><i class="pi pi-plus"></i>Ajouter dedans</button>
+        <button i18n type="button" class="tb-sheet-item" (click)="create(childrenOf(s)[0], s)"><i class="pi pi-plus"></i>Ajouter dedans</button>
       }
-      <button type="button" class="tb-sheet-item" (click)="edit(s)"><i class="pi pi-pencil"></i>Modifier ou déplacer</button>
+      <button i18n type="button" class="tb-sheet-item" (click)="edit(s)"><i class="pi pi-pencil"></i>Modifier ou déplacer</button>
       @if (s.attached && s.kind !== 'BUILDING') {
-        <button type="button" class="tb-sheet-item" (click)="detach(s)"><i class="pi pi-link"></i>Détacher</button>
+        <button i18n type="button" class="tb-sheet-item" (click)="detach(s)"><i class="pi pi-link"></i>Détacher</button>
       }
-      <button type="button" class="tb-sheet-item tb-sheet-danger" (click)="remove(s)"><i class="pi pi-trash"></i>Supprimer</button>
+      <button i18n type="button" class="tb-sheet-item tb-sheet-danger" (click)="remove(s)"><i class="pi pi-trash"></i>Supprimer</button>
     </nav>
   }
 </tb-sheet>

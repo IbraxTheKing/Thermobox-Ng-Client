@@ -7,6 +7,7 @@ import { Node, RoomKind } from '../../models/models';
 import { TreeStore, LABELS, KIND_ORDER, PARENTS } from '../../services/tree.store';
 import { HierarchyService } from '../../services/hierarchy.service';
 import { TbSheet } from '../../ui/sheet';
+import { TrPipe } from '../../ui/tr.pipe';
 
 /** What the dialog opens on: a new element (kind, parent) or an existing one. */
 export interface ElementEdit {
@@ -21,14 +22,14 @@ export interface ElementEdit {
  */
 @Component({
   selector: 'tb-element-dialog',
-  imports: [TbSheet],
+  imports: [TrPipe, TbSheet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <tb-sheet [open]="editing() != null" (openChange)="!$event && editing.set(null)" [title]="editing()?.element ? 'Modifier' : 'Ajouter'">
+    <tb-sheet [open]="editing() != null" (openChange)="!$event && editing.set(null)" [title]="editing()?.element ? ('Modifier' | tr) : ('Ajouter' | tr)">
       @if (editing(); as e) {
         <form (submit)="save($event)" novalidate>
           <div class="tb-field">
-            <label class="tb-label" for="tb-el-kind">Type</label>
+            <label i18n class="tb-label" for="tb-el-kind">Type</label>
             <select id="tb-el-kind" class="tb-select" [disabled]="!!e.element" (change)="changeKind($any($event.target).value)">
               @for (k of kinds(); track k) {
                 <option [value]="k" [selected]="kind() === k">{{ labels[k] }}</option>
@@ -36,17 +37,17 @@ export interface ElementEdit {
             </select>
           </div>
           <div class="tb-field">
-            <label class="tb-label" for="tb-el-name">Nom</label>
+            <label i18n class="tb-label" for="tb-el-name">Nom</label>
             <input id="tb-el-name" class="tb-input" [value]="name()" (input)="name.set($any($event.target).value)" [class.tb-invalid]="sent() && !name().trim()" autocomplete="off" />
             @if (sent() && !name().trim()) {
-              <span class="tb-field-error">Le nom est obligatoire</span>
+              <span i18n class="tb-field-error">Le nom est obligatoire</span>
             }
           </div>
           @if (parentsLabel()) {
             <div class="tb-field">
-              <label class="tb-label" for="tb-el-parent">Dans ({{ parentsLabel() }})</label>
+              <label i18n class="tb-label" for="tb-el-parent">Dans ({{ parentsLabel() }})</label>
               <select id="tb-el-parent" class="tb-select" (change)="parentId.set($any($event.target).value === '' ? null : +$any($event.target).value)">
-                <option value="" [selected]="parentId() == null">— Non rattaché —</option>
+                <option i18n value="" [selected]="parentId() == null">— Non rattaché —</option>
                 @for (p of parents(); track p.id) {
                   <option [value]="p.id" [selected]="parentId() === p.id">{{ store.label(p) }}</option>
                 }
@@ -54,8 +55,8 @@ export interface ElementEdit {
             </div>
           }
           <div class="tb-actions">
-            <button type="button" class="tb-btn tb-flat" (click)="editing.set(null)">Annuler</button>
-            <button type="submit" class="tb-btn" [class.tb-busy]="inProgress()" [disabled]="inProgress()"><i class="pi pi-check"></i>Enregistrer</button>
+            <button i18n type="button" class="tb-btn tb-flat" (click)="editing.set(null)">Annuler</button>
+            <button i18n type="submit" class="tb-btn" [class.tb-busy]="inProgress()" [disabled]="inProgress()"><i class="pi pi-check"></i>Enregistrer</button>
           </div>
         </form>
       }
@@ -110,11 +111,11 @@ export class ElementDialog {
       const n = e.element
         ? await firstValueFrom(this.api.edit(e.element.id, name, this.parentId()))
         : await firstValueFrom(this.api.create({ kind: this.kind(), name: name, parentId: this.parentId() }));
-      this.toasts.info(`${LABELS[n.kind]} « ${name} » enregistré(e)`);
+      this.toasts.info($localize`${LABELS[n.kind]} « ${name} » enregistré(e)`);
       this.editing.set(null);
       this.saved.emit(n);
     } catch (err) {
-      this.toasts.error(e.element ? 'Enregistrement impossible' : 'Rattachement impossible', errorMessage(err));
+      this.toasts.error(e.element ? $localize`Enregistrement impossible` : $localize`Rattachement impossible`, errorMessage(err));
     } finally {
       this.inProgress.set(false);
     }

@@ -8,6 +8,7 @@ import { TreeStore } from '../services/tree.store';
 import { UserService } from '../services/user.service';
 import { TbAccessTree } from './access-tree';
 import { TbSheet } from './sheet';
+import { TrPipe } from './tr.pipe';
 
 /**
  * The accesses of one user (ADMIN): everything, or only the ticked buildings / floors / rooms.
@@ -18,31 +19,31 @@ import { TbSheet } from './sheet';
  */
 @Component({
   selector: 'tb-user-access-sheet',
-  imports: [TbSheet, TbAccessTree],
+  imports: [TrPipe, TbSheet, TbAccessTree],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <tb-sheet [(open)]="shown" title="Accès" [width]="520">
+    <tb-sheet [(open)]="shown" i18n-title title="Accès" [width]="520">
       @if (row(); as l) {
-        <p class="tb-muted tb-access-intro">
-          Ce que <strong>{{ l.user.username }}</strong> ({{ roleName(l.user.type) }}) peut consulter{{ l.user.type === 'MANAGER' ? ' et piloter' : '' }}.
+        <p i18n class="tb-muted tb-access-intro">
+          Ce que <strong>{{ l.user.username }}</strong> ({{ roleName(l.user.type) }}) peut consulter{{ l.user.type === 'MANAGER' ? (' et piloter' | tr) : '' }}.
         </p>
         <div class="tb-access-mode" role="radiogroup">
-          <label class="tb-choice"><input type="radio" name="tb-access-mode" [checked]="!restricted()" (change)="restricted.set(false)" />Tout ThermoBox</label>
-          <label class="tb-choice"><input type="radio" name="tb-access-mode" [checked]="restricted()" (change)="restricted.set(true)" />Seulement les éléments cochés</label>
+          <label i18n class="tb-choice"><input type="radio" name="tb-access-mode" [checked]="!restricted()" (change)="restricted.set(false)" />Tout ThermoBox</label>
+          <label i18n class="tb-choice"><input type="radio" name="tb-access-mode" [checked]="restricted()" (change)="restricted.set(true)" />Seulement les éléments cochés</label>
         </div>
         @if (restricted()) {
-          <p class="tb-muted tb-access-rule">
+          <p i18n class="tb-muted tb-access-rule">
             Cocher un bâtiment ou un étage donne accès à tout ce qu'il contient, y compris ce qui y sera ajouté plus tard. Décocher une salle
             limite l'accès aux autres.
           </p>
           <tb-tree-access [nodes]="tree.nodes()" [(checked)]="checked" />
         }
         @if (l.groups.length) {
-          <p class="tb-muted tb-access-rule"><i class="pi pi-users"></i> En plus, par ses groupes : {{ l.groups.join(', ') }}.</p>
+          <p i18n class="tb-muted tb-access-rule"><i class="pi pi-users"></i> En plus, par ses groupes : {{ l.groups.join(', ') }}.</p>
         }
         <div class="tb-actions">
-          <button type="button" class="tb-btn tb-flat" (click)="shown.set(false)">Annuler</button>
-          <button type="button" class="tb-btn" [disabled]="saving()" (click)="save()"><i class="pi pi-check"></i>Enregistrer</button>
+          <button i18n type="button" class="tb-btn tb-flat" (click)="shown.set(false)">Annuler</button>
+          <button i18n type="button" class="tb-btn" [disabled]="saving()" (click)="save()"><i class="pi pi-check"></i>Enregistrer</button>
         </div>
       }
     </tb-sheet>
@@ -65,7 +66,7 @@ export class TbUserAccessSheet {
   protected readonly saving = signal(false);
 
   protected roleName(r: string | null | undefined): string {
-    return r ? (({ ADMIN: 'Administrateur', MANAGER: 'Gestionnaire', VIEWER: 'Lecteur' }) as Record<string, string>)[r] ?? r : '';
+    return r ? (({ ADMIN: $localize`Administrateur`, MANAGER: $localize`Gestionnaire`, VIEWER: $localize`Lecteur` }) as Record<string, string>)[r] ?? r : '';
   }
 
   /** Reads the accesses of [l] as they are now, then shows them. An ADMIN sees everything: nothing to set. */
@@ -97,7 +98,7 @@ export class TbUserAccessSheet {
     this.saving.set(true);
     try {
       await firstValueFrom(this.users.setAccess(l.user.id!, this.restricted(), elements));
-      this.toasts.info(`Accès de « ${l.user.username} » enregistrés`, this.restricted() ? `${elements.length} élément(s) et leur contenu` : 'Accès à tout');
+      this.toasts.info($localize`Accès de « ${l.user.username} » enregistrés`, this.restricted() ? $localize`${elements.length} élément(s) et leur contenu` : $localize`Accès à tout`);
       this.shown.set(false);
       this.saved.emit();
     } catch (e) {

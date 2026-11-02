@@ -31,14 +31,14 @@ export interface Palette {
 export const DEFAULT_SWATCH = '#2f6b58';
 
 export const PALETTES: Palette[] = [
-  { id: 'ocean', label: 'Océan', h: 250, c: 0.12 },
-  { id: 'lagoon', label: 'Lagon', h: 205, c: 0.09 },
-  { id: 'moss', label: 'Mousse', h: 130, c: 0.08 },
-  { id: 'amber', label: 'Ambre', h: 70, c: 0.11 },
-  { id: 'coral', label: 'Corail', h: 35, c: 0.13 },
-  { id: 'rose', label: 'Rose', h: 355, c: 0.12 },
-  { id: 'lavender', label: 'Lavande', h: 295, c: 0.12 },
-  { id: 'slate', label: 'Ardoise', h: 255, c: 0.025 },
+  { id: 'ocean', label: $localize`Océan`, h: 250, c: 0.12 },
+  { id: 'lagoon', label: $localize`Lagon`, h: 205, c: 0.09 },
+  { id: 'moss', label: $localize`Mousse`, h: 130, c: 0.08 },
+  { id: 'amber', label: $localize`Ambre`, h: 70, c: 0.11 },
+  { id: 'coral', label: $localize`Corail`, h: 35, c: 0.13 },
+  { id: 'rose', label: $localize`Rose`, h: 355, c: 0.12 },
+  { id: 'lavender', label: $localize`Lavande`, h: 295, c: 0.12 },
+  { id: 'slate', label: $localize`Ardoise`, h: 255, c: 0.025 },
 ];
 
 @Injectable({ providedIn: 'root' })
@@ -54,12 +54,12 @@ export class AccentService {
   readonly systemAvailable = computed(() => this.systemColor() != null);
   /** Why not, for the Préférences page. */
   readonly systemWhy = Capacitor.getPlatform() === 'ios'
-    ? "iOS ne donne pas sa couleur d'accent aux applications."
+    ? $localize`iOS ne donne pas sa couleur d'accent aux applications.`
     : Capacitor.getPlatform() === 'android'
-      ? "Couleurs du fond d'écran à partir d'Android 12."
+      ? $localize`Couleurs du fond d'écran à partir d'Android 12.`
       : DESKTOP_OS
-        ? "Ce système ne donne pas sa couleur d'accent à l'application."
-        : "Ce navigateur ne donne pas la couleur d'accent du système (Firefox et Safari la donnent).";
+        ? $localize`Ce système ne donne pas sa couleur d'accent à l'application.`
+        : $localize`Ce navigateur ne donne pas la couleur d'accent du système (Firefox et Safari la donnent).`;
 
   /** Hue and chroma shown, null for the ThermoBox colours. */
   readonly seed = computed<{ h: number; c: number } | null>(() => {

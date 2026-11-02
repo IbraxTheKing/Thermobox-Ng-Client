@@ -30,7 +30,7 @@ const marked = new Marked({
 });
 
 /** GitHub alerts: the first line of a quote. */
-const ALERTS: Record<string, string> = { NOTE: 'Remarque', TIP: 'Astuce', IMPORTANT: 'Important', WARNING: 'Attention', CAUTION: 'Prudence' };
+const ALERTS: Record<string, string> = { NOTE: $localize`Remarque`, TIP: $localize`Astuce`, IMPORTANT: $localize`Important`, WARNING: $localize`Attention`, CAUTION: $localize`Prudence` };
 
 let hooked = false;
 
@@ -68,7 +68,7 @@ function alerts(html: string): string {
 const cache = new Map<string, string>();
 
 export function markdownToHtml(text: string | null | undefined): string {
-  if (!text || !text.trim()) return '<p class="tb-muted">Pas de notes de version.</p>';
+  if (!text || !text.trim()) return $localize`<p class="tb-muted">Pas de notes de version.</p>`;
   const known = cache.get(text);
   if (known != null) return known;
   hook();

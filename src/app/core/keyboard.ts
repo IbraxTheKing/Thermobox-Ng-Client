@@ -29,24 +29,24 @@ export class KeyboardService {
   readonly help = signal(false);
 
   readonly shortcuts: Shortcut[] = [
-    { group: 'Partout', keys: ['1', '…', '6'], text: 'Ouvrir la 1ʳᵉ à la 6ᵉ entrée du menu (Aperçu, Salles, Mesures…)', key: /^[1-6]$/, act: (e) => this.destination(+e.key) },
-    { group: 'Partout', keys: ['/'], text: 'Aller au champ de recherche de la page', key: '/', act: () => this.search() },
-    { group: 'Partout', keys: ['R'], text: 'Actualiser les données de la page', key: 'r', act: () => this.click('.tb-page-head [data-action="refresh"]') },
-    { group: 'Partout', keys: ['N'], text: 'Action principale de la page (nouvel élément, nouvel utilisateur…)', key: 'n', act: () => this.click('.tb-page-head .tb-fab') },
-    { group: 'Partout', keys: ['T'], text: 'Passer du thème clair au thème sombre', key: 't', act: () => (this.prefs.changeTheme(this.prefs.theme() === 'dark' ? 'light' : 'dark'), true) },
+    { group: $localize`Partout`, keys: ['1', '…', '6'], text: $localize`Ouvrir la 1ʳᵉ à la 6ᵉ entrée du menu (Aperçu, Salles, Mesures…)`, key: /^[1-6]$/, act: (e) => this.destination(+e.key) },
+    { group: $localize`Partout`, keys: ['/'], text: $localize`Aller au champ de recherche de la page`, key: '/', act: () => this.search() },
+    { group: $localize`Partout`, keys: ['R'], text: $localize`Actualiser les données de la page`, key: 'r', act: () => this.click('.tb-page-head [data-action="refresh"]') },
+    { group: $localize`Partout`, keys: ['N'], text: $localize`Action principale de la page (nouvel élément, nouvel utilisateur…)`, key: 'n', act: () => this.click('.tb-page-head .tb-fab') },
+    { group: $localize`Partout`, keys: ['T'], text: $localize`Passer du thème clair au thème sombre`, key: 't', act: () => (this.prefs.changeTheme(this.prefs.theme() === 'dark' ? 'light' : 'dark'), true) },
     // macOS app: its settings window (as ⌘, of the menu bar)
     this.desktop.settingsInMenu
-      ? { group: 'Partout', keys: ['P'], text: 'Ouvrir les Réglages (comme ⌘,)', key: 'p', act: () => (void this.desktop.openSettings(), true) }
-      : { group: 'Partout', keys: ['P'], text: 'Ouvrir les Préférences', key: 'p', act: () => this.forward('/app/preferences') },
-    { group: 'Partout', keys: ['?'], text: 'Afficher ou cacher cette liste', key: '?', act: () => (this.help.update((v) => !v), true) },
-    { group: 'Partout', keys: ['Échap'], text: 'Fermer cette liste', key: null },
-    { group: "Page d'une salle", keys: ['Espace'], text: "Revenir à l'aperçu", key: ' ', when: () => this.page('/app/room/'), act: () => this.back() },
-    { group: "Page d'une salle", keys: ['Retour arrière'], text: "Revenir à l'aperçu (comme Espace)", key: 'Backspace', when: () => this.page('/app/room/'), act: () => this.back() },
-    { group: "Page d'une salle", keys: ['F'], text: 'Ajouter aux favoris ou en retirer', key: 'f', when: () => this.page('/app/room/'), act: () => this.click('.tb-page-head .tb-fav') },
+      ? { group: $localize`Partout`, keys: ['P'], text: $localize`Ouvrir les Réglages (comme ⌘,)`, key: 'p', act: () => (void this.desktop.openSettings(), true) }
+      : { group: $localize`Partout`, keys: ['P'], text: $localize`Ouvrir les Préférences`, key: 'p', act: () => this.forward('/app/preferences') },
+    { group: $localize`Partout`, keys: ['?'], text: $localize`Afficher ou cacher cette liste`, key: '?', act: () => (this.help.update((v) => !v), true) },
+    { group: $localize`Partout`, keys: [$localize`Échap`], text: $localize`Fermer cette liste`, key: null },
+    { group: $localize`Page d'une salle`, keys: [$localize`Espace`], text: $localize`Revenir à l'aperçu`, key: ' ', when: () => this.page('/app/room/'), act: () => this.back() },
+    { group: $localize`Page d'une salle`, keys: [$localize`Retour arrière`], text: $localize`Revenir à l'aperçu (comme Espace)`, key: 'Backspace', when: () => this.page('/app/room/'), act: () => this.back() },
+    { group: $localize`Page d'une salle`, keys: ['F'], text: $localize`Ajouter aux favoris ou en retirer`, key: 'f', when: () => this.page('/app/room/'), act: () => this.click('.tb-page-head .tb-fav') },
     {
-      group: 'Aperçu',
+      group: $localize`Aperçu`,
       keys: ['F'],
-      text: 'Replier ou déplier toutes les sections sauf les favoris',
+      text: $localize`Replier ou déplier toutes les sections sauf les favoris`,
       key: 'f',
       when: () => this.page('/app/overview'),
       act: () => {

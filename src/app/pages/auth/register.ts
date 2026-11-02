@@ -7,6 +7,7 @@ import { PlatformService } from '../../core/platform';
 import { PreferencesService } from '../../core/preferences';
 import { UserService } from '../../services/user.service';
 import { TbPassword } from '../../ui/controls';
+import { TrPipe } from '../../ui/tr.pipe';
 
 /** Bytes of a password in UTF-8: BCrypt only uses the first 72 (accented characters count double). */
 export function bytes(s: string): number {
@@ -30,7 +31,7 @@ export function force(s: string): 0 | 1 | 2 {
  */
 @Component({
   selector: 'tb-register',
-  imports: [RouterLink, TbPassword],
+  imports: [TrPipe, RouterLink, TbPassword],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './register.html',
 })
@@ -53,21 +54,21 @@ export class RegisterPage {
 
   protected readonly nameError = computed(() => {
     const n = this.username().trim();
-    if (!n) return "Nom d'utilisateur obligatoire";
-    if (n.length < 3 || n.length > 50) return 'Entre 3 et 50 caractères';
-    if (/\s/.test(n)) return "Le nom d'utilisateur ne peut pas contenir d'espace";
+    if (!n) return $localize`Nom d'utilisateur obligatoire`;
+    if (n.length < 3 || n.length > 50) return $localize`Entre 3 et 50 caractères`;
+    if (/\s/.test(n)) return $localize`Le nom d'utilisateur ne peut pas contenir d'espace`;
     return null;
   });
   protected readonly passwordError = computed(() => {
     const p = this.password();
-    if (!p) return 'Mot de passe obligatoire';
-    if (p.length < 8) return 'Au moins 8 caractères';
-    if (bytes(p) > 72) return 'Trop long (72 octets au plus, les lettres accentuées comptent double)';
+    if (!p) return $localize`Mot de passe obligatoire`;
+    if (p.length < 8) return $localize`Au moins 8 caractères`;
+    if (bytes(p) > 72) return $localize`Trop long (72 octets au plus, les lettres accentuées comptent double)`;
     return null;
   });
   protected readonly confirmError = computed(() => {
-    if (!this.confirm()) return 'Confirmation obligatoire';
-    return this.confirm() !== this.password() ? 'Les mots de passe ne correspondent pas' : null;
+    if (!this.confirm()) return $localize`Confirmation obligatoire`;
+    return this.confirm() !== this.password() ? $localize`Les mots de passe ne correspondent pas` : null;
   });
   protected readonly force = computed(() => force(this.password()));
 
@@ -77,7 +78,7 @@ export class RegisterPage {
     this.error.set(null);
     const base = this.serverField() ? (toBase(this.address()) ?? this.server.defaultBase) : this.server.base();
     if (!base) {
-      this.error.set("Indique l'adresse du serveur ThermoBox");
+      this.error.set($localize`Indique l'adresse du serveur ThermoBox`);
       return;
     }
     if (this.nameError() || this.passwordError() || this.confirmError()) return;
@@ -88,8 +89,8 @@ export class RegisterPage {
       // The login page, ready for the new account: its server and its name
       await this.router.navigate(['/login'], { queryParams: { registered: 'true', name: username, server: base } });
     } catch (err) {
-      const m = errorMessage(err, 'Inscription impossible');
-      this.error.set(m === 'Username already taken' ? "Ce nom d'utilisateur est déjà pris" : m);
+      const m = errorMessage(err, $localize`Inscription impossible`);
+      this.error.set(m === 'Username already taken' ? $localize`Ce nom d'utilisateur est déjà pris` : m);
     } finally {
       this.inProgress.set(false);
     }

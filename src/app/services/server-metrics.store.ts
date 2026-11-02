@@ -83,7 +83,7 @@ export class ServerMetricsStore {
         this.available.set(false);
         clearInterval(this.timer);
       } else {
-        this.error.set('Le serveur ne répond pas');
+        this.error.set($localize`Le serveur ne répond pas`);
       }
     }
   }

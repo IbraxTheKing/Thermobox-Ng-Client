@@ -8,6 +8,7 @@ import { UnitService } from '../../core/unit';
 import { TbWatch } from '../../ui/controls';
 import { TbPhotoImg } from '../../ui/photo';
 import { RoomSummary } from './summary';
+import { TrPipe } from '../../ui/tr.pipe';
 
 /**
  * A room on the dashboard, in the look of the site (tokens.css):
@@ -26,7 +27,7 @@ import { RoomSummary } from './summary';
  */
 @Component({
   selector: 'tb-room-card',
-  imports: [RouterLink, TbWatch, TbPhotoImg],
+  imports: [TrPipe, RouterLink, TbWatch, TbPhotoImg],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { style: 'display: contents' },
   template: `
@@ -41,8 +42,8 @@ import { RoomSummary } from './summary';
         [class.tb-press]="pressing()"
         (pointerdown)="press($event)" (contextmenu)="menu($event)"
       >
-        <a [routerLink]="['/app/room', s.id]" class="tb-stretched" [title]="'Ouvrir ' + s.name">
-          <span class="tb-sr-only">Ouvrir {{ s.name }}</span>
+        <a [routerLink]="['/app/room', s.id]" class="tb-stretched" [title]="('Ouvrir ' | tr) + s.name">
+          <span i18n class="tb-sr-only">Ouvrir {{ s.name }}</span>
         </a>
         @if (s.image != null) {
           <span class="tb-cell-photo"><tb-photo-img [roomId]="s.id" [version]="s.image" /></span>
@@ -57,7 +58,7 @@ import { RoomSummary } from './summary';
           <small>{{ deltaText() }}</small>
         </span>
         @if (s.favorite) {
-          <i class="pi pi-star-fill tb-cell-favorite" aria-label="Favori"></i>
+          <i class="pi pi-star-fill tb-cell-favorite" i18n-aria-label aria-label="Favori"></i>
         }
       </article>
     } @else {
@@ -70,11 +71,11 @@ import { RoomSummary } from './summary';
         [class.tb-press]="pressing()"
         (pointerdown)="press($event)" (contextmenu)="menu($event)"
       >
-        <a [routerLink]="['/app/room', s.id]" class="tb-stretched" [title]="'Ouvrir ' + s.name">
-          <span class="tb-sr-only">Ouvrir {{ s.name }}</span>
+        <a [routerLink]="['/app/room', s.id]" class="tb-stretched" [title]="('Ouvrir ' | tr) + s.name">
+          <span i18n class="tb-sr-only">Ouvrir {{ s.name }}</span>
         </a>
         <button type="button" class="tb-room-tile-favorite" [class.tb-fav-on]="s.favorite" [attr.aria-pressed]="s.favorite"
-                [title]="s.favorite ? 'Retirer des favoris' : 'Ajouter aux favoris'" (click)="favorite.emit(s.id)">
+                [title]="s.favorite ? ('Retirer des favoris' | tr) : ('Ajouter aux favoris' | tr)" (click)="favorite.emit(s.id)">
           <i class="pi" [class.pi-star-fill]="s.favorite" [class.pi-star]="!s.favorite"></i>
         </button>
         @if (s.image != null) {
@@ -83,7 +84,7 @@ import { RoomSummary } from './summary';
         <span class="tb-room-tile-name" data-vt="room-name" [attr.data-vt-id]="s.id">{{ s.name }}</span>
         <span class="tb-room-tile-t tb-figures" data-vt="room-temp" [attr.data-vt-id]="s.id" [tbWatch]="s.temperature">{{ unit.t(s.temperature) }}<span>°</span></span>
         <span class="tb-room-tile-state">
-          @if (r().state.tone === 'stable') { Confortable } @else { <b>{{ homeState() }}</b> }
+          @if (r().state.tone === 'stable') {<ng-container i18n> Confortable </ng-container>} @else { <b>{{ homeState() }}</b> }
           @if (s.setpoint?.value != null) { · {{ unit.t(s.setpoint?.value) }}° }
         </span>
         @if (r().trend; as t) {
@@ -175,8 +176,8 @@ export class TbRoomCard {
   protected readonly cellColor = computed(() => deltaColor(this.r().delta, this.dark(), this.prefs.tolerance()));
   protected readonly deltaText = computed(() => {
     const e = this.r().delta;
-    if (e == null) return this.r().room.temperature == null ? 'pas de mesure' : 'sans consigne';
-    return Math.abs(e) < 0.05 ? 'à la consigne' : this.unit.delta(e);
+    if (e == null) return this.r().room.temperature == null ? $localize`pas de mesure` : $localize`sans consigne`;
+    return Math.abs(e) < 0.05 ? $localize`à la consigne` : this.unit.delta(e);
   });
 
   protected readonly tile = computed(() => {
@@ -184,5 +185,5 @@ export class TbRoomCard {
     const c = roomColor(s.temperature, s.setpoint?.value, this.prefs.homeColors(), this.prefs.tolerance());
     return { background: tintSoft(c, this.dark()), strong: tintStrong(c, this.dark()) };
   });
-  protected readonly homeState = computed(() => ({ heating: 'Chauffe', hot: 'Un peu chaud', unknown: 'Pas de mesure', stable: 'Confortable' })[this.r().state.tone]);
+  protected readonly homeState = computed(() => ({ heating: $localize`Chauffe`, hot: $localize`Un peu chaud`, unknown: $localize`Pas de mesure`, stable: $localize`Confortable` })[this.r().state.tone]);
 }

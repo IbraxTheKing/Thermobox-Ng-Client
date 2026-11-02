@@ -24,17 +24,17 @@ export const CHILDREN: Record<RoomKind, RoomKind[]> = {
 };
 
 export const LABELS: Record<RoomKind, string> = {
-  BUILDING: 'Bâtiment',
-  FLOOR: 'Étage',
-  ROOM: 'Salle',
-  DEVICE: 'Boîtier',
+  BUILDING: $localize`Bâtiment`,
+  FLOOR: $localize`Étage`,
+  ROOM: $localize`Salle`,
+  DEVICE: $localize`Boîtier`,
 };
 
 export const WITH_ARTICLE: Record<RoomKind, string> = {
-  BUILDING: 'un bâtiment',
-  FLOOR: 'un étage',
-  ROOM: 'une salle',
-  DEVICE: 'un boîtier',
+  BUILDING: $localize`un bâtiment`,
+  FLOOR: $localize`un étage`,
+  ROOM: $localize`une salle`,
+  DEVICE: $localize`un boîtier`,
 };
 
 export const ICONS: Record<RoomKind, string> = {
@@ -142,7 +142,7 @@ export class TreeStore {
       this.lastJson = json;
       this.error.set(null);
     } catch (e) {
-      this.error.set(errorMessage(e, "Impossible de charger les bâtiments et salles"));
+      this.error.set(errorMessage(e, $localize`Impossible de charger les bâtiments et salles`));
       if (!quiet) throw e;
     } finally {
       this.loading.set(false);

@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, computed, i
 
 import { PlatformService } from '../core/platform';
 import { UnitService } from '../core/unit';
+import { locale } from '../core/i18n';
 
 /** The arc covers 270°, from the bottom left to the bottom right. */
 const START = -225;
@@ -49,7 +50,7 @@ const PACE = [150, 110, 80, 60];
             <!-- A wider ring than the knob, easier to catch with a finger -->
             <circle class="tb-dial-grip" [attr.cx]="start[0]" [attr.cy]="start[1]" r="34" (pointerdown)="enter($event)" />
             <circle class="tb-dial-button" [attr.cx]="start[0]" [attr.cy]="start[1]" r="16"
-                    role="slider" tabindex="0" aria-label="Consigne"
+                    role="slider" tabindex="0" i18n-aria-label aria-label="Consigne"
                     [attr.aria-valuemin]="unit.setpointMin()" [attr.aria-valuemax]="unit.setpointMax()" [attr.aria-valuenow]="value()"
                     [attr.aria-valuetext]="text(value()) + ' ' + unit.symbol()"
                     (pointerdown)="enter($event)"
@@ -61,27 +62,27 @@ const PACE = [150, 110, 80, 60];
       <div class="tb-dial-center" [class.tb-dial-adjusting]="adjusting()">
         <!-- Being set: the figure is the setpoint asked for, the temperature goes underneath -->
         @if (adjusting()) {
-          <small>Objectif</small>
+          <small i18n>Objectif</small>
           @for (v of [text(value())]; track v) {
             <b class="tb-figures tb-dial-target">{{ v }}<span>°</span></b>
           }
-          <em>Il fait {{ unit.t(temperature()) }}°</em>
+          <em i18n>Il fait {{ unit.t(temperature()) }}°</em>
         } @else {
-          <small>Il fait</small>
+          <small i18n>Il fait</small>
           <b class="tb-figures" [attr.data-vt]="vtId() != null ? 'room-temp' : null" [attr.data-vt-id]="vtId()">{{ unit.t(temperature()) }}<span>°</span></b>
           @if (setpoint() != null) {
-            <em>Objectif {{ unit.t(setpoint()) }}°</em>
+            <em i18n>Objectif {{ unit.t(setpoint()) }}°</em>
           } @else {
-            <em>Pas d'objectif</em>
+            <em i18n>Pas d'objectif</em>
           }
         }
       </div>
     </div>
     @if (editable()) {
       <div class="tb-dial-step">
-        <button type="button" [class.tb-held]="held() === -1" aria-label="Baisser la consigne"
+        <button type="button" [class.tb-held]="held() === -1" i18n-aria-label aria-label="Baisser la consigne"
                 (pointerdown)="press(-1, $event)" (click)="click(-1, $event)"><i class="pi pi-minus"></i></button>
-        <button type="button" [class.tb-held]="held() === 1" aria-label="Monter la consigne"
+        <button type="button" [class.tb-held]="held() === 1" i18n-aria-label aria-label="Monter la consigne"
                 (pointerdown)="press(1, $event)" (click)="click(1, $event)"><i class="pi pi-plus"></i></button>
       </div>
     }
@@ -156,7 +157,7 @@ export class TbDial {
   }
 
   protected text(v: number | null): string {
-    return v == null ? '—' : v.toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    return v == null ? '—' : v.toLocaleString(locale(), { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   }
 
   protected step(direction: number, e?: Event): void {

@@ -14,6 +14,7 @@ import { TbAccessTree } from './access-tree';
 import { TbPassword } from './controls';
 import { TbMultipleChoice } from './multiple-choice';
 import { TbSheet } from './sheet';
+import { TrPipe } from './tr.pipe';
 
 /**
  * An account (ADMIN): created, renamed, its role or password changed, or deleted. The
@@ -23,13 +24,13 @@ import { TbSheet } from './sheet';
  */
 @Component({
   selector: 'tb-user-form-sheet',
-  imports: [TbSheet, TbPassword, TbMultipleChoice, TbAccessTree],
+  imports: [TrPipe, TbSheet, TbPassword, TbMultipleChoice, TbAccessTree],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <tb-sheet [(open)]="shown" [title]="creation() ? 'Nouvel utilisateur' : 'Modifier l\\'utilisateur'" [width]="creation() ? 560 : 420">
+    <tb-sheet [(open)]="shown" [title]="creation() ? ('Nouvel utilisateur' | tr) : ('Modifier l\\'utilisateur' | tr)" [width]="creation() ? 560 : 420">
       <form (submit)="save($event)" novalidate>
         <div class="tb-field">
-          <label class="tb-label" for="tb-u-name">Nom d'utilisateur</label>
+          <label i18n class="tb-label" for="tb-u-name">Nom d'utilisateur</label>
           <input id="tb-u-name" class="tb-input" autocomplete="off" autocapitalize="off" spellcheck="false" [value]="name()" (input)="name.set($any($event.target).value)"
                  [class.tb-invalid]="submitted() && nameError()" />
           @if (submitted() && nameError(); as e) {
@@ -37,19 +38,19 @@ import { TbSheet } from './sheet';
           }
         </div>
         <div class="tb-field">
-          <label class="tb-label" for="tb-u-role">Rôle</label>
+          <label i18n class="tb-label" for="tb-u-role">Rôle</label>
           <select id="tb-u-role" class="tb-select" [class.tb-invalid]="submitted() && !role()" [disabled]="isMe()" (change)="role.set($any($event.target).value)">
-            <option value="" [selected]="!role()">Choisir…</option>
+            <option i18n value="" [selected]="!role()">Choisir…</option>
             @for (r of roles; track r) {
               <option [value]="r" [selected]="role() === r">{{ roleName(r) }}</option>
             }
           </select>
           @if (submitted() && !role()) {
-            <span class="tb-field-error">Rôle obligatoire</span>
+            <span i18n class="tb-field-error">Rôle obligatoire</span>
           }
         </div>
         <div class="tb-field">
-          <label class="tb-label" for="tb-u-password">{{ creation() ? 'Mot de passe' : 'Nouveau mot de passe (optionnel)' }}</label>
+          <label class="tb-label" for="tb-u-password">{{ creation() ? ('Mot de passe' | tr) : ('Nouveau mot de passe (optionnel)' | tr) }}</label>
           <tb-password inputId="tb-u-password" [(value)]="password" autocomplete="new-password" [invalid]="!!(submitted() && passwordError())" />
           @if (submitted() && passwordError(); as e) {
             <span class="tb-field-error">{{ e }}</span>
@@ -59,31 +60,31 @@ import { TbSheet } from './sheet';
           <!-- From the start: its groups and what it may see -->
           @if (access.groups().length) {
             <div class="tb-field">
-              <span class="tb-label">Groupes (facultatif)</span>
-              <tb-choice-multiple [options]="groupOptions()" [(value)]="groups" placeholder="Rechercher un groupe…" empty="Aucun groupe" />
+              <span i18n class="tb-label">Groupes (facultatif)</span>
+              <tb-choice-multiple [options]="groupOptions()" [(value)]="groups" i18n-placeholder placeholder="Rechercher un groupe…" i18n-empty empty="Aucun groupe" />
             </div>
           }
           @if (role() !== 'ADMIN') {
             <div class="tb-field">
-              <span class="tb-label">Accès</span>
-              <div class="tb-access-mode" role="radiogroup" aria-label="Accès">
-                <label class="tb-choice"><input type="radio" name="tb-new-access" [checked]="!restricted()" (change)="restricted.set(false)" />Tout ThermoBox</label>
-                <label class="tb-choice"><input type="radio" name="tb-new-access" [checked]="restricted()" (change)="restricted.set(true)" />Seulement les éléments cochés{{ groups().size ? ' (en plus de ses groupes)' : '' }}</label>
+              <span i18n class="tb-label">Accès</span>
+              <div class="tb-access-mode" role="radiogroup" i18n-aria-label aria-label="Accès">
+                <label i18n class="tb-choice"><input type="radio" name="tb-new-access" [checked]="!restricted()" (change)="restricted.set(false)" />Tout ThermoBox</label>
+                <label i18n class="tb-choice"><input type="radio" name="tb-new-access" [checked]="restricted()" (change)="restricted.set(true)" />Seulement les éléments cochés{{ groups().size ? (' (en plus de ses groupes)' | tr) : '' }}</label>
               </div>
               @if (restricted()) {
                 <tb-tree-access [nodes]="tree.nodes()" [(checked)]="checked" />
               }
             </div>
           } @else {
-            <p class="tb-muted"><i class="pi pi-shield"></i> Un administrateur voit tout ThermoBox.</p>
+            <p i18n class="tb-muted"><i class="pi pi-shield"></i> Un administrateur voit tout ThermoBox.</p>
           }
         }
         <div class="tb-actions">
           @if (!creation() && !isMe()) {
-            <button type="button" class="tb-btn tb-flat tb-btn-danger tb-actions-start" (click)="removeShown()"><i class="pi pi-trash"></i>Supprimer</button>
+            <button i18n type="button" class="tb-btn tb-flat tb-btn-danger tb-actions-start" (click)="removeShown()"><i class="pi pi-trash"></i>Supprimer</button>
           }
-          <button type="button" class="tb-btn tb-flat" (click)="shown.set(false)">Annuler</button>
-          <button type="submit" class="tb-btn" [disabled]="saving()"><i class="pi pi-check"></i>Enregistrer</button>
+          <button i18n type="button" class="tb-btn tb-flat" (click)="shown.set(false)">Annuler</button>
+          <button i18n type="submit" class="tb-btn" [disabled]="saving()"><i class="pi pi-check"></i>Enregistrer</button>
         </div>
       </form>
     </tb-sheet>
@@ -121,20 +122,20 @@ export class TbUserFormSheet {
 
   protected readonly nameError = computed(() => {
     const n = this.name().trim();
-    if (!n) return "Nom d'utilisateur obligatoire";
-    if (n.length < 3 || n.length > 50) return 'Entre 3 et 50 caractères';
+    if (!n) return $localize`Nom d'utilisateur obligatoire`;
+    if (n.length < 3 || n.length > 50) return $localize`Entre 3 et 50 caractères`;
     return null;
   });
   protected readonly passwordError = computed(() => {
     const p = this.password();
-    if (!p) return this.creation() ? 'Mot de passe obligatoire' : null;
-    if (p.length < 8) return 'Au moins 8 caractères';
-    if (bytes(p) > 72) return 'Trop long (72 octets au plus)';
+    if (!p) return this.creation() ? $localize`Mot de passe obligatoire` : null;
+    if (p.length < 8) return $localize`Au moins 8 caractères`;
+    if (bytes(p) > 72) return $localize`Trop long (72 octets au plus)`;
     return null;
   });
 
   protected roleName(r: string): string {
-    return ({ ADMIN: 'Administrateur', MANAGER: 'Gestionnaire', VIEWER: 'Lecteur' } as Record<string, string>)[r] ?? r;
+    return ({ ADMIN: $localize`Administrateur`, MANAGER: $localize`Gestionnaire`, VIEWER: $localize`Lecteur` } as Record<string, string>)[r] ?? r;
   }
 
   create(): void {
@@ -176,19 +177,19 @@ export class TbUserFormSheet {
         const extra = id != null ? await this.setUp(id, role) : [];
         const nothing = role !== 'ADMIN' && this.restricted() && !(this.accessTree()?.kept().length ?? 0) && !this.groups().size;
         this.toasts.info(
-          `Utilisateur « ${name} » créé`,
-          extra.length ? extra.join(', ') : nothing ? "Il n'a encore accès à aucune salle : touche ses accès pour lui en donner." : null,
+          $localize`Utilisateur « ${name} » créé`,
+          extra.length ? extra.join(', ') : nothing ? $localize`Il n'a encore accès à aucune salle : touche ses accès pour lui en donner.` : null,
         );
       } else if (u?.id != null) {
         const update = await firstValueFrom(this.users.update(u.id, { username: name, type: role, ...(this.password() ? { password: this.password() } : {}) }));
         if (this.auth.isMe(u)) this.auth.updateUser(update);
-        this.toasts.info(`Utilisateur « ${name} » modifié`);
+        this.toasts.info($localize`Utilisateur « ${name} » modifié`);
       }
       this.shown.set(false);
       this.saved.emit();
     } catch (err) {
-      const m = errorMessage(err, 'Enregistrement impossible');
-      this.toasts.error(m === 'Username already taken' ? "Ce nom d'utilisateur est déjà pris" : 'Enregistrement impossible', m === 'Username already taken' ? null : m);
+      const m = errorMessage(err, $localize`Enregistrement impossible`);
+      this.toasts.error(m === 'Username already taken' ? $localize`Ce nom d'utilisateur est déjà pris` : $localize`Enregistrement impossible`, m === 'Username already taken' ? null : m);
     } finally {
       this.saving.set(false);
     }
@@ -204,16 +205,16 @@ export class TbUserFormSheet {
       try {
         await firstValueFrom(this.groupsApi.edit(g.id, req));
       } catch (e) {
-        this.toasts.error(`Ajout à « ${g.name} » impossible`, errorMessage(e));
+        this.toasts.error($localize`Ajout à « ${g.name} » impossible`, errorMessage(e));
       }
     }
-    if (ids.size) done.push(`dans ${ids.size} groupe(s)`);
+    if (ids.size) done.push($localize`dans ${ids.size} groupe(s)`);
     if (role !== 'ADMIN') {
       const elements = this.restricted() ? (this.accessTree()?.kept() ?? []) : [];
       if (!this.restricted() || elements.length) {
         try {
           await firstValueFrom(this.users.setAccess(id, this.restricted(), elements));
-          done.push(this.restricted() ? `accès à ${elements.length} élément(s)` : 'accès à tout');
+          done.push(this.restricted() ? $localize`accès à ${elements.length} élément(s)` : $localize`accès à tout`);
         } catch (e) {
           this.toasts.error('Accès non enregistrés', errorMessage(e));
         }
@@ -233,10 +234,10 @@ export class TbUserFormSheet {
       this.toasts.error('Supprime ton propre compte depuis la page Profil');
       return false;
     }
-    if (!(await this.confirm.ask('Supprimer', `Supprimer l'utilisateur « ${u.username} » ?`, { confirm: 'Supprimer' }))) return false;
+    if (!(await this.confirm.ask($localize`Supprimer`, $localize`Supprimer l'utilisateur « ${u.username} » ?`, { confirm: $localize`Supprimer` }))) return false;
     try {
       await firstValueFrom(this.users.remove(u.id!));
-      this.toasts.info(`Utilisateur « ${u.username} » supprimé`);
+      this.toasts.info($localize`Utilisateur « ${u.username} » supprimé`);
       this.saved.emit();
       return true;
     } catch (e) {

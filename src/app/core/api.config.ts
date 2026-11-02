@@ -118,19 +118,19 @@ export function toInstant(value: Date | string): string {
 }
 
 /** Message to show for a failed request: the server's when it gave one. */
-export function errorMessage(err: unknown, fallback = 'Erreur inattendue'): string {
+export function errorMessage(err: unknown, fallback = $localize`Erreur inattendue`): string {
   if (err instanceof HttpErrorResponse) {
     // No answer at all (offline, wrong address, refused): the network error says nothing more
-    if (err.status === 0 && (err.error == null || err.error instanceof Error || err.error instanceof ProgressEvent)) return 'Le serveur ThermoBox ne répond pas';
+    if (err.status === 0 && (err.error == null || err.error instanceof Error || err.error instanceof ProgressEvent)) return $localize`Le serveur ThermoBox ne répond pas`;
     const body = err.error as { error?: string; message?: string } | string | null;
     if (body && typeof body === 'object') {
       if (body.error) return body.error;
       if (body.message) return body.message;
     }
     if (typeof body === 'string' && body.trim() && !body.trim().startsWith('<')) return body.trim();
-    if (err.status === 0) return 'Le serveur ThermoBox ne répond pas';
-    if (err.status === 403) return 'Action non autorisée';
-    if (err.status === 404) return 'Élément introuvable';
+    if (err.status === 0) return $localize`Le serveur ThermoBox ne répond pas`;
+    if (err.status === 403) return $localize`Action non autorisée`;
+    if (err.status === 404) return $localize`Élément introuvable`;
     return `${fallback} (${err.status})`;
   }
   if (err instanceof Error) return err.message;

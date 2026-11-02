@@ -14,6 +14,7 @@ import { ClientUpdateService } from '../../core/client-update';
 import { COMMIT_CLIENT, VERSION_CLIENT } from '../../core/version';
 import { AuthService } from '../../core/auth';
 import { DesktopService } from '../../core/desktop';
+import { TrPipe } from '../../ui/tr.pipe';
 
 interface Link {
   name: string;
@@ -28,7 +29,7 @@ interface Link {
  */
 @Component({
   selector: 'tb-about',
-  imports: [TbServerLogo, NgTemplateOutlet],
+  imports: [TrPipe, TbServerLogo, NgTemplateOutlet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './about.html',
 })
@@ -57,7 +58,7 @@ export class AboutPage {
   protected readonly versionAngular = VERSION.full;
   protected readonly platformName = this.desktop.active
     ? `Application ${this.desktop.name()}`
-    : { ios: 'iOS · Liquid Glass', android: 'Android · Material 3', web: 'Web' }[this.platform.platform];
+    : { ios: 'iOS · Liquid Glass', android: 'Android · Material 3', web: $localize`Web` }[this.platform.platform];
   protected readonly native = this.platform.native;
   /** Version of the installed app (App Store / Play Store build), native app only. */
   protected readonly versionNative = signal<string | null>(null);
@@ -71,28 +72,28 @@ export class AboutPage {
   protected readonly repositories = computed<Link[]>(() => [
     {
       name: 'ThermoBox',
-      detail: this.jsf() ? 'Serveur REST, interface JSF, base de données et boîtiers' : 'Serveur REST, base de données et boîtiers',
+      detail: this.jsf() ? $localize`Serveur REST, interface JSF, base de données et boîtiers` : $localize`Serveur REST, base de données et boîtiers`,
       url: 'https://github.com/IbraxTheKing/ThermoBox',
       icon: 'pi-server',
     },
     {
       name: 'Thermobox-Ng-Client',
-      detail: 'Ce client : web, PWA, iOS, Android, Windows, macOS et Linux',
+      detail: $localize`Ce client : web, PWA, iOS, Android, Windows, macOS et Linux`,
       url: 'https://github.com/IbraxTheKing/Thermobox-Ng-Client',
       icon: 'pi-mobile',
     },
   ]);
 
   protected readonly libraries = computed<{ name: string; role: string; url: string }[]>(() => [
-    { name: 'Angular', role: 'application', url: 'https://angular.dev' },
-    { name: 'Capacitor', role: 'applications iOS et Android', url: 'https://capacitorjs.com' },
-    { name: 'Tauri', role: 'applications Windows, macOS et Linux', url: 'https://tauri.app' },
+    { name: $localize`Angular`, role: 'application', url: 'https://angular.dev' },
+    { name: $localize`Capacitor`, role: $localize`applications iOS et Android`, url: 'https://capacitorjs.com' },
+    { name: $localize`Tauri`, role: $localize`applications Windows, macOS et Linux`, url: 'https://tauri.app' },
     { name: 'Chart.js', role: 'courbes', url: 'https://www.chartjs.org' },
-    { name: 'PrimeIcons', role: 'icônes', url: 'https://primeng.org/icons' },
-    { name: 'Manrope', role: 'police (SIL Open Font License)', url: 'https://github.com/sharanda/manrope' },
-    { name: 'Tailwind CSS', role: 'utilitaires de style', url: 'https://tailwindcss.com' },
-    { name: 'Kotlin, Jersey, Jetty, Jackson', role: 'serveur REST', url: 'https://github.com/IbraxTheKing/ThermoBox' },
-    ...(this.jsf() ? [{ name: 'Jakarta Faces et PrimeFaces', role: 'interface JSF', url: 'https://www.primefaces.org' }] : []),
+    { name: 'PrimeIcons', role: $localize`icônes`, url: 'https://primeng.org/icons' },
+    { name: $localize`Manrope`, role: 'police (SIL Open Font License)', url: 'https://github.com/sharanda/manrope' },
+    { name: 'Tailwind CSS', role: $localize`utilitaires de style`, url: 'https://tailwindcss.com' },
+    { name: 'Kotlin, Jersey, Jetty, Jackson', role: $localize`serveur REST`, url: 'https://github.com/IbraxTheKing/ThermoBox' },
+    ...(this.jsf() ? [{ name: $localize`Jakarta Faces et PrimeFaces`, role: 'interface JSF', url: 'https://www.primefaces.org' }] : []),
   ]);
 
   constructor() {
@@ -126,6 +127,6 @@ export class AboutPage {
   }
 
   protected channel(c: string | undefined): string {
-    return c === 'PRERELEASE' ? 'préversions' : 'stable';
+    return c === 'PRERELEASE' ? $localize`préversions` : 'stable';
   }
 }

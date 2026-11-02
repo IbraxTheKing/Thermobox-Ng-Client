@@ -1,8 +1,8 @@
 {
   "name": "Thermobox",
   "short_name": "Thermobox",
-  "description": "La température de chaque salle, en un coup d'œil.",
-  "lang": "fr",
+  "description": "The temperature of every room, at a glance.",
+  "lang": "en",
   "start_url": "/app/apercu",
   "scope": "/",
   "display": "standalone",

@@ -10,6 +10,7 @@ import { PlatformService } from '../../core/platform';
 import { PreferencesService } from '../../core/preferences';
 import { initial } from '../../core/text';
 import { TbPassword } from '../../ui/controls';
+import { TrPipe } from '../../ui/tr.pipe';
 
 /**
  * Connexion (login.xhtml), and the accounts saved on this device: tap one to open it, or to give
@@ -20,7 +21,7 @@ import { TbPassword } from '../../ui/controls';
  */
 @Component({
   selector: 'tb-login',
-  imports: [RouterLink, TbPassword, TbServerLogo],
+  imports: [TrPipe, RouterLink, TbPassword, TbServerLogo],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './login.html',
 })
@@ -127,7 +128,7 @@ export class LoginPage {
     } else if (this.serverField()) {
       base = toBase(this.address()) ?? this.server.defaultBase;
       if (!base) {
-        this.error.set("Indique l'adresse du serveur ThermoBox");
+        this.error.set($localize`Indique l'adresse du serveur ThermoBox`);
         return;
       }
     }
@@ -142,12 +143,12 @@ export class LoginPage {
       else await this.router.navigateByUrl('/app/overview');
     } catch (err) {
       this.password.set('');
-      const m = errorMessage(err, 'Connexion impossible');
+      const m = errorMessage(err, $localize`Connexion impossible`);
       this.error.set(
         m === 'Invalid username or password'
-          ? "Nom d'utilisateur ou mot de passe incorrect"
+          ? $localize`Nom d'utilisateur ou mot de passe incorrect`
           : m.startsWith('Too many attempts')
-            ? 'Trop de tentatives : réessaie dans quelques minutes'
+            ? $localize`Trop de tentatives : réessaie dans quelques minutes`
             : m,
       );
     } finally {

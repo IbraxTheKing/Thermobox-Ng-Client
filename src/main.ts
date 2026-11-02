@@ -1,13 +1,13 @@
-import { bootstrapApplication } from '@angular/platform-browser';
-import { appConfig } from './app/app.config';
-import { App } from './app/app';
-import { prepareDesktop } from './app/core/desktop';
+import { loadLanguage } from './app/core/i18n';
 import { migrateStorage } from './app/core/storage-migration';
 
 migrateStorage();
 
-// Desktop app (Tauri): the server calls through Rust, the settings window on its page
-prepareDesktop()
+// The language first (its texts must be there before any module of the app reads them), then
+// the app: imported afterwards for that reason. Desktop app (Tauri): the server calls through
+// Rust, the settings window on its page.
+loadLanguage()
   .catch((err) => console.error(err))
-  .then(() => bootstrapApplication(App, appConfig))
+  .then(() => import('./bootstrap'))
+  .then(({ start }) => start())
   .catch((err) => console.error(err));

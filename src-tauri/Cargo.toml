@@ -22,6 +22,7 @@ tauri-plugin-opener = "2.7"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tauri-plugin-notification = "2"
+sys-locale = "0.3"
 
 [target.'cfg(windows)'.dependencies]
 # Snap layouts of Windows 11 from the maximize button of the title bar drawn by the page; the

@@ -11,7 +11,8 @@
     "mock": "node mock/demo-server.mjs",
     "cap:sync": "npm run build && npx cap sync",
     "desktop": "tauri dev",
-    "desktop:build": "tauri build"
+    "desktop:build": "tauri build",
+    "i18n": "node scripts/i18n.mjs"
   },
   "private": true,
   "packageManager": "npm@11.19.0",
@@ -20,6 +21,7 @@
     "@angular/compiler": "^22.1.0",
     "@angular/core": "^22.1.0",
     "@angular/forms": "^22.1.0",
+    "@angular/localize": "^22.1.7",
     "@angular/platform-browser": "^22.1.0",
     "@angular/router": "^22.1.0",
     "@angular/service-worker": "^22.1.7",
