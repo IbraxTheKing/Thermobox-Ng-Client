@@ -15,7 +15,17 @@
  * Celsius in, CSS colours out; the unit shown (°C / °F) does not change them.
  */
 
+import { DESKTOP_OS } from './tauri';
+
 type Rgb = [number, number, number];
+
+/**
+ * The Linux app: the colours of the GNOME palette (blue, teal, green, yellow, orange, red of the
+ * HIG), clear and saturated as GTK apps show their states, on the neutral window of libadwaita.
+ * The soft colours of ThermoBox, made for its green-grey page, came out grey there: a comfortable
+ * room was not quite green, a cold one not quite blue, a hot one not quite red.
+ */
+const GNOME = DESKTOP_OS === 'linux';
 
 const DELTA_LIGHT: [number, Rgb][] = [
   [-2.5, [47, 95, 174]],
@@ -71,6 +81,16 @@ export function deltaColor(rawDelta: number | null, dark: boolean, tolerance = 1
   };
 }
 
+const TEMPERATURE_GNOME: [number, string][] = [
+  [16, '#1c71d8'],
+  [18.5, '#2190a4'],
+  [20, '#26a269'],
+  [21.8, '#2ec27e'],
+  [23, '#e5a50a'],
+  [24.5, '#e66100'],
+  [26, '#e01b24'],
+];
+
 const TEMPERATURE: [number, string][] = [
   [16, '#3d6cb4'],
   [18.5, '#2e8ca0'],
@@ -83,9 +103,19 @@ const TEMPERATURE: [number, string][] = [
 
 /** Colour of a temperature itself (Celsius), mixed in OKLCH between its stops; null: grey. */
 export function temperatureColor(t: number | null): string {
-  if (t == null || isNaN(t)) return '#8a9690';
-  return mix(TEMPERATURE, t);
+  if (t == null || isNaN(t)) return GNOME ? '#9a9996' : '#8a9690';
+  return mix(GNOME ? TEMPERATURE_GNOME : TEMPERATURE, t);
 }
+
+const DELTA_HOME_GNOME: [number, string][] = [
+  [-2.5, '#1c71d8'],
+  [-1.2, '#2190a4'],
+  [-0.5, '#26a269'],
+  [0.5, '#2ec27e'],
+  [0.95, '#e5a50a'],
+  [1.7, '#e66100'],
+  [2.5, '#e01b24'],
+];
 
 const DELTA_HOME: [number, string][] = [
   [-2.5, '#3d6cb4'],
@@ -99,7 +129,7 @@ const DELTA_HOME: [number, string][] = [
 
 /** Home: colour of a gap to the setpoint (Celsius, stretched by the tolerance). */
 export function homeDeltaColor(delta: number, tolerance = 1): string {
-  return mix(DELTA_HOME, delta / tolerance);
+  return mix(GNOME ? DELTA_HOME_GNOME : DELTA_HOME, delta / tolerance);
 }
 
 export type HomeColors = 'delta' | 'temperature';
@@ -108,8 +138,14 @@ export type HomeColors = 'delta' | 'temperature';
  * Home: the colour of a room, as the Preferences page asks. By gap, a room without setpoint
  * falls back on its temperature.
  */
-export function roomColor(temperature: number | null | undefined, setpoint: number | null | undefined, mode: HomeColors, tolerance = 1): string {
-  if (mode === 'delta' && temperature != null && setpoint != null) return homeDeltaColor(temperature - setpoint, tolerance);
+export function roomColor(
+  temperature: number | null | undefined,
+  setpoint: number | null | undefined,
+  mode: HomeColors,
+  tolerance = 1,
+): string {
+  if (mode === 'delta' && temperature != null && setpoint != null)
+    return homeDeltaColor(temperature - setpoint, tolerance);
   return temperatureColor(temperature ?? null);
 }
 
@@ -118,7 +154,8 @@ function mix(stops: [number, string][], x: number): string {
   for (let i = 1; i < stops.length; i++) {
     const [a, ca] = stops[i - 1];
     const [b, cb] = stops[i];
-    if (v <= b) return `color-mix(in oklch, ${cb} ${Math.round(((v - a) / (b - a)) * 100)}%, ${ca})`;
+    if (v <= b)
+      return `color-mix(in oklch, ${cb} ${Math.round(((v - a) / (b - a)) * 100)}%, ${ca})`;
   }
   return stops[stops.length - 1][1];
 }
@@ -128,10 +165,18 @@ function mix(stops: [number, string][], x: number): string {
  * ThermoBox, not the page of the accent: a blue page would turn a comfortable green into blue.
  */
 export function tintSoft(color: string, dark: boolean): string {
+  // Linux: into the card of libadwaita, enough of it for the colour to read as itself
+  if (GNOME) return `color-mix(in oklch, ${color} ${dark ? 38 : 30}%, var(--lx-card))`;
   return `color-mix(in oklch, ${color} ${dark ? 30 : 24}%, var(--tb-tint-base, var(--tb-background)))`;
 }
 
 /** The same colour, for text and lines on its soft tint. */
 export function tintStrong(color: string, dark: boolean): string {
-  return dark ? `color-mix(in oklch, ${color} 72%, #ffffff)` : `color-mix(in oklch, ${color} 78%, #1d2421)`;
+  if (GNOME)
+    return dark
+      ? `color-mix(in oklch, ${color} 62%, #ffffff)`
+      : `color-mix(in oklch, ${color} 72%, #000006)`;
+  return dark
+    ? `color-mix(in oklch, ${color} 72%, #ffffff)`
+    : `color-mix(in oklch, ${color} 78%, #1d2421)`;
 }

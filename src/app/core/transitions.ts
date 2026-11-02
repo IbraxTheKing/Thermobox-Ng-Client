@@ -1,6 +1,12 @@
 import { DOCUMENT } from '@angular/common';
 import { EnvironmentInjector, Injectable, afterNextRender, inject } from '@angular/core';
-import { ActivatedRouteSnapshot, NavigationEnd, NavigationStart, Router, ViewTransitionInfo } from '@angular/router';
+import {
+  ActivatedRouteSnapshot,
+  NavigationEnd,
+  NavigationStart,
+  Router,
+  ViewTransitionInfo,
+} from '@angular/router';
 
 import { PlatformService } from './platform';
 import { PreferencesService } from './preferences';
@@ -35,6 +41,13 @@ type Doc = Document & { startViewTransition?: (f: () => void | Promise<void>) =>
  * block, as a Frame (html.tb-win-entering: it rises a little and fades in, a third of a second),
  * its parts don't come one after the other.
  *
+ * The Linux app moves as a GTK 4 app (AdwNavigationView), without view transitions (WebKitGTK
+ * drew the card morph badly, half of it skipped): a page opened from another one (a room from
+ * the overview, Préférences…) slides in from the right over the page left, which moves a little
+ * to the left under a shade; back, the page leaves to the right and uncovers the one below. Pages
+ * of the sidebar replace each other with a short fade, as the panes of GNOME apps. The page left
+ * is a copy of it (linuxShot), the page that comes the live one.
+ *
  * Nothing moves when the system asks for less motion.
  *
  * Scroll of the pages (instead of the router's, withInMemoryScrolling off): back on a page, it
@@ -50,6 +63,9 @@ export class TransitionsService {
   private readonly prefs = inject(PreferencesService);
   private readonly platform = inject(PlatformService);
   private readonly root = this.doc.documentElement;
+  private readonly gtk = DESKTOP_OS === 'linux';
+  /** Linux: the push / pop running, to end at once if another page comes. */
+  private gtkMotion: { animations: Animation[]; end: () => void } | null = null;
 
   private current: ViewTransition | null = null;
   /**
@@ -57,7 +73,8 @@ export class TransitionsService {
    * The colour of the page then changes without pictures: the background glides to the new
    * colour (tokens.css, body::before), the rest of the palette follows at once.
    */
-  private readonly webkit = /AppleWebKit/.test(navigator.userAgent) && !/Chrome\/|Chromium|Edg\//.test(navigator.userAgent);
+  private readonly webkit =
+    /AppleWebKit/.test(navigator.userAgent) && !/Chrome\/|Chromium|Edg\//.test(navigator.userAgent);
   /** The new page is not in place yet: a colour asked now goes with it. */
   private beforeUpdate = false;
   private timer?: ReturnType<typeof setTimeout>;
@@ -102,7 +119,8 @@ export class TransitionsService {
         this.scrollTarget = this.popstate ? (this.positions.get(this.restoredId) ?? 0) : 0;
         // With a page transition: in its update (newPage); without (browser without them): once
         // the new page is drawn
-        if (!this.beforeUpdate) afterNextRender(() => this.restoreScroll(), { injector: this.injector });
+        if (!this.beforeUpdate)
+          afterNextRender(() => this.restoreScroll(), { injector: this.injector });
       }
     });
     // The picture of the new page is taken as soon as the update callback is done: what must be
@@ -121,7 +139,10 @@ export class TransitionsService {
     }
     addEventListener(
       'popstate',
-      (e) => (this.byBrowser = (e as PopStateEvent & { hasUAVisualTransition?: boolean }).hasUAVisualTransition === true),
+      (e) =>
+        (this.byBrowser =
+          (e as PopStateEvent & { hasUAVisualTransition?: boolean }).hasUAVisualTransition ===
+          true),
       true,
     );
     this.doc.addEventListener(
@@ -129,7 +150,11 @@ export class TransitionsService {
       (e) => {
         const card = (e.target as Element | null)?.closest?.('.tb-room') as HTMLElement | null;
         if (!card || !(e.target as Element).closest('.tb-stretched')) return;
-        this.clickedCard = { id: card.dataset['vtId'] ?? '', el: card, top: card.getBoundingClientRect().top };
+        this.clickedCard = {
+          id: card.dataset['vtId'] ?? '',
+          el: card,
+          top: card.getBoundingClientRect().top,
+        };
       },
       true,
     );
@@ -145,6 +170,15 @@ export class TransitionsService {
     }
     const fromPath = path(from);
     const toPath = path(to);
+    if (this.gtk) {
+      this.linuxTransition(
+        transition,
+        fromPath,
+        toPath,
+        String(sheet(toPath === 'room/:id' ? to : from).params['id'] ?? ''),
+      );
+      return;
+    }
     const card = isCard(fromPath, toPath);
     const id = card ? String(sheet(toPath === 'room/:id' ? to : from).params['id'] ?? '') : '';
     // Between pages: no pictures of the pages. A picture of the glass (backdrop-filter) is drawn
@@ -163,7 +197,10 @@ export class TransitionsService {
     // The photo flies out of the card (and back into it): where it starts, measured on the page
     // we leave, before it changes
     const forward = toPath === 'room/:id';
-    const cardStart = card && forward && this.clickedCard?.id === id && this.clickedCard.el.isConnected ? frame(this.clickedCard.el) : null;
+    const cardStart =
+      card && forward && this.clickedCard?.id === id && this.clickedCard.el.isConnected
+        ? frame(this.clickedCard.el)
+        : null;
     const photoStart = card && !forward ? this.namedPhoto(id) : null;
     const backStart = photoStart ? frame(photoStart) : null;
     this.onNewPage = () => {
@@ -174,7 +211,11 @@ export class TransitionsService {
         this.name(id, false);
         // Nothing to morph into (room page not ready, card in a folded section): the card
         // would stay on its own in the middle of the new page, so no transition at all
-        if (!this.named.some((e) => e.style.getPropertyValue('view-transition-name') === `room-card-${id}`)) {
+        if (
+          !this.named.some(
+            (e) => e.style.getPropertyValue('view-transition-name') === `room-card-${id}`,
+          )
+        ) {
           this.unname();
           transition.skipTransition();
         }
@@ -197,6 +238,139 @@ export class TransitionsService {
         this.root.classList.remove('tb-vt-in', 'tb-card-morph', 'tb-card-full', 'tb-vt-flight');
         if (this.tonePending) this.fade();
       });
+  }
+
+  /**
+   * Linux: AdwNavigationView. No pictures (skipTransition); the page left is copied before it
+   * goes, the new one is animated live once it is there.
+   */
+  private linuxTransition(
+    transition: ViewTransition,
+    fromPath: string,
+    toPath: string,
+    id: string,
+  ): void {
+    transition.skipTransition();
+    this.endLinuxMotion();
+    const depthFrom = linuxDepth(fromPath);
+    const depthTo = linuxDepth(toPath);
+    const kind: 'push' | 'pop' | 'switch' =
+      depthTo > depthFrom
+        ? 'push'
+        : depthTo < depthFrom || (this.popstate && fromPath === toPath && fromPath !== '')
+          ? 'pop'
+          : 'switch';
+    const main = this.doc.querySelector<HTMLElement>('.tb-app .tb-main');
+    const shot = kind !== 'switch' && main ? linuxShot(this.doc, main) : null;
+    this.current = transition;
+    this.beforeUpdate = true;
+    this.onNewPage = () => {
+      if (fromPath === 'room/:id' && toPath === 'overview' && id) this.returnToCard(id);
+      this.applyTone(this.wantedTone);
+      const page = this.doc.querySelector<HTMLElement>('.tb-app .tb-main');
+      if (!page || !page.isConnected) {
+        shot?.layer.remove();
+        return;
+      }
+      if (shot && kind !== 'switch') this.slide(kind, shot, page);
+      else this.gtkFade(page);
+    };
+    transition.updateCallbackDone.catch(() => undefined).then(() => this.newPage());
+    transition.finished
+      .catch(() => undefined)
+      .then(() => {
+        if (this.current !== transition) return;
+        this.current = null;
+        if (this.tonePending) this.fade();
+      });
+  }
+
+  /**
+   * The push (the new page over the old one, from the right) or the pop (the old one leaves to
+   * the right): the page above has its shadow on its left edge, the one below moves by a third
+   * of the way, under a shade that fades.
+   */
+  private slide(kind: 'push' | 'pop', shot: Shot, page: HTMLElement): void {
+    const doc = this.doc;
+    const area = shot.area;
+    const w = area.width;
+    const timing: KeyframeAnimationOptions = {
+      duration: 300,
+      easing: 'cubic-bezier(.25, .46, .45, .94)',
+      fill: 'both',
+    };
+    const box = (cls: string, z: number) => {
+      const e = doc.createElement('div');
+      e.className = cls;
+      e.setAttribute('aria-hidden', 'true');
+      Object.assign(e.style, {
+        left: `${area.left}px`,
+        top: `${area.top}px`,
+        width: `${w}px`,
+        height: `${area.height}px`,
+        zIndex: String(z),
+      });
+      doc.body.append(e);
+      return e;
+    };
+    this.root.classList.add('tb-lx-nav');
+    const out = `translateX(${-w * 0.3}px)`;
+    const animations: Animation[] = [];
+    const extra: HTMLElement[] = [];
+    // The live page stacked above or under the copy, as needed, while it moves
+    page.style.position = 'relative';
+    if (kind === 'push') {
+      shot.layer.style.zIndex = '5';
+      const dim = box('tb-lx-dim', 5);
+      const sheet = box('tb-lx-sheet', 6);
+      page.style.zIndex = '7';
+      extra.push(dim, sheet);
+      animations.push(
+        shot.layer.animate({ transform: ['none', out] }, timing),
+        dim.animate({ opacity: [0, 1] }, timing),
+        sheet.animate({ transform: [`translateX(${w}px)`, 'none'] }, timing),
+        page.animate({ transform: [`translateX(${w}px)`, 'none'] }, timing),
+      );
+    } else {
+      page.style.zIndex = '5';
+      const dim = box('tb-lx-dim', 6);
+      shot.layer.style.zIndex = '7';
+      shot.layer.classList.add('tb-lx-above');
+      extra.push(dim);
+      animations.push(
+        page.animate({ transform: [out, 'none'] }, timing),
+        dim.animate({ opacity: [1, 0] }, timing),
+        shot.layer.animate({ transform: ['none', `translateX(${w}px)`] }, timing),
+      );
+    }
+    const end = () => {
+      if (this.gtkMotion?.end !== end) return;
+      this.gtkMotion = null;
+      for (const a of animations) a.cancel();
+      shot.layer.remove();
+      for (const e of extra) e.remove();
+      page.style.removeProperty('position');
+      page.style.removeProperty('z-index');
+      this.root.classList.remove('tb-lx-nav');
+    };
+    this.gtkMotion = { animations, end };
+    Promise.all(animations.map((a) => a.finished)).then(end, end);
+  }
+
+  /** Linux, between the pages of the sidebar: the new one appears quickly, as a GNOME pane. */
+  private gtkFade(page: HTMLElement): void {
+    const a = page.animate({ opacity: [0, 1] }, { duration: 150, easing: 'ease-out' });
+    const end = () => {
+      if (this.gtkMotion?.end !== end) return;
+      this.gtkMotion = null;
+      a.cancel();
+    };
+    this.gtkMotion = { animations: [a], end };
+    a.finished.then(end, end);
+  }
+
+  private endLinuxMotion(): void {
+    this.gtkMotion?.end();
   }
 
   /**
@@ -263,7 +437,8 @@ export class TransitionsService {
 
   /** Entrance of the page (CSS under html.tb-entering). */
   private entrance(): void {
-    if (this.prefs.reducedMotion()) return;
+    // Linux: a GTK app shows its page at once (the motion is the push / pop of linuxTransition)
+    if (this.prefs.reducedMotion() || this.gtk) return;
     if (DESKTOP_OS === 'windows') {
       clearTimeout(this.timer);
       this.root.classList.remove('tb-win-entering');
@@ -288,10 +463,13 @@ export class TransitionsService {
    */
   private name(id: string, clicked: boolean): void {
     if (!id) return;
-    const all = [...this.doc.querySelectorAll<HTMLElement>(`[data-vt][data-vt-id="${CSS.escape(id)}"]`)];
+    const all = [
+      ...this.doc.querySelectorAll<HTMLElement>(`[data-vt][data-vt-id="${CSS.escape(id)}"]`),
+    ];
     const cards = all.filter((e) => e.classList.contains('tb-room'));
     let card: HTMLElement | undefined;
-    if (clicked && this.clickedCard?.id === id && this.clickedCard.el.isConnected) card = this.clickedCard.el;
+    if (clicked && this.clickedCard?.id === id && this.clickedCard.el.isConnected)
+      card = this.clickedCard.el;
     card ??= cards.find((c) => {
       const r = c.getBoundingClientRect();
       return r.bottom > 0 && r.top < innerHeight;
@@ -306,7 +484,11 @@ export class TransitionsService {
       page.dataset['vtFull'] = '';
       this.named.push(page);
       // The room page: its photo flies on its own, out of the card (flyPhoto)
-      const photo = card ? null : all.find((e) => e.dataset['vt'] === 'room-photo' && !e.classList.contains('tb-photo-empty'));
+      const photo = card
+        ? null
+        : all.find(
+            (e) => e.dataset['vt'] === 'room-photo' && !e.classList.contains('tb-photo-empty'),
+          );
       if (photo) {
         photo.style.setProperty('view-transition-name', `room-photo-${id}`);
         photo.style.setProperty('view-transition-class', 'tb-vt-photo');
@@ -319,13 +501,17 @@ export class TransitionsService {
     for (const e of all) {
       const name = e.dataset['vt']!;
       // Only one element per name: the one of the chosen card, or the only one of the room page
-      if (taken.has(name) || (card && e !== card && !card.contains(e) && e.closest('.tb-room'))) continue;
+      if (taken.has(name) || (card && e !== card && !card.contains(e) && e.closest('.tb-room')))
+        continue;
       taken.add(name);
       e.style.setProperty('view-transition-name', `${name}-${id}`);
       // Their layers: the photo under the card and its words (motion.css), whichever page it
       // comes from; a photo alone (the card has none to morph into) fades under the card
       if (!e.style.getPropertyValue('view-transition-class')) {
-        e.style.setProperty('view-transition-class', name === 'room-photo' ? 'tb-vt-photo' : 'tb-vt-text');
+        e.style.setProperty(
+          'view-transition-class',
+          name === 'room-photo' ? 'tb-vt-photo' : 'tb-vt-text',
+        );
         e.dataset['vtClass'] = '';
       }
       this.named.push(e);
@@ -334,7 +520,9 @@ export class TransitionsService {
 
   /** The photo of the room page, named for the transition, if the room has one. */
   private namedPhoto(id: string): HTMLElement | null {
-    const p = this.named.find((e) => e.style.getPropertyValue('view-transition-name') === `room-photo-${id}`);
+    const p = this.named.find(
+      (e) => e.style.getPropertyValue('view-transition-name') === `room-photo-${id}`,
+    );
     return p && !p.classList.contains('tb-photo-empty') ? p : null;
   }
 
@@ -346,19 +534,31 @@ export class TransitionsService {
    */
   private flyPhoto(id: string, cardStart: Frame | null, backStart: Frame | null): void {
     const pseudo = `::view-transition-group(room-photo-${id})`;
-    const options: KeyframeAnimationOptions = { duration: 520, easing: 'cubic-bezier(.2, .8, .2, 1)', fill: 'both', pseudoElement: pseudo };
+    const options: KeyframeAnimationOptions = {
+      duration: 520,
+      easing: 'cubic-bezier(.2, .8, .2, 1)',
+      fill: 'both',
+      pseudoElement: pseudo,
+    };
     if (cardStart) {
       const photo = this.namedPhoto(id);
       if (!photo) return;
       this.root.classList.add('tb-vt-flight');
       this.root.animate(images(cardStart, frame(photo)), options);
     } else if (backStart) {
-      const card = this.named.find((e) => e.style.getPropertyValue('view-transition-name') === `room-card-${id}` && e.classList.contains('tb-room'));
+      const card = this.named.find(
+        (e) =>
+          e.style.getPropertyValue('view-transition-name') === `room-card-${id}` &&
+          e.classList.contains('tb-room'),
+      );
       if (!card) return;
       this.root.classList.add('tb-vt-flight');
       this.root.animate(images(backStart, frame(card)), options);
       // It melts into the card at the end of the way
-      this.root.animate({ opacity: [1, 1, 0], offset: [0, 0.6, 1] }, { ...options, pseudoElement: `::view-transition-old(room-photo-${id})` });
+      this.root.animate(
+        { opacity: [1, 1, 0], offset: [0, 0.6, 1] },
+        { ...options, pseudoElement: `::view-transition-old(room-photo-${id})` },
+      );
     }
   }
 
@@ -366,7 +566,11 @@ export class TransitionsService {
     for (const e of this.named.splice(0)) {
       e.style.removeProperty('view-transition-name');
       // Set here only on the page; the cards carry their own (room-card.ts)
-      if ((e.dataset['vtFull'] != null && !e.classList.contains('tb-room')) || e.dataset['vtClass'] != null) e.style.removeProperty('view-transition-class');
+      if (
+        (e.dataset['vtFull'] != null && !e.classList.contains('tb-room')) ||
+        e.dataset['vtClass'] != null
+      )
+        e.style.removeProperty('view-transition-class');
       delete e.dataset['vtFull'];
       delete e.dataset['vtClass'];
     }
@@ -384,16 +588,26 @@ export class TransitionsService {
     if (!card) return;
     // Its place when it was clicked (on the screen); kept inside the window if the click came
     // during a fling, the page still moving
-    const at = this.clickedCard?.id === id ? this.clickedCard.top : (innerHeight - card.offsetHeight) / 2;
+    const at =
+      this.clickedCard?.id === id ? this.clickedCard.top : (innerHeight - card.offsetHeight) / 2;
     const top = Math.min(Math.max(at, 0), Math.max(0, innerHeight - card.offsetHeight));
-    scrollTo({ top: Math.max(0, card.getBoundingClientRect().top + scrollY - top), behavior: 'instant' });
+    scrollTo({
+      top: Math.max(0, card.getBoundingClientRect().top + scrollY - top),
+      behavior: 'instant',
+    });
   }
 
   private fade(): void {
     this.tonePending = false;
     const tone = this.wantedTone;
     if (tone === this.shownTone) return;
-    if (!this.doc.startViewTransition || this.webkit || this.prefs.reducedMotion() || this.root.dataset['tint'] === 'off' || this.doc.hidden) {
+    if (
+      !this.doc.startViewTransition ||
+      this.webkit ||
+      this.prefs.reducedMotion() ||
+      this.root.dataset['tint'] === 'off' ||
+      this.doc.hidden
+    ) {
       this.applyTone(tone);
       return;
     }
@@ -430,6 +644,76 @@ function path(s: ActivatedRouteSnapshot): string {
   return sheet(s).routeConfig?.path ?? '';
 }
 
+/**
+ * Linux: how deep a page is in the navigation of the app. The pages of the sidebar are at the top;
+ * a room, Préférences, the profile, À propos… are opened from them (a back button in the header
+ * bar), as the subpages of an AdwNavigationView.
+ */
+function linuxDepth(path: string): number {
+  return ['room/:id', 'preferences', 'profile', 'about', 'more'].includes(path) ? 1 : 0;
+}
+
+interface Shot {
+  /** The copy of the page left, in a layer the size of the place of the pages. */
+  layer: HTMLElement;
+  /** That place, on the screen: under the header bar, beside the sidebar. */
+  area: { left: number; top: number; width: number; height: number };
+}
+
+/**
+ * Linux: a copy of the page shown, where it is on the screen, before the router replaces it. The
+ * canvases (charts) are copied as pictures, the copy can't be focused nor clicked.
+ */
+function linuxShot(doc: Document, main: HTMLElement): Shot {
+  const style = getComputedStyle(main);
+  const left = parseFloat(style.getPropertyValue('--tb-rail')) || 0;
+  const top = parseFloat(style.getPropertyValue('--tb-chrome-top')) || 0;
+  const area = {
+    left,
+    top,
+    width: Math.max(0, innerWidth - left),
+    height: Math.max(0, innerHeight - top),
+  };
+  const r = main.getBoundingClientRect();
+  const copy = main.cloneNode(true) as HTMLElement;
+  const from = main.querySelectorAll('canvas');
+  const to = copy.querySelectorAll('canvas');
+  from.forEach((c, i) => {
+    try {
+      if (c.width && c.height) to[i]?.getContext('2d')?.drawImage(c, 0, 0);
+    } catch {
+      // A canvas that can't be read: left blank
+    }
+  });
+  copy.inert = true;
+  Object.assign(copy.style, {
+    position: 'absolute',
+    left: `${r.left - left}px`,
+    top: `${r.top - top}px`,
+    width: `${r.width}px`,
+    margin: '0',
+    boxSizing: 'border-box',
+  });
+  const layer = doc.createElement('div');
+  layer.className = 'tb-lx-shot';
+  // Its colour too: the tint of its page (a room), if it has one
+  const tint = doc.querySelector<HTMLElement>('.tb-background-page');
+  const color =
+    tint && getComputedStyle(tint).display !== 'none' ? getComputedStyle(tint).backgroundColor : '';
+  if (color && !/^rgba\(.*,\s*0\)$|^transparent$/.test(color))
+    layer.style.background = `linear-gradient(${color}, ${color}), var(--lx-window)`;
+  layer.setAttribute('aria-hidden', 'true');
+  Object.assign(layer.style, {
+    left: `${area.left}px`,
+    top: `${area.top}px`,
+    width: `${area.width}px`,
+    height: `${area.height}px`,
+  });
+  layer.append(copy);
+  doc.body.append(layer);
+  return { layer, area };
+}
+
 function isCard(from: string, to: string): boolean {
   return (from === 'overview' && to === 'room/:id') || (from === 'room/:id' && to === 'overview');
 }
@@ -445,13 +729,29 @@ interface Frame {
 /** Where an element is on the screen, and its corners. */
 function frame(e: HTMLElement): Frame {
   const r = e.getBoundingClientRect();
-  return { x: r.left, y: r.top, l: r.width, h: r.height, radius: getComputedStyle(e).borderRadius || '0px' };
+  return {
+    x: r.left,
+    y: r.top,
+    l: r.width,
+    h: r.height,
+    radius: getComputedStyle(e).borderRadius || '0px',
+  };
 }
 
 /** Keyframes of a view transition group going from one frame to another. */
 function images(from: Frame, to: Frame): Keyframe[] {
   return [
-    { transform: `translate(${from.x}px, ${from.y}px)`, width: `${from.l}px`, height: `${from.h}px`, borderRadius: from.radius },
-    { transform: `translate(${to.x}px, ${to.y}px)`, width: `${to.l}px`, height: `${to.h}px`, borderRadius: to.radius },
+    {
+      transform: `translate(${from.x}px, ${from.y}px)`,
+      width: `${from.l}px`,
+      height: `${from.h}px`,
+      borderRadius: from.radius,
+    },
+    {
+      transform: `translate(${to.x}px, ${to.y}px)`,
+      width: `${to.l}px`,
+      height: `${to.h}px`,
+      borderRadius: to.radius,
+    },
   ];
 }

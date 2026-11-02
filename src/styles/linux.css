@@ -77,6 +77,18 @@
     --tb-field-hover: var(--lx-veil-hover);
     --tb-field-line: transparent;
     --tb-tile: var(--lx-card);
+    --tb-tint-base: var(--lx-card);
+
+    /* The states in the colours of GNOME (success, warning, error of libadwaita) */
+    --tb-stable: #1b8553;
+    --tb-stable-container: color-mix(in srgb, #2ec27e 22%, #ffffff);
+    --tb-on-stable-container: #14663f;
+    --tb-heating: #9c6e03;
+    --tb-heating-container: color-mix(in srgb, #e5a50a 24%, #ffffff);
+    --tb-on-heating-container: #6f4f00;
+    --md-error: #c01c28;
+    --md-error-container: color-mix(in srgb, #e01b24 17%, #ffffff);
+    --md-on-error-container: #a51d2d;
 
     --tb-raised-1: var(--lx-card-shadow);
     --tb-raised-2: 0 1px 5px 1px rgb(0 0 6 / .09), 0 2px 14px 3px rgb(0 0 6 / .05);
@@ -84,6 +96,15 @@
 }
 :root[data-desktop="linux"][data-theme="dark"] {
     /* libadwaita, dark */
+    --tb-stable: #78e9ab;
+    --tb-stable-container: color-mix(in srgb, #26a269 32%, #2f2f33);
+    --tb-on-stable-container: #a8f2c8;
+    --tb-heating: #ffc252;
+    --tb-heating-container: color-mix(in srgb, #e5a50a 28%, #2f2f33);
+    --tb-on-heating-container: #ffd88f;
+    --md-error: #ff938c;
+    --md-error-container: color-mix(in srgb, #e01b24 32%, #2f2f33);
+    --md-on-error-container: #ffc0bb;
     --lx-window: #222226;
     --lx-view: #1d1d20;
     --lx-header: #2e2e32;
@@ -467,3 +488,28 @@
 /* ============================== Motion of Adwaita: short, eased, nothing that bounces */
 
 :root[data-desktop="linux"] .tb-dialog { animation-timing-function: cubic-bezier(.25, .46, .45, .94); }
+
+/* ============================== Between pages: AdwNavigationView (transitions.ts) */
+
+/* The page left (a copy), the shade over the page below, the sheet under the page that comes */
+:root[data-desktop="linux"] :is(.tb-lx-shot, .tb-lx-dim, .tb-lx-sheet) {
+    position: fixed;
+    pointer-events: none;
+    will-change: transform, opacity;
+}
+:root[data-desktop="linux"] .tb-lx-shot { overflow: hidden; background: var(--lx-window); }
+:root[data-desktop="linux"] .tb-lx-dim { background: var(--lx-nav-shade); }
+/* The sheet: the colour of the page that comes (its tint, « Couleurs selon l'état ») */
+:root[data-desktop="linux"] .tb-lx-sheet { background: var(--tb-tint-page, var(--lx-window)); }
+:root[data-desktop="linux"]:is([data-tint="off"], [data-style="panel"]) .tb-lx-sheet { background: var(--lx-window); }
+/* The tint of a page comes and goes with it, at once (no fade of 0.8 s behind the slide) */
+:root[data-desktop="linux"] .tb-background-page { transition: none; }
+/* The page above has its shadow on its left edge */
+:root[data-desktop="linux"] :is(.tb-lx-sheet, .tb-lx-shot.tb-lx-above) {
+    box-shadow: -1px 0 0 var(--lx-nav-edge), -6px 0 16px -4px var(--lx-nav-edge);
+}
+:root[data-desktop="linux"] { --lx-nav-shade: rgb(0 0 6 / .1); --lx-nav-edge: rgb(0 0 6 / .1); }
+:root[data-desktop="linux"][data-theme="dark"] { --lx-nav-shade: rgb(0 0 6 / .3); --lx-nav-edge: rgb(0 0 6 / .35); }
+/* Nothing moves sideways out of the window while a page slides */
+:root[data-desktop="linux"].tb-lx-nav { overflow-x: clip; }
+:root[data-desktop="linux"].tb-lx-nav body { overflow-x: clip; }
