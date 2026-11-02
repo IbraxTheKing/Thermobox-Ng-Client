@@ -11,6 +11,7 @@ import { STATES, RoomState, STATE_ORDER, countLabel, stateOf } from '../../core/
 import { ToastService } from '../../core/messages';
 import { FlipService } from '../../core/flip';
 import { PlatformService } from '../../core/platform';
+import { SeasonService } from '../../core/season';
 import { PreferencesService } from '../../core/preferences';
 import { TransitionsService } from '../../core/transitions';
 import { matches, normalize, byName, plural } from '../../core/text';
@@ -80,6 +81,7 @@ export class DashboardPage implements OnInit, OnDestroy {
   private readonly platform = inject(PlatformService);
   private readonly transitions = inject(TransitionsService);
   protected readonly prefs = inject(PreferencesService);
+  protected readonly seasons = inject(SeasonService);
   protected readonly range = inject(DeltaRange);
   /** Look of the site: the thermal map (Panel) or the tiles of a home (Home). */
   protected readonly panel = computed(() => this.prefs.style() === 'panel');

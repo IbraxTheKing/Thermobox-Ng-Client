@@ -27,12 +27,15 @@ export async function prepareDesktop(): Promise<void> {
   if (!TAURI) return;
   document.documentElement.dataset['desktop'] = DESKTOP_OS!;
   if (DESKTOP_OS === 'windows') {
+    // The blur chosen in Préférences (on by default), before Angular reads the preferences
+    let blur = true;
+    try {
+      blur = (JSON.parse(localStorage.getItem('tb-preferences') ?? '{}') as { windowBlur?: boolean }).windowBlur ?? true;
+    } catch {
+      /* none stored */
+    }
     // Not awaited: Angular starts meanwhile
-    void import('@tauri-apps/api/core').then(({ invoke }) =>
-      invoke<string | null>('window_backdrop')
-        .then((backdrop) => backdrop && (document.documentElement.dataset['backdrop'] = backdrop))
-        .catch(() => undefined),
-    );
+    void applyAcrylic(blur);
   }
   const view = new URLSearchParams(location.search).get('view');
   if (view === 'settings') {
@@ -71,6 +74,24 @@ export async function prepareDesktop(): Promise<void> {
       if (e instanceof DOMException && e.name === 'AbortError') throw e;
       throw new TypeError(e instanceof Error ? e.message : String(e));
     });
+  }
+}
+
+/**
+ * Windows: the Acrylic of the system behind the window, and the blur of the bars of the page
+ * (html[data-blur="off"]: windows.css). html[data-backdrop="acrylic"] once Windows draws it.
+ */
+export async function applyAcrylic(on: boolean): Promise<void> {
+  const root = document.documentElement;
+  if (on) delete root.dataset['blur'];
+  else root.dataset['blur'] = 'off';
+  try {
+    const { invoke } = await import('@tauri-apps/api/core');
+    const shown = await invoke<boolean>('window_acrylic', { on });
+    if (shown) root.dataset['backdrop'] = 'acrylic';
+    else delete root.dataset['backdrop'];
+  } catch {
+    delete root.dataset['backdrop'];
   }
 }
 

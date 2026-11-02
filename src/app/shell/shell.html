@@ -1,6 +1,8 @@
 <div class="tb-busy-bar" [class.tb-busy-on]="activity.busy()" aria-hidden="true"></div>
 <!-- « Maison »: the page of a room takes the colour of its temperature (BackgroundService) -->
 <div class="tb-background-page" #background aria-hidden="true"></div>
+<!-- « Maison », on a holiday: snow, bats, eggs… behind the page (SeasonService) -->
+<tb-season-decor />
 
 <!-- Top bar (phones): the brand, then the title of the page once it has scrolled away. No actions. -->
 <header class="tb-topbar">

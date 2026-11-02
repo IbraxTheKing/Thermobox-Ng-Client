@@ -1,0 +1,93 @@
+/*
+ * Seasonal looks of the « Maison » style (SeasonService, seasons.ts): html[data-season="<id>"]
+ * while a holiday shows. The colour comes from AccentService (the season's accent when the user
+ * kept the ThermoBox colours); here, what crosses the page (TbSeasonDecor) and a few touches.
+ * Never in the « Panneau de configuration » style: the service sets nothing there.
+ */
+
+/* ============================== What crosses the page */
+
+/* Behind the cards and the text, over the colour of the page; never catches the pointer */
+.tb-season {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+    pointer-events: none;
+    contain: strict;
+}
+.tb-season-p {
+    position: absolute;
+    top: var(--y);
+    left: var(--x);
+    display: block;
+    opacity: .75;
+    will-change: transform;
+    animation-duration: var(--d, 20s);
+    animation-delay: var(--w, 0s);
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+}
+.tb-season-p > svg {
+    display: block;
+    animation: tb-season-sway calc(var(--d, 20s) / 4) ease-in-out var(--w, 0s) infinite alternate;
+}
+/* On a light page, white snow needs an edge */
+:root:not([data-theme="dark"]) .tb-season-p > svg { filter: drop-shadow(0 0 1px rgb(0 0 0 / .28)); }
+
+/* fall: from above the window to below it */
+.tb-season-fall .tb-season-p { top: -40px; animation-name: tb-season-fall; }
+@keyframes tb-season-fall { from { transform: translateY(0); } to { transform: translateY(calc(100vh + 80px)); } }
+/* rise: from below to above */
+.tb-season-rise .tb-season-p { top: auto; bottom: -40px; animation-name: tb-season-rise; }
+@keyframes tb-season-rise { from { transform: translateY(0); } to { transform: translateY(calc(-100vh - 80px)); } }
+/* drift: across the top of the window, left to right */
+.tb-season-drift .tb-season-p { left: -60px; animation-name: tb-season-drift; }
+@keyframes tb-season-drift { from { transform: translateX(0); } to { transform: translateX(calc(100vw + 120px)); } }
+
+@keyframes tb-season-sway { from { transform: translateX(-12px); } to { transform: translateX(12px); } }
+.tb-season-drift .tb-season-p > svg { animation-name: tb-season-bob; }
+@keyframes tb-season-bob { from { transform: translateY(-10px); } to { transform: translateY(10px); } }
+
+/* Less motion asked: they stay where they are, scattered */
+@media (prefers-reduced-motion: reduce) {
+    .tb-season .tb-season-p { top: var(--y); bottom: auto; left: var(--x); }
+    .tb-season-p, .tb-season-p > svg { animation: none !important; }
+}
+:root[data-motion="off"] .tb-season .tb-season-p { top: var(--y); bottom: auto; left: var(--x); }
+:root[data-motion="off"] :is(.tb-season-p, .tb-season-p > svg) { animation: none !important; }
+
+/* Phones: fewer, and not under the bar at the bottom */
+@media (max-width: 840px) {
+    .tb-season-p:nth-child(2n) { display: none; }
+}
+
+/* ============================== Touches of each season */
+
+/* The logo of the side bar wears the season */
+:root[data-season="christmas"] .tb-rail-brand .tb-logo,
+:root[data-season="christmas"] .tb-brand .tb-logo { background: linear-gradient(145deg, #c4303a, #7d1d27); }
+:root[data-season="halloween"] .tb-rail-brand .tb-logo,
+:root[data-season="halloween"] .tb-brand .tb-logo { background: linear-gradient(145deg, #f08a2c, #6b2f8f); }
+:root[data-season="easter"] .tb-rail-brand .tb-logo,
+:root[data-season="easter"] .tb-brand .tb-logo { background: linear-gradient(145deg, #9fd6a8, #f2c9dc); }
+:root[data-season="new-year"] .tb-rail-brand .tb-logo,
+:root[data-season="new-year"] .tb-brand .tb-logo { background: linear-gradient(145deg, #e9c45a, #8a6a14); }
+:root[data-season="valentine"] .tb-rail-brand .tb-logo,
+:root[data-season="valentine"] .tb-brand .tb-logo { background: linear-gradient(145deg, #f07c9b, #b02a52); }
+:root[data-season="bastille-day"] .tb-rail-brand .tb-logo,
+:root[data-season="bastille-day"] .tb-brand .tb-logo { background: linear-gradient(90deg, #2f4fb4 33%, #f4f4f4 33% 66%, #d8343f 66%); }
+
+/* Halloween at night: the dark theme a little more purple (the season's accent does the rest) */
+:root[data-season="halloween"][data-theme="dark"]:not([data-accent]) { --tb-background: #1b1622; }
+
+/* The greeting under the title of « Maison » (dashboard) */
+.tb-season-greeting {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 4px 0 0;
+    color: var(--md-primary);
+    font-weight: 600;
+}
+.tb-season-greeting svg { width: 18px; height: 18px; }

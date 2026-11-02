@@ -23,7 +23,18 @@ interface Stored {
   tolerance?: number;
   cardSize?: number;
   buildingOrder?: string[];
+  /** Windows app: the Acrylic of the window and the blur of the bars. */
+  windowBlur?: boolean;
+  /** « Maison »: the look of the holidays of the year (SeasonService). */
+  seasons?: boolean;
+  /** Apps (mobile, desktop): notify when a room leaves or reaches its setpoint. */
+  notifications?: boolean;
+  /** Which rooms: the favorites or all those the user sees. */
+  notifyRooms?: NotifyRooms;
 }
+
+/** Rooms followed by the notifications of the setpoint. */
+export type NotifyRooms = 'favorites' | 'all';
 
 const KEY = 'tb-preferences';
 
@@ -68,6 +79,13 @@ export class PreferencesService {
   readonly style = signal<StyleSite>('glass');
   /** Accent colour: the ThermoBox green, the system's, or a palette (AccentService applies it). */
   readonly accent = signal<string>(this.stored.accent ?? 'default');
+  /** Windows app: Acrylic behind the side bar, blurred bars (on by default). */
+  readonly windowBlur = signal(this.stored.windowBlur ?? true);
+  /** « Maison »: Christmas, Halloween… change the look of the app on their days (on by default). */
+  readonly seasons = signal(this.stored.seasons ?? true);
+  /** Apps: notifications of the setpoint (off until the user turns them on). */
+  readonly notifications = signal(this.stored.notifications ?? false);
+  readonly notifyRooms = signal<NotifyRooms>(this.stored.notifyRooms ?? 'favorites');
 
   /** The system asks for less motion: no transitions between pages, nothing slides or pops. */
   readonly reducedMotion = signal(this.motionQuery.matches);
@@ -100,6 +118,10 @@ export class PreferencesService {
         tolerance: this.tolerance(),
         cardSize: this.cardSize(),
         buildingOrder: this.buildingOrder(),
+        windowBlur: this.windowBlur(),
+        seasons: this.seasons(),
+        notifications: this.notifications(),
+        notifyRooms: this.notifyRooms(),
       } satisfies Stored);
       // Only what changed here: a reload from another window writes nothing back
       if (json === this.written) return;
@@ -136,6 +158,10 @@ export class PreferencesService {
     if (p.tolerance != null) this.tolerance.set(p.tolerance);
     if (p.cardSize != null) this.cardSize.set(p.cardSize);
     if (p.buildingOrder) this.buildingOrder.set(p.buildingOrder);
+    if (p.windowBlur != null) this.windowBlur.set(p.windowBlur);
+    if (p.seasons != null) this.seasons.set(p.seasons);
+    if (p.notifications != null) this.notifications.set(p.notifications);
+    if (p.notifyRooms) this.notifyRooms.set(p.notifyRooms);
   }
 
   /**

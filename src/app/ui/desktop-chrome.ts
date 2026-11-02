@@ -3,7 +3,7 @@ import { ChangeDetectionStrategy, Component, DOCUMENT, DestroyRef, ElementRef, e
 import { Location } from '@angular/common';
 import { NavigationEnd, Router } from '@angular/router';
 
-import { DesktopService } from '../core/desktop';
+import { DesktopService, applyAcrylic } from '../core/desktop';
 import { PreferencesService } from '../core/preferences';
 import { TitleService } from '../core/title';
 
@@ -78,6 +78,16 @@ export class TbDesktopChrome {
 
   constructor() {
     if (!this.desktop.windows) return;
+    // Préférences › Flou: the Acrylic and the blurred bars, or none (prepareDesktop did it at start)
+    let first = true;
+    effect(() => {
+      const blur = this.prefs.windowBlur();
+      if (first) {
+        first = false;
+        return;
+      }
+      void applyAcrylic(blur);
+    });
     // The theme shown (« Système » resolved): Windows redraws the Acrylic in it
     effect(() => {
       const theme = this.prefs.theme();

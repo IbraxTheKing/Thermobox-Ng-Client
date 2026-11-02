@@ -9,6 +9,8 @@ import { ThemeChoice, PreferencesService } from '../../core/preferences';
 import { ServerFeaturesService } from '../../services/server-features.service';
 import { TbSwitch } from '../../ui/controls';
 import { DesktopService } from '../../core/desktop';
+import { SeasonService } from '../../core/season';
+import { NotificationService } from '../../core/notifications';
 import { AccentService, DEFAULT_SWATCH, PALETTES, swatch } from '../../core/accent';
 
 /**
@@ -30,6 +32,8 @@ export class PreferencesPage {
   protected readonly accent = inject(AccentService);
   protected readonly features = inject(ServerFeaturesService);
   protected readonly desktop = inject(DesktopService);
+  protected readonly seasons = inject(SeasonService);
+  protected readonly notifications = inject(NotificationService);
   private readonly router = inject(Router);
   private readonly location = inject(Location);
 
@@ -70,4 +74,15 @@ export class PreferencesPage {
     ? `Application ${this.desktop.name()}`
     : { ios: 'iOS (Liquid Glass)', android: 'Android (Material 3)', web: 'Web (ThermoBox)' }[this.platform.platform];
 
+
+  protected toggleNotifications(on: boolean): void {
+    if (on) void this.notifications.enable();
+    else this.prefs.notifications.set(false);
+  }
+
+  /** « 1er décembre » */
+  protected dayLabel(d: Date): string {
+    const n = d.getDate();
+    return `${n === 1 ? '1er' : n} ${d.toLocaleDateString('fr-FR', { month: 'long' })}`;
+  }
 }
