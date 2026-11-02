@@ -91,9 +91,16 @@ export class DashboardPage implements OnInit, OnDestroy {
   /** Cards glide to their new places when a filter or a favourite changes them. */
   private readonly flip = inject(FlipService);
 
+  /**
+   * Back on the page (back button, or back from a room): as it was left, its filters and the
+   * cards drawn with their heights, so it is exactly where it was (the boxes of the cards not
+   * drawn measured, not guessed: a guess too tall or too short above the screen moved the page).
+   */
+  private readonly kept = this.router.currentNavigation()?.trigger === 'popstate' ? left : null;
+
   // Filters
-  protected readonly search = signal('');
-  protected readonly stateFilter = signal<RoomState | null>(null);
+  protected readonly search = signal(this.kept?.search ?? '');
+  protected readonly stateFilter = signal<RoomState | null>(this.kept?.stateFilter ?? null);
 
   constructor() {
     // The page takes the colour of the state picked (« Couleurs selon l'état »)
@@ -117,6 +124,8 @@ export class DashboardPage implements OnInit, OnDestroy {
       this.folded();
       afterNextRender(schedule, { injector: this.injector });
     });
+    // Many cards (drawn as they come near): the page keeps its place itself (holdPlace)
+    effect(() => document.documentElement.classList.toggle('tb-anchor-manual', this.large()));
     // Back from a room: its card is drawn, wherever it is, for the transition to land in it
     const back = this.transitions.lastCardId();
     if (back != null) {
@@ -134,7 +143,7 @@ export class DashboardPage implements OnInit, OnDestroy {
   }
   /** The first curves were asked for (ngOnInit): later ones follow the cards drawn. */
   private started = false;
-  protected readonly buildingId = signal<number | null>(null);
+  protected readonly buildingId = signal<number | null>(this.kept?.buildingId ?? null);
 
   /** Curves of the last 24 h by room: undefined while they load, null without enough measures. */
   private readonly cache = inject(CurveCache);
@@ -255,11 +264,11 @@ export class DashboardPage implements OnInit, OnDestroy {
    */
   protected readonly large = computed(() => this.visible().length > WINDOWED);
   /** Columns of the grids (measured), for blocks of whole rows. */
-  private readonly cols = signal(this.platform.phone() ? 2 : 4);
+  private readonly cols = signal(this.kept?.cols ?? (this.platform.phone() ? 2 : 4));
   /** Blocks drawn, by key; null until the page has been measured once (the first ones then). */
-  private readonly drawnKeys = signal<Set<string> | null>(null);
+  private readonly drawnKeys = signal<Set<string> | null>(this.kept?.drawnKeys ?? null);
   /** Height of each block when last drawn, for its empty box. */
-  private readonly heights = signal<Map<string, number>>(new Map());
+  private readonly heights = signal<Map<string, number>>(new Map(this.kept?.heights));
   /** A card that must stay drawn (coming back from its room: the transition lands in it). */
   private readonly pinned = signal<number | null>(null);
 
@@ -321,8 +330,8 @@ export class DashboardPage implements OnInit, OnDestroy {
     return b.rows * row + Math.max(0, b.rows - 1) * this.rowGap;
   }
 
-  private rowHeight: number | null = null;
-  private rowGap = 12;
+  private rowHeight: number | null = this.kept?.rowHeight ?? null;
+  private rowGap = this.kept?.rowGap ?? 12;
 
   /** Ids of the cards drawn. */
   private readonly shownIds = computed(() => {
@@ -393,8 +402,42 @@ export class DashboardPage implements OnInit, OnDestroy {
       if (block) this.rowHeight = (heights.get(block.key)! - (block.rows - 1) * this.rowGap) / block.rows;
     }
     const old = this.drawnKeys();
-    if (!old || old.size !== keys.size || [...keys].some((k) => !old.has(k))) this.drawnKeys.set(keys);
+    const redraw = !old || old.size !== keys.size || [...keys].some((k) => !old.has(k));
+    if (changed || redraw) this.holdPlace();
+    if (redraw) this.drawnKeys.set(keys);
   }
+
+  /**
+   * The cards on the screen stay where they are while blocks above them are drawn or measured
+   * (a box of another height than guessed): the page is scrolled by the difference. Chromium
+   * does it by itself (overflow-anchor), WebKit (Safari, iOS, Linux) not: done here for all
+   * (html.tb-anchor-manual turns the browser's off, not to do it twice).
+   */
+  private holdPlace(): void {
+    if (this.holding) return;
+    let anchor: HTMLElement | null = null;
+    let top = 0;
+    for (const card of this.host.querySelectorAll<HTMLElement>('.tb-room')) {
+      const r = card.getBoundingClientRect();
+      if (r.bottom > 0 && r.top < innerHeight) {
+        anchor = card;
+        top = r.top;
+        break;
+      }
+    }
+    if (!anchor) return;
+    this.holding = true;
+    afterNextRender(
+      () => {
+        this.holding = false;
+        if (!anchor.isConnected) return;
+        const moved = anchor.getBoundingClientRect().top - top;
+        if (Math.abs(moved) > 0.5) scrollBy({ top: moved, behavior: 'instant' });
+      },
+      { injector: this.injector },
+    );
+  }
+  private holding = false;
 
   protected readonly favorites = computed(() => this.visible().filter((r) => r.room.favorite));
 
@@ -685,6 +728,17 @@ export class DashboardPage implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     clearInterval(this.timer);
+    document.documentElement.classList.remove('tb-anchor-manual');
+    left = {
+      search: this.search(),
+      stateFilter: this.stateFilter(),
+      buildingId: this.buildingId(),
+      cols: this.cols(),
+      drawnKeys: this.drawnKeys(),
+      heights: this.heights(),
+      rowHeight: this.rowHeight,
+      rowGap: this.rowGap,
+    };
   }
 
   /** "Actualiser": unlike the poll, also redraws the curves. */
@@ -807,6 +861,19 @@ export class DashboardPage implements OnInit, OnDestroy {
 function points(l: Point[]): PointT[] {
   return l.filter((p) => p.value != null).map((p) => ({ t: time(p.date), v: p.value! })).filter((p) => !isNaN(p.t));
 }
+
+/** The page as it was left (ngOnDestroy), for a way back to it. */
+interface LeftPage {
+  search: string;
+  stateFilter: RoomState | null;
+  buildingId: number | null;
+  cols: number;
+  drawnKeys: Set<string> | null;
+  heights: Map<string, number>;
+  rowHeight: number | null;
+  rowGap: number;
+}
+let left: LeftPage | null = null;
 
 function readSections(): Set<string> {
   try {

@@ -823,3 +823,96 @@
 
 /* Préférences: the headers of the groups, as in the Settings of Windows */
 :root[data-desktop="windows"] .tb-pref-heading { margin-bottom: 8px; color: var(--md-on-surface); font-size: 14px; font-weight: 600; }
+
+/* ============================== MenuFlyout and ComboBox of WinUI 3 (core/winui-flyout.ts)
+
+   The context menus and the drop-down lists: Acrylic of the flyouts (opaque without the blur,
+   Préférences › Flou), corners of 8 px, stroke and shadow of a flyout, rows of 32 px with
+   corners of 4 px, the shortcut on the right in the secondary text colour. */
+
+.tb-flyout {
+    --wf-flyout-bg: rgb(252 252 252 / .85);
+    --wf-flyout-stroke: rgb(0 0 0 / .0578);
+    --wf-flyout-disabled: rgb(0 0 0 / .3614);
+    --wf-flyout-separator: rgb(0 0 0 / .0803);
+    position: fixed;
+    z-index: 4000;
+    box-sizing: border-box;
+    min-width: 160px;
+    max-width: 456px;
+    overflow: auto;
+    padding: 2px 0;
+    border: 1px solid var(--wf-flyout-stroke);
+    border-radius: 8px;
+    background: var(--wf-flyout-bg);
+    -webkit-backdrop-filter: blur(30px) saturate(150%);
+    backdrop-filter: blur(30px) saturate(150%);
+    box-shadow: 0 8px 16px rgb(0 0 0 / .14);
+    color: var(--md-on-surface);
+    font: 400 14px / 20px "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+    outline: none;
+    scrollbar-width: thin;
+    user-select: none;
+    -webkit-user-select: none;
+    cursor: default;
+}
+:root[data-theme="dark"] .tb-flyout {
+    --wf-flyout-bg: rgb(44 44 44 / .82);
+    --wf-flyout-stroke: rgb(0 0 0 / .2);
+    --wf-flyout-disabled: rgb(255 255 255 / .3628);
+    --wf-flyout-separator: rgb(255 255 255 / .0837);
+    box-shadow: 0 8px 16px rgb(0 0 0 / .26);
+}
+:root:not([data-backdrop="acrylic"]) .tb-flyout { --wf-flyout-bg: #f9f9f9; -webkit-backdrop-filter: none; backdrop-filter: none; }
+:root:not([data-backdrop="acrylic"])[data-theme="dark"] .tb-flyout { --wf-flyout-bg: #2c2c2c; }
+
+.tb-flyout-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 32px;
+    margin: 2px 4px;
+    padding: 6px 11px;
+    box-sizing: border-box;
+    border-radius: 4px;
+    outline: none;
+    white-space: nowrap;
+}
+.tb-flyout-item:focus { background: var(--wf-subtle-hover); }
+.tb-flyout-item:active:not([aria-disabled]) { background: var(--wf-subtle-press); color: color-mix(in srgb, var(--md-on-surface) 78%, transparent); }
+.tb-flyout-item[aria-disabled] { color: var(--wf-flyout-disabled); }
+.tb-flyout-item:focus-visible { outline: 2px solid var(--md-on-surface); outline-offset: -2px; }
+.tb-flyout-label { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.tb-flyout-key { flex: none; margin-left: 24px; color: var(--wf-text-secondary); font-size: 12px; }
+.tb-flyout-item[aria-disabled] .tb-flyout-key { color: inherit; }
+/* A ticked line: the tick of Segoe Fluent Icons in a column of its own, as all the lines */
+.tb-flyout-tick { flex: none; width: 12px; font: 12px / 1 "Segoe Fluent Icons", "Segoe MDL2 Assets"; }
+.tb-flyout-separator { height: 1px; margin: 1px 0; background: var(--wf-flyout-separator); }
+
+/* ComboBox: the chosen line in grey with the accent pill on its left */
+.tb-flyout-combo .tb-flyout-item[aria-selected="true"] { background: var(--wf-subtle-hover); }
+.tb-flyout-combo .tb-flyout-item[aria-selected="true"]::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 3px;
+    height: 16px;
+    margin-top: -8px;
+    border-radius: 2px;
+    background: var(--md-primary);
+}
+.tb-flyout-combo .tb-flyout-item[aria-selected="true"]:focus { background: color-mix(in srgb, var(--md-on-surface) 9%, transparent); }
+
+/* Opening: it slides out of its side (down from the pointer, up when it opens above it), the list
+   of a ComboBox unfolds from the line chosen; it fades out when closed */
+.tb-flyout-open-down { animation: wf-flyout-down .25s cubic-bezier(0, 0, 0, 1) both; }
+.tb-flyout-open-up { animation: wf-flyout-up .25s cubic-bezier(0, 0, 0, 1) both; }
+.tb-flyout-open-combo { animation: wf-flyout-combo .25s cubic-bezier(0, 0, 0, 1) both; }
+.tb-flyout-closing { animation: wf-fade-out .083s linear both; }
+@keyframes wf-flyout-down { from { opacity: 0; transform: translateY(-12px); clip-path: inset(0 0 60% 0 round 8px); } 40% { opacity: 1; } to { clip-path: inset(0 round 8px); } }
+@keyframes wf-flyout-up { from { opacity: 0; transform: translateY(12px); clip-path: inset(60% 0 0 0 round 8px); } 40% { opacity: 1; } to { clip-path: inset(0 round 8px); } }
+@keyframes wf-flyout-combo { from { opacity: 0; transform: scaleY(.6); } 40% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .tb-flyout { animation-duration: 1ms !important; } }
+:root[data-motion="off"] .tb-flyout { animation-duration: 1ms !important; }

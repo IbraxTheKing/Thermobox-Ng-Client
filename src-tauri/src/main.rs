@@ -124,6 +124,16 @@ fn page_ready(window: tauri::WebviewWindow, ready: tauri::State<'_, PageReady>) 
     let _ = window;
 }
 
+/// Windows: the text of the clipboard, for « Coller » in the menus drawn by the page (WebView2
+/// keeps it from the page). Null elsewhere: macOS and Linux have native menus that paste.
+#[tauri::command]
+fn clipboard_text() -> Option<String> {
+    #[cfg(windows)]
+    return win::clipboard_text();
+    #[cfg(not(windows))]
+    None
+}
+
 /// Linux: where the desktop puts the buttons of the windows (GTK: gtk-decoration-layout, as
 /// GNOME Tweaks sets it), « appmenu:minimize,maximize,close »: the header bar drawn by the page
 /// puts its own at the same places. Null elsewhere or when GTK does not say.
@@ -232,7 +242,7 @@ fn main() {
             let _ = app;
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![settings_window, snap_layouts, system_accent, page_ready, window_acrylic, window_theme, app_language, decoration_layout]);
+        .invoke_handler(tauri::generate_handler![settings_window, snap_layouts, system_accent, page_ready, window_acrylic, window_theme, app_language, decoration_layout, clipboard_text]);
     #[cfg(target_os = "macos")]
     let builder = builder.menu(menu::build).on_menu_event(menu::on_event);
     builder.run(tauri::generate_context!()).expect("Thermobox could not start");

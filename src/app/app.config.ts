@@ -1,5 +1,5 @@
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
-import { ApplicationConfig, inject, isDevMode, provideBrowserGlobalErrorListeners, LOCALE_ID } from '@angular/core';
+import { ApplicationConfig, inject, isDevMode, provideAppInitializer, provideBrowserGlobalErrorListeners, LOCALE_ID } from '@angular/core';
 import { TitleStrategy, provideRouter, withComponentInputBinding, withInMemoryScrolling, withViewTransitions } from '@angular/router';
 import { provideServiceWorker } from '@angular/service-worker';
 import { registerLocaleData } from '@angular/common';
@@ -20,10 +20,13 @@ registerLocaleData(localeEnGb);
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
+    // From the first page on: it keeps where each page was left (scroll)
+    provideAppInitializer(() => void inject(TransitionsService)),
     provideRouter(
       routes,
       withComponentInputBinding(),
-      withInMemoryScrolling({ scrollPositionRestoration: 'enabled' }),
+      // The scroll of the pages: TransitionsService (in the page transition, before its picture)
+      withInMemoryScrolling({ scrollPositionRestoration: 'disabled' }),
       // Cross-fade between pages, the room card morphs into its page (as in the JSF interface);
       // entrance of the new page and colour of the state with it: TransitionsService
       withViewTransitions({

@@ -2092,3 +2092,7 @@ kbd {
 .tb-access-node .tb-muted { font-size: .8rem; }
 
 .tb-crumb.tb-crumb-off { cursor: default; }
+
+/* The overview with many cards keeps its place itself as cards are drawn (dashboard.ts,
+   holdPlace): not the browser's anchoring as well */
+html.tb-anchor-manual { overflow-anchor: none; }
