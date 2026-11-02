@@ -71,7 +71,13 @@
             <span class="tb-avatar tb-user-avatar tb-role-{{ l.user.type }}">{{ initial(l.user.username) }}</span>
             <span class="tb-mgmt-text">
               <strong>{{ l.user.username }} @if (auth.isMe(l.user)) { <span i18n class="tb-tag tb-tag-info tb-ml">vous</span> }</strong>
+              @if (person(l); as p) {
+                <span class="tb-muted">{{ p }}</span>
+              }
               <span class="tb-muted" [class.tb-access-without]="noAccess(l)">{{ roleName(l.user.type) }} · {{ summary(l) }}</span>
+              @if (l.user.mustChangePassword) {
+                <span class="tb-tag tb-tag-warning tb-user-provisional"><i class="pi pi-clock"></i>{{ provisionalExpired(l) ? ('Provisoire expiré' | tr) : ('Mot de passe provisoire' | tr) }}</span>
+              }
               @if (l.groups.length) {
                 <span class="tb-muted"><i class="pi pi-users"></i> {{ l.groups.join(', ') }}</span>
               }
@@ -108,6 +114,12 @@
                 <span class="tb-avatar tb-user-avatar tb-role-{{ l.user.type }}">{{ initial(l.user.username) }}</span>
                 <span class="tb-mgmt-name-text">
                   <strong>{{ l.user.username }} @if (auth.isMe(l.user)) { <span i18n class="tb-tag tb-tag-info tb-ml">vous</span> }</strong>
+                  @if (person(l); as p) {
+                    <span class="tb-muted tb-user-person">{{ p }}</span>
+                  }
+                  @if (l.user.mustChangePassword) {
+                    <span class="tb-tag tb-tag-warning tb-user-provisional" [title]="provisionalTitle(l)"><i class="pi pi-clock"></i>{{ provisionalExpired(l) ? ('Provisoire expiré' | tr) : ('Mot de passe provisoire' | tr) }}</span>
+                  }
                 </span>
               </div>
             </td>
@@ -243,6 +255,17 @@
 
 <tb-user-access-sheet (saved)="load()" />
 <tb-user-form-sheet (saved)="load()" />
+<tb-user-import-sheet (imported)="load()" />
+
+<!-- A provisional password given by the admin: shown once -->
+<tb-sheet [(open)]="handoverShown" i18n-title title="Mot de passe provisoire" [width]="640">
+  @if (handover(); as h) {
+    <tb-password-handover [accounts]="h" />
+    <div class="tb-actions">
+      <button i18n type="button" class="tb-btn" (click)="handoverShown.set(false)"><i class="pi pi-check"></i>Terminé</button>
+    </div>
+  }
+</tb-sheet>
 <tb-user-groups-sheet [canCreate]="true" (create)="newGroupWith($event)" (saved)="load()" />
 
 <tb-sheet [(open)]="dlgRole" i18n-title title="Rôle des utilisateurs sélectionnés" [width]="400">
@@ -342,6 +365,9 @@
     </div>
     <div class="tb-actions">
       <button i18n type="button" class="tb-btn tb-tonal" (click)="groupsOf(l)"><i class="pi pi-users"></i>Groupes</button>
+      @if (canProvision() && !auth.isMe(l.user)) {
+        <button i18n type="button" class="tb-btn tb-flat" (click)="provisional(l)"><i class="pi pi-key"></i>Mot de passe provisoire</button>
+      }
     </div>
     <div class="tb-actions">
       @if (!auth.isMe(l.user)) {

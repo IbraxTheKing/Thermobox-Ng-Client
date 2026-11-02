@@ -7,6 +7,10 @@
     "fr": "Inscription",
     "en": "Sign up"
   },
+  "1595243664489137760": {
+    "fr": "Nouveau mot de passe",
+    "en": "New password"
+  },
   "5460349843625378822": {
     "fr": "Paramètres",
     "en": "Settings"
@@ -631,6 +635,10 @@
     "fr": "Connexion impossible",
     "en": "Cannot sign in"
   },
+  "4471177932491930983": {
+    "fr": "Ton mot de passe provisoire a expiré : demande-en un nouveau à un administrateur.",
+    "en": "Your temporary password has expired: ask an administrator for a new one."
+  },
   "577860728605162174": {
     "fr": "Nom d'utilisateur ou mot de passe incorrect",
     "en": "Wrong username or password"
@@ -638,6 +646,110 @@
   "7805436466006262024": {
     "fr": "Trop de tentatives : réessaie dans quelques minutes",
     "en": "Too many attempts: try again in a few minutes"
+  },
+  "1322119701623034094": {
+    "fr": "Choisis ton mot de passe",
+    "en": "Choose your password"
+  },
+  "7356186501821206887": {
+    "fr": " Ton compte a reçu un mot de passe provisoire. Remplace-le par un mot de passe à toi pour accéder à ThermoBox : le provisoire ne servira plus. ",
+    "en": " Your account was given a temporary password. Replace it with a password of your own to use ThermoBox: the temporary one will no longer work. "
+  },
+  "6998220801459796632": {
+    "fr": "Le mot de passe provisoire expire le {$INTERPOLATION}.",
+    "en": "The temporary password expires on {$INTERPOLATION}."
+  },
+  "5950486130525007322": {
+    "fr": "Mot de passe provisoire",
+    "en": "Temporary password"
+  },
+  "7202289464381586653": {
+    "fr": "Mot de passe provisoire obligatoire",
+    "en": "Temporary password required"
+  },
+  "7553923192464181199": {
+    "fr": "Règles du mot de passe",
+    "en": "Password rules"
+  },
+  "5718948908888733968": {
+    "fr": "Confirmer le mot de passe",
+    "en": "Confirm the password"
+  },
+  "3147528868343560257": {
+    "fr": "Les deux mots de passe sont différents",
+    "en": "The two passwords are different"
+  },
+  "8427688530463880214": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Enregistrer et continuer ",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Save and continue "
+  },
+  "3955958679696743040": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Se déconnecter",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Sign out"
+  },
+  "3253423867882314037": {
+    "fr": "Au moins {$PH} caractères",
+    "en": "At least {$PH} characters"
+  },
+  "1699536010650437881": {
+    "fr": "Des lettres et des chiffres",
+    "en": "Letters and digits"
+  },
+  "7247368685943971040": {
+    "fr": "Pas ton nom d'utilisateur",
+    "en": "Not your username"
+  },
+  "5653841765885972645": {
+    "fr": "Pas le mot de passe provisoire",
+    "en": "Not the temporary password"
+  },
+  "4339689729735666987": {
+    "fr": "{$PH} octets au plus",
+    "en": "{$PH} bytes at most"
+  },
+  "4491728407384948116": {
+    "fr": "Le mot de passe provisoire est incorrect",
+    "en": "The temporary password is wrong"
+  },
+  "7403350625762709653": {
+    "fr": "Le serveur refuse ce mot de passe : {$PH}",
+    "en": "The server refuses this password: {$PH}"
+  },
+  "1589415618798225460": {
+    "fr": "Changement impossible",
+    "en": "Could not change the password"
+  },
+  "3547909335744594022": {
+    "fr": "trop court",
+    "en": "too short"
+  },
+  "5589002131410457250": {
+    "fr": "trop long",
+    "en": "too long"
+  },
+  "2687392294131422386": {
+    "fr": "sans lettre",
+    "en": "no letter"
+  },
+  "7974907034282160535": {
+    "fr": "sans chiffre",
+    "en": "no digit"
+  },
+  "4954311886327498743": {
+    "fr": "espaces au début ou à la fin",
+    "en": "spaces at the start or the end"
+  },
+  "711441181973620978": {
+    "fr": "contient le nom d'utilisateur",
+    "en": "contains the username"
+  },
+  "8603946382243660892": {
+    "fr": "trop simple",
+    "en": "too simple"
+  },
+  "6568203093190363488": {
+    "fr": "identique au mot de passe provisoire",
+    "en": "same as the temporary password"
   },
   "1847466303514167048": {
     "fr": "Créer un compte",
@@ -1107,6 +1219,10 @@
     "fr": "Rien",
     "en": "Nothing"
   },
+  "5471833942323838770": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Terminé",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Done"
+  },
   "2967128886246409531": {
     "fr": "Rôle des utilisateurs sélectionnés",
     "en": "Role of the selected users"
@@ -1179,6 +1295,10 @@
     "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Groupes",
     "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Groups"
   },
+  "4683040347333014870": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Mot de passe provisoire",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Temporary password"
+  },
   "7545676459644380969": {
     "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Supprimer",
     "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Delete"
@@ -1194,6 +1314,26 @@
   "5431634898619297743": {
     "fr": "{$PH} et {$PH_1} autre(s)",
     "en": "{$PH} and {$PH_1} other(s)"
+  },
+  "6713041941973341347": {
+    "fr": "Doit choisir son mot de passe ; le provisoire expire le {$PH}",
+    "en": "Must choose their password; the temporary one expires on {$PH}"
+  },
+  "2546314086745768664": {
+    "fr": "Doit choisir son mot de passe à sa prochaine connexion",
+    "en": "Must choose their password at their next login"
+  },
+  "6978379421095808222": {
+    "fr": "Donner un nouveau mot de passe provisoire à « {$PH} » ? Son mot de passe actuel ne fonctionnera plus ; il choisira le sien à sa prochaine connexion.",
+    "en": "Give “{$PH}” a new temporary password? Their current password will stop working; they will choose their own at their next login."
+  },
+  "1760096412508171418": {
+    "fr": "Donner un mot de passe",
+    "en": "Give a password"
+  },
+  "629657782559671248": {
+    "fr": "Mot de passe provisoire impossible",
+    "en": "Could not give a temporary password"
   },
   "5041354590769758251": {
     "fr": "Admin",
@@ -1267,6 +1407,10 @@
     "fr": "Nouveau groupe avec lui",
     "en": "New group with this user"
   },
+  "2387001399098743064": {
+    "fr": "Mot de passe provisoire…",
+    "en": "Temporary password…"
+  },
   "4797596446730729626": {
     "fr": "Cocher",
     "en": "Select"
@@ -1278,6 +1422,10 @@
   "5578299683751045756": {
     "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Nouveau groupe",
     "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}New group"
+  },
+  "8349872560386364092": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Importer",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Import"
   },
   "7205695106013475120": {
     "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Nouvel utilisateur",
@@ -1930,6 +2078,14 @@
   "6696756700619625637": {
     "fr": "Versions du client et du serveur, code source, crédits",
     "en": "Versions of the client and the server, source code, credits"
+  },
+  "923349530718729860": {
+    "fr": "Revoir le guide de démarrage",
+    "en": "Show the getting started guide again"
+  },
+  "2438098891245050054": {
+    "fr": "Les pages de ThermoBox et ce que ton rôle permet d'y faire",
+    "en": "The pages of ThermoBox and what your role lets you do there"
   },
   "9059591462371468557": {
     "fr": "Enregistré sur cet appareil uniquement. Interface : {$INTERPOLATION}.",
@@ -2879,10 +3035,6 @@
     "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Mon profil",
     "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}My profile"
   },
-  "3955958679696743040": {
-    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Se déconnecter",
-    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Sign out"
-  },
   "1482721639166433890": {
     "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Ajouter un compte ",
     "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Add an account "
@@ -2975,9 +3127,157 @@
     "fr": "Aucun",
     "en": "None"
   },
+  "3722548177883512333": {
+    "fr": "Étapes du guide",
+    "en": "Steps of the guide"
+  },
+  "266487151776477570": {
+    "fr": "Passer le guide",
+    "en": "Skip the guide"
+  },
+  "1369350890745732082": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Précédent",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Back"
+  },
+  "3199132445957600150": {
+    "fr": "Bienvenue, {$PH}",
+    "en": "Welcome, {$PH}"
+  },
+  "3456420452035832632": {
+    "fr": "ThermoBox montre la température de chaque salle, en direct, et ce qu'elle devrait être. Voici l'essentiel en quelques étapes : tu peux passer ce guide à tout moment.",
+    "en": "ThermoBox shows the temperature of every room, live, and what it should be. Here are the essentials in a few steps: you can skip this guide at any time."
+  },
+  "50085921704551483": {
+    "fr": "L'aperçu",
+    "en": "The overview"
+  },
+  "1637391144771877854": {
+    "fr": "Une carte par salle, de la couleur de son état : à la bonne température, en chauffe, trop chaude. Touche une carte pour ouvrir la salle, son étoile pour la mettre dans tes favoris, en haut de l'aperçu.",
+    "en": "One card per room, in the colour of its state: at the right temperature, heating, too warm. Tap a card to open the room, its star to add it to your favourites, at the top of the overview."
+  },
+  "7761092436475328462": {
+    "fr": "Une salle",
+    "en": "A room"
+  },
+  "3284496808753590911": {
+    "fr": "La température de la salle, sa consigne et sa courbe des dernières heures. Tu peux changer sa consigne : celle d'un bâtiment ou d'un étage vaut pour tout ce qu'il contient.",
+    "en": "The temperature of the room, its setpoint and its curve over the last hours. You can change its setpoint: the setpoint of a building or a floor applies to everything in it."
+  },
+  "1031169846817996822": {
+    "fr": "La température de la salle, sa consigne (la température voulue) et sa courbe des dernières heures. Les consignes sont réglées par les gestionnaires.",
+    "en": "The temperature of the room, its setpoint (the temperature wanted) and its curve over the last hours. Setpoints are set by the managers."
+  },
+  "4781006891275646617": {
+    "fr": "L'historique",
+    "en": "History"
+  },
+  "1435793834518086388": {
+    "fr": "Les courbes de plusieurs salles sur la période de ton choix, pour comparer ou retrouver ce qui s'est passé.",
+    "en": "The curves of several rooms over the period of your choice, to compare them or find out what happened."
+  },
+  "3660918948402755185": {
+    "fr": "Tous les bâtiments, étages et salles que tu peux voir, rangés comme ils sont sur place.",
+    "en": "All the buildings, floors and rooms you can see, arranged as they are on site."
+  },
+  "524649159501589600": {
+    "fr": "Les salles, étages et bâtiments : les créer, les ranger, changer les consignes de plusieurs salles à la fois, voir leurs boîtiers de mesure.",
+    "en": "Rooms, floors and buildings: create and arrange them, change the setpoints of several rooms at once, see their sensor boxes."
+  },
+  "1000169012920740214": {
+    "fr": "Les consignes de plusieurs salles à la fois, et les boîtiers de mesure de chaque salle, avec leur dernière mesure.",
+    "en": "The setpoints of several rooms at once, and the sensor boxes of each room, with their last reading."
+  },
+  "9017616700038660204": {
+    "fr": "Les comptes",
+    "en": "Accounts"
+  },
+  "5282197627431445544": {
+    "fr": "Dans Gérer › Utilisateurs et groupes : crée des comptes un par un, ou importe-les d'un fichier Excel ou CSV (chacun reçoit un mot de passe provisoire à changer). Donne-leur des accès par bâtiment, étage ou salle, ou par groupes.",
+    "en": "In Manage › Users and groups: create accounts one by one, or import them from an Excel or CSV file (each gets a temporary password to change). Give them access by building, floor or room, or through groups."
+  },
+  "8866338299400846574": {
+    "fr": "Le serveur",
+    "en": "The server"
+  },
+  "3760525623523650017": {
+    "fr": "Les mises à jour de ThermoBox, le logo et les limites de température de l'installation.",
+    "en": "ThermoBox updates, the logo and the temperature limits of the installation."
+  },
+  "2984647374187728268": {
+    "fr": "Tes préférences",
+    "en": "Your preferences"
+  },
+  "5014906621427291563": {
+    "fr": "Thème, couleurs, unité, langue, et les notifications quand une salle s'écarte de sa consigne.",
+    "en": "Theme, colours, unit, language, and notifications when a room drifts from its setpoint."
+  },
+  "6776379844603827088": {
+    "fr": "C'est tout !",
+    "en": "That's it!"
+  },
+  "745570533088484999": {
+    "fr": "Tu peux revoir ce guide quand tu veux dans Préférences › Divers.",
+    "en": "You can see this guide again any time in Preferences › Other."
+  },
+  "1477689446922704310": {
+    "fr": "Compte administrateur",
+    "en": "Administrator account"
+  },
+  "6549490994455426625": {
+    "fr": "Compte gestionnaire",
+    "en": "Manager account"
+  },
+  "4371020367415289979": {
+    "fr": "Compte lecteur",
+    "en": "Viewer account"
+  },
   "3817498941817715969": {
     "fr": "Pages",
     "en": "Pages"
+  },
+  "6806037506087334172": {
+    "fr": "{$START_TAG_STRONG}Ces mots de passe ne seront plus affichés{$CLOSE_TAG_STRONG}Remets-les à chaque personne (fiche imprimée, en main propre) ; chacun choisira le sien à sa première connexion. Ne les envoie pas en clair par courriel ou messagerie de groupe. ",
+    "en": "{$START_TAG_STRONG}These passwords will not be shown again{$CLOSE_TAG_STRONG}Hand them to each person (printed sheet, in person); everyone will choose their own at their first login. Don't send them in plain text by email or group chat. "
+  },
+  "1427591118066296235": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Imprimer les fiches",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Print the sheets"
+  },
+  "7359124764807344933": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Télécharger (CSV)",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Download (CSV)"
+  },
+  "857958721592473271": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Tout copier",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Copy all"
+  },
+  "1288162239112104795": {
+    "fr": "Personne",
+    "en": "Person"
+  },
+  "6687054427434656770": {
+    "fr": "Valables jusqu'au {$INTERPOLATION}.",
+    "en": "Valid until {$INTERPOLATION}."
+  },
+  "5372182109246164338": {
+    "fr": "{$PH} mot(s) de passe copié(s)",
+    "en": "{$PH} password(s) copied"
+  },
+  "3053022756258517667": {
+    "fr": "Adresse e-mail",
+    "en": "Email address"
+  },
+  "3791399422305486211": {
+    "fr": "Valable jusqu'au",
+    "en": "Valid until"
+  },
+  "1366395489997231948": {
+    "fr": "mots-de-passe-provisoires.csv",
+    "en": "temporary-passwords.csv"
+  },
+  "6936472988126616663": {
+    "fr": "À ta première connexion, ThermoBox te demandera de choisir ton propre mot de passe.",
+    "en": "At your first login, ThermoBox will ask you to choose your own password."
   },
   "345382201476557852": {
     "fr": " Ce que {$START_TAG_STRONG}{$INTERPOLATION}{$CLOSE_TAG_STRONG} ({$INTERPOLATION_1}) peut consulter{$INTERPOLATION_2}. ",
@@ -3070,6 +3370,190 @@
   "1779149028430688095": {
     "fr": "retiré de {$PH} groupe(s)",
     "en": "removed from {$PH} group(s)"
+  },
+  "8203024106711668685": {
+    "fr": "Prénom",
+    "en": "First name"
+  },
+  "5786092725159834620": {
+    "fr": "Sert à repérer les doublons",
+    "en": "Used to spot duplicates"
+  },
+  "6838987736442541619": {
+    "fr": "Sans colonne : fait des prénom et nom (jdupont)",
+    "en": "Without a column: made from the first and last names (jdupont)"
+  },
+  "1997997227103593349": {
+    "fr": "Administrateur, gestionnaire ou lecteur ; sinon le rôle par défaut",
+    "en": "Administrator, manager or viewer; otherwise the default role"
+  },
+  "1766110989620382170": {
+    "fr": "Étapes",
+    "en": "Steps"
+  },
+  "82508179246368547": {
+    "fr": "Dépose un fichier Excel ou CSV, ou clique pour le choisir",
+    "en": "Drop an Excel or CSV file, or click to choose it"
+  },
+  "5942495850170816562": {
+    "fr": "Une ligne par personne, la première ligne donnant les noms des colonnes (Prénom, Nom, Courriel…). 10 Mo au plus.",
+    "en": "One line per person, the first line giving the names of the columns (First name, Last name, Email…). 10 MB at most."
+  },
+  "1593219410095917069": {
+    "fr": "Ou depuis une base de données du serveur",
+    "en": "Or from a database of the server"
+  },
+  "8427668346107281395": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} La liste reste sur le serveur le temps de l'import (une demi-heure au plus), elle n'est pas enregistrée.",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} The list stays on the server during the import (half an hour at most); it is not saved."
+  },
+  "7138243605953305004": {
+    "fr": "— Aucune colonne —",
+    "en": "— No column —"
+  },
+  "4624788178842644476": {
+    "fr": "Rôle par défaut",
+    "en": "Default role"
+  },
+  "2204270631353922814": {
+    "fr": "Validité des mots de passe provisoires",
+    "en": "Validity of the temporary passwords"
+  },
+  "8667058959445607763": {
+    "fr": "Aperçu des premières lignes",
+    "en": "Preview of the first lines"
+  },
+  "4566567151237068042": {
+    "fr": "Choisis au moins une colonne pour le nom d'utilisateur, ou pour le prénom ou le nom.",
+    "en": "Choose at least a column for the username, or for the first or last name."
+  },
+  "583095158621315036": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Autre liste",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Other list"
+  },
+  "8329203321371994960": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Vérifier les lignes ",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Check the lines "
+  },
+  "3786791760096280412": {
+    "fr": "Ligne",
+    "en": "Line"
+  },
+  "7965162081229090037": {
+    "fr": "auto",
+    "en": "auto"
+  },
+  "2731908489878974959": {
+    "fr": "ajusté",
+    "en": "adjusted"
+  },
+  "6774275150936991892": {
+    "fr": "Les doublons et les lignes invalides ne seront pas importés. Corrige la liste puis relis-la, ou crée les autres comptes maintenant.",
+    "en": "Duplicates and invalid lines will not be imported. Fix the list and read it again, or create the other accounts now."
+  },
+  "5395561536336596882": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Colonnes",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Columns"
+  },
+  "8396108165390443070": {
+    "fr": "Liste",
+    "en": "List"
+  },
+  "3298063886296349322": {
+    "fr": "Colonnes",
+    "en": "Columns"
+  },
+  "4454049401369679040": {
+    "fr": "Vérification",
+    "en": "Check"
+  },
+  "2810048879354479542": {
+    "fr": "{$PH} compte(s) créé(s)",
+    "en": "{$PH} account(s) created"
+  },
+  "2251075083984177508": {
+    "fr": "Ni nom d'utilisateur, ni prénom, ni nom",
+    "en": "No username, first name or last name"
+  },
+  "6873591272897823831": {
+    "fr": "Nom d'utilisateur impossible (lettres seulement)",
+    "en": "Impossible username (letters only)"
+  },
+  "4362503133794629401": {
+    "fr": "Nom d'utilisateur déjà pris",
+    "en": "Username already taken"
+  },
+  "1657463135787356625": {
+    "fr": "Nom d'utilisateur en double dans la liste",
+    "en": "Username twice in the list"
+  },
+  "9022276767790054541": {
+    "fr": "Adresse e-mail invalide",
+    "en": "Invalid email address"
+  },
+  "568272925605621727": {
+    "fr": "Adresse déjà utilisée par un compte",
+    "en": "Address already used by an account"
+  },
+  "1779419861070135241": {
+    "fr": "Adresse en double dans la liste",
+    "en": "Address twice in the list"
+  },
+  "658302013822692354": {
+    "fr": "Rôle inconnu",
+    "en": "Unknown role"
+  },
+  "2312824147044153351": {
+    "fr": "Prénom ou nom trop long",
+    "en": "First or last name too long"
+  },
+  "7183855987305382484": {
+    "fr": "Ancien format Excel (.xls) : enregistre le fichier en .xlsx ou en .csv.",
+    "en": "Old Excel format (.xls): save the file as .xlsx or .csv."
+  },
+  "5904446504664862854": {
+    "fr": "Format non pris en charge : enregistre le fichier en .xlsx ou en .csv.",
+    "en": "Unsupported format: save the file as .xlsx or .csv."
+  },
+  "3633357059137398792": {
+    "fr": "Ce fichier n'est pas un classeur Excel lisible.",
+    "en": "This file is not a readable Excel workbook."
+  },
+  "8863493204569511725": {
+    "fr": "La liste est vide (aucune ligne sous les noms des colonnes).",
+    "en": "The list is empty (no line under the names of the columns)."
+  },
+  "867879323721469520": {
+    "fr": "Le fichier est trop gros (10 Mo au plus).",
+    "en": "The file is too large (10 MB at most)."
+  },
+  "3998962286856444860": {
+    "fr": "La liste a trop de lignes (20 000 au plus).",
+    "en": "The list has too many lines (20,000 at most)."
+  },
+  "2840250389734145119": {
+    "fr": "La liste a trop de colonnes (200 au plus).",
+    "en": "The list has too many columns (200 at most)."
+  },
+  "3474617840183003795": {
+    "fr": "Cette base de données n'est plus déclarée sur le serveur.",
+    "en": "This database is no longer declared on the server."
+  },
+  "8006993278708237650": {
+    "fr": "Le serveur n'a pas de pilote pour cette base de données.",
+    "en": "The server has no driver for this database."
+  },
+  "3235147245062854393": {
+    "fr": "La base de données n'a pas pu être lue (adresse, compte ou requête).",
+    "en": "The database could not be read (address, account or query)."
+  },
+  "2737669424719383374": {
+    "fr": "L'import a expiré (une demi-heure) : relis la liste.",
+    "en": "The import expired (half an hour): read the list again."
+  },
+  "7586103476548648871": {
+    "fr": "Import impossible",
+    "en": "Import failed"
   },
   "4400564979333262351": {
     "fr": "Nouvelle version du client",
@@ -3166,6 +3650,10 @@
   "5071958320939415208": {
     "fr": "boîtier",
     "en": "box"
+  },
+  "2620863526371666363": {
+    "fr": "Provisoire expiré",
+    "en": "Temporary expired"
   },
   "6999296574516326076": {
     "fr": "Aucun utilisateur ne correspond",
@@ -3579,6 +4067,22 @@
     "fr": " choisi(s)",
     "en": " chosen"
   },
+  "2112727133462078997": {
+    "fr": "Étape ",
+    "en": "Step "
+  },
+  "530295141492622432": {
+    "fr": "C'est parti",
+    "en": "Let's go"
+  },
+  "3779003498131248588": {
+    "fr": "Suivant",
+    "en": "Next"
+  },
+  "2602235345093169301": {
+    "fr": "Copier le mot de passe de ",
+    "en": "Copy the password of "
+  },
   "7954895544329067211": {
     "fr": "Ouvrir {name}",
     "en": "Open {name}"
@@ -3606,5 +4110,81 @@
   "8577302037590856757": {
     "fr": " (il voit déjà tout ThermoBox)",
     "en": " (they already see all of ThermoBox)"
+  },
+  "1263139206194532839": {
+    "fr": "Importer des utilisateurs",
+    "en": "Import users"
+  },
+  "8663626973182997155": {
+    "fr": "Source : ",
+    "en": "Source: "
+  },
+  "2352091321626487801": {
+    "fr": "lignes",
+    "en": "lines"
+  },
+  "1228783011833546120": {
+    "fr": "ligne",
+    "en": "line"
+  },
+  "3700244640301657148": {
+    "fr": "jours",
+    "en": "days"
+  },
+  "4320734463559046311": {
+    "fr": "jour",
+    "en": "day"
+  },
+  "8748647147940224033": {
+    "fr": "À créer",
+    "en": "To create"
+  },
+  "3989208545325171069": {
+    "fr": "Doublons",
+    "en": "Duplicates"
+  },
+  "8387784276171480002": {
+    "fr": "Invalides",
+    "en": "Invalid"
+  },
+  "4497791594471923541": {
+    "fr": "Sera créé",
+    "en": "Will be created"
+  },
+  "6253980040120318331": {
+    "fr": "Afficher plus",
+    "en": "Show more"
+  },
+  "2002502055123460997": {
+    "fr": "Création des comptes…",
+    "en": "Creating the accounts…"
+  },
+  "1204219410253987310": {
+    "fr": "Créer ",
+    "en": "Create "
+  },
+  "8309632234962552284": {
+    "fr": " comptes",
+    "en": " accounts"
+  },
+  "3074160839571754305": {
+    "fr": " compte",
+    "en": " account"
+  },
+  "6082195596141697875": {
+    "fr": "comptes créés",
+    "en": "accounts created"
+  },
+  "3905028665608764776": {
+    "fr": "compte créé",
+    "en": "account created"
+  },
+  "8520234155720051": {
+    "fr": "ligne(s) laissée(s) de côté",
+    "en": "line(s) left out"
+  },
+  "5363010021096697940": {
+    "fr": "Lignes non créées (erreur du serveur) : ",
+    "en": "Lines not created (server error): "
   }
 }

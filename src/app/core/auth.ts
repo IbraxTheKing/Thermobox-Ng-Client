@@ -3,7 +3,7 @@ import { Injectable, computed, effect, inject, signal, untracked } from '@angula
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
-import { LoginResponse, User, UserRole } from '../models/models';
+import { LoginResponse, PasswordPolicy, User, UserRole } from '../models/models';
 import { ApiVersionService } from './api-version';
 import { ServerService, apiUrl, readableAddress } from './api.config';
 import { initial } from './text';
@@ -109,6 +109,15 @@ export class AuthService {
     }
   }
 
+  /**
+   * The provisional password just typed at login, kept in memory only until the user has chosen
+   * theirs (the page of the new password does not ask it again).
+   */
+  private pending: string | null = null;
+
+  /** The account must choose its password before anything else (imported, reset by an admin). */
+  readonly mustChangePassword = computed(() => this.user()?.mustChangePassword === true);
+
   /** Logs in on [base] (default: the current server); the account becomes the current one. */
   async login(username: string, password: string, base = this.server.base()): Promise<void> {
     // Asked again at each login: the server may have been updated (v1 → v2) since
@@ -121,6 +130,48 @@ export class AuthService {
     this.setActive(key);
     this.save();
     this.scheduleExpiration();
+    this.pending = r.user.mustChangePassword ? password : null;
+  }
+
+  /** The provisional password typed at login, once (null when not known: asked again). */
+  takePendingPassword(): string | null {
+    const p = this.pending;
+    this.pending = null;
+    return p;
+  }
+
+  /** The server says the password must be changed first (403 password_change_required). */
+  requirePasswordChange(): void {
+    const c = this.account();
+    if (!c) return;
+    if (!c.user.mustChangePassword) {
+      this.edit(c.key, { user: { ...c.user, mustChangePassword: true } });
+      this.save();
+    }
+    if (!this.router.url.startsWith('/password')) void this.router.navigateByUrl('/password');
+  }
+
+  /**
+   * POST /api/v2/auth/password: the current password (the provisional one) and the new one. The
+   * account is no longer provisional afterwards; the same token reaches everything again.
+   */
+  async changePassword(current: string, next: string): Promise<void> {
+    await firstValueFrom(this.http.post<void>(this.server.url('/auth/password'), { currentPassword: current, newPassword: next }));
+    this.pending = null;
+    const c = this.account();
+    if (c) {
+      this.edit(c.key, { user: { ...c.user, mustChangePassword: false, provisionalExpiresAt: null } });
+      this.save();
+    }
+  }
+
+  /** The rules of the passwords chosen by their owners (servers 26.12 and later); null if unknown. */
+  async passwordPolicy(): Promise<PasswordPolicy | null> {
+    try {
+      return await firstValueFrom(this.http.get<PasswordPolicy>(this.server.url('/auth/password-policy')));
+    } catch {
+      return null;
+    }
   }
 
   /** Revokes the token on the server (a copy stops working too); the account stays saved. */
