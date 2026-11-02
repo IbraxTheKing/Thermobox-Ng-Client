@@ -6,10 +6,15 @@ import { errorMessage } from '../../core/api.config';
 import { AuthService } from '../../core/auth';
 import { ConfirmService, ToastService } from '../../core/messages';
 import { UserService } from '../../services/user.service';
+import { ServerFeaturesService } from '../../services/server-features.service';
 import { TbPassword } from '../../ui/controls';
 import { bytes } from '../auth/register';
 
-/** Mon profil (profil.xhtml): one's own name and password, or deleting one's account. */
+/**
+ * Mon profil (profil.xhtml): one's own username, first and last name and address (servers 26.12
+ * and later), password, or deleting one's account.
+ */
+const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s.]+$/;
 @Component({
   selector: 'tb-profile',
   imports: [TbPassword],
@@ -19,7 +24,7 @@ import { bytes } from '../auth/register';
       <header class="tb-page-head">
         <span class="tb-avatar tb-avatar-xl">{{ auth.initial() }}</span>
         <div class="tb-page-title">
-          <span class="tb-eyebrow">{{ auth.role() }}</span>
+          <span class="tb-eyebrow">{{ roleName() }}</span>
           <h1 i18n>Mon profil</h1>
         </div>
       </header>
@@ -34,8 +39,28 @@ import { bytes } from '../auth/register';
               <span class="tb-field-error">{{ e }}</span>
             }
           </div>
+          @if (features.people()) {
+            <div class="tb-field-row">
+              <div class="tb-field">
+                <label i18n class="tb-label" for="first-name">Prénom</label>
+                <input id="first-name" class="tb-input" autocomplete="given-name" maxlength="100" [value]="firstName()" (input)="firstName.set($any($event.target).value)" />
+              </div>
+              <div class="tb-field">
+                <label i18n class="tb-label" for="last-name">Nom</label>
+                <input id="last-name" class="tb-input" autocomplete="family-name" maxlength="100" [value]="lastName()" (input)="lastName.set($any($event.target).value)" />
+              </div>
+            </div>
+            <div class="tb-field">
+              <label i18n class="tb-label" for="email">Adresse e-mail</label>
+              <input id="email" class="tb-input" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" maxlength="255"
+                     [value]="email()" (input)="email.set($any($event.target).value)" [class.tb-invalid]="sent() && emailError()" />
+              @if (sent() && emailError(); as e) {
+                <span class="tb-field-error">{{ e }}</span>
+              }
+            </div>
+          }
           <div class="tb-field">
-            <span i18n class="tb-muted">Rôle : <strong>{{ auth.role() }}</strong></span>
+            <span i18n class="tb-muted">Rôle : <strong>{{ roleName() }}</strong></span>
           </div>
           <div class="tb-field">
             <label i18n class="tb-label" for="pwd">Nouveau mot de passe (laisser vide pour ne pas changer)</label>
@@ -68,8 +93,19 @@ export class ProfilePage {
   private readonly toasts = inject(ToastService);
   private readonly confirm = inject(ConfirmService);
   private readonly router = inject(Router);
+  protected readonly features = inject(ServerFeaturesService);
 
   protected readonly name = signal(this.auth.user()?.username ?? '');
+  protected readonly firstName = signal(this.auth.user()?.firstName ?? '');
+  protected readonly lastName = signal(this.auth.user()?.lastName ?? '');
+  protected readonly email = signal(this.auth.user()?.email ?? '');
+  protected readonly roleName = computed(
+    () => ({ ADMIN: $localize`Administrateur`, MANAGER: $localize`Gestionnaire`, VIEWER: $localize`Lecteur` })[this.auth.role() ?? 'VIEWER'],
+  );
+  protected readonly emailError = computed(() => {
+    const m = this.email().trim();
+    return m && (m.length > 255 || !EMAIL.test(m)) ? $localize`Adresse e-mail invalide` : null;
+  });
   protected readonly password = signal('');
   protected readonly confirmation = signal('');
   protected readonly sent = signal(false);
@@ -92,7 +128,7 @@ export class ProfilePage {
   protected async save(e: Event): Promise<void> {
     e.preventDefault();
     this.sent.set(true);
-    if (this.nameError() || this.passwordError()) return;
+    if (this.nameError() || this.passwordError() || this.emailError()) return;
     if (this.password() && this.password() !== this.confirmation()) {
       this.toasts.error('Les mots de passe ne correspondent pas');
       return;
@@ -101,7 +137,8 @@ export class ProfilePage {
     if (id == null) return;
     this.inProgress.set(true);
     try {
-      const update = await firstValueFrom(this.users.update(id, { username: this.name().trim(), ...(this.password() ? { password: this.password() } : {}) }));
+      const person = this.features.people() ? { firstName: this.firstName().trim(), lastName: this.lastName().trim(), email: this.email().trim() } : {};
+      const update = await firstValueFrom(this.users.update(id, { username: this.name().trim(), ...person, ...(this.password() ? { password: this.password() } : {}) }));
       this.auth.updateUser(update);
       this.password.set('');
       this.confirmation.set('');
@@ -109,7 +146,12 @@ export class ProfilePage {
       this.toasts.info('Profil mis à jour');
     } catch (err) {
       const m = errorMessage(err, $localize`Mise à jour impossible`);
-      this.toasts.error(m === 'Username already taken' ? $localize`Ce nom d'utilisateur est déjà pris` : $localize`Mise à jour impossible`, m === 'Username already taken' ? null : m);
+      const known: Record<string, string> = {
+        'Username already taken': $localize`Ce nom d'utilisateur est déjà pris`,
+        'Email address already used': $localize`Cette adresse est déjà utilisée par un autre compte`,
+        'Invalid email address': $localize`Adresse e-mail invalide`,
+      };
+      this.toasts.error(known[m] ?? $localize`Mise à jour impossible`, known[m] ? null : m);
     } finally {
       this.inProgress.set(false);
     }

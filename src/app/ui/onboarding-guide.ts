@@ -24,7 +24,8 @@ interface Step {
  * - Phones: the card sits at the bottom, above the bar of the app (under the thumb, the ringed
  *   tab above it in view), in the look of the platform (Material 3, iOS glass).
  * - Windows: a TeachingTip of WinUI 3, the control of Windows for this: pointing at the item of
- *   the NavigationView it speaks of, no dimmed page, its close button in the corner.
+ *   the NavigationView it speaks of, its close button in the corner, the window dimmed as under
+ *   a ContentDialog (its title bar too, its buttons still usable).
  */
 @Component({
   selector: 'tb-onboarding-guide',
@@ -33,6 +34,7 @@ interface Step {
   template: `
     @if (guide.open()) {
       <div class="tb-guide-scrim"></div>
+      <div class="tb-guide-dim" aria-hidden="true"></div>
       @if (ring(); as r) {
         <div class="tb-guide-ring" aria-hidden="true" [style.left.px]="r.left" [style.top.px]="r.top" [style.width.px]="r.width" [style.height.px]="r.height"></div>
       }

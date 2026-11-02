@@ -227,6 +227,22 @@
         </div>
         @if (prefs.notifications()) {
           <div class="tb-pref">
+            <span class="tb-section-icon"><i class="pi pi-send"></i></span>
+            <div class="tb-pref-text">
+              <strong i18n>Tester</strong>
+              @if (notifications.last(); as l) {
+                @if (l.error) {
+                  <span class="tb-muted tb-pref-note-off">{{ ('Dernière vérification à ' | tr) + (l.at | date: 'HH:mm') + (' : échec (' | tr) + l.error + ')' }}</span>
+                } @else {
+                  <span class="tb-muted">{{ ('Dernière vérification à ' | tr) + (l.at | date: 'HH:mm') + ' : ' + (l.events ? l.events + (' changement(s) notifié(s)' | tr) : ('aucun changement' | tr)) }}</span>
+                }
+              } @else {
+                <span i18n class="tb-muted">Envoie une notification maintenant, pour voir si le système l'affiche.</span>
+              }
+            </div>
+            <button i18n type="button" class="tb-btn tb-tonal" (click)="testNotification()"><i class="pi pi-bell"></i>Envoyer</button>
+          </div>
+          <div class="tb-pref">
             <span class="tb-section-icon"><i class="pi pi-star"></i></span>
             <div class="tb-pref-text">
               <strong i18n>Salles suivies</strong>
@@ -253,11 +269,11 @@
           <span class="tb-pref-text"><strong i18n>À propos de Thermobox</strong><span i18n class="tb-muted">Versions du client et du serveur, code source, crédits</span></span>
           <i class="pi pi-angle-right tb-pref-chevron" aria-hidden="true"></i>
         </a>
-        <button type="button" class="tb-pref tb-pref-link" (click)="guide.start()">
+        <a class="tb-pref tb-pref-link" role="button" tabindex="0" (click)="guide.start()" (keydown.enter)="guide.start()" (keydown.space)="$event.preventDefault(); guide.start()">
           <span class="tb-section-icon"><i class="pi pi-compass"></i></span>
           <span class="tb-pref-text"><strong i18n>Revoir le guide de démarrage</strong><span i18n class="tb-muted">Les pages de ThermoBox et ce que ton rôle permet d'y faire</span></span>
           <i class="pi pi-angle-right tb-pref-chevron" aria-hidden="true"></i>
-        </button>
+        </a>
       </div>
     }
     <p i18n class="tb-muted tb-pref-scope">Enregistré sur cet appareil uniquement. Interface : {{ platformName }}.</p>

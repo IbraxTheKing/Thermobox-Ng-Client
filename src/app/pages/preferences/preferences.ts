@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, booleanAttribute, computed, inject, input } from '@angular/core';
-import { NgTemplateOutlet, Location } from '@angular/common';
+import { DatePipe, NgTemplateOutlet, Location } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 
 import { AuthService } from '../../core/auth';
@@ -16,6 +16,7 @@ import { AccentService, DEFAULT_SWATCH, PALETTES, swatch } from '../../core/acce
 import { locale } from '../../core/i18n';
 import { OnboardingService } from '../../core/onboarding';
 import { TrPipe } from '../../ui/tr.pipe';
+import { ToastService } from '../../core/messages';
 
 /**
  * Preferences (preferences.xhtml): theme, colours following the state, unit, keyboard shortcuts
@@ -24,7 +25,7 @@ import { TrPipe } from '../../ui/tr.pipe';
  */
 @Component({
   selector: 'tb-preferences',
-  imports: [TrPipe, TbSwitch, RouterLink, NgTemplateOutlet],
+  imports: [TrPipe, TbSwitch, RouterLink, NgTemplateOutlet, DatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './preferences.html',
 })
@@ -80,6 +81,12 @@ export class PreferencesPage {
     ? $localize`Application ${this.desktop.name()}`
     : { ios: 'iOS (Liquid Glass)', android: 'Android (Material 3)', web: 'Web (ThermoBox)' }[this.platform.platform];
 
+
+  private readonly toasts = inject(ToastService);
+
+  protected async testNotification(): Promise<void> {
+    if (!(await this.notifications.test())) this.toasts.error($localize`Les notifications sont bloquées pour Thermobox dans les réglages du système.`);
+  }
 
   protected toggleNotifications(on: boolean): void {
     if (on) void this.notifications.enable();

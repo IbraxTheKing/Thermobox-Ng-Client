@@ -267,6 +267,14 @@
     "fr": "Confirmer",
     "en": "Confirm"
   },
+  "3441895204640594765": {
+    "fr": "Notification de test",
+    "en": "Test notification"
+  },
+  "1927009725204911837": {
+    "fr": "Les changements de consigne de tes salles s'afficheront ainsi.",
+    "en": "Changes of the setpoints of your rooms will show like this."
+  },
   "4601537828709514981": {
     "fr": "ont atteint leur consigne",
     "en": "reached their setpoint"
@@ -1423,6 +1431,10 @@
     "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Nouveau groupe",
     "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}New group"
   },
+  "95511687676538214": {
+    "fr": "Importer des utilisateurs d'un fichier Excel ou CSV",
+    "en": "Import users from an Excel or CSV file"
+  },
   "8349872560386364092": {
     "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Importer",
     "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Import"
@@ -2055,6 +2067,14 @@
     "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Bloquées par le système : autorise-les pour Thermobox dans ses réglages.",
     "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Blocked by the system: allow them for Thermobox in its settings."
   },
+  "2756888385869851256": {
+    "fr": "Tester",
+    "en": "Test"
+  },
+  "3923293621303664253": {
+    "fr": "Envoie une notification maintenant, pour voir si le système l'affiche.",
+    "en": "Sends a notification now, to see whether the system shows it."
+  },
   "2110150414997987647": {
     "fr": "Salles suivies",
     "en": "Rooms followed"
@@ -2111,6 +2131,18 @@
     "fr": "Application {$PH}",
     "en": "{$PH} app"
   },
+  "3446295246449438222": {
+    "fr": "Les notifications sont bloquées pour Thermobox dans les réglages du système.",
+    "en": "Notifications are blocked for Thermobox in the system settings."
+  },
+  "8203024106711668685": {
+    "fr": "Prénom",
+    "en": "First name"
+  },
+  "3053022756258517667": {
+    "fr": "Adresse e-mail",
+    "en": "Email address"
+  },
   "6088962790205997652": {
     "fr": "Rôle : {$START_TAG_STRONG}{$INTERPOLATION}{$CLOSE_TAG_STRONG}",
     "en": "Role: {$START_TAG_STRONG}{$INTERPOLATION}{$CLOSE_TAG_STRONG}"
@@ -2131,6 +2163,10 @@
     "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Supprimer mon compte",
     "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Delete my account"
   },
+  "9022276767790054541": {
+    "fr": "Adresse e-mail invalide",
+    "en": "Invalid email address"
+  },
   "975197668752695737": {
     "fr": "Trop long (72 octets au plus)",
     "en": "Too long (72 bytes at most)"
@@ -2138,6 +2174,10 @@
   "2676702226428589836": {
     "fr": "Mise à jour impossible",
     "en": "Cannot update"
+  },
+  "7345519266615219294": {
+    "fr": "Cette adresse est déjà utilisée par un autre compte",
+    "en": "This address is already used by another account"
   },
   "4898198551118005690": {
     "fr": "Supprimer mon compte",
@@ -3127,6 +3167,10 @@
     "fr": "Aucun",
     "en": "None"
   },
+  "1511129190715440835": {
+    "fr": "Fermer le guide",
+    "en": "Close the guide"
+  },
   "3722548177883512333": {
     "fr": "Étapes du guide",
     "en": "Steps of the guide"
@@ -3243,6 +3287,10 @@
     "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Imprimer les fiches",
     "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Print the sheets"
   },
+  "2903508937592694065": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Partager (CSV)",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Share (CSV)"
+  },
   "7359124764807344933": {
     "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Télécharger (CSV)",
     "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Download (CSV)"
@@ -3262,10 +3310,6 @@
   "5372182109246164338": {
     "fr": "{$PH} mot(s) de passe copié(s)",
     "en": "{$PH} password(s) copied"
-  },
-  "3053022756258517667": {
-    "fr": "Adresse e-mail",
-    "en": "Email address"
   },
   "3791399422305486211": {
     "fr": "Valable jusqu'au",
@@ -3371,10 +3415,6 @@
     "fr": "retiré de {$PH} groupe(s)",
     "en": "removed from {$PH} group(s)"
   },
-  "8203024106711668685": {
-    "fr": "Prénom",
-    "en": "First name"
-  },
   "5786092725159834620": {
     "fr": "Sert à repérer les doublons",
     "en": "Used to spot duplicates"
@@ -3390,6 +3430,10 @@
   "1766110989620382170": {
     "fr": "Étapes",
     "en": "Steps"
+  },
+  "8228286272007830054": {
+    "fr": "Choisis un fichier Excel ou CSV",
+    "en": "Choose an Excel or CSV file"
   },
   "82508179246368547": {
     "fr": "Dépose un fichier Excel ou CSV, ou clique pour le choisir",
@@ -3435,10 +3479,6 @@
     "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Vérifier les lignes ",
     "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Check the lines "
   },
-  "3786791760096280412": {
-    "fr": "Ligne",
-    "en": "Line"
-  },
   "7965162081229090037": {
     "fr": "auto",
     "en": "auto"
@@ -3446,6 +3486,10 @@
   "2731908489878974959": {
     "fr": "ajusté",
     "en": "adjusted"
+  },
+  "3786791760096280412": {
+    "fr": "Ligne",
+    "en": "Line"
   },
   "6774275150936991892": {
     "fr": "Les doublons et les lignes invalides ne seront pas importés. Corrige la liste puis relis-la, ou crée les autres comptes maintenant.",
@@ -3486,10 +3530,6 @@
   "1657463135787356625": {
     "fr": "Nom d'utilisateur en double dans la liste",
     "en": "Username twice in the list"
-  },
-  "9022276767790054541": {
-    "fr": "Adresse e-mail invalide",
-    "en": "Invalid email address"
   },
   "568272925605621727": {
     "fr": "Adresse déjà utilisée par un compte",
@@ -3831,6 +3871,22 @@
     "fr": "Ajouter un compte, sur ce serveur ou un autre",
     "en": "Add an account, on this server or another one"
   },
+  "4636779706042015840": {
+    "fr": "Dernière vérification à ",
+    "en": "Last check at "
+  },
+  "6004340503232221333": {
+    "fr": " : échec (",
+    "en": ": failed ("
+  },
+  "5536559205287975447": {
+    "fr": " changement(s) notifié(s)",
+    "en": " change(s) notified"
+  },
+  "9137269661951105106": {
+    "fr": "aucun changement",
+    "en": "no change"
+  },
   "4431218269864510098": {
     "fr": "au-dessus",
     "en": "above"
@@ -4146,6 +4202,10 @@
   "8387784276171480002": {
     "fr": "Invalides",
     "en": "Invalid"
+  },
+  "520352361243901928": {
+    "fr": "Ligne ",
+    "en": "Line "
   },
   "4497791594471923541": {
     "fr": "Sera créé",
