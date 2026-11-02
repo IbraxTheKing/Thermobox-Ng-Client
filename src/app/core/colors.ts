@@ -160,23 +160,30 @@ function mix(stops: [number, string][], x: number): string {
   return stops[stops.length - 1][1];
 }
 
+/*
+ * The mixes into the page are in OKLab, not OKLCH: a grey has a faint hue of its own (the blue
+ * grey of the cards of Adwaita, the green grey of ThermoBox), and WebKit (the Linux app, Safari)
+ * turned around the colour wheel towards it in OKLCH: yellow came out mauve, green blue. Chromium
+ * gave nearly the same colours both ways. Between two colours of a scale (mix), OKLCH stays.
+ */
+
 /**
  * The same colour, softened into the page (tiles, background of a room's page). Into the page of
  * ThermoBox, not the page of the accent: a blue page would turn a comfortable green into blue.
  */
 export function tintSoft(color: string, dark: boolean): string {
   // Linux: into the card of libadwaita, enough of it for the colour to read as itself
-  if (GNOME) return `color-mix(in oklch, ${color} ${dark ? 38 : 30}%, var(--lx-card))`;
-  return `color-mix(in oklch, ${color} ${dark ? 30 : 24}%, var(--tb-tint-base, var(--tb-background)))`;
+  if (GNOME) return `color-mix(in oklab, ${color} ${dark ? 38 : 30}%, var(--lx-card))`;
+  return `color-mix(in oklab, ${color} ${dark ? 30 : 24}%, var(--tb-tint-base, var(--tb-background)))`;
 }
 
 /** The same colour, for text and lines on its soft tint. */
 export function tintStrong(color: string, dark: boolean): string {
   if (GNOME)
     return dark
-      ? `color-mix(in oklch, ${color} 62%, #ffffff)`
-      : `color-mix(in oklch, ${color} 72%, #000006)`;
+      ? `color-mix(in oklab, ${color} 62%, #ffffff)`
+      : `color-mix(in oklab, ${color} 72%, #000006)`;
   return dark
-    ? `color-mix(in oklch, ${color} 72%, #ffffff)`
-    : `color-mix(in oklch, ${color} 78%, #1d2421)`;
+    ? `color-mix(in oklab, ${color} 72%, #ffffff)`
+    : `color-mix(in oklab, ${color} 78%, #1d2421)`;
 }
