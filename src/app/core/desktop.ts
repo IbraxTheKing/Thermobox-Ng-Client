@@ -10,9 +10,15 @@ export type { DesktopOs } from './tauri';
 
 /**
  * Before Angular starts (main.ts), in the desktop app:
- * - the calls to a ThermoBox server go through Rust (tauri-plugin-http): no CORS, and no mixed
- *   content between the tauri:// page of macOS / Linux and a server in plain http on the local
- *   network. The page's own files stay with the webview.
+ * - macOS and Linux: the calls to a ThermoBox server go through Rust (tauri-plugin-http): the
+ *   tauri:// page could not reach a server in plain http on the local network (mixed content).
+ *   The page's own files stay with the webview.
+ * - Windows: the page is http://tauri.localhost, it calls the server itself, as the browser and
+ *   the mobile apps do (the server answers CORS). Through tauri-plugin-http, every response came
+ *   back in pieces of a few kilobytes, each one a request of WebView2 to Rust: the photos of the
+ *   rooms made thousands of them, and WebView2 kept the memory of each (several GB, then out of
+ *   memory). Only if the server can't be reached directly (an old server without CORS) do its
+ *   calls go through Rust.
  * - the settings window (macOS) opens on index.html?view=settings: its page is /settings.
  * - Windows 11: the window has the Acrylic backdrop of the system (main.rs): html[data-backdrop]
  *   leaves the side bar and the title bar clear for it (windows.css).
@@ -21,9 +27,12 @@ export async function prepareDesktop(): Promise<void> {
   if (!TAURI) return;
   document.documentElement.dataset['desktop'] = DESKTOP_OS!;
   if (DESKTOP_OS === 'windows') {
-    const { invoke } = await import('@tauri-apps/api/core');
-    const backdrop = await invoke<string | null>('window_backdrop').catch(() => null);
-    if (backdrop) document.documentElement.dataset['backdrop'] = backdrop;
+    // Not awaited: Angular starts meanwhile
+    void import('@tauri-apps/api/core').then(({ invoke }) =>
+      invoke<string | null>('window_backdrop')
+        .then((backdrop) => backdrop && (document.documentElement.dataset['backdrop'] = backdrop))
+        .catch(() => undefined),
+    );
   }
   const view = new URLSearchParams(location.search).get('view');
   if (view === 'settings') {
@@ -42,13 +51,31 @@ export async function prepareDesktop(): Promise<void> {
       /* not a URL: the page's */
     }
     if (!outside) return own(input, init);
-    // Unreachable server: a TypeError as the fetch of a browser (« Le serveur ne répond pas »)
+    if (DESKTOP_OS !== 'windows') return throughRust(input, init);
+    const origin = new URL(url, location.href).origin;
+    if (throughRustOnly.has(origin)) return throughRust(input, init);
+    return own(input, init).catch((e: unknown) => {
+      if (!(e instanceof TypeError)) throw e;
+      // Refused by the webview (no CORS) or unreachable: Rust tries; if it gets an answer, this
+      // server is reached through Rust from now on
+      return throughRust(input, init).then((r) => {
+        throughRustOnly.add(origin);
+        return r;
+      });
+    });
+  };
+
+  // Unreachable server: a TypeError as the fetch of a browser (« Le serveur ne répond pas »)
+  function throughRust(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
     return rustFetch(input, init).catch((e: unknown) => {
       if (e instanceof DOMException && e.name === 'AbortError') throw e;
       throw new TypeError(e instanceof Error ? e.message : String(e));
     });
-  };
+  }
 }
+
+/** Windows: servers the webview could not call itself (CORS), called through Rust. */
+const throughRustOnly = new Set<string>();
 
 /**
  * What the desktop app changes in the page:
