@@ -14,19 +14,27 @@ import { ServerFeaturesService } from './services/server-features.service';
 import { TbConfirm, TbToasts } from './ui/hosts';
 import { TbDesktopChrome } from './ui/desktop-chrome';
 import { DesktopService } from './core/desktop';
+import { DESKTOP_OS } from './core/tauri';
+import { TbAdwPreferencesDialog } from './ui/adw-preferences-dialog';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, TbToasts, TbConfirm, TbDesktopChrome],
+  imports: [RouterOutlet, TbToasts, TbConfirm, TbDesktopChrome, TbAdwPreferencesDialog],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <tb-desktop-chrome />
     <router-outlet />
     <tb-toasts />
     <tb-confirm />
+    @if (linux) {
+      <tb-adw-preferences-dialog />
+    }
   `,
 })
 export class App {
+  /** The Linux app: Préférences as a dialog of libadwaita. */
+  protected readonly linux = DESKTOP_OS === 'linux';
+
   constructor() {
     // Theme, platform and shortcuts apply from the first page on
     inject(PreferencesService);

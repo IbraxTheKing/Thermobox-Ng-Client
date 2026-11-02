@@ -2,7 +2,7 @@
   The same page three ways: in the app (/app/preferences), from the login page (/settings, with a
   way back) and in the settings window of macOS (/settings, the window is the page).
 -->
-@if (standalone()) {
+@if (standalone() && !dialog()) {
   <main class="tb-main tb-standalone" [class.tb-standalone-window]="desktop.settingsWindow">
     @if (!desktop.settingsWindow) {
       <button i18n type="button" class="tb-btn tb-flat tb-standalone-back" (click)="back()"><i class="pi pi-arrow-left"></i>Retour</button>
@@ -15,12 +15,14 @@
 
 <ng-template #page>
 <div class="tb-narrow">
-  <header class="tb-page-head">
-    <div class="tb-page-title">
-      <span i18n class="tb-eyebrow">Mon expérience</span>
-      <h1>{{ heading }}</h1>
-    </div>
-  </header>
+  @if (!dialog()) {
+    <header class="tb-page-head">
+      <div class="tb-page-title">
+        <span i18n class="tb-eyebrow">Mon expérience</span>
+        <h1>{{ heading }}</h1>
+      </div>
+    </header>
+  }
 
   <!-- Kept on this device, applied at once; in four groups -->
   <section class="tb-panel tb-pref-group" aria-labelledby="tb-pref-look">

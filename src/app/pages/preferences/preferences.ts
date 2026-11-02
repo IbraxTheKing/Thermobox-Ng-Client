@@ -51,6 +51,8 @@ export class PreferencesPage {
    * settings of this device only: no About, no server.
    */
   readonly standalone = input(false, { transform: booleanAttribute });
+  /** In the dialog of the Linux app (AdwPreferencesDialog): the groups only, the dialog has the title. */
+  readonly dialog = input(false, { transform: booleanAttribute });
   /** « Réglages » on a Mac, as its apps name them; « Paramètres » from the login page (its button). */
   protected get heading(): string {
     return this.desktop.mac ? $localize`Réglages` : this.standalone() ? $localize`Paramètres` : $localize`Préférences`;

@@ -513,3 +513,166 @@
 /* Nothing moves sideways out of the window while a page slides */
 :root[data-desktop="linux"].tb-lx-nav { overflow-x: clip; }
 :root[data-desktop="linux"].tb-lx-nav body { overflow-x: clip; }
+
+/* ============================== Préférences: AdwPreferencesDialog (adw-preferences-dialog.ts) */
+
+/* The window dimmed under it, header bar included; its corners kept */
+:root[data-desktop="linux"] .tb-adw-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 3100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    border-radius: var(--lx-radius);
+    background: rgb(0 0 6 / .25);
+    animation: adw-dim-in .2s ease-out both;
+}
+:root[data-desktop="linux"][data-theme="dark"] .tb-adw-scrim { background: rgb(0 0 6 / .45); }
+:root[data-desktop="linux"] .tb-adw-scrim.tb-adw-closing { animation: adw-dim-out .2s ease-in both; }
+@keyframes adw-dim-in { from { opacity: 0; } }
+@keyframes adw-dim-out { to { opacity: 0; } }
+
+:root[data-desktop="linux"] .tb-adw-dialog {
+    --adw-row: var(--lx-card);
+    display: flex;
+    flex-direction: column;
+    width: min(640px, 100%);
+    height: min(720px, 100%);
+    border-radius: 15px;
+    background: var(--lx-dialog);
+    color: var(--lx-fg);
+    box-shadow: 0 0 0 1px rgb(0 0 6 / .05), 0 4px 14px 2px rgb(0 0 6 / .15), 0 10px 32px 4px rgb(0 0 6 / .1);
+    overflow: hidden;
+    font-size: 15px;
+    animation: adw-dialog-in .3s cubic-bezier(.05, .7, .1, 1) both;
+}
+:root[data-desktop="linux"][data-theme="dark"] .tb-adw-dialog {
+    --adw-row: rgb(255 255 255 / .08);
+    background: #2e2e32;
+    box-shadow: 0 0 0 1px rgb(0 0 6 / .5), 0 4px 14px 2px rgb(0 0 6 / .4), 0 10px 32px 4px rgb(0 0 6 / .3);
+}
+:root[data-desktop="linux"] .tb-adw-dialog:focus, :root[data-desktop="linux"] .tb-adw-dialog:focus-visible { outline: none; }
+:root[data-desktop="linux"] .tb-adw-dialog.tb-adw-closing { animation: adw-dialog-out .2s ease-in both; }
+@keyframes adw-dialog-in { from { opacity: 0; transform: scale(.88); } }
+@keyframes adw-dialog-out { to { opacity: 0; transform: scale(.94); } }
+
+/* Its header bar: flat, search at the start, the title in the middle, the round close at the end */
+:root[data-desktop="linux"] .tb-adw-head {
+    flex: none;
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr) 34px;
+    align-items: center;
+    gap: 6px;
+    min-height: 47px;
+    padding: 6px 7px;
+}
+:root[data-desktop="linux"] .tb-adw-title { margin: 0; text-align: center; font-size: 15px; font-weight: 700; color: var(--lx-fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:root[data-desktop="linux"] .tb-adw-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+:root[data-desktop="linux"] .tb-adw-head-btn {
+    display: inline-grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--lx-fg);
+    cursor: default;
+}
+:root[data-desktop="linux"] .tb-adw-head-btn svg { width: 16px; height: 16px; }
+:root[data-desktop="linux"] .tb-adw-head-btn:hover { background: var(--lx-flat-hover); }
+:root[data-desktop="linux"] .tb-adw-head-btn:active, :root[data-desktop="linux"] .tb-adw-head-btn.tb-adw-on { background: var(--lx-flat-active); }
+:root[data-desktop="linux"] .tb-adw-head-btn:focus-visible { outline: 2px solid var(--lx-focus); outline-offset: -2px; }
+/* The close button of AdwDialog: a small round button with a veil */
+:root[data-desktop="linux"] .tb-adw-close { justify-self: end; }
+:root[data-desktop="linux"] .tb-adw-close { width: 24px; height: 24px; border-radius: 50%; background: var(--lx-veil); margin-right: 5px; }
+:root[data-desktop="linux"] .tb-adw-close:hover { background: var(--lx-veil-hover); }
+:root[data-desktop="linux"] .tb-adw-close:active { background: var(--lx-veil-active); }
+:root[data-desktop="linux"] .tb-adw-close svg { width: 14px; height: 14px; }
+
+/* The search entry, in the place of the title (GtkSearchEntry) */
+:root[data-desktop="linux"] .tb-adw-search {
+    justify-self: center;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: min(360px, 100%);
+    height: 34px;
+    padding: 0 9px;
+    border-radius: 6px;
+    background: var(--lx-veil);
+    color: var(--lx-dim);
+}
+:root[data-desktop="linux"] .tb-adw-search:focus-within { outline: 2px solid var(--lx-focus); outline-offset: -2px; }
+:root[data-desktop="linux"] .tb-adw-search svg { flex: none; width: 16px; height: 16px; }
+:root[data-desktop="linux"] .tb-adw-search input, :root[data-desktop="linux"] .tb-adw-search input:focus { outline: none; box-shadow: none; }
+:root[data-desktop="linux"] .tb-adw-search input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--lx-fg); font: inherit; font-size: 15px; }
+:root[data-desktop="linux"] .tb-adw-search input::-webkit-search-cancel-button { display: none; }
+
+/* The page: its groups, 600 px at most, as AdwPreferencesPage (an AdwClamp) */
+:root[data-desktop="linux"] .tb-adw-body { flex: 1; min-height: 0; overflow: auto; padding: 12px 12px 30px; scrollbar-width: thin; }
+:root[data-desktop="linux"] .tb-adw-body .tb-narrow { max-width: 600px; margin: 0 auto; }
+:root[data-desktop="linux"] .tb-adw-body .tb-pref-group {
+    margin: 0 0 24px;
+    padding: 0;
+    border: 0;
+    background: none;
+    box-shadow: none;
+    animation: none;
+}
+/* The title of a group: above its list, bold */
+:root[data-desktop="linux"] .tb-adw-body .tb-pref-heading { margin: 0 0 12px; font-size: 15px; font-weight: 700; color: var(--lx-fg); }
+/* Its boxed list: rows of 50 px at least, a hairline between them */
+:root[data-desktop="linux"] .tb-adw-body .tb-prefs {
+    gap: 0;
+    border-radius: 12px;
+    background: var(--adw-row);
+    box-shadow: var(--lx-card-shadow);
+    overflow: hidden;
+}
+:root[data-desktop="linux"][data-theme="dark"] .tb-adw-body .tb-prefs { box-shadow: none; }
+:root[data-desktop="linux"] .tb-adw-body .tb-pref {
+    gap: 12px;
+    min-height: 50px;
+    padding: 8px 12px;
+    border-top: 1px solid var(--lx-shade);
+    box-sizing: border-box;
+}
+:root[data-desktop="linux"][data-theme="dark"] .tb-adw-body .tb-pref { border-top-color: rgb(0 0 6 / .36); }
+:root[data-desktop="linux"] .tb-adw-body .tb-pref:first-child { border-top: 0; padding-top: 8px; }
+:root[data-desktop="linux"] .tb-adw-body a.tb-pref:hover { background: var(--lx-flat-hover); }
+/* The rows of Adwaita have no icon of their own here; their title in the weight of the text */
+:root[data-desktop="linux"] .tb-adw-body .tb-pref > .tb-section-icon { display: none; }
+:root[data-desktop="linux"] .tb-adw-body .tb-pref-text strong { font-size: 15px; font-weight: 400; color: var(--lx-fg); }
+:root[data-desktop="linux"] .tb-adw-body .tb-pref-text .tb-muted { font-size: 13px; color: var(--lx-dim); }
+:root[data-desktop="linux"] .tb-adw-body .tb-pref-scope { margin: 12px 0 0; font-size: 13px; color: var(--lx-dim); }
+
+/* Search: only the rows that match, and the groups that keep one */
+:root[data-desktop="linux"] .tb-adw-body .tb-adw-hidden { display: none !important; }
+:root[data-desktop="linux"] .tb-adw-body.tb-adw-searching .tb-pref-group > :not(.tb-pref-heading, .tb-prefs) { display: none; }
+:root[data-desktop="linux"] .tb-adw-body.tb-adw-searching .tb-pref:not(.tb-adw-hidden) { border-top: 0; }
+:root[data-desktop="linux"] .tb-adw-body.tb-adw-searching .tb-pref:not(.tb-adw-hidden) ~ .tb-pref:not(.tb-adw-hidden) { border-top: 1px solid var(--lx-shade); }
+/* AdwStatusPage: nothing found */
+:root[data-desktop="linux"] .tb-adw-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 64px 12px;
+    text-align: center;
+    color: var(--lx-dim);
+}
+:root[data-desktop="linux"] .tb-adw-empty svg { width: 96px; height: 96px; margin-bottom: 20px; opacity: .5; }
+:root[data-desktop="linux"] .tb-adw-empty strong { font-size: 20px; font-weight: 800; color: var(--lx-fg); }
+
+/* A small window: the dialog takes all of it */
+@media (max-width: 480px), (max-height: 420px) {
+    :root[data-desktop="linux"] .tb-adw-scrim { padding: 0; }
+    :root[data-desktop="linux"] .tb-adw-dialog { width: 100%; height: 100%; border-radius: var(--lx-radius); }
+}
+@media (prefers-reduced-motion: reduce) {
+    :root[data-desktop="linux"] :is(.tb-adw-scrim, .tb-adw-dialog) { animation-duration: 1ms !important; }
+}

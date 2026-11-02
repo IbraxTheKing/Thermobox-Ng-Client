@@ -1,6 +1,7 @@
 import { inject } from '@angular/core';
 import { Router, Routes } from '@angular/router';
 
+import { adwPreferencesGuard } from './core/adw-preferences';
 import { adminGuard, loggedInGuard, managerGuard, passwordGuard, publicGuard } from './core/http';
 
 /**
@@ -36,6 +37,7 @@ export const routes: Routes = [
     path: 'settings',
     title: $localize`Paramètres`,
     data: { standalone: true },
+    canActivate: [adwPreferencesGuard],
     loadComponent: () => import('./pages/preferences/preferences').then((m) => m.PreferencesPage),
   },
   {
@@ -73,7 +75,7 @@ export const routes: Routes = [
       { path: 'profile', title: $localize`Mon profil`, loadComponent: () => import('./pages/profile/profile').then((m) => m.ProfilePage) },
       { path: 'about', title: $localize`À propos`, loadComponent: () => import('./pages/about/about').then((m) => m.AboutPage) },
       { path: 'more', title: $localize`Plus`, loadComponent: () => import('./pages/more/more').then((m) => m.MorePage) },
-      { path: 'preferences', title: $localize`Préférences`, loadComponent: () => import('./pages/preferences/preferences').then((m) => m.PreferencesPage) },
+      { path: 'preferences', title: $localize`Préférences`, canActivate: [adwPreferencesGuard], loadComponent: () => import('./pages/preferences/preferences').then((m) => m.PreferencesPage) },
     ],
   },
   // Addresses of the versions before 26.12 (bookmarks, shortcuts on a home screen)

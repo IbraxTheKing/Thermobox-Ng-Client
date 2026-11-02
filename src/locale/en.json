@@ -3095,6 +3095,22 @@
     "fr": "Oublier",
     "en": "Forget"
   },
+  "4756320131036675252": {
+    "fr": "Rechercher les préférences",
+    "en": "Search preferences"
+  },
+  "9059155436017318544": {
+    "fr": "Fermer",
+    "en": "Close"
+  },
+  "8332478813279888013": {
+    "fr": "Aucun résultat",
+    "en": "No results"
+  },
+  "4884836977009242867": {
+    "fr": "Aucune préférence ne correspond à la recherche.",
+    "en": "No preference matches the search."
+  },
   "16694699619925492": {
     "fr": "Graphique des températures",
     "en": "Temperature chart"
@@ -3126,10 +3142,6 @@
   "7362122314560708990": {
     "fr": "Réduire",
     "en": "Minimize"
-  },
-  "9059155436017318544": {
-    "fr": "Fermer",
-    "en": "Close"
   },
   "3951776232613752274": {
     "fr": "Afficher la barre latérale",
