@@ -8,6 +8,7 @@ import { ROLES, User, UserRole } from '../models/models';
 import { UserService } from '../services/user.service';
 import { AccessStore } from '../services/access.store';
 import { GroupService } from '../services/group.service';
+import { ServerFeaturesService } from '../services/server-features.service';
 import { TreeStore } from '../services/tree.store';
 import { bytes } from '../pages/auth/register';
 import { TbAccessTree } from './access-tree';
@@ -37,6 +38,26 @@ import { TrPipe } from './tr.pipe';
             <span class="tb-field-error">{{ e }}</span>
           }
         </div>
+        @if (features.people()) {
+          <div class="tb-field-row">
+            <div class="tb-field">
+              <label i18n class="tb-label" for="tb-u-first">Prénom</label>
+              <input id="tb-u-first" class="tb-input" autocomplete="off" maxlength="100" [value]="firstName()" (input)="firstName.set($any($event.target).value)" />
+            </div>
+            <div class="tb-field">
+              <label i18n class="tb-label" for="tb-u-last">Nom</label>
+              <input id="tb-u-last" class="tb-input" autocomplete="off" maxlength="100" [value]="lastName()" (input)="lastName.set($any($event.target).value)" />
+            </div>
+          </div>
+          <div class="tb-field">
+            <label i18n class="tb-label" for="tb-u-email">Adresse e-mail</label>
+            <input id="tb-u-email" class="tb-input" type="email" inputmode="email" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="255"
+                   [value]="email()" (input)="email.set($any($event.target).value)" [class.tb-invalid]="submitted() && emailError()" />
+            @if (submitted() && emailError(); as e) {
+              <span class="tb-field-error">{{ e }}</span>
+            }
+          </div>
+        }
         <div class="tb-field">
           <label i18n class="tb-label" for="tb-u-role">Rôle</label>
           <select id="tb-u-role" class="tb-select" [class.tb-invalid]="submitted() && !role()" [disabled]="isMe()" (change)="role.set($any($event.target).value)">
@@ -98,6 +119,18 @@ export class TbUserFormSheet {
   protected readonly access = inject(AccessStore);
   protected readonly tree = inject(TreeStore);
   private readonly groupsApi = inject(GroupService);
+  protected readonly features = inject(ServerFeaturesService);
+  protected readonly firstName = signal('');
+  protected readonly lastName = signal('');
+  protected readonly email = signal('');
+  protected readonly emailError = computed(() => {
+    const m = this.email().trim();
+    return m && (m.length > 255 || !/^[^@\s]+@[^@\s]+\.[^@\s.]+$/.test(m)) ? $localize`Adresse e-mail invalide` : null;
+  });
+  /** The names and the address, for the servers that keep them. */
+  private person(): { firstName?: string; lastName?: string; email?: string } {
+    return this.features.people() ? { firstName: this.firstName().trim(), lastName: this.lastName().trim(), email: this.email().trim() } : {};
+  }
   private readonly accessTree = viewChild(TbAccessTree);
 
   /** Creation: the groups it joins, and whether it sees everything or only what is ticked. */
@@ -153,6 +186,9 @@ export class TbUserFormSheet {
   private fill(u: User, role: UserRole | ''): void {
     this.user.set(u);
     this.name.set(u.username);
+    this.firstName.set(u.firstName ?? '');
+    this.lastName.set(u.lastName ?? '');
+    this.email.set(u.email ?? '');
     this.role.set(role);
     this.password.set('');
     this.submitted.set(false);
@@ -163,7 +199,7 @@ export class TbUserFormSheet {
     e.preventDefault();
     this.submitted.set(true);
     const role = this.role();
-    if (this.nameError() || this.passwordError() || !role) return;
+    if (this.nameError() || this.passwordError() || this.emailError() || !role) return;
     const name = this.name().trim();
     const u = this.user();
     this.saving.set(true);
@@ -173,7 +209,8 @@ export class TbUserFormSheet {
         await firstValueFrom(this.users.add({ username: name, password: this.password() }));
         const created = await firstValueFrom(this.users.getByUsername(name));
         const id = created?.id;
-        if (id != null && role !== 'VIEWER') await firstValueFrom(this.users.update(id, { type: role }));
+        const person = this.person();
+        if (id != null && (role !== 'VIEWER' || Object.values(person).some(Boolean))) await firstValueFrom(this.users.update(id, { type: role, ...person }));
         const extra = id != null ? await this.setUp(id, role) : [];
         const nothing = role !== 'ADMIN' && this.restricted() && !(this.accessTree()?.kept().length ?? 0) && !this.groups().size;
         this.toasts.info(
@@ -181,7 +218,7 @@ export class TbUserFormSheet {
           extra.length ? extra.join(', ') : nothing ? $localize`Il n'a encore accès à aucune salle : touche ses accès pour lui en donner.` : null,
         );
       } else if (u?.id != null) {
-        const update = await firstValueFrom(this.users.update(u.id, { username: name, type: role, ...(this.password() ? { password: this.password() } : {}) }));
+        const update = await firstValueFrom(this.users.update(u.id, { username: name, type: role, ...this.person(), ...(this.password() ? { password: this.password() } : {}) }));
         if (this.auth.isMe(u)) this.auth.updateUser(update);
         this.toasts.info($localize`Utilisateur « ${name} » modifié`);
       }
@@ -189,7 +226,12 @@ export class TbUserFormSheet {
       this.saved.emit();
     } catch (err) {
       const m = errorMessage(err, $localize`Enregistrement impossible`);
-      this.toasts.error(m === 'Username already taken' ? $localize`Ce nom d'utilisateur est déjà pris` : $localize`Enregistrement impossible`, m === 'Username already taken' ? null : m);
+      const known: Record<string, string> = {
+        'Username already taken': $localize`Ce nom d'utilisateur est déjà pris`,
+        'Email address already used': $localize`Cette adresse est déjà utilisée par un autre compte`,
+        'Invalid email address': $localize`Adresse e-mail invalide`,
+      };
+      this.toasts.error(known[m] ?? $localize`Enregistrement impossible`, known[m] ? null : m);
     } finally {
       this.saving.set(false);
     }

@@ -39,6 +39,10 @@ export class ServerFeaturesService {
   readonly v2 = computed(() => !!this.api()?.v2);
   /** Name, version, logo of the server (26.11 or later). */
   readonly info = computed<ServerInfo | null>(() => this.api()?.info ?? null);
+  /** What the server says it can do beyond its API ("user-import", "provisional-passwords"…). */
+  readonly features = computed(() => new Set(this.info()?.features ?? []));
+  /** Accounts with a first name, a last name and an address (ThermoBox 26.12, V8). */
+  readonly people = computed(() => this.features().has('provisional-passwords'));
   /** Its logo, null before 26.12. */
   readonly logo = computed(() => (this.v2() ? this.versions.logo(this.server.base(), 192) : null));
 

@@ -74,6 +74,9 @@ export class NotificationService {
   readonly denied = signal(false);
   readonly active = computed(() => this.available && this.prefs.notifications() && this.auth.loggedIn() && !this.denied());
 
+  /** The last question to the server: when, how many changes, or why it failed (Préférences). */
+  readonly last = signal<{ at: Date; events: number; error: string | null } | null>(null);
+
   private timer?: ReturnType<typeof setInterval>;
   private busy = false;
   private listening = false;
@@ -138,6 +141,7 @@ export class NotificationService {
       const r = await firstValueFrom(this.http.get<SetpointEvents>(this.server.url('/notifications/setpoints'), { params }));
       this.supported.set(true);
       write(sinceKey, r.now);
+      this.last.set({ at: new Date(), events: r.events.length, error: null });
       // The first time: from now on, not what happened before the notifications were on
       if (since) await this.notify(r.events);
     } catch (e) {
@@ -145,9 +149,23 @@ export class NotificationService {
         this.supported.set(false);
         this.stop();
       }
+      this.last.set({ at: new Date(), events: 0, error: e instanceof HttpErrorResponse ? `HTTP ${e.status}` : String((e as Error)?.message ?? e) });
     } finally {
       this.busy = false;
     }
+  }
+
+  /**
+   * Préférences › « Tester »: a notification now, to see that the system shows them (allowed,
+   * not silenced); then the server is asked at once. False when the system refused.
+   */
+  async test(): Promise<boolean> {
+    const allowed = await this.permission(true);
+    this.denied.set(!allowed);
+    if (!allowed) return false;
+    await this.send([{ title: $localize`Notification de test`, body: $localize`Les changements de consigne de tes salles s'afficheront ainsi.`, roomId: null }]);
+    void this.check();
+    return true;
   }
 
   /** The texts for [events] (one each, or one for all when they are many). */
@@ -177,7 +195,10 @@ export class NotificationService {
 
   private async notify(events: SetpointEvent[]): Promise<void> {
     if (!events.length) return;
-    const texts = this.texts(events);
+    await this.send(this.texts(events));
+  }
+
+  private async send(texts: NotificationText[]): Promise<void> {
     if (Capacitor.isNativePlatform()) {
       const { LocalNotifications } = await import('@capacitor/local-notifications');
       await LocalNotifications.schedule({

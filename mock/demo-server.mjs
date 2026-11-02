@@ -741,6 +741,11 @@ route('PUT', '/api/v2/users/{id}', 'owner', ({ p, body, user }) => {
   }
   if (c.password) u.password = c.password;
   if (c.type) u.type = c.type;
+  if (typeof c.email === 'string' && c.email.trim()) {
+    const m = c.email.trim();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s.]+$/.test(m)) return error(400, 'Invalid email address');
+    if (users.some((x) => x !== u && x.email?.toLowerCase() === m.toLowerCase())) return error(409, 'Email address already used');
+  }
   for (const k of ['firstName', 'lastName', 'email']) if (typeof c[k] === 'string') u[k] = c[k].trim() || null;
   return ok(userDto(u));
 });
@@ -951,7 +956,9 @@ function watchChanges(curve, sp, since, now) {
   let start = 0;
   let last = 0;
   const confirm = () => {
-    if (confirmed && confirmed !== cand && start >= since) out.push({ previous: confirmed, state: cand, at: start, temperature: last });
+    // Given in the period in which it became known (start + hold), as the server
+    const known = start + WATCH.hold;
+    if (confirmed && confirmed !== cand && known > since && known <= now) out.push({ previous: confirmed, state: cand, at: start, temperature: last });
     confirmed = cand;
   };
   for (const t of curve) {

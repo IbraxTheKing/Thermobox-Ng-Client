@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, DOCUMENT, effect, inject } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { ChangeDetectionStrategy, Component, DOCUMENT, effect, inject, signal } from '@angular/core';
+import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 
 import { AnimationsService } from './core/animations';
 import { AuthService } from './core/auth';
@@ -44,11 +44,20 @@ export class App {
     inject(DesktopService).start();
     // Apps: notifications of the setpoint (Préférences turns them on)
     inject(NotificationService).start();
+    // The pages of the app (its side bar, the Acrylic of Windows around it) or those around it
+    // (login, adding an account while logged in, the new password): by the page shown, not by
+    // being logged in
     const auth = inject(AuthService);
     const body = inject(DOCUMENT).body;
+    const router = inject(Router);
+    const inApp = signal(location.pathname.startsWith('/app'));
+    router.events.subscribe((e) => {
+      if (e instanceof NavigationEnd) inApp.set(e.urlAfterRedirects.startsWith('/app'));
+    });
     effect(() => {
-      body.classList.toggle('tb-app', auth.loggedIn());
-      body.classList.toggle('tb-public', !auth.loggedIn());
+      const app = auth.loggedIn() && inApp();
+      body.classList.toggle('tb-app', app);
+      body.classList.toggle('tb-public', !app);
     });
   }
 }
