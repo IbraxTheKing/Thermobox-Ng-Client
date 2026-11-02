@@ -21,7 +21,7 @@
  */
 import { createServer } from 'node:http';
 import { randomBytes } from 'node:crypto';
-import { gzipSync } from 'node:zlib';
+import { gzipSync, inflateRawSync } from 'node:zlib';
 import os from 'node:os';
 import { readFile, stat } from 'node:fs/promises';
 import { extname, join, normalize, resolve } from 'node:path';
@@ -53,7 +53,9 @@ const users = [
   { id: id(), username: 'admin', password: 'admin1234', type: 'ADMIN' },
   { id: id(), username: 'gestion', password: 'gestion1234', type: 'MANAGER' },
   { id: id(), username: 'lecteur', password: 'lecteur1234', type: 'VIEWER' },
-  { id: id(), username: 'camille', password: 'camille1234', type: 'VIEWER' },
+  { id: id(), username: 'camille', password: 'camille1234', type: 'VIEWER', firstName: 'Camille', lastName: 'Roux', email: 'camille.roux@exemple.fr' },
+  // Imported account, its provisional password not changed yet (26.12)
+  { id: id(), username: 'nouveau', password: 'Prov-2026-demo', type: 'VIEWER', firstName: 'Noé', lastName: 'Martin', email: 'noe.martin@exemple.fr', mustChangePassword: true, provisionalExpiresAt: Date.now() + 7 * 24 * 3600 * 1000 },
 ];
 
 /** Elements: { id, name, kind }, links child → parent (and the children of each, rebuilt on change). */
@@ -400,7 +402,17 @@ function iso(ms) {
 const point = (t) => ({ date: iso(t.date), value: Math.round(t.value * 100) / 100 });
 const elementDto = (e, accessible = true) => ({ id: e.id, name: e.name, kind: e.kind, accessible });
 const setpointDto = (c) => ({ value: c.setpoint.value, date: iso(c.setpoint.date), inherited: c.inherited, sourceId: c.source.id, sourceName: c.source.name });
-const userDto = (u) => ({ id: u.id, username: u.username, type: u.type });
+const localIso = (t) => (t == null ? null : new Date(t - new Date(t).getTimezoneOffset() * 60000).toISOString().slice(0, 19));
+const userDto = (u) => ({
+  id: u.id,
+  username: u.username,
+  type: u.type,
+  firstName: u.firstName ?? null,
+  lastName: u.lastName ?? null,
+  email: u.email ?? null,
+  mustChangePassword: !!u.mustChangePassword,
+  provisionalExpiresAt: u.mustChangePassword ? localIso(u.provisionalExpiresAt) : null,
+});
 
 function node(e, user, p) {
   const parentId = parents.get(e.id) ?? null;
@@ -469,6 +481,9 @@ route('POST', '/api/v2/auth/login', 'public', ({ body }) => {
   if (!c.username || !c.password) return error(400, 'username and password are required');
   const u = users.find((x) => x.username === String(c.username).trim() && x.password === c.password);
   if (!u) return error(401, 'Invalid username or password');
+  if (u.mustChangePassword && u.provisionalExpiresAt && u.provisionalExpiresAt < Date.now()) {
+    return { status: 401, body: { error: 'Provisional password expired: ask an administrator for a new one', code: 'provisional_expired' } };
+  }
   const token = randomBytes(24).toString('base64url');
   const expiresAt = new Date(Date.now() + 8 * HOUR).toISOString();
   tokens.set(token, { userId: u.id, expiresAt });
@@ -476,6 +491,214 @@ route('POST', '/api/v2/auth/login', 'public', ({ body }) => {
 });
 route('POST', '/api/v2/auth/logout', 'auth', ({ token }) => (tokens.delete(token), empty()));
 route('GET', '/api/v2/auth/me', 'auth', ({ user }) => ok(userDto(user)));
+route('GET', '/api/v2/auth/password-policy', 'public', () => ok({ minLength: 10, maxBytes: 72, letter: true, digit: true, notUsername: true }));
+route('POST', '/api/v2/auth/password', 'auth', ({ body, user }) => {
+  const c = json(body) ?? {};
+  if (!c.currentPassword || !c.newPassword) return error(400, 'currentPassword and newPassword are required');
+  if (c.currentPassword !== user.password) return { status: 403, body: { error: 'The current password is wrong', code: 'wrong_password' } };
+  const p = String(c.newPassword);
+  const problems = [];
+  if (p.length < 10) problems.push('too_short');
+  if (!/\p{L}/u.test(p)) problems.push('no_letter');
+  if (!/\d/.test(p)) problems.push('no_digit');
+  if (user.username.length >= 3 && p.toLowerCase().includes(user.username.toLowerCase())) problems.push('contains_username');
+  if (p === user.password) problems.push('same_as_current');
+  if (problems.length) return { status: 400, body: { error: 'The new password is refused', code: 'password_refused', problems } };
+  user.password = p;
+  user.mustChangePassword = false;
+  user.provisionalExpiresAt = null;
+  return empty();
+});
+
+// ---- provisional passwords and import of accounts (26.12)
+const PROV_ALPHABET = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+function provisionalPassword() {
+  for (;;) {
+    const b = randomBytes(12);
+    const t = [...b].map((x) => PROV_ALPHABET[x % PROV_ALPHABET.length]).join('');
+    if (/\d/.test(t) && /[a-z]/.test(t) && /[A-Z]/.test(t)) return t.match(/.{4}/g).join('-');
+  }
+}
+route('POST', '/api/v2/users/{id}/provisional-password', 'ADMIN', ({ p, q }) => {
+  const u = users.find((x) => x.id === +p.id);
+  if (!u) return empty(404);
+  const days = Math.min(90, Math.max(1, Number(q.get('days')) || 7));
+  u.password = provisionalPassword();
+  u.mustChangePassword = true;
+  u.provisionalExpiresAt = Date.now() + days * 24 * 3600 * 1000;
+  return ok({ id: u.id, username: u.username, password: u.password, expiresAt: localIso(u.provisionalExpiresAt) });
+});
+
+/** Minimal reading of .xlsx (first sheet, shared and inline texts) for the demo. */
+function readXlsx(buf) {
+  const files = new Map();
+  let end = buf.length - 22;
+  while (end >= 0 && buf.readUInt32LE(end) !== 0x06054b50) end--;
+  if (end < 0) throw Object.assign(new Error('Not an Excel workbook (.xlsx).'), { code: 'not_xlsx' });
+  let at = buf.readUInt32LE(end + 16);
+  const n = buf.readUInt16LE(end + 10);
+  for (let i = 0; i < n; i++) {
+    const method = buf.readUInt16LE(at + 10), size = buf.readUInt32LE(at + 20), nameLen = buf.readUInt16LE(at + 28), extra = buf.readUInt16LE(at + 30), comment = buf.readUInt16LE(at + 32), local = buf.readUInt32LE(at + 42);
+    const name = buf.subarray(at + 46, at + 46 + nameLen).toString();
+    const start = local + 30 + buf.readUInt16LE(local + 26) + buf.readUInt16LE(local + 28);
+    const data = buf.subarray(start, start + size);
+    files.set(name, method === 8 ? inflateRawSync(data).toString('utf8') : data.toString('utf8'));
+    at += 46 + nameLen + extra + comment;
+  }
+  const unxml = (t) => t.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&amp;/g, '&');
+  const shared = [...(files.get('xl/sharedStrings.xml') ?? '').matchAll(/<si>([\s\S]*?)<\/si>/g)].map((m) => unxml([...m[1].matchAll(/<t[^>]*>([\s\S]*?)<\/t>/g)].map((x) => x[1]).join('')));
+  const sheet = files.get('xl/worksheets/sheet1.xml');
+  if (!sheet) throw Object.assign(new Error('The workbook has no sheet.'), { code: 'not_xlsx' });
+  const col = (r) => [...r.replace(/\d/g, '')].reduce((a, c) => a * 26 + c.charCodeAt(0) - 64, 0) - 1;
+  return [...sheet.matchAll(/<row[^>]*>([\s\S]*?)<\/row>/g)].map((row) => {
+    const line = [];
+    for (const c of row[1].matchAll(/<c r="([A-Z]+\d+)"([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g)) {
+      const t = /t="(\w+)"/.exec(c[2])?.[1];
+      const v = /<v>([\s\S]*?)<\/v>/.exec(c[3] ?? '')?.[1] ?? '';
+      const text = t === 's' ? shared[+v] : t === 'inlineStr' ? unxml([...(c[3] ?? '').matchAll(/<t[^>]*>([\s\S]*?)<\/t>/g)].map((x) => x[1]).join('')) : unxml(v);
+      line[col(c[1])] = text ?? '';
+    }
+    return Array.from(line, (x) => x ?? '');
+  });
+}
+function readCsv(text) {
+  text = text.replace(/^\uFEFF/, '');
+  const first = text.split(/\r?\n/, 1)[0];
+  const sep = [';', ',', '\t'].sort((a, b) => first.split(b).length - first.split(a).length)[0];
+  const rows = [];
+  let row = [], field = '', quoted = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (quoted) {
+      if (c === '"' && text[i + 1] === '"') (field += '"'), i++;
+      else if (c === '"') quoted = false;
+      else field += c;
+    } else if (c === '"' && !field) quoted = true;
+    else if (c === sep) row.push(field), (field = '');
+    else if (c === '\n' || c === '\r') {
+      if (c === '\r' && text[i + 1] === '\n') i++;
+      row.push(field), rows.push(row), (row = []), (field = '');
+    } else field += c;
+  }
+  if (field || row.length) row.push(field), rows.push(row);
+  return rows.filter((r) => r.some((x) => x.trim()));
+}
+const IMPORT_HEADERS = {
+  USERNAME: ['identifiant', 'login', 'username', 'user', 'utilisateur', 'compte', 'uid'],
+  FIRST_NAME: ['prenom', 'firstname', 'givenname', 'first'],
+  LAST_NAME: ['nom', 'lastname', 'surname', 'familyname', 'nomdefamille', 'last', 'name'],
+  EMAIL: ['email', 'mail', 'courriel', 'adressemail', 'adresseemail', 'emailaddress'],
+  ROLE: ['role', 'type', 'profil', 'droit', 'droits'],
+};
+const letters = (t) => String(t ?? '').normalize('NFD').replace(/\p{M}+/gu, '').replace(/œ/g, 'oe').replace(/æ/g, 'ae').replace(/[^a-zA-Z]/g, '');
+const importSessions = new Map();
+function openImport(user, source, rows) {
+  if (!rows.length) return { status: 400, body: { error: 'Empty list', code: 'empty' } };
+  const columns = rows[0].map((c, i) => String(c).trim() || `Colonne ${i + 1}`);
+  const data = rows.slice(1).map((r) => columns.map((_, i) => String(r[i] ?? '').trim())).filter((r) => r.some(Boolean));
+  if (!data.length) return { status: 400, body: { error: 'No line under the names of the columns', code: 'empty' } };
+  const sid = randomBytes(18).toString('base64url');
+  importSessions.set(sid, { owner: user.id, source, columns, rows: data });
+  const suggested = {};
+  for (const [field, names] of Object.entries(IMPORT_HEADERS)) {
+    const c = columns.find((x) => names.includes(letters(x).toLowerCase()) && !Object.values(suggested).includes(x));
+    if (c) suggested[field] = c;
+  }
+  return ok({ id: sid, source, columns, sample: data.slice(0, 5), rowCount: data.length, suggested });
+}
+const roleOf = (t) => {
+  const k = letters(t).toLowerCase();
+  if (['admin', 'administrateur', 'administratrice', 'administrator'].includes(k)) return 'ADMIN';
+  if (['manager', 'gestionnaire', 'gestion', 'responsable'].includes(k)) return 'MANAGER';
+  if (['viewer', 'lecteur', 'lectrice', 'lecture', 'observateur', 'utilisateur', 'user', 'employe'].includes(k)) return 'VIEWER';
+  return null;
+};
+function planImport(s, o) {
+  const takenNames = new Set(users.map((u) => u.username.toLowerCase()));
+  const takenMails = new Set(users.map((u) => u.email?.toLowerCase()).filter(Boolean));
+  const fileNames = new Set(), fileMails = new Set();
+  const idx = Object.fromEntries(Object.entries(o.mapping ?? {}).map(([f, c]) => [f, s.columns.indexOf(c)]).filter(([, i]) => i >= 0));
+  const cell = (r, f) => (idx[f] != null ? r[idx[f]] : '') || null;
+  return s.rows.map((r, i) => {
+    const problems = [];
+    let dup = false;
+    const first = cell(r, 'FIRST_NAME'), last = cell(r, 'LAST_NAME'), email = cell(r, 'EMAIL');
+    if (email) {
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s.]+$/.test(email)) problems.push('email_invalid');
+      else if (takenMails.has(email.toLowerCase())) problems.push('email_taken'), (dup = true);
+      else if (fileMails.has(email.toLowerCase())) problems.push('email_repeated'), (dup = true);
+    }
+    const roleText = cell(r, 'ROLE');
+    const role = roleText ? roleOf(roleText) : o.defaultRole ?? 'VIEWER';
+    if (!role) problems.push('role_unknown');
+    let username = null, made = false, adjusted = false;
+    const given = cell(r, 'USERNAME');
+    if (given) {
+      const clean = letters(given);
+      if (!clean || /\d/.test(given)) problems.push('username_invalid');
+      else if (takenNames.has(clean.toLowerCase())) problems.push('username_taken'), (dup = true), (username = clean);
+      else if (fileNames.has(clean.toLowerCase())) problems.push('username_repeated'), (dup = true), (username = clean);
+      else (username = clean), (adjusted = clean !== given);
+    } else {
+      const f = letters(first).toLowerCase(), l = letters(last).toLowerCase();
+      const base = f && l ? f[0] + l : f + l;
+      if (base) {
+        const free = (x) => !takenNames.has(x) && !fileNames.has(x);
+        username = [base, f + l, ...'abcdefghijklmnopqrstuvwxyz'.split('').map((x) => base + x)].find(free) ?? null;
+        made = !!username;
+      }
+      if (!username) problems.push('username_missing');
+    }
+    const status = problems.some((p) => !/taken|repeated/.test(p)) ? 'INVALID' : dup ? 'DUPLICATE' : 'CREATE';
+    if (status === 'CREATE') fileNames.add(username.toLowerCase()), email && fileMails.add(email.toLowerCase());
+    return { line: i + 2, username, firstName: first, lastName: last, email, role: role ?? o.defaultRole ?? 'VIEWER', status, problems, usernameMade: made, usernameAdjusted: adjusted };
+  });
+}
+route('GET', '/api/v2/users/import/sources', 'ADMIN', () => ok([{ name: 'Annuaire RH (démo)' }]));
+route('POST', '/api/v2/users/import/file', 'ADMIN', ({ body, q, user }) => {
+  const name = (q.get('name') ?? 'liste').toLowerCase();
+  if (!body.length) return { status: 400, body: { error: 'Missing file', code: 'empty' } };
+  if (body.length > 10 * 1024 * 1024) return { status: 413, body: { error: 'The file is too large.', code: 'too_large' } };
+  if (name.endsWith('.xls') || body[0] === 0xd0) return { status: 400, body: { error: 'Old Excel format', code: 'xls' } };
+  try {
+    const rows = body[0] === 0x50 && body[1] === 0x4b ? readXlsx(body) : readCsv(body.toString('utf8'));
+    return openImport(user, q.get('name') ?? 'liste', rows);
+  } catch (e) {
+    return { status: 400, body: { error: e.message, code: e.code ?? 'not_xlsx' } };
+  }
+});
+route('POST', '/api/v2/users/import/source', 'ADMIN', ({ body, user }) => {
+  const c = json(body) ?? {};
+  if (c.name !== 'Annuaire RH (démo)') return { status: 400, body: { error: 'No such source.', code: 'unknown_source' } };
+  const people = [['prenom', 'nom', 'mail', 'service']];
+  const firsts = ['Léa', 'Hugo', 'Chloé', 'Lucas', 'Inès', 'Jules', 'Manon', 'Louis', 'Zoé', 'Adam', 'Jade', 'Léo'];
+  const lasts = ['Bernard', 'Petit', 'Durand', 'Leroy', 'Moreau', 'Simon', 'Laurent', 'Lefèvre', 'Michel', 'Garcia', 'David', 'Bertrand'];
+  for (let i = 0; i < 24; i++) people.push([firsts[i % 12], lasts[(i * 5) % 12], `${letters(firsts[i % 12]).toLowerCase()}.${letters(lasts[(i * 5) % 12]).toLowerCase()}@exemple.fr`, ['Accueil', 'Maintenance', 'Direction'][i % 3]]);
+  return openImport(user, c.name, people);
+});
+route('POST', '/api/v2/users/import/{sid}/check', 'ADMIN', ({ p, body, user }) => {
+  const s = importSessions.get(p.sid);
+  if (!s || s.owner !== user.id) return { status: 404, body: { error: 'This import is no longer open', code: 'import_expired' } };
+  const rows = planImport(s, json(body) ?? {});
+  return ok({ rows, create: rows.filter((r) => r.status === 'CREATE').length, duplicates: rows.filter((r) => r.status === 'DUPLICATE').length, invalid: rows.filter((r) => r.status === 'INVALID').length });
+});
+route('POST', '/api/v2/users/import/{sid}/confirm', 'ADMIN', ({ p, body, user }) => {
+  const s = importSessions.get(p.sid);
+  if (!s || s.owner !== user.id) return { status: 404, body: { error: 'This import is no longer open', code: 'import_expired' } };
+  importSessions.delete(p.sid);
+  const o = json(body) ?? {};
+  const rows = planImport(s, o);
+  const expires = Date.now() + Math.min(90, Math.max(1, o.validityDays ?? 7)) * 24 * 3600 * 1000;
+  const created = [];
+  for (const r of rows.filter((x) => x.status === 'CREATE')) {
+    const u = { id: id(), username: r.username, password: provisionalPassword(), type: r.role, firstName: r.firstName, lastName: r.lastName, email: r.email, mustChangePassword: true, provisionalExpiresAt: expires };
+    users.push(u);
+    restricted.set(u.id, new Set());
+    created.push({ line: r.line, id: u.id, username: u.username, firstName: u.firstName, lastName: u.lastName, email: u.email, role: u.type, password: u.password, expiresAt: localIso(expires) });
+  }
+  return ok({ created, skipped: rows.filter((r) => r.status !== 'CREATE'), failed: [] });
+});
+route('DELETE', '/api/v2/users/import/{sid}', 'ADMIN', ({ p }) => (importSessions.delete(p.sid), empty()));
 
 // ---- users
 route('GET', '/api/v2/users', 'ADMIN', () => ok(users.map(userDto)));
@@ -509,6 +732,7 @@ route('PUT', '/api/v2/users/{id}', 'owner', ({ p, body, user }) => {
   }
   if (c.password) u.password = c.password;
   if (c.type) u.type = c.type;
+  for (const k of ['firstName', 'lastName', 'email']) if (typeof c[k] === 'string') u[k] = c[k].trim() || null;
   return ok(userDto(u));
 });
 route('DELETE', '/api/v2/users/{id}', 'owner', ({ p }) => {
@@ -995,7 +1219,7 @@ let logo = null;
 const logoVersion = () => (logo ? String(logo.version) : 'default');
 const serverInfo = () =>
   API === 'v2'
-    ? { name: 'ThermoBox', version: SERVER_VERSION, apiVersions: ['v1', 'v2'], logo: `/api/v2/server/logo?v=${logoVersion()}`, logoSource: logo ? 'custom' : 'default' }
+    ? { name: 'ThermoBox', version: SERVER_VERSION, apiVersions: ['v1', 'v2'], logo: `/api/v2/server/logo?v=${logoVersion()}`, logoSource: logo ? 'custom' : 'default', features: ['user-import', 'provisional-passwords'] }
     : { name: 'ThermoBox', version: SERVER_VERSION, apiVersions: ['v1'] };
 route('GET', '/api/v2/server', 'public', () => ok(serverInfo()));
 route('GET', '/api/v2/server/logo', 'public', () => {
@@ -1156,6 +1380,10 @@ createServer(async (req, res) => {
       const session = token && tokens.get(token);
       const user = session && Date.parse(session.expiresAt) > Date.now() && users.find((u) => u.id === session.userId);
       if (!user) return reply(error(401, token ? 'Invalid or expired token' : 'Missing bearer token'));
+      // A provisional password: only the account and the change of password (26.12)
+      if (user.mustChangePassword && !/^\/api\/v2\/auth\/(me|logout|password)$/.test(path)) {
+        return reply({ status: 403, body: { error: 'Password change required', code: 'password_change_required' } });
+      }
       const roleOk = r.role === 'auth' || user.type === 'ADMIN' || (r.role === 'MANAGER' && user.type === 'MANAGER') || (r.role === 'owner' && +ctx.p.id === user.id);
       if (!roleOk) return reply(error(403, 'Forbidden'));
       Object.assign(ctx, { user, token, scopeOf: scope(user) });
@@ -1171,7 +1399,7 @@ createServer(async (req, res) => {
 }).listen(PORT, () => {
   const api = { v2: 'v1 + v2 (26.12)', v1: 'v1, /api/server (26.11)', old: 'v1 only (before 26.11)' }[API];
   console.log(`ThermoBox (demo, API ${api}): http://localhost:${PORT}/api${APP ? `, app on http://localhost:${PORT}/` : ''}`);
-  console.log('Accounts: admin / admin1234 · gestion / gestion1234 · lecteur / lecteur1234 · camille / camille1234');
+  console.log('Accounts: admin / admin1234 · gestion / gestion1234 · lecteur / lecteur1234 · camille / camille1234 · nouveau / Prov-2026-demo (provisional)');
 });
 
 function send(res, r) {

@@ -36,6 +36,7 @@ import { TbAccounts } from '../ui/accounts';
 import { TbServerLogo } from '../ui/server-logo';
 import { TbSheet } from '../ui/sheet';
 import { Destination, lastTab, destinationsOf, barSlots } from './destinations';
+import { TbOnboardingGuide } from '../ui/onboarding-guide';
 import { TrPipe } from '../ui/tr.pipe';
 
 /** The lens follows the finger once held this long (ms), or as soon as the finger slides. */
@@ -56,7 +57,7 @@ const SLIDE = 8;
  */
 @Component({
   selector: 'tb-shell',
-  imports: [TrPipe, NgTemplateOutlet, RouterOutlet, RouterLink, RouterLinkActive, TbSheet, TbAccounts, TbServerLogo, TbSeasonDecor],
+  imports: [TrPipe, NgTemplateOutlet, RouterOutlet, RouterLink, RouterLinkActive, TbSheet, TbAccounts, TbServerLogo, TbSeasonDecor, TbOnboardingGuide],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './shell.html',
   host: {

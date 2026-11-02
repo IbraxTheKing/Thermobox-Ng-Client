@@ -253,6 +253,11 @@
           <span class="tb-pref-text"><strong i18n>À propos de Thermobox</strong><span i18n class="tb-muted">Versions du client et du serveur, code source, crédits</span></span>
           <i class="pi pi-angle-right tb-pref-chevron" aria-hidden="true"></i>
         </a>
+        <button type="button" class="tb-pref tb-pref-link" (click)="guide.start()">
+          <span class="tb-section-icon"><i class="pi pi-compass"></i></span>
+          <span class="tb-pref-text"><strong i18n>Revoir le guide de démarrage</strong><span i18n class="tb-muted">Les pages de ThermoBox et ce que ton rôle permet d'y faire</span></span>
+          <i class="pi pi-angle-right tb-pref-chevron" aria-hidden="true"></i>
+        </button>
       </div>
     }
     <p i18n class="tb-muted tb-pref-scope">Enregistré sur cet appareil uniquement. Interface : {{ platformName }}.</p>

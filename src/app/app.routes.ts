@@ -1,7 +1,7 @@
 import { inject } from '@angular/core';
 import { Router, Routes } from '@angular/router';
 
-import { adminGuard, loggedInGuard, managerGuard, publicGuard } from './core/http';
+import { adminGuard, loggedInGuard, managerGuard, passwordGuard, publicGuard } from './core/http';
 
 /**
  * Pages of the JSF interface, same order:
@@ -22,6 +22,13 @@ export const routes: Routes = [
     title: $localize`Inscription`,
     canActivate: [publicGuard],
     loadComponent: () => import('./pages/auth/register').then((m) => m.RegisterPage),
+  },
+  // A provisional password (imported account, reset by an admin): the user chooses theirs first
+  {
+    path: 'password',
+    title: $localize`Nouveau mot de passe`,
+    canActivate: [passwordGuard],
+    loadComponent: () => import('./pages/auth/password').then((m) => m.PasswordPage),
   },
   // Without an account (the buttons of the login page; the settings window of macOS): the
   // settings of this device, and À propos

@@ -79,7 +79,7 @@ export class ManagementPage implements OnInit {
   protected readonly phone = this.platform.phone;
 
   private readonly dialog = viewChild(ElementDialog);
-  private readonly accessTab = viewChild(AccessTab);
+  protected readonly accessTab = viewChild(AccessTab);
 
   protected readonly icons = ICONS;
   protected readonly labels = LABELS;
@@ -702,6 +702,10 @@ export class ManagementPage implements OnInit {
 
   /** Main action of the page (header button): a new element or a new group. */
   protected readonly accessView = computed(() => this.accessTab()?.view() ?? 'users');
+
+  protected importUsers(): void {
+    this.accessTab()?.importUsers();
+  }
 
   protected newUser(): void {
     this.accessTab()?.newUser();

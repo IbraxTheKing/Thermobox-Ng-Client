@@ -1,6 +1,7 @@
 import { DesktopService } from '../../core/desktop';
 import { VERSION_CLIENT } from '../../core/version';
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Router, RouterLink } from '@angular/router';
 
 import { ServerService, readableAddress, errorMessage, toBase } from '../../core/api.config';
@@ -139,17 +140,22 @@ export class LoginPage {
     try {
       await this.auth.login(this.username().trim(), this.password(), base);
       this.password.set('');
-      if (other) location.assign(new URL('app/apercu', document.baseURI).href);
+      // A provisional password: the user chooses theirs first (in this page, not a reload)
+      if (this.auth.mustChangePassword()) await this.router.navigateByUrl('/password');
+      else if (other) location.assign(new URL('app/apercu', document.baseURI).href);
       else await this.router.navigateByUrl('/app/overview');
     } catch (err) {
       this.password.set('');
       const m = errorMessage(err, $localize`Connexion impossible`);
+      const code = err instanceof HttpErrorResponse ? (err.error as { code?: string } | null)?.code : undefined;
       this.error.set(
-        m === 'Invalid username or password'
-          ? $localize`Nom d'utilisateur ou mot de passe incorrect`
-          : m.startsWith('Too many attempts')
-            ? $localize`Trop de tentatives : réessaie dans quelques minutes`
-            : m,
+        code === 'provisional_expired'
+          ? $localize`Ton mot de passe provisoire a expiré : demande-en un nouveau à un administrateur.`
+          : m === 'Invalid username or password'
+            ? $localize`Nom d'utilisateur ou mot de passe incorrect`
+            : m.startsWith('Too many attempts')
+              ? $localize`Trop de tentatives : réessaie dans quelques minutes`
+              : m,
       );
     } finally {
       this.inProgress.set(false);

@@ -41,6 +41,10 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   return next(query).pipe(
     catchError((err: unknown) => {
       if (err instanceof HttpErrorResponse && err.status === 401 && toApi && !login && !own) auth.expired();
+      // A provisional password: nothing else until the user has chosen theirs
+      if (err instanceof HttpErrorResponse && err.status === 403 && toApi && !own && (err.error as { code?: string } | null)?.code === 'password_change_required') {
+        auth.requirePasswordChange();
+      }
       return throwError(() => err);
     }),
     finalize(() => {
@@ -49,10 +53,18 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   );
 };
 
-/** Pages of a logged-in user. */
+/** Pages of a logged-in user; with a provisional password, the page to choose one first. */
 export const loggedInGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
-  return auth.loggedIn() ? true : inject(Router).createUrlTree(['/login']);
+  if (!auth.loggedIn()) return inject(Router).createUrlTree(['/login']);
+  return auth.mustChangePassword() ? inject(Router).createUrlTree(['/password']) : true;
+};
+
+/** The page of the new password: only for an account whose password is provisional. */
+export const passwordGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  if (!auth.loggedIn()) return inject(Router).createUrlTree(['/login']);
+  return auth.mustChangePassword() ? true : inject(Router).createUrlTree(['/app/overview']);
 };
 
 /**

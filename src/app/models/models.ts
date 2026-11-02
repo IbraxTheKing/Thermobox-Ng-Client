@@ -19,11 +19,20 @@ export type UserRole = 'ADMIN' | 'MANAGER' | 'VIEWER';
 
 export const ROLES: readonly UserRole[] = ['ADMIN', 'MANAGER', 'VIEWER'];
 
-/** UserDto: the API never sends the password back. */
+/**
+ * UserDto: the API never sends the password back. [mustChangePassword]: the password is a
+ * provisional one (imported account, reset by an admin): it must be replaced before anything else
+ * (servers 26.12 and later), until [provisionalExpiresAt].
+ */
 export interface User {
   id?: number;
   username: string;
   type?: UserRole | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  email?: string | null;
+  mustChangePassword?: boolean;
+  provisionalExpiresAt?: string | null;
 }
 
 /** Body of POST /api/v2/users (registration) and PUT /api/v2/users/{id} (partial update). */
@@ -31,6 +40,85 @@ export interface UserChanges {
   username?: string;
   password?: string;
   type?: UserRole;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+}
+
+/** POST /api/v2/users/{id}/provisional-password: shown once, never kept by the server in clear. */
+export interface ProvisionalPassword {
+  id: number | null;
+  username: string;
+  password: string;
+  /** ISO local date-time; null: no limit. */
+  expiresAt: string | null;
+}
+
+/** GET /api/v2/auth/password-policy */
+export interface PasswordPolicy {
+  minLength: number;
+  maxBytes: number;
+  letter: boolean;
+  digit: boolean;
+  notUsername: boolean;
+}
+
+/** Fields of an account a column of an imported list can give. */
+export type ImportField = 'USERNAME' | 'FIRST_NAME' | 'LAST_NAME' | 'EMAIL' | 'ROLE';
+
+/** POST /api/v2/users/import/file or /source: the list read, waiting to be checked. */
+export interface ImportSession {
+  id: string;
+  source: string;
+  columns: string[];
+  sample: string[][];
+  rowCount: number;
+  suggested: Partial<Record<ImportField, string>>;
+}
+
+export interface ImportOptions {
+  mapping: Partial<Record<ImportField, string>>;
+  defaultRole: UserRole;
+  validityDays: number;
+}
+
+export interface ImportRow {
+  line: number;
+  username: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  email: string | null;
+  role: UserRole;
+  status: 'CREATE' | 'DUPLICATE' | 'INVALID';
+  problems: string[];
+  usernameMade: boolean;
+  usernameAdjusted: boolean;
+}
+
+export interface ImportCheck {
+  rows: ImportRow[];
+  create: number;
+  duplicates: number;
+  invalid: number;
+}
+
+/** An account created by an import, with its provisional password (the only time it is given). */
+export interface CreatedAccount {
+  line: number;
+  id: number | null;
+  username: string;
+  firstName: string | null;
+  lastName: string | null;
+  email: string | null;
+  role: UserRole;
+  password: string;
+  expiresAt: string | null;
+}
+
+export interface ImportResult {
+  created: CreatedAccount[];
+  skipped: ImportRow[];
+  failed: { line: number; problem: string }[];
 }
 
 export interface LoginResponse {

@@ -14,6 +14,7 @@ import { NotificationService } from '../../core/notifications';
 import { LANGUAGES, language, systemLanguage } from '../../core/i18n';
 import { AccentService, DEFAULT_SWATCH, PALETTES, swatch } from '../../core/accent';
 import { locale } from '../../core/i18n';
+import { OnboardingService } from '../../core/onboarding';
 import { TrPipe } from '../../ui/tr.pipe';
 
 /**
@@ -29,6 +30,7 @@ import { TrPipe } from '../../ui/tr.pipe';
 })
 export class PreferencesPage {
   protected readonly auth = inject(AuthService);
+  protected readonly guide = inject(OnboardingService);
   protected readonly prefs = inject(PreferencesService);
   protected readonly keyboard = inject(KeyboardService);
   protected readonly platform = inject(PlatformService);

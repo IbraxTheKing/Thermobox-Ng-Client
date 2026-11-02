@@ -7,7 +7,12 @@
     @if (accessView() === 'groups') {
       <button i18n type="button" class="tb-btn tb-btn-lg tb-fab" (click)="newGroup()"><i class="pi pi-users"></i>Nouveau groupe</button>
     } @else {
-      <button i18n type="button" class="tb-btn tb-btn-lg tb-fab" (click)="newUser()"><i class="pi pi-user-plus"></i>Nouvel utilisateur</button>
+      <span class="tb-head-actions">
+        @if (accessTab()?.canImport()) {
+          <button i18n type="button" class="tb-btn tb-tonal tb-btn-lg tb-import-btn" (click)="importUsers()"><i class="pi pi-file-import"></i>Importer</button>
+        }
+        <button i18n type="button" class="tb-btn tb-btn-lg tb-fab" (click)="newUser()"><i class="pi pi-user-plus"></i>Nouvel utilisateur</button>
+      </span>
     }
   }
   @if (auth.admin() && tab() === 'rooms' && !selectionMode()) {

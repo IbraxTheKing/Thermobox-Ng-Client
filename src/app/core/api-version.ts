@@ -27,6 +27,8 @@ export interface ServerInfo {
   logo?: string | null;
   /** "custom" (given by an ADMIN), "site" (of the website the server belongs to), "default". */
   logoSource?: string | null;
+  /** What the server can do beyond its API version: "user-import", "provisional-passwords"… */
+  features?: string[];
 }
 
 export interface ServerApi {

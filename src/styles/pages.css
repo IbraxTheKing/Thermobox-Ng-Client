@@ -593,3 +593,134 @@ button.tb-update-installation-head.tb-card-head { margin-bottom: 0; }
 .tb-update-installed-line { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
 .tb-update-installed .tb-update-notes { margin-top: 8px; }
 .tb-card.tb-update-installed:has(.tb-update-notes[open]) { align-items: flex-start; }
+
+/* ============================== New password (provisional one replaced: pages/auth/password) */
+
+.tb-password-card > .tb-muted { margin: 0 0 12px; }
+.tb-password-expiry { display: flex; align-items: center; gap: 6px; }
+.tb-password-rules { display: grid; gap: 4px; margin: 10px 0 0; padding: 0; list-style: none; font-size: .86rem; color: var(--md-on-surface-variant); }
+.tb-password-rules li { display: flex; align-items: center; gap: 8px; transition: color .2s ease; }
+.tb-password-rules .pi { font-size: .9rem; }
+.tb-password-rules .tb-rule-ok { color: var(--tb-ok, var(--md-primary)); }
+
+/* ============================== Import of users (ui/user-import-sheet, ui/password-handover) */
+
+.tb-head-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.tb-user-person { display: block; font-size: .82rem; }
+.tb-user-provisional { display: inline-flex; align-items: center; gap: 4px; margin-top: 3px; }
+.tb-user-provisional .pi { font-size: .75rem; }
+
+/* The four steps, in a line above the content */
+.tb-steps { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 0 0 18px; padding: 0; list-style: none; font-size: .88rem; color: var(--md-on-surface-variant); }
+.tb-steps li { display: flex; align-items: center; gap: 8px; }
+.tb-step-n {
+    display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%;
+    border: 1.5px solid currentColor; font-size: .78rem; font-weight: 600;
+}
+.tb-steps .tb-step-on { color: var(--md-on-surface); font-weight: 600; }
+.tb-steps .tb-step-on .tb-step-n { border-color: var(--md-primary); background: var(--md-primary); color: var(--md-on-primary); }
+.tb-steps .tb-step-done .tb-step-n { border-color: var(--md-primary); color: var(--md-primary); }
+
+/* The file: dropped on the box, or picked by a click on it */
+.tb-drop {
+    position: relative; display: grid; justify-items: center; gap: 8px; padding: 32px 20px;
+    border: 2px dashed var(--md-outline-variant); border-radius: var(--tb-shape-lg);
+    text-align: center; cursor: pointer; transition: border-color .15s ease, background-color .15s ease;
+}
+.tb-drop input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.tb-drop > .pi { font-size: 2rem; color: var(--md-primary); }
+.tb-drop:hover, .tb-drop-over { border-color: var(--md-primary); background: color-mix(in srgb, var(--md-primary) 6%, transparent); }
+.tb-drop:focus-within { outline: 2px solid var(--md-primary); outline-offset: 2px; }
+.tb-import-sources { display: grid; gap: 8px; margin-top: 18px; }
+.tb-import-source-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.tb-import-privacy { display: flex; gap: 6px; align-items: flex-start; margin-top: 16px; font-size: .84rem; }
+
+.tb-import-mapping { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 4px 18px; margin-bottom: 8px; }
+.tb-import-preview, .tb-import-check, .tb-handover-table { max-height: 46vh; overflow: auto; margin: 6px 0 12px; }
+.tb-import-preview table { font-size: .84rem; }
+.tb-import-preview th, .tb-import-preview td { white-space: nowrap; max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
+.tb-import-preview th .tb-tag { margin-left: 6px; }
+.tb-import-preview .tb-col-used { background: color-mix(in srgb, var(--md-primary) 7%, transparent); }
+.tb-import-preview td:not(.tb-col-used) { color: var(--md-on-surface-variant); }
+
+.tb-import-check { font-size: .88rem; }
+.tb-import-check .tb-col-line { width: 56px; color: var(--md-on-surface-variant); font-variant-numeric: tabular-nums; }
+.tb-import-check .tb-tag { margin-left: 4px; }
+.tb-import-state { display: inline-flex; align-items: flex-start; gap: 6px; }
+.tb-import-state .pi { margin-top: 3px; }
+.tb-import-CREATE .tb-import-state { color: var(--tb-stable, var(--md-primary)); }
+.tb-import-DUPLICATE .tb-import-state { color: var(--tb-on-heating-container, var(--md-on-surface-variant)); }
+.tb-import-INVALID .tb-import-state { color: var(--md-error); }
+.tb-import-INVALID td:not(:last-child) { color: var(--md-on-surface-variant); }
+.tb-import-chip-ok .pi, .tb-import-chip-dup .pi, .tb-import-chip-bad .pi { margin-right: 4px; }
+.tb-import-done { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 1.05rem; font-weight: 600; }
+.tb-import-done > .pi { color: var(--tb-stable, var(--md-primary)); }
+
+.tb-handover-warning { margin-bottom: 12px; }
+.tb-handover-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 4px; }
+.tb-handover-mail { display: block; font-size: .8rem; }
+.tb-handover-password { display: inline-flex; align-items: center; gap: 4px; }
+.tb-handover-password code {
+    padding: 3px 8px; border-radius: 6px; background: var(--md-surface-container-high);
+    font: 600 .95rem ui-monospace, "Cascadia Mono", Consolas, monospace; letter-spacing: .04em; user-select: all;
+}
+
+/* ============================== Guide of a first visit (ui/onboarding-guide) */
+
+.tb-guide-scrim {
+    position: fixed; inset: 0; z-index: 2600;
+    background: color-mix(in srgb, var(--tb-scrim, #000) 38%, transparent);
+    animation: tb-fade-in .25s ease both;
+}
+/* The link of the navigation the step speaks of, ringed above the scrim */
+.tb-guide-ring {
+    position: fixed; z-index: 2601; pointer-events: none;
+    border-radius: 14px;
+    box-shadow: 0 0 0 3px var(--md-primary), 0 0 0 9px color-mix(in srgb, var(--md-primary) 25%, transparent);
+    transition: left .3s var(--tb-ease), top .3s var(--tb-ease), width .3s var(--tb-ease), height .3s var(--tb-ease);
+    animation: tb-guide-pulse 1.8s ease-in-out infinite;
+}
+@keyframes tb-guide-pulse { 50% { box-shadow: 0 0 0 3px var(--md-primary), 0 0 0 14px color-mix(in srgb, var(--md-primary) 10%, transparent); } }
+.tb-guide {
+    position: fixed; z-index: 2602; left: 50%; top: 50%;
+    width: min(500px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow: auto;
+    transform: translate(-50%, -50%);
+    padding: 28px 28px 20px; box-sizing: border-box;
+    border-radius: var(--tb-shape-xl, 28px);
+    background: var(--md-surface-container-high, var(--tb-glass-solid));
+    color: var(--md-on-surface);
+    box-shadow: var(--tb-raised-3, 0 24px 48px rgb(0 0 0 / .25));
+    text-align: center; outline: none;
+    animation: tb-guide-in .35s var(--tb-ease) both;
+}
+@keyframes tb-guide-in { from { opacity: 0; transform: translate(-50%, -46%) scale(.97); } }
+.tb-guide-art {
+    display: grid; place-items: center; width: 72px; height: 72px; margin: 0 auto 14px;
+    border-radius: 24px; background: var(--md-primary-container, color-mix(in srgb, var(--md-primary) 16%, transparent));
+    color: var(--md-on-primary-container, var(--md-primary));
+}
+.tb-guide-art .pi { font-size: 1.9rem; }
+.tb-guide-role { margin: 0 0 4px; color: var(--md-on-surface-variant); font-size: .82rem; }
+.tb-guide h2 { margin: 0 0 10px; font-size: 1.35rem; }
+.tb-guide-text { margin: 0 auto 18px; max-width: 36ch; color: var(--md-on-surface-variant); line-height: 1.5; min-height: 4.5em; }
+.tb-guide-dots { display: flex; justify-content: center; gap: 6px; margin-bottom: 18px; }
+.tb-guide-dots button {
+    width: 8px; height: 8px; padding: 0; border: 0; border-radius: 4px;
+    background: color-mix(in srgb, var(--md-on-surface) 22%, transparent); cursor: pointer;
+    transition: width .25s var(--tb-ease), background-color .25s ease;
+}
+.tb-guide-dots .tb-guide-dot-on { width: 22px; background: var(--md-primary); }
+.tb-guide-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 4px 8px; }
+.tb-guide-actions .tb-btn { white-space: nowrap; }
+.tb-guide-skip { margin-right: auto; }
+.tb-guide-next .pi { margin: 0 0 0 6px; }
+@media (prefers-reduced-motion: reduce) { .tb-guide, .tb-guide-ring, .tb-guide-scrim { animation: none; transition: none; } }
+:root[data-motion="off"] :is(.tb-guide, .tb-guide-ring, .tb-guide-scrim) { animation: none; transition: none; }
+
+.tb-handover-expiry { display: flex; align-items: center; gap: 6px; }
+@media (max-width: 480px) {
+    .tb-guide { padding: 24px 20px 16px; }
+    .tb-guide-actions { justify-content: space-between; }
+    .tb-guide-actions .tb-guide-next { flex: 1 1 auto; justify-content: center; }
+    .tb-guide-skip { order: 3; width: 100%; margin: 4px 0 0; justify-content: center; }
+}

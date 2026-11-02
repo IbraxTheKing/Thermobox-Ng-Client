@@ -24,6 +24,11 @@ import { followSelectionBar } from '../../ui/selection-bar';
 import { TrPipe } from '../../ui/tr.pipe';
 import { MenuList, SEPARATOR, TbContextMenu, showMenu } from '../../core/context-menu';
 import { TAURI } from '../../core/tauri';
+import { ServerService } from '../../core/api.config';
+import { ApiVersionService } from '../../core/api-version';
+import { UserImportService } from '../../services/user-import.service';
+import { TbUserImportSheet } from '../../ui/user-import-sheet';
+import { Handover, TbPasswordHandover } from '../../ui/password-handover';
 
 /**
  * « Utilisateurs et groupes » tab of the Gestion page (ADMIN only, gestion-droits.xhtml): roles
@@ -37,7 +42,7 @@ const NO_GROUP = -1;
 
 @Component({
   selector: 'tb-access',
-  imports: [TbContextMenu, TrPipe, TbSheet, TbSwitch, TbMultipleChoice, TbAccessTree, TbPager, TbUserAccessSheet, TbUserGroupsSheet, TbUserFormSheet],
+  imports: [TbContextMenu, TrPipe, TbSheet, TbSwitch, TbMultipleChoice, TbAccessTree, TbPager, TbUserAccessSheet, TbUserGroupsSheet, TbUserFormSheet, TbUserImportSheet, TbPasswordHandover],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './access.html',
 })
@@ -107,7 +112,10 @@ export class AccessTab implements OnInit {
     const members = new Set(this.access.groups().filter((g) => gf.has(g.id)).flatMap((g) => g.members.map((m) => m.id)));
     return this.access.users().filter(
       (l) =>
-        (!word || l.user.username.toLowerCase().includes(word) || l.groups.some((g) => g.toLowerCase().includes(word))) &&
+        (!word ||
+          l.user.username.toLowerCase().includes(word) ||
+          l.groups.some((g) => g.toLowerCase().includes(word)) ||
+          [l.user.firstName, l.user.lastName, l.user.email].some((v) => v?.toLowerCase().includes(word))) &&
         (!roles.size || roles.has(l.user.type!)) &&
         (!gf.size || members.has(l.user.id!) || (gf.has(NO_GROUP) && !l.groups.length)),
     );
@@ -185,9 +193,73 @@ export class AccessTab implements OnInit {
   // ---------------------------------------------------------------- accounts
 
   protected readonly userForm = viewChild.required(TbUserFormSheet);
+  private readonly importSheet = viewChild.required(TbUserImportSheet);
+  private readonly importApi = inject(UserImportService);
+  private readonly versions = inject(ApiVersionService);
+  private readonly server = inject(ServerService);
+
+  /** What the server can do (26.12 and later): import accounts, give provisional passwords. */
+  private readonly features = computed(() => new Set(this.versions.known()[this.server.base()]?.info?.features ?? []));
+  readonly canImport = computed(() => this.features().has('user-import'));
+  protected readonly canProvision = computed(() => this.features().has('provisional-passwords'));
 
   newUser(): void {
     this.userForm().create();
+  }
+
+  importUsers(): void {
+    this.importSheet().open();
+  }
+
+  /** « Jean Dupont · jean.dupont@… », what the server knows of the person (imported accounts). */
+  protected person(l: UserRow): string | null {
+    const name = [l.user.firstName, l.user.lastName].filter(Boolean).join(' ');
+    return [name, l.user.email].filter(Boolean).join(' · ') || null;
+  }
+
+  protected provisionalExpired(l: UserRow): boolean {
+    const at = l.user.provisionalExpiresAt;
+    return !!at && Date.parse(at) < Date.now();
+  }
+
+  protected provisionalTitle(l: UserRow): string {
+    const at = l.user.provisionalExpiresAt;
+    return at ? $localize`Doit choisir son mot de passe ; le provisoire expire le ${new Date(at).toLocaleString()}` : $localize`Doit choisir son mot de passe à sa prochaine connexion`;
+  }
+
+  /** The provisional password just given, shown once. */
+  protected readonly handover = signal<Handover[] | null>(null);
+  protected readonly handoverShown = signal(false);
+
+  /**
+   * A new provisional password for [l] (forgotten, expired): their current one stops working,
+   * they choose theirs at their next login.
+   */
+  protected async provisional(l: UserRow): Promise<void> {
+    const ok = await this.confirm.ask(
+      $localize`Mot de passe provisoire`,
+      $localize`Donner un nouveau mot de passe provisoire à « ${l.user.username} » ? Son mot de passe actuel ne fonctionnera plus ; il choisira le sien à sa prochaine connexion.`,
+      { confirm: $localize`Donner un mot de passe` },
+    );
+    if (!ok) return;
+    try {
+      const p = await firstValueFrom(this.importApi.provisionalPassword(l.user.id!));
+      this.userSheet.set(false);
+      this.handover.set([
+        {
+          username: p.username,
+          name: [l.user.firstName, l.user.lastName].filter(Boolean).join(' '),
+          email: l.user.email ?? null,
+          role: l.user.type ?? 'VIEWER',
+          password: p.password,
+          expiresAt: p.expiresAt,
+        },
+      ]);
+      this.handoverShown.set(true);
+      await this.load();
+    } catch (e) {
+      this.toasts.error($localize`Mot de passe provisoire impossible`, errorMessage(e));
+    }
   }
 
   protected editUser(l: UserRow): void {
@@ -439,6 +511,7 @@ export class AccessTab implements OnInit {
         { label: $localize`Accès`, action: () => this.accessSheet().open(l) },
         { label: $localize`Groupes`, action: () => this.groupsSheet().open(l) },
         { label: $localize`Nouveau groupe avec lui`, action: () => this.newGroupWith(l) },
+        this.canProvision() && !this.auth.isMe(l.user) && { label: $localize`Mot de passe provisoire…`, action: () => this.provisional(l) },
         SEPARATOR,
         { label: $localize`Cocher`, checked, action: () => this.check(l.user.id!, !checked) },
         SEPARATOR,
