@@ -179,25 +179,17 @@
         </div>
       }
     </div>
+    <!-- The list itself in its own dialog (the « ? » key, the main menu of the desktop apps) -->
     @if (hasKeyboard && prefs.keyboard()) {
-      <div class="tb-shortcuts">
-        @for (g of keyboard.groups(); track g.group) {
-          <section class="tb-shortcuts-group">
-            <h3>{{ g.group }}</h3>
-            <dl>
-              @for (r of g.shortcuts; track r.text) {
-                <div class="tb-shortcut">
-                  <dt>
-                    @for (t of r.keys; track $index) {
-                      @if (t === '…') { … } @else { <kbd>{{ t }}</kbd> }
-                    }
-                  </dt>
-                  <dd>{{ r.text }}</dd>
-                </div>
-              }
-            </dl>
-          </section>
-        }
+      <div class="tb-prefs tb-prefs-more">
+        <button type="button" class="tb-pref tb-pref-link tb-pref-shortcuts" (click)="keyboard.help.set(true)">
+          <span class="tb-section-icon"><i class="pi pi-th-large"></i></span>
+          <span class="tb-pref-text">
+            <strong i18n>Tous les raccourcis</strong>
+            <span i18n class="tb-muted">La liste des touches, par page ; aussi avec <kbd>?</kbd></span>
+          </span>
+          <i class="pi pi-angle-right tb-pref-chevron" aria-hidden="true"></i>
+        </button>
       </div>
     }
   </section>

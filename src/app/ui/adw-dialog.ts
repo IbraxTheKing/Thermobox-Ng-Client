@@ -3,37 +3,43 @@ import {
   Component,
   DOCUMENT,
   ElementRef,
+  Injector,
   afterNextRender,
+  computed,
   effect,
   inject,
   signal,
   untracked,
   viewChild,
-  Injector,
 } from '@angular/core';
 
-import { AdwPreferencesService } from '../core/adw-preferences';
+import { AdwDialogKind, AdwDialogsService } from '../core/adw-dialogs';
+import { AboutPage } from '../pages/about/about';
 import { PreferencesPage } from '../pages/preferences/preferences';
 
 /** How long AdwDialog takes to go (linux.css, adw-dialog-out). */
 const CLOSING = 200;
 
 /**
- * The Linux app: Préférences as an AdwPreferencesDialog of libadwaita (the preferences of
- * Fichiers, of Paramètres…). A dialog over the window, its own header bar: the search button at
- * the start, the title in the middle, the round close button at the end. The groups of the page,
- * their title above their boxed list. The search (the button, Ctrl+F, or typing) keeps the rows
- * whose title or description match, and the groups that still have one; « Aucun résultat »
- * otherwise. Escape closes the search, then the dialog.
+ * The Linux app: the dialogs of libadwaita over the window, their own header bar.
  *
- * A link of the page (À propos, the guide) closes the dialog: what it opens is behind it.
+ * - Préférences: an AdwPreferencesDialog (the preferences of Fichiers, of Paramètres…). The search
+ *   button at the start, the title in the middle, the round close button at the end; the groups of
+ *   the page, their title above their boxed list. The search (the button, Ctrl+F, or typing) keeps
+ *   the rows whose title or description match, and the groups that still have one; « Aucun
+ *   résultat » otherwise. Escape closes the search, then the dialog.
+ * - À propos: an AdwAboutDialog: no title, the logo, the name and the version in the middle, then
+ *   the lists of the page (versions, code source, crédits).
+ *
+ * A link of the app in it (À propos from Préférences, the guide) closes the dialog: what it opens
+ * is behind it, or the other dialog. Links to the web open outside and leave it open.
  */
 @Component({
-  selector: 'tb-adw-preferences-dialog',
-  imports: [PreferencesPage],
+  selector: 'tb-adw-dialog',
+  imports: [PreferencesPage, AboutPage],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    @if (shown()) {
+    @if (shown(); as kind) {
       <div
         class="tb-adw-scrim"
         [class.tb-adw-closing]="closing()"
@@ -42,42 +48,47 @@ const CLOSING = 200;
         <section
           #box
           class="tb-adw-dialog"
+          [class.tb-adw-about]="kind === 'about'"
           [class.tb-adw-closing]="closing()"
           role="dialog"
           aria-modal="true"
-          aria-labelledby="tb-adw-prefs-title"
+          aria-labelledby="tb-adw-title"
           tabindex="-1"
           (keydown)="key($event)"
         >
           <header class="tb-adw-head">
-            <button
-              type="button"
-              class="tb-adw-head-btn"
-              [class.tb-adw-on]="searching()"
-              [attr.aria-pressed]="searching()"
-              (click)="toggleSearch()"
-              i18n-title
-              title="Rechercher"
-              i18n-aria-label
-              aria-label="Rechercher"
-            >
-              <svg viewBox="0 0 16 16" aria-hidden="true">
-                <circle
-                  cx="6.5"
-                  cy="6.5"
-                  r="4.75"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                />
-                <path
-                  d="M10 10l4.25 4.25"
-                  stroke="currentColor"
-                  stroke-width="1.75"
-                  stroke-linecap="round"
-                />
-              </svg>
-            </button>
+            @if (kind === 'preferences') {
+              <button
+                type="button"
+                class="tb-adw-head-btn"
+                [class.tb-adw-on]="searching()"
+                [attr.aria-pressed]="searching()"
+                (click)="toggleSearch()"
+                i18n-title
+                title="Rechercher"
+                i18n-aria-label
+                aria-label="Rechercher"
+              >
+                <svg viewBox="0 0 16 16" aria-hidden="true">
+                  <circle
+                    cx="6.5"
+                    cy="6.5"
+                    r="4.75"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                  />
+                  <path
+                    d="M10 10l4.25 4.25"
+                    stroke="currentColor"
+                    stroke-width="1.75"
+                    stroke-linecap="round"
+                  />
+                </svg>
+              </button>
+            } @else {
+              <span></span>
+            }
             @if (searching()) {
               <label class="tb-adw-search">
                 <svg viewBox="0 0 16 16" aria-hidden="true">
@@ -107,9 +118,16 @@ const CLOSING = 200;
                   aria-label="Rechercher les préférences"
                 />
               </label>
-              <h2 id="tb-adw-prefs-title" class="tb-adw-visually-hidden">{{ title() }}</h2>
+              <h2 id="tb-adw-title" class="tb-adw-visually-hidden">{{ title() }}</h2>
             } @else {
-              <h2 id="tb-adw-prefs-title" class="tb-adw-title">{{ title() }}</h2>
+              <!-- AdwAboutDialog has no title of its own: its name is in the middle of it -->
+              <h2
+                id="tb-adw-title"
+                class="tb-adw-title"
+                [class.tb-adw-visually-hidden]="kind === 'about'"
+              >
+                {{ title() }}
+              </h2>
             }
             <button
               type="button"
@@ -134,11 +152,19 @@ const CLOSING = 200;
             #body
             class="tb-adw-body"
             [class.tb-adw-searching]="query().trim() !== ''"
+            (pointerdown)="armed = dialogs.shown"
+            (keydown)="armed = dialogs.shown"
             (click)="bodyClick($event)"
           >
-            <!-- Loaded the first time the dialog opens (the page of Préférences is a chunk of its own) -->
-            @defer (on immediate) {
-              <tb-preferences dialog [standalone]="dialog.standalone()" />
+            <!-- Loaded the first time the dialog opens (the pages are chunks of their own) -->
+            @if (kind === 'preferences') {
+              @defer (on immediate) {
+                <tb-preferences dialog [standalone]="dialogs.standalone()" />
+              }
+            } @else {
+              @defer (on immediate) {
+                <tb-about dialog [standalone]="dialogs.standalone()" />
+              }
             }
             @if (empty()) {
               <div class="tb-adw-empty" role="status">
@@ -168,17 +194,20 @@ const CLOSING = 200;
     }
   `,
 })
-export class TbAdwPreferencesDialog {
-  protected readonly dialog = inject(AdwPreferencesService);
+export class TbAdwDialog {
+  protected readonly dialogs = inject(AdwDialogsService);
   private readonly doc = inject(DOCUMENT);
   private readonly injector = inject(Injector);
 
-  protected readonly shown = signal(false);
+  /** What is shown: stays during the closing animation. */
+  protected readonly shown = signal<AdwDialogKind | null>(null);
   protected readonly closing = signal(false);
   protected readonly searching = signal(false);
   protected readonly query = signal('');
   protected readonly empty = signal(false);
   protected pressed = false;
+  /** How many times a dialog had opened when the click on a link began. */
+  protected armed = 0;
 
   private readonly box = viewChild<ElementRef<HTMLElement>>('box');
   private readonly body = viewChild<ElementRef<HTMLElement>>('body');
@@ -186,17 +215,22 @@ export class TbAdwPreferencesDialog {
   private before: HTMLElement | null = null;
   private timer?: ReturnType<typeof setTimeout>;
 
-  protected readonly title = () =>
-    this.dialog.standalone() ? $localize`Paramètres` : $localize`Préférences`;
+  protected readonly title = computed(() =>
+    this.shown() === 'about'
+      ? $localize`À propos`
+      : this.dialogs.standalone()
+        ? $localize`Paramètres`
+        : $localize`Préférences`,
+  );
 
   constructor() {
     effect(() => {
-      const open = this.dialog.open();
-      untracked(() => (open ? this.opened() : this.closed()));
+      const kind = this.dialogs.open();
+      untracked(() => (kind ? this.opened(kind) : this.closed()));
     });
     effect(() => {
       const q = this.query();
-      if (this.shown()) untracked(() => this.filter(q));
+      if (this.shown() === 'preferences') untracked(() => this.filter(q));
     });
     // A click on the scrim (pressed and released on it) closes, as AdwDialog
     this.doc.addEventListener('click', (e) => {
@@ -207,20 +241,25 @@ export class TbAdwPreferencesDialog {
   }
 
   close(): void {
-    this.dialog.close();
+    this.dialogs.close();
   }
 
-  private opened(): void {
+  private opened(kind: AdwDialogKind): void {
     clearTimeout(this.timer);
     if (!this.shown()) this.before = this.doc.activeElement as HTMLElement | null;
     this.closing.set(false);
     this.searching.set(false);
     this.query.set('');
-    this.shown.set(true);
+    this.empty.set(false);
+    this.shown.set(kind);
     this.doc.body.style.overflow = 'hidden';
-    afterNextRender(() => this.box()?.nativeElement.focus({ preventScroll: true }), {
-      injector: this.injector,
-    });
+    afterNextRender(
+      () => {
+        this.box()?.nativeElement.focus({ preventScroll: true });
+        this.body()?.nativeElement.scrollTo({ top: 0 });
+      },
+      { injector: this.injector },
+    );
   }
 
   private closed(): void {
@@ -228,7 +267,7 @@ export class TbAdwPreferencesDialog {
     this.closing.set(true);
     this.doc.body.style.overflow = '';
     this.timer = setTimeout(() => {
-      this.shown.set(false);
+      this.shown.set(null);
       this.closing.set(false);
       if (this.before?.isConnected) this.before.focus({ preventScroll: true });
     }, CLOSING);
@@ -267,7 +306,8 @@ export class TbAdwPreferencesDialog {
       else this.close();
       return;
     }
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
+    const prefs = this.shown() === 'preferences';
+    if (prefs && (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
       e.preventDefault();
       this.startSearch(this.query());
       return;
@@ -275,31 +315,23 @@ export class TbAdwPreferencesDialog {
     // Typing starts the search (type-to-search of GTK), not in a field nor on a control; the
     // keys typed before the entry has the focus go into it
     const t = e.target as HTMLElement;
-    const typed = e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey;
-    if (this.searching() && typed && !t.closest('input, textarea, select, [contenteditable]')) {
+    const typed = e.key.length === 1 && e.key !== ' ' && !e.ctrlKey && !e.altKey && !e.metaKey;
+    const field = !!t.closest('input, textarea, select, [contenteditable]');
+    if (prefs && typed && !field) {
       e.preventDefault();
-      this.startSearch(this.query() + e.key);
-      e.stopPropagation();
-      return;
-    }
-    if (
-      !this.searching() &&
-      e.key.length === 1 &&
-      e.key !== ' ' &&
-      !e.ctrlKey &&
-      !e.altKey &&
-      !e.metaKey &&
-      !t.closest('input, textarea, select, [contenteditable]')
-    ) {
-      e.preventDefault();
-      this.startSearch(e.key);
+      this.startSearch((this.searching() ? this.query() : '') + e.key);
     }
     // The shortcuts of the app don't run under the dialog
     e.stopPropagation();
   }
 
   protected bodyClick(e: MouseEvent): void {
-    if ((e.target as Element).closest('a.tb-pref-link, a[href]')) this.close();
+    // A link of the app (an address of its own, the guide); not a page of the web
+    // (once the router has done with it: À propos from Préférences opens the other dialog)
+    if (!(e.target as Element).closest('a.tb-pref-link, a[href^="/"]')) return;
+    // (the router may already have run its guard: compared with the count before the click)
+    const shown = this.armed;
+    setTimeout(() => shown === this.dialogs.shown && this.close());
   }
 
   /** The rows whose title or description match, and the groups that still have one. */

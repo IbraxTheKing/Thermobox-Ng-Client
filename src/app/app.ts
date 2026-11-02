@@ -15,11 +15,12 @@ import { TbConfirm, TbToasts } from './ui/hosts';
 import { TbDesktopChrome } from './ui/desktop-chrome';
 import { DesktopService } from './core/desktop';
 import { DESKTOP_OS } from './core/tauri';
-import { TbAdwPreferencesDialog } from './ui/adw-preferences-dialog';
+import { TbAdwDialog } from './ui/adw-dialog';
+import { TbSheet } from './ui/sheet';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, TbToasts, TbConfirm, TbDesktopChrome, TbAdwPreferencesDialog],
+  imports: [RouterOutlet, TbToasts, TbConfirm, TbDesktopChrome, TbAdwDialog, TbSheet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <tb-desktop-chrome />
@@ -27,12 +28,35 @@ import { TbAdwPreferencesDialog } from './ui/adw-preferences-dialog';
     <tb-toasts />
     <tb-confirm />
     @if (linux) {
-      <tb-adw-preferences-dialog />
+      <tb-adw-dialog />
     }
+    <!-- "?" : keyboard shortcuts (here, not in the shell: also from the settings of the login page) -->
+    <tb-sheet class="tb-keyboard-sheet" [(open)]="keyboard.help" i18n-title title="Raccourcis clavier" [width]="760">
+      <div class="tb-shortcuts">
+        @for (g of keyboard.groups(); track g.group) {
+          <section class="tb-shortcuts-group">
+            <h3>{{ g.group }}</h3>
+            <dl>
+              @for (r of g.shortcuts; track r.text) {
+                <div class="tb-shortcut">
+                  <dt>
+                    @for (t of r.keys; track $index) {
+                      @if (t === '…') { … } @else { <kbd>{{ t }}</kbd> }
+                    }
+                  </dt>
+                  <dd>{{ r.text }}</dd>
+                </div>
+              }
+            </dl>
+          </section>
+        }
+      </div>
+    </tb-sheet>
   `,
 })
 export class App {
-  /** The Linux app: Préférences as a dialog of libadwaita. */
+  protected readonly keyboard = inject(KeyboardService);
+  /** The Linux app: Préférences and À propos as dialogs of libadwaita. */
   protected readonly linux = DESKTOP_OS === 'linux';
 
   constructor() {

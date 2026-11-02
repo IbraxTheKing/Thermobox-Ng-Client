@@ -55,6 +55,10 @@
     "fr": "Préférences",
     "en": "Preferences"
   },
+  "4614707419003618549": {
+    "fr": "Raccourcis clavier",
+    "en": "Keyboard shortcuts"
+  },
   "4606916689314514635": {
     "fr": "Océan",
     "en": "Ocean"
@@ -2039,13 +2043,17 @@
     "fr": " Affichage et saisie des températures et des consignes. Elles restent enregistrées en Celsius : les autres utilisateurs gardent leur unité. ",
     "en": " Display and entry of temperatures and setpoints. They stay saved in Celsius: the other users keep their unit. "
   },
-  "4614707419003618549": {
-    "fr": "Raccourcis clavier",
-    "en": "Keyboard shortcuts"
-  },
   "4155375298641848652": {
     "fr": "Sur ordinateur : naviguer, chercher, revenir à l'aperçu… sans la souris. {$START_TAG_KBD}?{$CLOSE_TAG_KBD} affiche cette liste depuis n'importe quelle page.",
     "en": "On a computer: navigate, search, go back to the overview… without the mouse. {$START_TAG_KBD}?{$CLOSE_TAG_KBD} shows this list from any page."
+  },
+  "8864047773458003397": {
+    "fr": "Tous les raccourcis",
+    "en": "All shortcuts"
+  },
+  "1859693947045353647": {
+    "fr": "La liste des touches, par page ; aussi avec {$START_TAG_KBD}?{$CLOSE_TAG_KBD}",
+    "en": "The list of keys, page by page; also with {$START_TAG_KBD}?{$CLOSE_TAG_KBD}"
   },
   "5851560788527570644": {
     "fr": "Notifications",

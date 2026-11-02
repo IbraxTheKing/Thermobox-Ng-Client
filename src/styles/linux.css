@@ -482,8 +482,43 @@
 
 /* ============================== Scroll bars (overlay, thin) */
 
-:root[data-desktop="linux"] { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, currentColor 30%, transparent) transparent; }
-:root[data-desktop="linux"] * { scrollbar-width: thin; }
+/* The scroll bar of the window: hidden (it went over the header bar and the rounded corner),
+   drawn as the overlay scroll bar of GTK 4 under the header bar instead (gtk-scrollbar.ts) */
+:root[data-desktop="linux"] { scrollbar-width: none; }
+:root[data-desktop="linux"]::-webkit-scrollbar { display: none; width: 0; height: 0; }
+:root[data-desktop="linux"] * { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, currentColor 30%, transparent) transparent; }
+.tb-gtk-scrollbar {
+    position: fixed;
+    top: calc(var(--tb-chrome-top) + 3px);
+    right: 0;
+    bottom: calc(var(--lx-radius) / 2 + 3px);
+    z-index: 2900;
+    width: 14px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .3s ease;
+}
+.tb-gtk-scrollbar.tb-gtk-visible { opacity: 1; pointer-events: auto; }
+.tb-gtk-scrollbar.tb-gtk-none { display: none; }
+/* The slider: a thin line, wider under the pointer or dragged */
+.tb-gtk-thumb {
+    position: absolute;
+    top: 0;
+    right: 3px;
+    width: 3px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--lx-fg) 45%, transparent);
+    outline: 1px solid color-mix(in srgb, var(--lx-window) 60%, transparent);
+    transition: width .15s ease, background-color .15s ease;
+}
+.tb-gtk-scrollbar:hover .tb-gtk-thumb, .tb-gtk-scrollbar.tb-gtk-dragging .tb-gtk-thumb { width: 8px; }
+.tb-gtk-scrollbar:hover .tb-gtk-thumb:hover, .tb-gtk-scrollbar.tb-gtk-dragging .tb-gtk-thumb { background: color-mix(in srgb, var(--lx-fg) 70%, transparent); }
+@media (prefers-reduced-motion: reduce) {
+    .tb-gtk-scrollbar, .tb-gtk-thumb { transition: none; }
+}
+
+/* « Retour » in the head of a page (a room…): the back button of the header bar is there */
+:root[data-desktop="linux"] .tb-page-head .tb-back { display: none; }
 
 /* ============================== Motion of Adwaita: short, eased, nothing that bounces */
 
@@ -676,3 +711,32 @@
 @media (prefers-reduced-motion: reduce) {
     :root[data-desktop="linux"] :is(.tb-adw-scrim, .tb-adw-dialog) { animation-duration: 1ms !important; }
 }
+
+/* À propos: AdwAboutDialog: narrower, the logo, the name and the version in the middle */
+:root[data-desktop="linux"] .tb-adw-dialog.tb-adw-about { width: min(480px, 100%); height: min(680px, 100%); }
+:root[data-desktop="linux"] .tb-adw-about .tb-about-mark { flex-direction: column; gap: 12px; margin: 0 0 30px; text-align: center; }
+:root[data-desktop="linux"] .tb-adw-about .tb-about-mark > div { align-items: center; gap: 4px; }
+:root[data-desktop="linux"] .tb-adw-about .tb-about-mark .tb-logo-xl { width: 128px; height: 128px; }
+:root[data-desktop="linux"] .tb-adw-about .tb-about-mark strong { font-size: 26px; font-weight: 800; letter-spacing: 0; color: var(--lx-fg); }
+:root[data-desktop="linux"] .tb-adw-about .tb-about-mark .tb-muted { font-size: 15px; color: var(--lx-dim); }
+/* The version: a pill in the accent, as the version button of AdwAboutDialog */
+:root[data-desktop="linux"] .tb-about-pill {
+    margin-top: 10px;
+    padding: 3px 12px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--md-primary) 15%, transparent);
+    color: var(--md-primary);
+    font-size: 14px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+:root[data-desktop="linux"] .tb-adw-about .tb-list-title { margin: 24px 0 12px; font-size: 15px; font-weight: 700; letter-spacing: 0; text-transform: none; color: var(--lx-fg); }
+:root[data-desktop="linux"] .tb-adw-about .tb-list-group { margin-bottom: 12px; border-radius: 12px; background: var(--adw-row); }
+:root[data-desktop="linux"][data-theme="dark"] .tb-adw-about .tb-list-group { box-shadow: none; }
+:root[data-desktop="linux"] .tb-adw-about .tb-list-icon { display: none; }
+:root[data-desktop="linux"] .tb-adw-about .tb-about-license { margin: 24px 0 0; font-size: 13px; color: var(--lx-dim); }
+/* Préférences: the second list of a group (Tous les raccourcis) */
+:root[data-desktop="linux"] .tb-adw-body .tb-prefs-more { margin-top: 12px; }
+:root[data-desktop="linux"] .tb-adw-body .tb-prefs-more > .tb-pref:first-child { border-top: 0; padding-top: 8px; }
+:root[data-desktop="linux"] .tb-adw-body button.tb-pref-link:hover { background: var(--lx-flat-hover); }
+:root[data-desktop="linux"] .tb-adw-body .tb-pref-link:hover strong { color: var(--lx-fg); }
