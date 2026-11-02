@@ -2,6 +2,8 @@ import { ChangeDetectionStrategy, Component, DOCUMENT, ElementRef, computed, eff
 
 import { AuthService } from '../core/auth';
 import { OnboardingService } from '../core/onboarding';
+import { PlatformService } from '../core/platform';
+import { DESKTOP_OS } from '../core/tauri';
 import { TrPipe } from './tr.pipe';
 
 interface Step {
@@ -18,6 +20,11 @@ interface Step {
  * accounts (import included) and the server. A card in the middle of the screen, one step at a
  * time, the place of the app it speaks of ringed in the navigation; « Passer » at every step,
  * Escape too. Replayed from Préférences › Divers.
+ *
+ * - Phones: the card sits at the bottom, above the bar of the app (under the thumb, the ringed
+ *   tab above it in view), in the look of the platform (Material 3, iOS glass).
+ * - Windows: a TeachingTip of WinUI 3, the control of Windows for this: pointing at the item of
+ *   the NavigationView it speaks of, no dimmed page, its close button in the corner.
  */
 @Component({
   selector: 'tb-onboarding-guide',
@@ -25,12 +32,17 @@ interface Step {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (guide.open()) {
-      <div class="tb-guide-scrim" (click)="skip()"></div>
+      <div class="tb-guide-scrim"></div>
       @if (ring(); as r) {
         <div class="tb-guide-ring" aria-hidden="true" [style.left.px]="r.left" [style.top.px]="r.top" [style.width.px]="r.width" [style.height.px]="r.height"></div>
       }
-      <section class="tb-guide" role="dialog" aria-modal="true" aria-labelledby="tb-guide-title" aria-describedby="tb-guide-text" (keydown)="key($event)" #card tabindex="-1">
+      <section class="tb-guide" role="dialog" aria-modal="true" aria-labelledby="tb-guide-title" aria-describedby="tb-guide-text" (keydown)="key($event)" #card tabindex="-1"
+               [class.tb-guide-docked]="docked()" [class.tb-guide-tip]="!!tip()" [class.tb-guide-tip-below]="tip()?.below"
+               [style.left.px]="tip()?.left" [style.top.px]="tip()?.top" [style.--tb-tail.px]="tip()?.tail">
         @let s = step();
+        @if (winui) {
+          <button type="button" class="tb-guide-close" i18n-aria-label aria-label="Fermer le guide" i18n-title title="Fermer le guide" (click)="skip()">&#xE8BB;</button>
+        }
         <div class="tb-guide-art" aria-hidden="true">
           <i class="pi {{ s.icon }}"></i>
         </div>
@@ -61,6 +73,13 @@ export class TbOnboardingGuide {
   protected readonly guide = inject(OnboardingService);
   private readonly auth = inject(AuthService);
   private readonly doc = inject(DOCUMENT);
+  private readonly platform = inject(PlatformService);
+  /** Windows: a TeachingTip of WinUI 3. */
+  protected readonly winui = DESKTOP_OS === 'windows';
+  /** Phones: at the bottom of the screen, above the bar of the app. */
+  protected readonly docked = computed(() => !this.winui && this.platform.bottomBar());
+  /** Windows: where the tip goes, beside the item it points at (null: in the middle). */
+  protected readonly tip = signal<{ left: number; top: number; tail: number; below: boolean } | null>(null);
   private readonly card = viewChild<ElementRef<HTMLElement>>('card');
   private readonly primary = viewChild<ElementRef<HTMLElement>>('primary');
 
@@ -163,7 +182,7 @@ export class TbOnboardingGuide {
     effect(() => {
       if (!this.guide.open()) return;
       this.step();
-      untracked(() => requestAnimationFrame(() => this.place()));
+      untracked(() => requestAnimationFrame(() => (this.place(), requestAnimationFrame(() => this.place()))));
     });
     effect(() => {
       if (this.guide.open()) untracked(() => this.index.set(0));
@@ -183,10 +202,24 @@ export class TbOnboardingGuide {
       : null;
     if (!el) {
       this.ring.set(null);
+      this.tip.set(null);
       return;
     }
     const r = el.getBoundingClientRect();
     this.ring.set({ left: r.left - 4, top: r.top - 4, width: r.width + 8, height: r.height + 8 });
+    if (!this.winui) return;
+    // TeachingTip: to the right of the item of the pane, its tail on the middle of the item
+    const card = this.card()?.nativeElement;
+    const h = card?.offsetHeight ?? 260;
+    const w = card?.offsetWidth ?? 360;
+    if (r.right + 16 + w <= innerWidth - 8) {
+      const top = Math.min(Math.max(r.top + r.height / 2 - h / 2, 40), innerHeight - h - 8);
+      this.tip.set({ left: r.right + 14, top, tail: r.top + r.height / 2 - top, below: false });
+    } else {
+      // Pane folded over a narrow window: under the item
+      const left = Math.min(Math.max(r.left + r.width / 2 - w / 2, 8), innerWidth - w - 8);
+      this.tip.set({ left, top: r.bottom + 14, tail: r.left + r.width / 2 - left, below: true });
+    }
   }
 
   protected go(i: number): void {

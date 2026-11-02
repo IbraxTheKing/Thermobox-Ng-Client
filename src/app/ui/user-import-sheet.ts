@@ -3,6 +3,7 @@ import { firstValueFrom } from 'rxjs';
 
 import { errorMessage } from '../core/api.config';
 import { ToastService } from '../core/messages';
+import { PlatformService } from '../core/platform';
 import { ImportCheck, ImportField, ImportResult, ImportRow, ImportSession, ROLES, UserRole } from '../models/models';
 import { UserImportService } from '../services/user-import.service';
 import { Handover, TbPasswordHandover } from './password-handover';
@@ -37,6 +38,13 @@ const FIELDS: { field: ImportField; label: string; hint: string }[] = [
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <tb-sheet [(open)]="shown" [title]="'Importer des utilisateurs' | tr" [width]="step() === 'source' ? 560 : 920" (openChange)="!$event && closed()">
+      @if (platform.phone()) {
+        <!-- Phones: where we are, and a bar of progress (the four steps don't fit on a line) -->
+        <div class="tb-steps-compact">
+          <span><strong>{{ steps[stepIndex()].label }}</strong> · {{ ('Étape ' | tr) + (stepIndex() + 1) + ('/' + steps.length) }}</span>
+          <span class="tb-steps-bar" aria-hidden="true"><span [style.width.%]="((stepIndex() + 1) / steps.length) * 100"></span></span>
+        </div>
+      } @else {
       <ol class="tb-steps" i18n-aria-label aria-label="Étapes">
         @for (s of steps; track s.id; let i = $index) {
           <li [class.tb-step-on]="step() === s.id" [class.tb-step-done]="stepIndex() > i" [attr.aria-current]="step() === s.id ? 'step' : null">
@@ -44,13 +52,18 @@ const FIELDS: { field: ImportField; label: string; hint: string }[] = [
           </li>
         }
       </ol>
+      }
 
       @switch (step()) {
         @case ('source') {
           <label class="tb-drop" [class.tb-drop-over]="over()" (dragover)="$event.preventDefault(); over.set(true)" (dragleave)="over.set(false)" (drop)="drop($event)">
             <input type="file" accept=".xlsx,.csv,.txt,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" (change)="pick($event)" [disabled]="busy()" />
             <i class="pi" [class.pi-file-excel]="!busy()" [class.pi-spinner]="busy()" [class.pi-spin]="busy()" aria-hidden="true"></i>
-            <strong i18n>Dépose un fichier Excel ou CSV, ou clique pour le choisir</strong>
+            @if (touch) {
+              <strong i18n>Choisis un fichier Excel ou CSV</strong>
+            } @else {
+              <strong i18n>Dépose un fichier Excel ou CSV, ou clique pour le choisir</strong>
+            }
             <span i18n class="tb-muted">Une ligne par personne, la première ligne donnant les noms des colonnes (Prénom, Nom, Courriel…). 10 Mo au plus.</span>
           </label>
           @if (sources().length) {
@@ -142,7 +155,7 @@ const FIELDS: { field: ImportField; label: string; hint: string }[] = [
 
         @case ('check') {
           @if (check(); as c) {
-            <div class="tb-summary">
+            <div class="tb-summary tb-import-summary">
               <button type="button" class="tb-summary-chip tb-import-chip-ok" [class.tb-chip-on]="filter() === 'CREATE'" (click)="toggleFilter('CREATE')">
                 <i class="pi pi-user-plus"></i>{{ 'À créer' | tr }}<span class="tb-chip-n">{{ c.create }}</span>
               </button>
@@ -153,6 +166,28 @@ const FIELDS: { field: ImportField; label: string; hint: string }[] = [
                 <i class="pi pi-exclamation-triangle"></i>{{ 'Invalides' | tr }}<span class="tb-chip-n">{{ c.invalid }}</span>
               </button>
             </div>
+            @if (platform.phone()) {
+              <!-- Phones: one card per line, nothing cut off -->
+              <ul class="tb-import-cards">
+                @for (r of shownRows(); track r.line) {
+                  <li [class]="'tb-import-' + r.status">
+                    <div class="tb-import-card-head">
+                      <strong>{{ r.username ?? '—' }}</strong>
+                      @if (r.usernameMade) { <span i18n class="tb-tag">auto</span> }
+                      @if (r.usernameAdjusted) { <span i18n class="tb-tag">ajusté</span> }
+                      <span class="tb-muted tb-import-card-line">{{ ('Ligne ' | tr) + r.line }}</span>
+                    </div>
+                    <span>{{ personName(r) }} · {{ roleName(r.role) }}</span>
+                    @if (r.email) {
+                      <span class="tb-muted tb-import-card-mail">{{ r.email }}</span>
+                    }
+                    <span class="tb-import-state">
+                      <i class="pi" [class.pi-check-circle]="r.status === 'CREATE'" [class.pi-clone]="r.status === 'DUPLICATE'" [class.pi-times-circle]="r.status === 'INVALID'"></i>{{ r.status === 'CREATE' ? ('Sera créé' | tr) : problems(r) }}
+                    </span>
+                  </li>
+                }
+              </ul>
+            } @else {
             <div class="tb-table tb-import-check">
               <table>
                 <thead>
@@ -187,6 +222,7 @@ const FIELDS: { field: ImportField; label: string; hint: string }[] = [
                 </tbody>
               </table>
             </div>
+            }
             @if (filteredRows().length > shownRows().length) {
               <button type="button" class="tb-btn tb-flat tb-btn-sm" (click)="limit.set(limit() + 200)">{{ ('Afficher plus' | tr) + ' (' + (filteredRows().length - shownRows().length) + ')' }}</button>
             }
@@ -229,6 +265,9 @@ const FIELDS: { field: ImportField; label: string; hint: string }[] = [
 export class TbUserImportSheet {
   private readonly api = inject(UserImportService);
   private readonly toasts = inject(ToastService);
+  protected readonly platform = inject(PlatformService);
+  /** A finger, no mouse: nothing to drop, a file to choose. */
+  protected readonly touch = matchMedia('(pointer: coarse)').matches;
 
   /** Accounts were created. */
   readonly imported = output<void>();

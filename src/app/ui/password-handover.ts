@@ -4,6 +4,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, input, signal } f
 import { ServerService, readableAddress } from '../core/api.config';
 import { downloadFile } from '../core/file';
 import { ToastService } from '../core/messages';
+import { PlatformService } from '../core/platform';
 import { UserRole } from '../models/models';
 import { TrPipe } from './tr.pipe';
 
@@ -35,10 +36,33 @@ export interface Handover {
       </div>
     </div>
     <div class="tb-handover-actions">
-      <button i18n type="button" class="tb-btn tb-tonal" (click)="print()"><i class="pi pi-print"></i>Imprimer les fiches</button>
-      <button i18n type="button" class="tb-btn tb-flat" (click)="download()"><i class="pi pi-download"></i>Télécharger (CSV)</button>
+      <!-- The apps of phones can't print a page (their webview has no printing) -->
+      @if (!platform.native) {
+        <button i18n type="button" class="tb-btn tb-tonal" (click)="print()"><i class="pi pi-print"></i>Imprimer les fiches</button>
+      }
+      @if (share) {
+        <button i18n type="button" class="tb-btn" [class.tb-tonal]="platform.native" [class.tb-flat]="!platform.native" (click)="download()"><i class="pi pi-share-alt"></i>Partager (CSV)</button>
+      } @else {
+        <button i18n type="button" class="tb-btn tb-flat" (click)="download()"><i class="pi pi-download"></i>Télécharger (CSV)</button>
+      }
       <button i18n type="button" class="tb-btn tb-flat" (click)="copyAll()"><i class="pi pi-copy"></i>Tout copier</button>
     </div>
+    @if (platform.phone()) {
+      <!-- Phones: one card per person, the password large, nothing cut off -->
+      <ul class="tb-handover-cards">
+        @for (a of accounts(); track a.username) {
+          <li>
+            <span class="tb-handover-card-who"><strong>{{ a.name || a.username }}</strong><span class="tb-muted">{{ a.username }}@if (a.email) { · {{ a.email }}}</span></span>
+            <span class="tb-handover-password">
+              <code>{{ a.password }}</code>
+              <button type="button" class="tb-btn tb-icon tb-flat" [attr.aria-label]="('Copier le mot de passe de ' | tr) + a.username" (click)="copy(a)">
+                <i class="pi" [class.pi-copy]="copied() !== a.username" [class.pi-check]="copied() === a.username"></i>
+              </button>
+            </span>
+          </li>
+        }
+      </ul>
+    } @else {
     <div class="tb-table tb-handover-table">
       <table>
         <thead>
@@ -66,6 +90,7 @@ export interface Handover {
         </tbody>
       </table>
     </div>
+    }
     @if (expires(); as at) {
       <p class="tb-muted tb-handover-expiry"><i class="pi pi-clock"></i><span i18n>Valables jusqu'au {{ at | date: 'd MMMM y, HH:mm' }}.</span></p>
     }
@@ -75,6 +100,9 @@ export class TbPasswordHandover {
   readonly accounts = input.required<Handover[]>();
   private readonly toasts = inject(ToastService);
   private readonly server = inject(ServerService);
+  protected readonly platform = inject(PlatformService);
+  /** The file goes through the share sheet of the system (phones, tablets): what downloadFile does. */
+  protected readonly share = matchMedia('(pointer: coarse)').matches && typeof (navigator as Navigator & { canShare?: unknown }).canShare === 'function';
   protected readonly copied = signal<string | null>(null);
   protected readonly expires = computed(() => {
     const at = this.accounts().find((a) => a.expiresAt)?.expiresAt;

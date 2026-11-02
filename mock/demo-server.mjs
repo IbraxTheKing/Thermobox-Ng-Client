@@ -545,20 +545,23 @@ function readXlsx(buf) {
     files.set(name, method === 8 ? inflateRawSync(data).toString('utf8') : data.toString('utf8'));
     at += 46 + nameLen + extra + comment;
   }
-  const unxml = (t) => t.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&amp;/g, '&');
+  const unxml = (t) => t.replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16))).replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(+d)).replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&amp;/g, '&');
   const shared = [...(files.get('xl/sharedStrings.xml') ?? '').matchAll(/<si>([\s\S]*?)<\/si>/g)].map((m) => unxml([...m[1].matchAll(/<t[^>]*>([\s\S]*?)<\/t>/g)].map((x) => x[1]).join('')));
   const sheet = files.get('xl/worksheets/sheet1.xml');
   if (!sheet) throw Object.assign(new Error('The workbook has no sheet.'), { code: 'not_xlsx' });
   const col = (r) => [...r.replace(/\d/g, '')].reduce((a, c) => a * 26 + c.charCodeAt(0) - 64, 0) - 1;
-  return [...sheet.matchAll(/<row[^>]*>([\s\S]*?)<\/row>/g)].map((row) => {
+  let number = 0;
+  return [...sheet.matchAll(/<row([^>]*)>([\s\S]*?)<\/row>/g)].map((row) => {
+    number = Number(/r="(\d+)"/.exec(row[1])?.[1]) || number + 1;
     const line = [];
-    for (const c of row[1].matchAll(/<c r="([A-Z]+\d+)"([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g)) {
+    line.number = number;
+    for (const c of row[2].matchAll(/<c r="([A-Z]+\d+)"([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g)) {
       const t = /t="(\w+)"/.exec(c[2])?.[1];
       const v = /<v>([\s\S]*?)<\/v>/.exec(c[3] ?? '')?.[1] ?? '';
       const text = t === 's' ? shared[+v] : t === 'inlineStr' ? unxml([...(c[3] ?? '').matchAll(/<t[^>]*>([\s\S]*?)<\/t>/g)].map((x) => x[1]).join('')) : unxml(v);
       line[col(c[1])] = text ?? '';
     }
-    return Array.from(line, (x) => x ?? '');
+    return Object.assign(Array.from(line, (x) => x ?? ''), { number });
   });
 }
 function readCsv(text) {
@@ -581,6 +584,7 @@ function readCsv(text) {
     } else field += c;
   }
   if (field || row.length) row.push(field), rows.push(row);
+  rows.forEach((r, i) => (r.number = i + 1));
   return rows.filter((r) => r.some((x) => x.trim()));
 }
 const IMPORT_HEADERS = {
@@ -595,16 +599,21 @@ const importSessions = new Map();
 function openImport(user, source, rows) {
   if (!rows.length) return { status: 400, body: { error: 'Empty list', code: 'empty' } };
   const columns = rows[0].map((c, i) => String(c).trim() || `Colonne ${i + 1}`);
-  const data = rows.slice(1).map((r) => columns.map((_, i) => String(r[i] ?? '').trim())).filter((r) => r.some(Boolean));
+  // Each line keeps its number in the file (empty lines counted)
+  const data = rows
+    .slice(1)
+    .map((r, i) => Object.assign(columns.map((_, c) => String(r[c] ?? '').trim()), { number: r.number ?? i + 2 }))
+    .filter((r) => r.some(Boolean));
   if (!data.length) return { status: 400, body: { error: 'No line under the names of the columns', code: 'empty' } };
   const sid = randomBytes(18).toString('base64url');
   importSessions.set(sid, { owner: user.id, source, columns, rows: data });
+  const sample = data.slice(0, 5).map((r) => [...r]);
   const suggested = {};
   for (const [field, names] of Object.entries(IMPORT_HEADERS)) {
     const c = columns.find((x) => names.includes(letters(x).toLowerCase()) && !Object.values(suggested).includes(x));
     if (c) suggested[field] = c;
   }
-  return ok({ id: sid, source, columns, sample: data.slice(0, 5), rowCount: data.length, suggested });
+  return ok({ id: sid, source, columns, sample, rowCount: data.length, suggested });
 }
 const roleOf = (t) => {
   const k = letters(t).toLowerCase();
@@ -651,7 +660,7 @@ function planImport(s, o) {
     }
     const status = problems.some((p) => !/taken|repeated/.test(p)) ? 'INVALID' : dup ? 'DUPLICATE' : 'CREATE';
     if (status === 'CREATE') fileNames.add(username.toLowerCase()), email && fileMails.add(email.toLowerCase());
-    return { line: i + 2, username, firstName: first, lastName: last, email, role: role ?? o.defaultRole ?? 'VIEWER', status, problems, usernameMade: made, usernameAdjusted: adjusted };
+    return { line: r.number ?? i + 2, username, firstName: first, lastName: last, email, role: role ?? o.defaultRole ?? 'VIEWER', status, problems, usernameMade: made, usernameAdjusted: adjusted };
   });
 }
 route('GET', '/api/v2/users/import/sources', 'ADMIN', () => ok([{ name: 'Annuaire RH (démo)' }]));

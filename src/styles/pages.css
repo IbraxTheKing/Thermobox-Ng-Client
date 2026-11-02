@@ -605,7 +605,7 @@ button.tb-update-installation-head.tb-card-head { margin-bottom: 0; }
 
 /* ============================== Import of users (ui/user-import-sheet, ui/password-handover) */
 
-.tb-head-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.tb-page-head > .tb-import-btn + .tb-fab { margin-left: -10px; }
 .tb-user-person { display: block; font-size: .82rem; }
 .tb-user-provisional { display: inline-flex; align-items: center; gap: 4px; margin-top: 3px; }
 .tb-user-provisional .pi { font-size: .75rem; }
@@ -724,3 +724,111 @@ button.tb-update-installation-head.tb-card-head { margin-bottom: 0; }
     .tb-guide-actions .tb-guide-next { flex: 1 1 auto; justify-content: center; }
     .tb-guide-skip { order: 3; width: 100%; margin: 4px 0 0; justify-content: center; }
 }
+
+/* Phones: the guide at the bottom, above the bar of the app, under the thumb */
+.tb-guide.tb-guide-docked {
+    top: auto; left: calc(12px + env(safe-area-inset-left)); right: calc(12px + env(safe-area-inset-right));
+    bottom: calc(var(--tb-nav-bottom, 0px) + 12px);
+    width: auto; max-height: calc(100dvh - var(--tb-nav-bottom, 0px) - 80px);
+    transform: none;
+    animation: tb-guide-up .35s var(--tb-ease) both;
+}
+@keyframes tb-guide-up { from { opacity: 0; transform: translateY(24px); } }
+.tb-guide-docked .tb-guide-art { width: 56px; height: 56px; margin-bottom: 10px; border-radius: 18px; }
+.tb-guide-docked .tb-guide-art .pi { font-size: 1.5rem; }
+.tb-guide-docked .tb-guide-text { min-height: 0; }
+/* iOS: the glass of its sheets */
+:root[data-platform="ios"] .tb-guide {
+    background: color-mix(in srgb, var(--tb-glass-solid, var(--md-surface-container-high)) 82%, transparent);
+    -webkit-backdrop-filter: blur(30px) saturate(180%); backdrop-filter: blur(30px) saturate(180%);
+    border: 1px solid var(--tb-glass-line, transparent);
+    border-radius: 32px;
+}
+/* Android: the dialog of Material 3 (surface container high, 28 px corners, buttons of text) */
+:root[data-platform="android"] .tb-guide { border-radius: 28px; box-shadow: var(--tb-raised-2); }
+:root[data-platform="android"] .tb-guide-scrim { background: rgb(0 0 0 / .32); }
+
+/* ============================== Windows: the guide as a TeachingTip of WinUI 3 */
+
+:root[data-desktop="windows"] .tb-guide-scrim { background: transparent; animation: none; }
+:root[data-desktop="windows"] .tb-guide-ring { border-radius: 4px; box-shadow: 0 0 0 2px var(--md-primary); animation: none; }
+:root[data-desktop="windows"] .tb-guide {
+    width: 364px; padding: 12px; text-align: left;
+    border: 1px solid rgb(0 0 0 / .0578); border-radius: 8px;
+    background: rgb(252 252 252 / .85);
+    -webkit-backdrop-filter: blur(30px) saturate(150%); backdrop-filter: blur(30px) saturate(150%);
+    box-shadow: 0 8px 16px rgb(0 0 0 / .14);
+    font: 400 14px / 20px "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+    /* In the middle (a step without an item to point at): as a ContentDialog, from a scale of 1.05 */
+    animation: wf-guide-center .25s cubic-bezier(0, 0, 0, 1) both;
+}
+@keyframes wf-guide-center { from { opacity: 0; transform: translate(-50%, -50%) scale(1.05); } }
+:root[data-desktop="windows"] .tb-guide.tb-guide-tip { animation: wf-guide-tip .25s cubic-bezier(0, 0, 0, 1) both; }
+@keyframes wf-guide-tip { from { opacity: 0; transform: translateX(-8px); } }
+:root[data-desktop="windows"][data-theme="dark"] .tb-guide { background: rgb(44 44 44 / .9); border-color: rgb(0 0 0 / .2); box-shadow: 0 8px 16px rgb(0 0 0 / .26); }
+:root[data-desktop="windows"]:not([data-backdrop="acrylic"]) .tb-guide { background: var(--md-surface-container-high); -webkit-backdrop-filter: none; backdrop-filter: none; }
+/* Beside its item: no centring, a tail (the arrow of the tip) toward the item */
+:root[data-desktop="windows"] .tb-guide.tb-guide-tip { transform: none; overflow: visible; }
+:root[data-desktop="windows"] .tb-guide.tb-guide-tip::before {
+    content: ""; position: absolute; left: -7px; top: calc(var(--tb-tail, 40px) - 7px);
+    width: 12px; height: 12px; transform: rotate(45deg);
+    background: inherit; border-left: inherit; border-bottom: inherit;
+    -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+:root[data-desktop="windows"] .tb-guide.tb-guide-tip-below::before { left: calc(var(--tb-tail, 40px) - 7px); top: -7px; border-bottom: 0; border-top: inherit; }
+:root[data-desktop="windows"] .tb-guide-art {
+    width: auto; height: auto; margin: 0 0 8px; padding: 0; justify-content: start;
+    background: none; color: var(--md-primary);
+}
+:root[data-desktop="windows"] .tb-guide-art .pi { font-size: 24px; }
+:root[data-desktop="windows"] .tb-guide-role { font-size: 12px; margin: 0; }
+:root[data-desktop="windows"] .tb-guide h2 { font: 600 14px / 20px "Segoe UI Variable Text", "Segoe UI", sans-serif; margin: 0 28px 4px 0; letter-spacing: 0; }
+:root[data-desktop="windows"] .tb-guide-text { margin: 0 0 12px; max-width: none; min-height: 0; font-size: 14px; line-height: 20px; }
+:root[data-desktop="windows"] .tb-guide-dots { justify-content: flex-start; margin-bottom: 12px; }
+:root[data-desktop="windows"] .tb-guide-dots button { width: 6px; height: 6px; }
+:root[data-desktop="windows"] .tb-guide-dots .tb-guide-dot-on { width: 16px; }
+:root[data-desktop="windows"] .tb-guide-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+:root[data-desktop="windows"] .tb-guide-actions .tb-guide-skip { display: none; }
+:root[data-desktop="windows"] .tb-guide-actions .tb-btn { justify-content: center; }
+:root[data-desktop="windows"] .tb-guide-actions .tb-guide-next:only-child { grid-column: 1 / -1; }
+.tb-guide-close {
+    position: absolute; top: 8px; right: 8px;
+    display: grid; place-items: center; width: 28px; height: 28px; padding: 0;
+    border: 0; border-radius: 4px; background: transparent; color: var(--md-on-surface);
+    font: 10px / 1 "Segoe Fluent Icons", "Segoe MDL2 Assets"; cursor: default;
+}
+.tb-guide-close:hover { background: var(--wf-subtle-hover); }
+
+/* ============================== Import on phones: cards instead of tables */
+
+.tb-steps-compact { display: grid; gap: 8px; margin: 0 0 16px; font-size: .9rem; color: var(--md-on-surface-variant); }
+.tb-steps-compact strong { color: var(--md-on-surface); }
+.tb-steps-bar { height: 4px; border-radius: 2px; background: color-mix(in srgb, var(--md-on-surface) 12%, transparent); overflow: hidden; }
+.tb-steps-bar > span { display: block; height: 100%; border-radius: inherit; background: var(--md-primary); transition: width .3s var(--tb-ease); }
+@media (max-width: 640px) {
+    .tb-import-summary { flex-wrap: nowrap; overflow-x: auto; margin-inline: -4px; padding-inline: 4px; scrollbar-width: none; }
+    .tb-import-summary .tb-summary-chip { flex: none; }
+    .tb-import-mapping { grid-template-columns: 1fr; }
+}
+.tb-import-cards, .tb-handover-cards { display: grid; gap: 8px; margin: 8px 0 12px; padding: 0; list-style: none; }
+.tb-import-cards li, .tb-handover-cards li {
+    display: grid; gap: 2px; padding: 12px 14px;
+    border-radius: var(--tb-shape-lg); background: var(--md-surface-container-low, var(--tb-tile));
+    font-size: .9rem; min-width: 0;
+}
+.tb-import-card-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.tb-import-card-line { margin-left: auto; font-size: .8rem; }
+.tb-import-card-mail, .tb-handover-card-who .tb-muted { overflow-wrap: anywhere; font-size: .82rem; }
+.tb-import-cards .tb-import-state { margin-top: 4px; }
+.tb-handover-card-who { display: grid; gap: 2px; min-width: 0; }
+.tb-handover-cards li { grid-template-columns: 1fr; gap: 8px; }
+.tb-handover-cards .tb-handover-password { justify-content: space-between; }
+.tb-handover-cards .tb-handover-password code { font-size: 1.15rem; padding: 6px 10px; }
+
+/* Windows: the import in the forms of WinUI (ContentDialog) */
+:root[data-desktop="windows"] .tb-steps { font-size: 14px; gap: 6px 16px; }
+:root[data-desktop="windows"] .tb-step-n { width: 20px; height: 20px; border-width: 1px; font-size: 12px; }
+:root[data-desktop="windows"] .tb-drop { border: 1px dashed var(--wf-stroke-strong); border-radius: 8px; padding: 28px 20px; }
+:root[data-desktop="windows"] .tb-drop:hover, :root[data-desktop="windows"] .tb-drop-over { background: var(--wf-subtle-hover); border-color: var(--md-primary); }
+:root[data-desktop="windows"] .tb-handover-password code { border-radius: 4px; font-family: "Cascadia Mono", Consolas, monospace; background: var(--wf-control); border: 1px solid var(--wf-stroke); }
+:root[data-desktop="windows"] :is(.tb-import-cards, .tb-handover-cards) li { border-radius: 4px; background: var(--wf-layer); border: 1px solid var(--wf-stroke); }
