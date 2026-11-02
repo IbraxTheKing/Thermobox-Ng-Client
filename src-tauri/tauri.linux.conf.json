@@ -12,7 +12,8 @@
         "center": true,
         "dragDropEnabled": false,
         "decorations": false,
-        "transparent": true
+        "transparent": true,
+        "visible": false
       }
     ]
   }

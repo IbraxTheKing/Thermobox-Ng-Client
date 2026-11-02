@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, booleanAttribute, computed, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, booleanAttribute, computed, inject, input, signal } from '@angular/core';
 import { DatePipe, NgTemplateOutlet, Location } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 
@@ -38,6 +38,17 @@ export class PreferencesPage {
   protected readonly accent = inject(AccentService);
   protected readonly features = inject(ServerFeaturesService);
   protected readonly desktop = inject(DesktopService);
+  /** Linux: the window and the rendering picked here, applied when the app starts again. */
+  protected readonly linuxWindow = signal(this.desktop.linuxOptions?.window ?? 'gnome');
+  protected readonly linuxRendering = signal(this.desktop.linuxOptions?.rendering ?? 'auto');
+  protected readonly linuxChanged = computed(() => {
+    const o = this.desktop.linuxOptions;
+    return !!o && (this.linuxWindow() !== o.window || this.linuxRendering() !== o.rendering);
+  });
+
+  protected restartLinux(): void {
+    void this.desktop.setLinuxOptions(this.linuxWindow(), this.linuxRendering());
+  }
   protected readonly seasons = inject(SeasonService);
   protected readonly notifications = inject(NotificationService);
   /** English, Français: each in its own words. */

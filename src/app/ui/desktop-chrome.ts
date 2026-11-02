@@ -57,7 +57,7 @@ import { TrPipe } from './tr.pipe';
         <span class="tb-scrollbar-thumb" [style.height.px]="thumbHeight()" [style.transform]="'translateY(' + thumbTop() + 'px)'"
               (pointerdown)="thumbDown($event)"></span>
       </div>
-    } @else if (desktop.linux) {
+    } @else if (desktop.linux && !desktop.nativeChrome) {
       <!--
         The header bar of an AdwOverlaySplitView (GTK 4 / libadwaita), split in two:
         - over the sidebar (when it is shown): the name of the app in the middle, the main menu at the
@@ -72,11 +72,11 @@ import { TrPipe } from './tr.pipe';
         @if (inApp()) {
           <div class="tb-hb-pane" data-tauri-drag-region="deep">
             <div class="tb-hb-side tb-hb-start">
-              @for (b of layout().start; track b) {
+              @for (b of desktop.windowButtons().start; track b) {
                 <ng-container [ngTemplateOutlet]="windowButton" [ngTemplateOutletContext]="{ $implicit: b }" />
               }
             </div>
-            <span class="tb-hb-brand"><span class="tb-logo" aria-hidden="true"></span>Thermobox</span>
+            <span class="tb-hb-brand"><span class="tb-logo" aria-hidden="true"></span><span class="tb-hb-brand-name">Thermobox</span></span>
             <div class="tb-hb-side tb-hb-end">
               <ng-container [ngTemplateOutlet]="mainMenu" />
             </div>
@@ -85,7 +85,7 @@ import { TrPipe } from './tr.pipe';
         <div class="tb-hb-content" data-tauri-drag-region="deep">
           <div class="tb-hb-side tb-hb-start">
             <span class="tb-hb-content-start-buttons">
-              @for (b of layout().start; track b) {
+              @for (b of desktop.windowButtons().start; track b) {
                 <ng-container [ngTemplateOutlet]="windowButton" [ngTemplateOutletContext]="{ $implicit: b }" />
               }
             </span>
@@ -105,7 +105,7 @@ import { TrPipe } from './tr.pipe';
             @if (inApp()) {
               <span class="tb-hb-content-menu"><ng-container [ngTemplateOutlet]="mainMenu" /></span>
             }
-            @for (b of layout().end; track b) {
+            @for (b of desktop.windowButtons().end; track b) {
               <ng-container [ngTemplateOutlet]="windowButton" [ngTemplateOutletContext]="{ $implicit: b }" />
             }
           </div>
@@ -187,7 +187,31 @@ export class TbDesktopChrome {
     } else {
       // Linux: the header bar is drawn, Linux need not give its own back (main.rs); where its
       // window buttons go
-      void this.desktop.linuxChrome().then((layout) => layout && this.layout.set(parseLayout(layout)));
+      void this.desktop.linuxReady();
+      // The window of the system (Préférences › Fenêtre › GTK 3): its native header bar shows
+      // the title of the page, back, the sidebar button and the main menu; what they ask comes
+      // back here
+      if (this.desktop.nativeChrome) {
+        effect(() => {
+          const inApp = this.inApp();
+          void this.desktop.setNativeChrome({
+            title: this.pageTitle.title() || 'Thermobox',
+            back: { label: $localize`Retour`, shown: this.canGoBack() },
+            sidebar: { label: $localize`Afficher la barre latérale`, shown: inApp },
+            menuLabel: $localize`Menu principal`,
+            menu: inApp ? this.menuItems().map((m) => (m ? { id: m.id, label: m.label } : { id: '', label: '' })) : [],
+          });
+        });
+        this.desktop.onNative((what) => {
+          if (what === 'back') this.back();
+          else if (what === 'sidebar') this.desktop.togglePane();
+          else {
+            void this.menuItems()
+              .find((m) => m?.id === what)
+              ?.action();
+          }
+        });
+      }
       // Maximized: the corners of the window straighten (linux.css)
       effect(() => {
         const root = this.doc.documentElement;
@@ -251,25 +275,26 @@ export class TbDesktopChrome {
     });
   }
 
-  /** Linux: the buttons of the window at the start and at the end of the header bar. */
-  protected readonly layout = signal<{ start: string[]; end: string[] }>({ start: [], end: ['minimize', 'maximize', 'close'] });
-
   /**
-   * Linux: the main menu of a GNOME app (open-menu), a native menu of GTK under its button:
-   * Préférences, the keyboard shortcuts, À propos, logging out.
+   * Linux: the main menu of a GNOME app (open-menu), a native menu of GTK under its button (or the
+   * popover of the native header bar): Préférences, the keyboard shortcuts, À propos, logging out.
    */
+  private menuItems(): (MainMenuItem | null)[] {
+    return [
+      { id: 'preferences', label: $localize`Préférences`, action: () => this.router.navigateByUrl('/app/preferences') },
+      { id: 'shortcuts', label: $localize`Raccourcis clavier`, action: () => this.keyboard.help.set(true) },
+      { id: 'guide', label: $localize`Revoir le guide de démarrage`, action: () => this.guide.start() },
+      null,
+      { id: 'about', label: $localize`À propos de Thermobox`, action: () => this.router.navigateByUrl('/app/about') },
+      null,
+      { id: 'logout', label: $localize`Se déconnecter`, action: () => this.auth.logout() },
+    ];
+  }
+
   protected mainMenuClick(e: MouseEvent): void {
     const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
     void showMenu(
-      [
-        { label: $localize`Préférences`, action: () => this.router.navigateByUrl('/app/preferences') },
-        { label: $localize`Raccourcis clavier`, action: () => this.keyboard.help.set(true) },
-        { label: $localize`Revoir le guide de démarrage`, action: () => this.guide.start() },
-        SEPARATOR,
-        { label: $localize`À propos de Thermobox`, action: () => this.router.navigateByUrl('/app/about') },
-        SEPARATOR,
-        { label: $localize`Se déconnecter`, action: () => this.auth.logout() },
-      ],
+      this.menuItems().map((m) => (m ? { label: m.label, action: m.action } : SEPARATOR)),
       r.left,
       r.bottom + 4,
     );
@@ -353,9 +378,9 @@ export class TbDesktopChrome {
   }
 }
 
-/** « appmenu:minimize,maximize,close » → the buttons before and after the title. */
-function parseLayout(layout: string): { start: string[]; end: string[] } {
-  const known = (part: string | undefined) => (part ?? '').split(',').map((b) => b.trim()).filter((b) => ['minimize', 'maximize', 'close'].includes(b));
-  const [start, end] = layout.split(':');
-  return { start: known(start), end: known(end) };
+/** An entry of the main menu (Linux); null between two groups. */
+interface MainMenuItem {
+  id: string;
+  label: string;
+  action: () => unknown;
 }
