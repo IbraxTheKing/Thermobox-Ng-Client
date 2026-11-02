@@ -11,6 +11,7 @@
  * seasons.css    the holidays of the « Maison » style (snow, bats…)
  * desktop.css    the desktop app (Tauri): title bar of Windows, macOS under the traffic lights
  * windows.css    the Windows app: Fluent 2 / WinUI 3 look
+ * linux.css      the Linux app: GTK 4 / libadwaita look
  */
 
 /* Tailwind utilities stay available; its reset (preflight) is left out: the pages rely on the
@@ -35,3 +36,4 @@
 @import './styles/seasons.css';
 @import './styles/desktop.css';
 @import './styles/windows.css';
+@import './styles/linux.css';

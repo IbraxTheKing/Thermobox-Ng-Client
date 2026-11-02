@@ -238,7 +238,7 @@ export class Shell implements OnInit, OnDestroy {
 
   /** The side bar of computers: names and icons, or icons only (morphs where it can). */
   protected fold(): void {
-    if (this.desktop.windows) {
+    if (this.desktop.windows || this.desktop.linux) {
       // As NavigationView: the pane opens or closes at once (windows.css), no picture morphing
       if (innerWidth < 1200) {
         this.paneOpen.update((o) => !o);

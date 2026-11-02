@@ -91,8 +91,9 @@ export class AccentService {
       this.systemColor.set(await androidSystemAccent());
       return;
     }
-    // Desktop app on Windows: the colour of Settings › Personalisation (WebView2 has no AccentColor)
-    if (DESKTOP_OS === 'windows') {
+    // Desktop app on Windows: the colour of Settings › Personalisation (WebView2 has no AccentColor);
+    // on Linux, the accent of GNOME 47 and later (Settings › Appearance)
+    if (DESKTOP_OS === 'windows' || DESKTOP_OS === 'linux') {
       try {
         const { invoke } = await import('@tauri-apps/api/core');
         this.systemColor.set(await invoke<string | null>('system_accent'));

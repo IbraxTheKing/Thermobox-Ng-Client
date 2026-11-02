@@ -3131,6 +3131,18 @@
     "fr": "Fermer",
     "en": "Close"
   },
+  "3951776232613752274": {
+    "fr": "Afficher la barre latérale",
+    "en": "Show the sidebar"
+  },
+  "1632553618863251895": {
+    "fr": "Menu principal",
+    "en": "Main menu"
+  },
+  "6497544826155835104": {
+    "fr": "Se déconnecter",
+    "en": "Log out"
+  },
   "7470861785775411392": {
     "fr": "Il fait {$INTERPOLATION}°",
     "en": "It is {$INTERPOLATION}°"

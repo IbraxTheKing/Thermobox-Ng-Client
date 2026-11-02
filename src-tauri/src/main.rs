@@ -102,14 +102,43 @@ fn snap_layouts(window: tauri::WebviewWindow) {
     win::snap_layouts();
 }
 
-/// The accent colour of the system, #rrggbb: Windows (its registry). Elsewhere the page reads the
-/// CSS colour AccentColor itself (WebKit of macOS and Linux); null when there is none.
+/// The accent colour of the system, #rrggbb: Windows (its registry), GNOME 47 and later (the
+/// accent-color of org.gnome.desktop.interface, in the colours of libadwaita). Elsewhere the page
+/// reads the CSS colour AccentColor itself (WebKit of macOS); null when there is none.
 #[tauri::command]
 fn system_accent() -> Option<String> {
     #[cfg(windows)]
     return win::accent();
-    #[cfg(not(windows))]
+    #[cfg(target_os = "linux")]
+    return gnome_accent();
+    #[cfg(not(any(windows, target_os = "linux")))]
     None
+}
+
+/// GNOME: the accent chosen in Settings › Appearance, null on other desktops (or before 47).
+#[cfg(target_os = "linux")]
+fn gnome_accent() -> Option<String> {
+    use gtk::gio::prelude::SettingsExt;
+    const SCHEMA: &str = "org.gnome.desktop.interface";
+    let source = gtk::gio::SettingsSchemaSource::default()?;
+    let schema = source.lookup(SCHEMA, true)?;
+    if !schema.has_key("accent-color") {
+        return None;
+    }
+    let name = gtk::gio::Settings::new(SCHEMA).string("accent-color");
+    let hex = match name.as_str() {
+        "blue" => "#3584e4",
+        "teal" => "#2190a4",
+        "green" => "#3a944a",
+        "yellow" => "#c88800",
+        "orange" => "#ed5b00",
+        "red" => "#e62d42",
+        "pink" => "#d56199",
+        "purple" => "#9141ac",
+        "slate" => "#6f8396",
+        _ => return None,
+    };
+    Some(hex.to_string())
 }
 
 /// The page has drawn its title bar (Windows and Linux, index.html): no need for the system's,
