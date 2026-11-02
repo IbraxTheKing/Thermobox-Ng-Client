@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, Injector, OnDestroy, OnInit, afterNextRender, computed, effect, inject, signal, untracked } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
 import { errorMessage } from '../../core/api.config';
@@ -27,6 +27,7 @@ import { TbRoomOverview } from './room-overview';
 import { TbRoomCard } from './room-card';
 import { RoomSummary } from './summary';
 import { TrPipe } from '../../ui/tr.pipe';
+import { MenuList, SEPARATOR, TbContextMenu } from '../../core/context-menu';
 
 /** The rooms of a building (or those without building when [batiment] is null). */
 interface BuildingGroup {
@@ -65,7 +66,7 @@ interface Block {
  */
 @Component({
   selector: 'tb-dashboard',
-  imports: [TrPipe, RouterLink, TbRoomCard, TbRoomOverview],
+  imports: [TbContextMenu, TrPipe, RouterLink, TbRoomCard, TbRoomOverview],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './dashboard.html',
   // Computers: the size of the cards (the slider of the header)
@@ -73,6 +74,7 @@ interface Block {
 })
 export class DashboardPage implements OnInit, OnDestroy {
   protected readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
   protected readonly store = inject(TreeStore);
   protected readonly unit = inject(UnitService);
   protected readonly notice = inject(UpdateNoticeService);
@@ -733,6 +735,18 @@ export class DashboardPage implements OnInit, OnDestroy {
 
   /** Curves on their way. */
   private readonly trendsAsked = new Set<number>();
+
+  /** Desktop apps: the right click on a room card. */
+  protected cardMenu(r: { room: { id: number; name: string | null; favorite: boolean } }): () => MenuList {
+    return () => [
+      { label: $localize`Ouvrir`, action: () => this.router.navigate(['/app/room', r.room.id]) },
+      { label: $localize`Aperçu rapide`, action: () => this.openOverview(r.room.id) },
+      SEPARATOR,
+      { label: r.room.favorite ? $localize`Retirer des favoris` : $localize`Ajouter aux favoris`, action: () => this.toggleFavorite(r.room.id) },
+      SEPARATOR,
+      { label: $localize`Copier le nom`, action: () => navigator.clipboard?.writeText(r.room.name ?? '') },
+    ];
+  }
 
   protected async toggleFavorite(id: number): Promise<void> {
     const n = this.store.byId().get(id);

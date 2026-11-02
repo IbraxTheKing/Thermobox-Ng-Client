@@ -1,6 +1,6 @@
 import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnInit, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
 import { errorMessage } from '../../core/api.config';
@@ -23,6 +23,7 @@ import { TbSheet } from '../../ui/sheet';
 import { ShownCount, TbMore } from '../../ui/more';
 import { RawFeed } from './raw-feed';
 import { TrPipe } from '../../ui/tr.pipe';
+import { MenuList, TbContextMenu } from '../../core/context-menu';
 
 /** One curve: a room or a building, with its figures over the period (Celsius). */
 interface Row {
@@ -82,12 +83,13 @@ const NO_BUILDING = -1;
  */
 @Component({
   selector: 'tb-measurements',
-  imports: [TrPipe, RouterLink, DecimalPipe, TbChart, TbSheet, TbMore],
+  imports: [TbContextMenu, TrPipe, RouterLink, DecimalPipe, TbChart, TbSheet, TbMore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './measurements.html',
 })
 export class MeasurementsPage implements OnInit {
   protected readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
   protected readonly unit = inject(UnitService);
   /** « Maison »: the history of the house. */
   protected readonly home = computed(() => this.prefs.style() !== 'panel');
@@ -329,6 +331,14 @@ export class MeasurementsPage implements OnInit {
   }
 
   /** Colour chip of a row: shows or hides its curve. */
+  /** Desktop apps: the right click on a line of the table. */
+  protected lineMenu(e: { id: number; name: string | null }): () => MenuList {
+    return () => [
+      { label: $localize`Voir le détail`, action: () => this.router.navigate(['/app/room', e.id]) },
+      { label: $localize`Courbe affichée`, checked: !this.hidden().has(e.id), action: () => this.toggleCurve(e.id) },
+    ];
+  }
+
   protected toggleCurve(id: number): void {
     this.hidden.update((s) => {
       const r = new Set(s);

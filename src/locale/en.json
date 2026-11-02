@@ -127,6 +127,22 @@
     "fr": "GitHub a répondu {$PH}",
     "en": "GitHub answered {$PH}"
   },
+  "767083149332134478": {
+    "fr": "Couper",
+    "en": "Cut"
+  },
+  "5745063617940801770": {
+    "fr": "Copier",
+    "en": "Copy"
+  },
+  "792037118512191344": {
+    "fr": "Coller",
+    "en": "Paste"
+  },
+  "8151564538369708979": {
+    "fr": "Tout sélectionner",
+    "en": "Select all"
+  },
   "8188549017069899915": {
     "fr": "{$date} à {$time}",
     "en": "{$date} at {$time}"
@@ -839,6 +855,26 @@
     "fr": "pas de mesure pour ",
     "en": "no measurement for "
   },
+  "7359182511958867754": {
+    "fr": "Ouvrir",
+    "en": "Open"
+  },
+  "19008953398489250": {
+    "fr": "Aperçu rapide",
+    "en": "Quick look"
+  },
+  "3172960372084603025": {
+    "fr": "Retirer des favoris",
+    "en": "Remove from favourites"
+  },
+  "612493708982639728": {
+    "fr": "Ajouter aux favoris",
+    "en": "Add to favourites"
+  },
+  "1633997066877185099": {
+    "fr": "Copier le nom",
+    "en": "Copy name"
+  },
   "5383487753053731711": {
     "fr": "Ouvrir {$INTERPOLATION}",
     "en": "Open {$INTERPOLATION}"
@@ -1219,6 +1255,22 @@
     "fr": "Groupe « {$PH} » supprimé",
     "en": "Group “{$PH}” deleted"
   },
+  "8297340302369893029": {
+    "fr": "Nom, rôle, mot de passe",
+    "en": "Name, role, password"
+  },
+  "6830843158234145999": {
+    "fr": "Nouveau groupe avec lui",
+    "en": "New group with this user"
+  },
+  "4797596446730729626": {
+    "fr": "Cocher",
+    "en": "Select"
+  },
+  "3943521149039151436": {
+    "fr": "Modifier le groupe",
+    "en": "Edit the group"
+  },
   "5578299683751045756": {
     "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Nouveau groupe",
     "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}New group"
@@ -1471,6 +1523,18 @@
     "fr": "{$PH} élément(s) et leur contenu",
     "en": "{$PH} item(s) and their contents"
   },
+  "2298237604954833277": {
+    "fr": "Changer la consigne",
+    "en": "Change the target"
+  },
+  "7038476844424669015": {
+    "fr": "Voir ses boîtiers",
+    "en": "Show its boxes"
+  },
+  "5224643889970860634": {
+    "fr": "Renommer ou déplacer",
+    "en": "Rename or move"
+  },
   "1060709274691264736": {
     "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Moyenne actuelle",
     "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Current average"
@@ -1642,6 +1706,10 @@
   "7258177364040874833": {
     "fr": "tranche de 4 h",
     "en": "4-hour slot"
+  },
+  "4020966657448533832": {
+    "fr": "Courbe affichée",
+    "en": "Curve shown"
   },
   "7646430375120621776": {
     "fr": "Moment",
@@ -2274,6 +2342,22 @@
   "4707212054573210051": {
     "fr": "« {$PH} » déplacé(e) dans « {$PH_1} »",
     "en": "“{$PH}” moved into “{$PH_1}”"
+  },
+  "1791100700012830777": {
+    "fr": "Déplier",
+    "en": "Expand"
+  },
+  "2121966883386404118": {
+    "fr": "Replier",
+    "en": "Collapse"
+  },
+  "5545759926843501647": {
+    "fr": "Ajouter dedans",
+    "en": "Add inside"
+  },
+  "3443093877166656151": {
+    "fr": "Modifier ou déplacer",
+    "en": "Edit or move"
   },
   "3105066162468003472": {
     "fr": "Logo du serveur",
@@ -3063,14 +3147,6 @@
     "fr": "Ouvrir ",
     "en": "Open "
   },
-  "3172960372084603025": {
-    "fr": "Retirer des favoris",
-    "en": "Remove from favourites"
-  },
-  "612493708982639728": {
-    "fr": "Ajouter aux favoris",
-    "en": "Add to favourites"
-  },
   "8800511076379851987": {
     "fr": "Dernières 24 heures de ",
     "en": "Last 24 hours of "
@@ -3130,10 +3206,6 @@
   "8575241297747115483": {
     "fr": "Nouveau groupe",
     "en": "New group"
-  },
-  "3943521149039151436": {
-    "fr": "Modifier le groupe",
-    "en": "Edit the group"
   },
   "6907712459711218528": {
     "fr": "Éléments",

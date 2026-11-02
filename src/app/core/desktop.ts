@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { AuthService } from './auth';
 import { DESKTOP_OS, TAURI } from './tauri';
 import { language } from './i18n';
+import { desktopContextMenus, nativeSelects } from './context-menu';
 
 export { DESKTOP_OS, TAURI } from './tauri';
 export type { DesktopOs } from './tauri';
@@ -138,6 +139,9 @@ export class DesktopService {
     if (!this.active) return;
     // The menu bar of macOS and the titles of the windows in the language of the page
     void import('@tauri-apps/api/core').then(({ invoke }) => invoke('app_language', { lang: language() }).catch(() => undefined));
+    // No menu of the webview; native menus for the elements that have one and the drop-down lists
+    desktopContextMenus(this.doc);
+    nativeSelects(this.doc);
     // External links: the browser of the system, not a window of the app
     this.doc.addEventListener('click', (e) => this.externalLink(e), true);
     void this.listen();
@@ -149,7 +153,7 @@ export class DesktopService {
     await listen<string>('tb-open', (e) => {
       if (e.payload === 'about') void this.router.navigateByUrl(this.auth.user() ? '/app/about' : '/about');
     });
-    if (this.windows) {
+    if (this.windows || this.linux) {
       // (index.html has already told main.rs that the page draws its title bar)
       const { getCurrentWindow } = await import('@tauri-apps/api/window');
       const w = getCurrentWindow();
@@ -158,11 +162,25 @@ export class DesktopService {
     }
   }
 
-  /** Windows: the theme shown by the page for the window (the tint of its Acrylic). */
-  async windowTheme(theme: 'light' | 'dark'): Promise<void> {
-    if (!this.windows) return;
+  /**
+   * The theme for the window: [choice] picked by the user, or 'auto' (the window and the webview
+   * follow the system, the page sees its changes); [shown] the theme the page shows.
+   */
+  async windowTheme(choice: 'light' | 'dark' | 'auto', shown: 'light' | 'dark'): Promise<void> {
+    if (!this.active) return;
     const { invoke } = await import('@tauri-apps/api/core');
-    await invoke('window_theme', { theme });
+    await invoke('window_theme', { theme: choice === 'auto' ? null : choice, dark: shown === 'dark' });
+  }
+
+  /**
+   * Linux: the page draws the header bar (Linux need not give its own back: main.rs), and where
+   * the desktop puts the buttons of the windows (« appmenu:minimize,maximize,close »).
+   */
+  async linuxChrome(): Promise<string | null> {
+    if (!this.linux) return null;
+    const { invoke } = await import('@tauri-apps/api/core');
+    await invoke('page_ready').catch(() => undefined);
+    return invoke<string | null>('decoration_layout').catch(() => null);
   }
 
   /** The settings: their window on macOS, the page elsewhere. */

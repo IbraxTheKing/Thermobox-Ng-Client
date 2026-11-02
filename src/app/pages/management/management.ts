@@ -28,6 +28,7 @@ import { TbPager } from '../../ui/pager';
 import { ElementDialog } from '../rooms/element-dialog';
 import { AccessTab } from './access';
 import { TrPipe } from '../../ui/tr.pipe';
+import { MenuList, SEPARATOR, TbContextMenu } from '../../core/context-menu';
 
 /** One row: an element with its place, temperature and setpoint (Celsius). */
 interface Row {
@@ -54,7 +55,7 @@ const NO_BUILDING = -1;
  */
 @Component({
   selector: 'tb-management',
-  imports: [TrPipe, RouterLink, TbSheet, TbSwitch, TbStepper, TbAutofocus, TbMultipleChoice, ElementDialog, AccessTab, TbMore, TbPager],
+  imports: [TbContextMenu, TrPipe, RouterLink, TbSheet, TbSwitch, TbStepper, TbAutofocus, TbMultipleChoice, ElementDialog, AccessTab, TbMore, TbPager],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './management.html',
 })
@@ -708,5 +709,25 @@ export class ManagementPage implements OnInit {
 
   protected newGroup(): void {
     this.accessTab()?.newGroup();
+  }
+
+  /** Desktop apps: the right click on a row. */
+  protected rowMenu(l: Row): () => MenuList {
+    return () => {
+      const admin = this.auth.admin();
+      const checked = this.selection().has(l.n.id);
+      return [
+        { label: $localize`Voir la page`, action: () => this.router.navigate(['/app/room', l.n.id]) },
+        !l.device && { label: $localize`Changer la consigne`, action: () => this.openEditor(l) },
+        !l.device && l.n.devices > 0 && { label: $localize`Voir ses boîtiers`, action: () => this.showDevices(l) },
+        SEPARATOR,
+        { label: $localize`Cocher`, checked, action: () => this.check(l.n.id, !checked) },
+        SEPARATOR,
+        admin && { label: $localize`Renommer ou déplacer`, action: () => this.edit(l) },
+        admin && { label: $localize`Accès`, action: () => this.fromSheet(l, 'access') },
+        admin && SEPARATOR,
+        admin && { label: $localize`Supprimer`, action: () => this.remove(l) },
+      ];
+    };
   }
 }

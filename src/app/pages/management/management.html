@@ -216,7 +216,7 @@
       </thead>
       <tbody>
         @for (l of pageRows(); track l.n.id) {
-          <tr class="tb-tone-{{ l.state.tone }}" [class.tb-row-on]="selection().has(l.n.id)" [attr.data-flip]="'g' + l.n.id">
+          <tr class="tb-tone-{{ l.state.tone }}" [tbContextMenu]="rowMenu(l)" [class.tb-row-on]="selection().has(l.n.id)" [attr.data-flip]="'g' + l.n.id">
             <td class="tb-col-check">
               <input type="checkbox" class="tb-check" [checked]="selection().has(l.n.id)" (change)="check(l.n.id, $any($event.target).checked)" [attr.aria-label]="('Sélectionner ' | tr) + l.n.name" />
             </td>
