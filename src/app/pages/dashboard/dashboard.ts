@@ -26,6 +26,7 @@ import { DeltaRange } from './delta-range';
 import { TbRoomOverview } from './room-overview';
 import { TbRoomCard } from './room-card';
 import { RoomSummary } from './summary';
+import { TrPipe } from '../../ui/tr.pipe';
 
 /** The rooms of a building (or those without building when [batiment] is null). */
 interface BuildingGroup {
@@ -64,7 +65,7 @@ interface Block {
  */
 @Component({
   selector: 'tb-dashboard',
-  imports: [RouterLink, TbRoomCard, TbRoomOverview],
+  imports: [TrPipe, RouterLink, TbRoomCard, TbRoomOverview],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './dashboard.html',
   // Computers: the size of the cards (the slider of the header)
@@ -235,9 +236,9 @@ export class DashboardPage implements OnInit, OnDestroy {
     const b = this.range.bottom();
     const h = this.range.top();
     if (b == null && h == null) return '';
-    if (b == null) return `${this.unit.delta(h)} et moins`;
-    if (h == null) return `${this.unit.delta(b)} et plus`;
-    return `De ${this.unit.delta(b)} à ${this.unit.delta(h)}`;
+    if (b == null) return $localize`${this.unit.delta(h)} et moins`;
+    if (h == null) return $localize`${this.unit.delta(b)} et plus`;
+    return $localize`De ${this.unit.delta(b)} à ${this.unit.delta(h)}`;
   });
   protected readonly visibleCount = computed(() => this.visible().length);
 
@@ -428,7 +429,7 @@ export class DashboardPage implements OnInit, OnDestroy {
     return [...byBuilding.entries()]
       .map(([id, rooms]) => {
         const building = rooms[0].building;
-        return { building, name: building?.name ?? 'Sans bâtiment', key: id != null ? `b${id}` : 'none', average: averages.get(id) ?? null, rooms, floors: this.byFloor(rooms) };
+        return { building, name: building?.name ?? $localize`Sans bâtiment`, key: id != null ? `b${id}` : 'none', average: averages.get(id) ?? null, rooms, floors: this.byFloor(rooms) };
       })
       .sort((a, b) => {
         // The order arranged by hand first (the handles of the titles), then by name
@@ -607,7 +608,7 @@ export class DashboardPage implements OnInit, OnDestroy {
     if (byState.get(STATES.UNKNOWN)) l.push({ state: STATES.UNKNOWN, count: byState.get(STATES.UNKNOWN)! });
     return l;
   });
-  protected readonly lightNames: Record<string, string> = { hot: 'Trop chaudes', heating: 'En chauffe', stable: 'Stables', unknown: 'Sans mesure' };
+  protected readonly lightNames: Record<string, string> = { hot: $localize`Trop chaudes`, heating: $localize`En chauffe`, stable: $localize`Stables`, unknown: $localize`Sans mesure` };
 
   /** Panel: time of the last measure received, any room. */
   protected readonly lastReading = computed(() => {
@@ -626,21 +627,21 @@ export class DashboardPage implements OnInit, OnDestroy {
     const hot = by('hot');
     const heating = by('heating');
     const unknown = by('unknown');
-    if (!hot.length && !heating.length && !unknown.length) return [{ text: all.length > 1 ? 'Il fait bon partout.' : 'Il fait bon.' }];
+    if (!hot.length && !heating.length && !unknown.length) return [{ text: all.length > 1 ? $localize`Il fait bon partout.` : $localize`Il fait bon.` }];
     const pieces: { text: string; name?: boolean }[] = [];
     const stable = all.length - hot.length - heating.length - unknown.length;
     if (stable >= all.length / 2) pieces.push({ text: 'Il fait bon presque partout. ' });
     const names = (l: string[]) => {
       // More than three: a count rather than a list
-      if (l.length > 3) return [{ text: `${l.length} pièces` }];
-      return l.flatMap((n, i) => [...(i ? [{ text: i === l.length - 1 ? ' et ' : ', ' }] : []), { text: n, name: true }]);
+      if (l.length > 3) return [{ text: $localize`${l.length} pièces` }];
+      return l.flatMap((n, i) => [...(i ? [{ text: i === l.length - 1 ? $localize` et ` : ', ' }] : []), { text: n, name: true }]);
     };
     const sentences: { text: string; name?: boolean }[][] = [];
     if (heating.length) sentences.push([...names(heating), { text: heating.length > 1 ? ' chauffent' : ' chauffe' }]);
-    if (hot.length) sentences.push([{ text: 'il fait un peu chaud dans ' }, ...names(hot)]);
-    if (unknown.length) sentences.push([{ text: 'pas de mesure pour ' }, ...names(unknown)]);
+    if (hot.length) sentences.push([{ text: $localize`il fait un peu chaud dans ` }, ...names(hot)]);
+    if (unknown.length) sentences.push([{ text: $localize`pas de mesure pour ` }, ...names(unknown)]);
     sentences.forEach((p, i) => {
-      if (i) pieces.push({ text: i === sentences.length - 1 ? ' et ' : ', ' });
+      if (i) pieces.push({ text: i === sentences.length - 1 ? $localize` et ` : ', ' });
       pieces.push(...p);
     });
     pieces.push({ text: '.' });

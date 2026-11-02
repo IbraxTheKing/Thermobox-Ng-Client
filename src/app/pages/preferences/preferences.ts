@@ -11,7 +11,10 @@ import { TbSwitch } from '../../ui/controls';
 import { DesktopService } from '../../core/desktop';
 import { SeasonService } from '../../core/season';
 import { NotificationService } from '../../core/notifications';
+import { LANGUAGES, language, systemLanguage } from '../../core/i18n';
 import { AccentService, DEFAULT_SWATCH, PALETTES, swatch } from '../../core/accent';
+import { locale } from '../../core/i18n';
+import { TrPipe } from '../../ui/tr.pipe';
 
 /**
  * Preferences (preferences.xhtml): theme, colours following the state, unit, keyboard shortcuts
@@ -20,7 +23,7 @@ import { AccentService, DEFAULT_SWATCH, PALETTES, swatch } from '../../core/acce
  */
 @Component({
   selector: 'tb-preferences',
-  imports: [TbSwitch, RouterLink, NgTemplateOutlet],
+  imports: [TrPipe, TbSwitch, RouterLink, NgTemplateOutlet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './preferences.html',
 })
@@ -34,6 +37,9 @@ export class PreferencesPage {
   protected readonly desktop = inject(DesktopService);
   protected readonly seasons = inject(SeasonService);
   protected readonly notifications = inject(NotificationService);
+  /** English, Français: each in its own words. */
+  protected readonly languages = LANGUAGES;
+  protected readonly systemLanguageName = LANGUAGES.find((l) => l.id === systemLanguage())!.name;
   private readonly router = inject(Router);
   private readonly location = inject(Location);
 
@@ -44,7 +50,7 @@ export class PreferencesPage {
   readonly standalone = input(false, { transform: booleanAttribute });
   /** « Réglages » on a Mac, as its apps name them; « Paramètres » from the login page (its button). */
   protected get heading(): string {
-    return this.desktop.mac ? 'Réglages' : this.standalone() ? 'Paramètres' : 'Préférences';
+    return this.desktop.mac ? $localize`Réglages` : this.standalone() ? $localize`Paramètres` : $localize`Préférences`;
   }
 
   protected back(): void {
@@ -53,9 +59,9 @@ export class PreferencesPage {
   }
 
   protected readonly themes: { id: ThemeChoice; label: string; icon: string }[] = [
-    { id: 'light', label: 'Clair', icon: 'pi-sun' },
-    { id: 'dark', label: 'Sombre', icon: 'pi-moon' },
-    { id: 'auto', label: 'Système', icon: 'pi-mobile' },
+    { id: 'light', label: $localize`Clair`, icon: 'pi-sun' },
+    { id: 'dark', label: $localize`Sombre`, icon: 'pi-moon' },
+    { id: 'auto', label: $localize`Système`, icon: 'pi-mobile' },
   ];
   protected readonly panel = computed(() => this.prefs.style() === 'panel');
   protected readonly palettes = PALETTES;
@@ -63,15 +69,13 @@ export class PreferencesPage {
   protected readonly swatch = swatch;
   protected readonly accentName = computed(() => {
     const a = this.prefs.accent();
-    if (a === 'system') return this.accent.systemAvailable() ? 'Système' : 'ThermoBox';
+    if (a === 'system') return this.accent.systemAvailable() ? $localize`Système` : 'ThermoBox';
     return PALETTES.find((p) => p.id === a)?.label ?? 'ThermoBox';
   });
   /** Phones and tablets: no keyboard, no list. */
   protected readonly hasKeyboard = matchMedia('(hover: hover) and (pointer: fine)').matches;
-  /** The side bar of computers (the web on a wide screen). */
-  protected readonly hasSidebar = this.platform.platform === 'web' && this.hasKeyboard;
   protected readonly platformName = this.desktop.active
-    ? `Application ${this.desktop.name()}`
+    ? $localize`Application ${this.desktop.name()}`
     : { ios: 'iOS (Liquid Glass)', android: 'Android (Material 3)', web: 'Web (ThermoBox)' }[this.platform.platform];
 
 
@@ -82,7 +86,8 @@ export class PreferencesPage {
 
   /** « 1er décembre » */
   protected dayLabel(d: Date): string {
+    if (language() !== 'fr') return d.toLocaleDateString(locale(), { day: 'numeric', month: 'long' });
     const n = d.getDate();
-    return `${n === 1 ? '1er' : n} ${d.toLocaleDateString('fr-FR', { month: 'long' })}`;
+    return `${n === 1 ? '1er' : n} ${d.toLocaleDateString(locale(), { month: 'long' })}`;
   }
 }

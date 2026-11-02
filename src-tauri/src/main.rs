@@ -23,6 +23,33 @@ mod win;
 
 use tauri::{AppHandle, Emitter, Manager, WebviewUrl, WebviewWindowBuilder};
 
+/// The language of the app is French (else English, its main language): the system's at start,
+/// then the one the page says ([app_language], Préférences › Langue).
+static FRENCH: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+pub fn french() -> bool {
+    FRENCH.load(std::sync::atomic::Ordering::Relaxed)
+}
+
+/// The page tells its language ("fr", "en"): the menu bar of macOS and the titles of the windows
+/// follow it.
+#[tauri::command]
+fn app_language(app: AppHandle, lang: String) {
+    let fr = lang == "fr";
+    if fr == french() {
+        return;
+    }
+    FRENCH.store(fr, std::sync::atomic::Ordering::Relaxed);
+    #[cfg(target_os = "macos")]
+    if let Ok(m) = menu::build(&app) {
+        let _ = app.set_menu(m);
+    }
+    if let Some(w) = app.get_webview_window(SETTINGS) {
+        let _ = w.set_title(if fr { "Réglages" } else { "Settings" });
+    }
+    let _ = app;
+}
+
 /// Label of the settings window (macOS).
 const SETTINGS: &str = "settings";
 
@@ -35,7 +62,7 @@ pub fn open_settings(app: &AppHandle) -> tauri::Result<()> {
     }
     // index.html?view=settings: main.ts starts the client on its /settings page
     let builder = WebviewWindowBuilder::new(app, SETTINGS, WebviewUrl::App("index.html?view=settings".into()))
-        .title("Réglages")
+        .title(if french() { "Réglages" } else { "Settings" })
         .inner_size(600.0, 760.0)
         .min_inner_size(440.0, 480.0)
         .center()
@@ -148,6 +175,10 @@ struct Backdrop {
 struct PageReady(std::sync::atomic::AtomicBool);
 
 fn main() {
+    FRENCH.store(
+        sys_locale::get_locale().is_some_and(|l| l.to_lowercase().starts_with("fr")),
+        std::sync::atomic::Ordering::Relaxed,
+    );
     let builder = tauri::Builder::default()
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_opener::init())
@@ -174,7 +205,7 @@ fn main() {
             let _ = app;
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![settings_window, snap_layouts, system_accent, page_ready, window_acrylic, window_theme]);
+        .invoke_handler(tauri::generate_handler![settings_window, snap_layouts, system_accent, page_ready, window_acrylic, window_theme, app_language]);
     #[cfg(target_os = "macos")]
     let builder = builder.menu(menu::build).on_menu_event(menu::on_event);
     builder.run(tauri::generate_context!()).expect("Thermobox could not start");

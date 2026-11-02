@@ -30,6 +30,8 @@ import { PlatformService } from '../core/platform';
 import { PreferencesService } from '../core/preferences';
 import { DESKTOP_OS } from '../core/tauri';
 import { UnitService } from '../core/unit';
+import { locale } from '../core/i18n';
+import { TrPipe } from './tr.pipe';
 
 declare module 'chart.js' {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -92,6 +94,7 @@ const crosshair: Plugin<'line'> = {
  */
 @Component({
   selector: 'tb-chart-view',
+  imports: [TrPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     class: 'tb-chart-view',
@@ -104,7 +107,7 @@ const crosshair: Plugin<'line'> = {
       <div class="tb-reading">
         <div class="tb-reading-head">
           <span class="tb-reading-title">{{ l.title }}</span>
-          <button type="button" class="tb-btn tb-icon tb-flat tb-reading-full" (click)="toggleFull()" [attr.aria-label]="full() ? 'Réduire le graphique' : 'Graphique en plein écran'" [title]="full() ? 'Réduire' : 'Plein écran'">
+          <button type="button" class="tb-btn tb-icon tb-flat tb-reading-full" (click)="toggleFull()" [attr.aria-label]="full() ? ('Réduire le graphique' | tr) : ('Graphique en plein écran' | tr)" [title]="full() ? ('Réduire' | tr) : ('Plein écran' | tr)">
             <i class="pi" [class.pi-window-maximize]="!full()" [class.pi-window-minimize]="full()"></i>
           </button>
         </div>
@@ -132,7 +135,7 @@ export class TbChart implements OnDestroy {
 
   readonly labels = input.required<string[]>();
   readonly series = input.required<ChartSeries[]>();
-  readonly description = input('Graphique des températures');
+  readonly description = input($localize`Graphique des températures`);
   /**
    * Values in this unit as they are (« % », « Mo »…), not temperatures: no conversion to the unit
    * of the Preferences page. null: temperatures in Celsius.
@@ -224,7 +227,7 @@ export class TbChart implements OnDestroy {
     }
     const symbol = this.valueUnit() ?? this.unit.symbol();
     this.reading.set({
-      title: i == null ? 'Dernières valeurs' : (labels[k] ?? ''),
+      title: i == null ? $localize`Dernières valeurs` : (labels[k] ?? ''),
       values: datasets.map((d, index) => {
         // A setpoint holds until the next one: the last one set before this instant
         let v = d.data[k!];
@@ -233,7 +236,7 @@ export class TbChart implements OnDestroy {
           index,
           label: d.label ?? '',
           color: d.tbOrigin ?? (d.borderColor as string),
-          text: v == null ? '—' : `${v.toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} ${symbol}`,
+          text: v == null ? '—' : `${v.toLocaleString(locale(), { minimumFractionDigits: 1, maximumFractionDigits: 1 })} ${symbol}`,
           visible: chart.isDatasetVisible(index),
           setpoint: !!d.tbSetpoint,
         };
@@ -407,7 +410,7 @@ export class TbChart implements OnDestroy {
             label: (ctx) => {
               const y = ctx.parsed.y;
               if (y == null) return '';
-              return ` ${ctx.dataset.label} : ${y.toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} ${symbol}`;
+              return ` ${ctx.dataset.label} : ${y.toLocaleString(locale(), { minimumFractionDigits: 1, maximumFractionDigits: 1 })} ${symbol}`;
             },
           },
         },
@@ -441,7 +444,7 @@ export class TbChart implements OnDestroy {
             mirror: mobile,
             z: 1,
             maxTicksLimit: mobile ? 6 : 7,
-            callback: (v) => `${Number(v).toLocaleString('fr-FR', { maximumFractionDigits: 1 })}${this.valueUnit() != null ? ' ' + this.valueUnit() : '°'}`,
+            callback: (v) => `${Number(v).toLocaleString(locale(), { maximumFractionDigits: 1 })}${this.valueUnit() != null ? ' ' + this.valueUnit() : '°'}`,
           },
           ...(this.yMin() != null ? { min: this.yMin()! } : {}),
         },

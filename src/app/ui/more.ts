@@ -37,7 +37,7 @@ export class ShownCount {
   host: { class: 'tb-more', '[hidden]': 'shown() >= total()' },
   template: `
     @if (shown() < total()) {
-      <button type="button" class="tb-btn tb-flat" (click)="more.emit()">
+      <button i18n type="button" class="tb-btn tb-flat" (click)="more.emit()">
         <i class="pi pi-angle-down"></i>{{ label() }} ({{ total() - shown() }} de plus)
       </button>
     }
@@ -46,7 +46,7 @@ export class ShownCount {
 export class TbMore {
   readonly total = input.required<number>();
   readonly shown = input.required<number>();
-  readonly label = input('Afficher la suite');
+  readonly label = input($localize`Afficher la suite`);
   readonly more = output<void>();
 
   private readonly near = signal(false);

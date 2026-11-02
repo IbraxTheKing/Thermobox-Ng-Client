@@ -37,8 +37,8 @@ export class ClientUpdateService {
       const r = await fetch(`https://api.github.com/repos/${CLIENT_REPOSITORY}/releases?per_page=50`, {
         headers: { Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' },
       });
-      if (r.status === 403 || r.status === 429) throw new Error('Limite de requêtes GitHub atteinte, réessayez plus tard');
-      if (!r.ok) throw new Error(`GitHub a répondu ${r.status}`);
+      if (r.status === 403 || r.status === 429) throw new Error($localize`Limite de requêtes GitHub atteinte, réessayez plus tard`);
+      if (!r.ok) throw new Error($localize`GitHub a répondu ${r.status}`);
       const releases = (await r.json()) as { tag_name: string; name: string | null; html_url: string; draft: boolean; prerelease: boolean; published_at: string | null }[];
       const installed = this.installed;
       // A development or stable version only offers stable ones; a prerelease also offers the

@@ -1,4 +1,5 @@
 import { DateJson } from '../models/models';
+import { locale } from './i18n';
 
 /**
  * A date of the API as a JS Date (local time). Accepts what Jackson writes for a LocalDateTime
@@ -33,7 +34,7 @@ export function toField(d: Date): string {
   return toLocal(d).slice(0, 16);
 }
 
-const fmt = (o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat('fr-FR', o);
+const fmt = (o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat(locale(), o);
 const DD_MM = fmt({ day: '2-digit', month: '2-digit' });
 const HH_MM = fmt({ hour: '2-digit', minute: '2-digit' });
 const DD_MM_YYYY = fmt({ day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -48,7 +49,7 @@ export function ddmmHHmm(v: DateJson | Date | undefined): string {
 /** « 21/10 à 14:05 » */
 export function ddmmAtHHmm(v: DateJson | Date | undefined): string {
   const d = parseDate(v);
-  return d ? `${DD_MM.format(d)} à ${HH_MM.format(d)}` : '';
+  return d ? $localize`${DD_MM.format(d)}:date: à ${HH_MM.format(d)}:time:` : '';
 }
 
 /** « 21/10/2026 14:05 » */
@@ -60,7 +61,7 @@ export function full(v: DateJson | Date | undefined): string {
 /** « 21 octobre 2026 à 14:05 », « jamais » without a date. */
 export function long(v: DateJson | Date | undefined): string {
   const d = parseDate(v);
-  return d ? `${LONG.format(d)} à ${HH_MM.format(d)}` : 'jamais';
+  return d ? $localize`${LONG.format(d)}:date: à ${HH_MM.format(d)}:time:` : $localize`jamais`;
 }
 
 /** « 14:05 » */

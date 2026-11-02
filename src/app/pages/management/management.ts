@@ -27,6 +27,7 @@ import { TbMore } from '../../ui/more';
 import { TbPager } from '../../ui/pager';
 import { ElementDialog } from '../rooms/element-dialog';
 import { AccessTab } from './access';
+import { TrPipe } from '../../ui/tr.pipe';
 
 /** One row: an element with its place, temperature and setpoint (Celsius). */
 interface Row {
@@ -53,7 +54,7 @@ const NO_BUILDING = -1;
  */
 @Component({
   selector: 'tb-management',
-  imports: [RouterLink, TbSheet, TbSwitch, TbStepper, TbAutofocus, TbMultipleChoice, ElementDialog, AccessTab, TbMore, TbPager],
+  imports: [TrPipe, RouterLink, TbSheet, TbSwitch, TbStepper, TbAutofocus, TbMultipleChoice, ElementDialog, AccessTab, TbMore, TbPager],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './management.html',
 })
@@ -482,7 +483,7 @@ export class ManagementPage implements OnInit {
   protected async apply(l: Row): Promise<void> {
     const input = parseNumber(this.inputs().get(l.n.id));
     if (input == null) {
-      this.toasts.warn(`Indique une consigne pour « ${l.n.name} »`);
+      this.toasts.warn($localize`Indique une consigne pour « ${l.n.name} »`);
       return;
     }
     const targets = this.targetsOf(l);
@@ -540,7 +541,7 @@ export class ManagementPage implements OnInit {
     }
     const succeeded = elements.length - refused.length;
     const text = `${this.unit.t(celsius)} ${this.unit.symbol()}`;
-    if (succeeded > 0) this.toasts.info(`Consigne de ${text} pour ${succeeded} élément(s)`, `Envoyée à ${devices} boîtier(s)`);
+    if (succeeded > 0) this.toasts.info($localize`Consigne de ${text} pour ${succeeded} élément(s)`, $localize`Envoyée à ${devices} boîtier(s)`);
     if (refused.length) this.toasts.error('Consigne refusée', refused.join(', '));
     await this.store.load(true).catch(() => undefined);
     return refused.length === 0;
@@ -591,7 +592,7 @@ export class ManagementPage implements OnInit {
       }
     }
     const ok = sel.length - refused.length;
-    if (ok > 0) this.toasts.info(target ? `${ok} élément(s) déplacé(s) dans « ${target.name} »` : `${ok} élément(s) détaché(s)`);
+    if (ok > 0) this.toasts.info(target ? $localize`${ok} élément(s) déplacé(s) dans « ${target.name} »` : $localize`${ok} élément(s) détaché(s)`);
     if (refused.length) this.toasts.error('Déplacement impossible', refused.join(', '));
     this.targetId.set(null);
     this.dlgMove.set(false);
@@ -599,13 +600,13 @@ export class ManagementPage implements OnInit {
   }
 
   protected async remove(l: Row): Promise<void> {
-    if (!(await this.confirm.ask('Supprimer', `Supprimer « ${l.n.name} » ? Ce qu'il contient est gardé, sans rattachement.`, { confirm: 'Supprimer' }))) return;
+    if (!(await this.confirm.ask($localize`Supprimer`, $localize`Supprimer « ${l.n.name} » ? Ce qu'il contient est gardé, sans rattachement.`, { confirm: $localize`Supprimer` }))) return;
     await this.deleteAll([l]);
   }
 
   protected async deleteSelection(): Promise<void> {
     const sel = this.selectedRows();
-    if (!(await this.confirm.ask('Supprimer', `Supprimer les ${sel.length} éléments sélectionnés ? Ce qu'ils contiennent est gardé, sans rattachement.`, { confirm: 'Supprimer' }))) return;
+    if (!(await this.confirm.ask($localize`Supprimer`, $localize`Supprimer les ${sel.length} éléments sélectionnés ? Ce qu'ils contiennent est gardé, sans rattachement.`, { confirm: $localize`Supprimer` }))) return;
     await this.deleteAll(sel);
   }
 
@@ -619,7 +620,7 @@ export class ManagementPage implements OnInit {
       }
     }
     const ok = targets.length - refused.length;
-    if (ok > 0) this.toasts.info(`${ok} élément(s) supprimé(s)`);
+    if (ok > 0) this.toasts.info($localize`${ok} élément(s) supprimé(s)`);
     if (refused.length) this.toasts.error('Suppression impossible', refused.join(', '));
     this.selection.set(new Set());
     await this.store.load(true).catch(() => undefined);
@@ -667,7 +668,7 @@ export class ManagementPage implements OnInit {
       const l = this.access.byId().get(id);
       if (!l) continue;
       if (l.unlimited) {
-        ignored.push(`${l.user.username} (voit déjà tout)`);
+        ignored.push($localize`${l.user.username} (voit déjà tout)`);
         continue;
       }
       const current = (l.access?.elements ?? []).map((e) => e.id);
@@ -686,12 +687,12 @@ export class ManagementPage implements OnInit {
       req.elements = grant ? [...new Set([...req.elements, ...elements])] : req.elements.filter((x) => !elements.includes(x));
       try {
         await firstValueFrom(this.groupsApi.edit(g.id, req));
-        done.push(`groupe ${g.name}`);
+        done.push($localize`groupe ${g.name}`);
       } catch (e) {
-        ignored.push(`groupe ${g.name} (${errorMessage(e)})`);
+        ignored.push($localize`groupe ${g.name} (${errorMessage(e)})`);
       }
     }
-    if (done.length) this.toasts.info((grant ? 'Accès donné à ' : 'Accès retiré à ') + done.join(', '), `${elements.length} élément(s) et leur contenu`);
+    if (done.length) this.toasts.info((grant ? $localize`Accès donné à ` : $localize`Accès retiré à `) + done.join(', '), $localize`${elements.length} élément(s) et leur contenu`);
     if (ignored.length) this.toasts.warn('Non modifié', ignored.join(', '));
     this.dlgAccess.set(false);
     if (this.phone() && !this.selectionMode()) this.selection.set(new Set());

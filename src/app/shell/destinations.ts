@@ -21,25 +21,25 @@ export function barSlots(home: boolean): number {
 export function destinationsOf(auth: AuthService, home = false): Destination[] {
   const d: Destination[] = home
     ? [
-        { link: '/app/overview', icon: 'pi-home', label: 'Maison', also: ['/app/room/'] },
-        { link: '/app/measurements', icon: 'pi-chart-line', label: 'Historique' },
-        { link: '/app/rooms', icon: 'pi-th-large', label: 'Pièces' },
+        { link: '/app/overview', icon: 'pi-home', label: $localize`Maison`, also: ['/app/room/'] },
+        { link: '/app/measurements', icon: 'pi-chart-line', label: $localize`Historique` },
+        { link: '/app/rooms', icon: 'pi-th-large', label: $localize`Pièces` },
       ]
     : [
-        { link: '/app/overview', icon: 'pi-th-large', label: 'Aperçu' },
-        { link: '/app/rooms', icon: 'pi-building', label: 'Salles', also: ['/app/room/'] },
-        { link: '/app/measurements', icon: 'pi-chart-line', label: 'Mesures' },
+        { link: '/app/overview', icon: 'pi-th-large', label: $localize`Aperçu` },
+        { link: '/app/rooms', icon: 'pi-building', label: $localize`Salles`, also: ['/app/room/'] },
+        { link: '/app/measurements', icon: 'pi-chart-line', label: $localize`Mesures` },
       ];
-  if (auth.manager()) d.push({ link: '/app/management', icon: 'pi-sliders-h', label: 'Gérer' });
+  if (auth.manager()) d.push({ link: '/app/management', icon: 'pi-sliders-h', label: $localize`Gérer` });
   if (auth.admin()) {
     // Its resources, its updates (the badge: a version is out), its settings
-    d.push({ link: '/app/server', icon: 'pi-server', label: 'Serveur', badge: true });
+    d.push({ link: '/app/server', icon: 'pi-server', label: $localize`Serveur`, badge: true });
   }
   return d;
 }
 
 /** Label and icon of the last tab of phones. */
 export function lastTab(home: boolean, hasMore: boolean): { label: string; icon: string; native: string } {
-  if (home) return { label: 'Réglages', icon: 'pi-cog', native: 'settings' };
-  return hasMore ? { label: 'Plus', icon: 'pi-ellipsis-h', native: 'more' } : { label: 'Compte', icon: 'pi-user', native: 'account' };
+  if (home) return { label: $localize`Réglages`, icon: 'pi-cog', native: 'settings' };
+  return hasMore ? { label: $localize`Plus`, icon: 'pi-ellipsis-h', native: 'more' } : { label: $localize`Compte`, icon: 'pi-user', native: 'account' };
 }

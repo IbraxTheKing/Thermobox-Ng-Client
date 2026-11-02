@@ -4,6 +4,7 @@ import { TitleStrategy, provideRouter, withComponentInputBinding, withInMemorySc
 import { provideServiceWorker } from '@angular/service-worker';
 import { registerLocaleData } from '@angular/common';
 import localeFr from '@angular/common/locales/fr';
+import localeEnGb from '@angular/common/locales/en-GB';
 
 import { routes } from './app.routes';
 import { apiVersionInterceptor } from './core/api-version';
@@ -11,8 +12,10 @@ import { authInterceptor } from './core/http';
 import { PageTitleStrategy } from './core/title';
 import { TransitionsService } from './core/transitions';
 import { TAURI } from './core/tauri';
+import { locale } from './core/i18n';
 
 registerLocaleData(localeFr);
+registerLocaleData(localeEnGb);
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -30,7 +33,8 @@ export const appConfig: ApplicationConfig = {
     ),
     provideHttpClient(withFetch(), withInterceptors([authInterceptor, apiVersionInterceptor])),
     { provide: TitleStrategy, useClass: PageTitleStrategy },
-    { provide: LOCALE_ID, useValue: 'fr-FR' },
+    // French or English (core/i18n.ts, chosen before the app starts)
+    { provide: LOCALE_ID, useFactory: locale },
     // Installed web app (PWA): the shell works offline, the data always comes from the server.
     // Not in the desktop app: its files are in it already.
     provideServiceWorker('ngsw-worker.js', {

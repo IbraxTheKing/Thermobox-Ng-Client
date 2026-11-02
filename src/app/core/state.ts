@@ -8,10 +8,10 @@ export interface RoomState {
 }
 
 export const STATES = {
-  STABLE: { key: 'STABLE', label: 'Stable', tone: 'stable', singular: 'stable', plural: 'stables' },
-  HEATING: { key: 'HEATING', label: 'En chauffe', tone: 'heating', singular: 'en chauffe', plural: 'en chauffe' },
-  TOO_HOT: { key: 'TOO_HOT', label: 'Trop chaud', tone: 'hot', singular: 'trop chaude', plural: 'trop chaudes' },
-  UNKNOWN: { key: 'UNKNOWN', label: 'Pas de données', tone: 'unknown', singular: 'sans données', plural: 'sans données' },
+  STABLE: { key: 'STABLE', label: $localize`Stable`, tone: 'stable', singular: 'stable', plural: 'stables' },
+  HEATING: { key: 'HEATING', label: $localize`En chauffe`, tone: 'heating', singular: $localize`en chauffe`, plural: $localize`en chauffe` },
+  TOO_HOT: { key: 'TOO_HOT', label: $localize`Trop chaud`, tone: 'hot', singular: 'trop chaude', plural: 'trop chaudes' },
+  UNKNOWN: { key: 'UNKNOWN', label: $localize`Pas de données`, tone: 'unknown', singular: $localize`sans données`, plural: $localize`sans données` },
 } as const satisfies Record<string, RoomState>;
 
 /** In this order on the dashboard chips. */

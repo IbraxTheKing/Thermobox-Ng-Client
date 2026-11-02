@@ -9,7 +9,7 @@ import { Sparkline } from '../core/curves';
   host: { style: 'display: contents' },
   template: `
     @if (pending()) {
-      <div class="tb-spark-loading" aria-busy="true" aria-label="Courbe des dernières 24 h en cours de chargement">
+      <div class="tb-spark-loading" aria-busy="true" i18n-aria-label aria-label="Courbe des dernières 24 h en cours de chargement">
         <svg viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true" focusable="false">
           <path d="M0 26 C 12 18, 22 30, 34 22 S 56 10, 68 20 S 88 30, 100 16" />
         </svg>
@@ -30,7 +30,7 @@ import { Sparkline } from '../core/curves';
         <span class="tb-spark-caption">24 h</span>
       </div>
     } @else {
-      <div class="tb-spark tb-spark-empty" [class.tb-spark-new]="fresh()">Pas encore assez de mesures pour une courbe</div>
+      <div i18n class="tb-spark tb-spark-empty" [class.tb-spark-new]="fresh()">Pas encore assez de mesures pour une courbe</div>
     }
   `,
 })

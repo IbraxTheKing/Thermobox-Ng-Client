@@ -12,8 +12,8 @@ import { ChangeDetectionStrategy, Component, computed, input, model } from '@ang
   host: { class: 'tb-pager', '[hidden]': 'count() <= 1' },
   template: `
     @if (count() > 1) {
-      <nav class="tb-pagination" aria-label="Pages">
-        <button type="button" [disabled]="page() === 0" (click)="go(page() - 1)" aria-label="Page précédente"><i class="pi pi-angle-left"></i></button>
+      <nav class="tb-pagination" i18n-aria-label aria-label="Pages">
+        <button type="button" [disabled]="page() === 0" (click)="go(page() - 1)" i18n-aria-label aria-label="Page précédente"><i class="pi pi-angle-left"></i></button>
         @for (p of numbers(); track $index) {
           @if (p < 0) {
             <span class="tb-pager-gap" aria-hidden="true">…</span>
@@ -21,7 +21,7 @@ import { ChangeDetectionStrategy, Component, computed, input, model } from '@ang
             <button type="button" class="tb-pager-n" [class.tb-page-on]="p === page()" [attr.aria-current]="p === page() ? 'page' : null" (click)="go(p)">{{ p + 1 }}</button>
           }
         }
-        <button type="button" [disabled]="page() >= count() - 1" (click)="go(page() + 1)" aria-label="Page suivante"><i class="pi pi-angle-right"></i></button>
+        <button type="button" [disabled]="page() >= count() - 1" (click)="go(page() + 1)" i18n-aria-label aria-label="Page suivante"><i class="pi pi-angle-right"></i></button>
       </nav>
     }
   `,

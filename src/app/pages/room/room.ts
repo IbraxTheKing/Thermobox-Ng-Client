@@ -31,6 +31,7 @@ import { ChartSeries, TbChart } from '../../ui/chart';
 import { TbPhotoImg } from '../../ui/photo';
 import { ShownCount, TbMore } from '../../ui/more';
 import { TbDial } from '../../ui/dial';
+import { TrPipe } from '../../ui/tr.pipe';
 
 /** One colour per box or room, defined by the theme (light and dark differ). */
 const PALETTE = Array.from({ length: 8 }, (_, i) => `--tb-series-${i + 1}`);
@@ -47,7 +48,7 @@ const MAX_PHOTO_SIZE = 10 * 1024 * 1024;
  */
 @Component({
   selector: 'tb-room-page',
-  imports: [RouterLink, NgTemplateOutlet, TbStepper, TbSwitch, TbWatch, TbChart, TbPhotoImg, TbDial, TbMore],
+  imports: [TrPipe, RouterLink, NgTemplateOutlet, TbStepper, TbSwitch, TbWatch, TbChart, TbPhotoImg, TbDial, TbMore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './room.html',
 })
@@ -147,10 +148,10 @@ export class RoomPage implements OnDestroy {
     if (!e || this.device()) return '';
     const c = e.setpoint?.value;
     switch (this.state().tone) {
-      case 'stable': return 'Il fait bon.';
-      case 'heating': return `Chauffe pour atteindre ${this.unit.t(c)} ${this.unit.symbol()}.`;
-      case 'hot': return `Un peu chaud : ${this.unit.delta(this.delta()).replace('+', '')} au-dessus de l'objectif.`;
-      default: return e.temperature == null ? 'Pas encore de mesure.' : "Pas d'objectif réglé.";
+      case 'stable': return $localize`Il fait bon.`;
+      case 'heating': return $localize`Chauffe pour atteindre ${this.unit.t(c)} ${this.unit.symbol()}.`;
+      case 'hot': return $localize`Un peu chaud : ${this.unit.delta(this.delta()).replace('+', '')} au-dessus de l'objectif.`;
+      default: return e.temperature == null ? $localize`Pas encore de mesure.` : $localize`Pas d'objectif réglé.`;
     }
   });
 
@@ -168,17 +169,17 @@ export class RoomPage implements OnDestroy {
       // One curve per room (average of its boxes) rather than one per box
       h.rooms.forEach((s, i) => series.push({ label: s.name ?? '', color: PALETTE[i % PALETTE.length], points: pts(s.points) }));
       if (h.rooms.length > 1) {
-        series.push({ label: e.kind === 'FLOOR' ? "Moyenne de l'étage" : 'Moyenne du bâtiment', color: '--tb-series-average', role: 'average', points: pts(h.average) });
+        series.push({ label: e.kind === 'FLOOR' ? $localize`Moyenne de l'étage` : $localize`Moyenne du bâtiment`, color: '--tb-series-average', role: 'average', points: pts(h.average) });
       }
     } else if (!h.devices.length) {
       // VIEWER: the room's temperature only, not one curve per box
-      if (h.average.length) series.push({ label: 'Température', color: '--tb-series-average', role: 'average', points: pts(h.average) });
+      if (h.average.length) series.push({ label: $localize`Température`, color: '--tb-series-average', role: 'average', points: pts(h.average) });
     } else {
       h.devices.forEach((b, i) => series.push({ label: b.name ?? '', color: PALETTE[i % PALETTE.length], points: pts(b.points) }));
       // A single box is its own average: no need for a duplicate curve
-      if (h.devices.length > 1) series.push({ label: 'Moyenne de la salle', color: '--tb-series-average', role: 'average', points: pts(h.average) });
+      if (h.devices.length > 1) series.push({ label: $localize`Moyenne de la salle`, color: '--tb-series-average', role: 'average', points: pts(h.average) });
     }
-    series.push({ label: 'Consigne', color: '--tb-series-setpoint', role: 'setpoint', points: pts(h.setpoints), steps: true });
+    series.push({ label: $localize`Consigne`, color: '--tb-series-setpoint', role: 'setpoint', points: pts(h.setpoints), steps: true });
     const hasPoints = series.filter((s) => s.points.length);
     const { time: t, values } = forChart(hasPoints);
     return {
@@ -264,14 +265,14 @@ export class RoomPage implements OnDestroy {
       ownSetpoints: [],
       rooms: [],
     });
-    this.title.set(known.name ?? 'Salle');
+    this.title.set(known.name ?? $localize`Salle`);
   }
 
   private async refresh(id: number, quiet: boolean): Promise<void> {
     try {
       const d = await firstValueFrom(this.rooms$(id, quiet));
       this.detail.set(d);
-      this.title.set(d.element.name ?? 'Salle');
+      this.title.set(d.element.name ?? $localize`Salle`);
       // The stepper starts from the current setpoint, in the unit of the Preferences page
       if (this.newSetpoint() == null) this.newSetpoint.set(this.unit.forInput(d.element.setpoint?.value ?? DEFAULT_SETPOINT));
     } catch (e) {
@@ -286,7 +287,7 @@ export class RoomPage implements OnDestroy {
       }
       this.detail.set(null);
       this.missing.set(true);
-      this.title.set('Élément introuvable');
+      this.title.set($localize`Élément introuvable`);
     }
   }
 
@@ -344,16 +345,16 @@ export class RoomPage implements OnDestroy {
     this.sending.set(true);
     try {
       const r = await firstValueFrom(this.climate.sendSetpoint(e.id, celsius, this.force()));
-      const title = `Consigne de ${this.unit.t(celsius)} ${this.unit.symbol()} enregistrée`;
+      const title = $localize`Consigne de ${this.unit.t(celsius)} ${this.unit.symbol()} enregistrée`;
       const details = [
-        r.devices.length ? `envoyée à ${r.devices.length} boîtier(s)` : 'aucun boîtier à prévenir',
-        r.replaced.length ? `remplace celle de ${r.replaced.map((x) => x.name).join(', ')}` : null,
-        r.kept.length ? `${r.kept.map((x) => x.sourceName).join(', ')} garde(nt) sa consigne` : null,
+        r.devices.length ? $localize`envoyée à ${r.devices.length} boîtier(s)` : $localize`aucun boîtier à prévenir`,
+        r.replaced.length ? $localize`remplace celle de ${r.replaced.map((x) => x.name).join(', ')}` : null,
+        r.kept.length ? $localize`${r.kept.map((x) => x.sourceName).join(', ')} garde(nt) sa consigne` : null,
       ]
         .filter(Boolean)
         .join(' ; ');
       const text = details.charAt(0).toUpperCase() + details.slice(1);
-      if (r.failures.length) this.toasts.warn(title, `${text}. Non transmise à : ${r.failures.map((x) => x.name).join(', ')}`);
+      if (r.failures.length) this.toasts.warn(title, $localize`${text}. Non transmise à : ${r.failures.map((x) => x.name).join(', ')}`);
       else this.toasts.info(title, text);
       // The colours follow at once, here and on the dashboard: the element takes its new setpoint
       // before the server's answer, the tree (and what inherits from it) is read again
@@ -468,7 +469,7 @@ export class RoomPage implements OnDestroy {
   protected async removePhoto(): Promise<void> {
     const e = this.element();
     if (!e) return;
-    const ok = await this.confirm.ask('Retirer la photo', `La photo de « ${e.name} » sera supprimée.`, { confirm: 'Retirer' });
+    const ok = await this.confirm.ask($localize`Retirer la photo`, $localize`La photo de « ${e.name} » sera supprimée.`, { confirm: $localize`Retirer` });
     if (!ok) return;
     try {
       await firstValueFrom(this.rooms.deleteImage(e.id));

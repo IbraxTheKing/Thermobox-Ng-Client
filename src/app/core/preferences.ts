@@ -3,6 +3,7 @@ import { Injectable, computed, effect, inject, signal } from '@angular/core';
 
 import { StyleSite } from '../models/models';
 import { DESKTOP_OS, TAURI } from './tauri';
+import { LanguageChoice } from './i18n';
 import { HomeColors } from './colors';
 
 export type Theme = 'light' | 'dark';
@@ -31,6 +32,8 @@ interface Stored {
   notifications?: boolean;
   /** Which rooms: the favorites or all those the user sees. */
   notifyRooms?: NotifyRooms;
+  /** Language of the app (core/i18n.ts reads it before the app starts). */
+  language?: LanguageChoice;
 }
 
 /** Rooms followed by the notifications of the setpoint. */
@@ -86,6 +89,8 @@ export class PreferencesService {
   /** Apps: notifications of the setpoint (off until the user turns them on). */
   readonly notifications = signal(this.stored.notifications ?? false);
   readonly notifyRooms = signal<NotifyRooms>(this.stored.notifyRooms ?? 'favorites');
+  /** Language: the system's (French if it is French, English otherwise), or a chosen one. */
+  readonly language = signal<LanguageChoice>(this.stored.language ?? 'auto');
 
   /** The system asks for less motion: no transitions between pages, nothing slides or pops. */
   readonly reducedMotion = signal(this.motionQuery.matches);
@@ -122,6 +127,7 @@ export class PreferencesService {
         seasons: this.seasons(),
         notifications: this.notifications(),
         notifyRooms: this.notifyRooms(),
+        language: this.language(),
       } satisfies Stored);
       // Only what changed here: a reload from another window writes nothing back
       if (json === this.written) return;
@@ -162,6 +168,17 @@ export class PreferencesService {
     if (p.seasons != null) this.seasons.set(p.seasons);
     if (p.notifications != null) this.notifications.set(p.notifications);
     if (p.notifyRooms) this.notifyRooms.set(p.notifyRooms);
+    // Another window changed the language: this one starts again in it
+    if (p.language && p.language !== this.language()) location.reload();
+  }
+
+  /** Préférences › Langue: saved, then the app starts again in it (its texts load at start). */
+  changeLanguage(choice: LanguageChoice): void {
+    if (choice === this.language()) return;
+    this.language.set(choice);
+    // The effect writes on the next tick: written now, before the reload
+    write(JSON.stringify({ ...read(), language: choice }));
+    setTimeout(() => location.reload(), 50);
   }
 
   /**

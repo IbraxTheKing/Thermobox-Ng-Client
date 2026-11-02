@@ -2,8 +2,9 @@ import { Injectable, computed, inject } from '@angular/core';
 
 import { ServerFeaturesService } from '../services/server-features.service';
 import { PreferencesService } from './preferences';
+import { locale } from './i18n';
 
-const ONE_DECIMAL = new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const ONE_DECIMAL = new Intl.NumberFormat(locale(), { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 
 /**
  * Temperatures in the unit chosen on the Preferences page (Unite / UniteBean of the JSF

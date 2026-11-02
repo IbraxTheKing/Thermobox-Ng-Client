@@ -22,8 +22,8 @@ export class UpdateNoticeService {
     if (!e) return '';
     return [e.latestPatch, e.latestFeature]
       .filter((v) => v != null)
-      .map((v) => `${v!.version} (${updateTypeLabel(v!.type).toLowerCase()}${v!.type === 'PATCH' ? ', recommandée' : ''})`)
-      .join(' et ');
+      .map((v) => `${v!.version} (${updateTypeLabel(v!.type).toLowerCase()}${v!.type === 'PATCH' ? $localize`, recommandée` : ''})`)
+      .join($localize` et `);
   });
 
   /** At most once an hour: the server itself checks GitHub once a day. */

@@ -3,6 +3,7 @@ import { NgTemplateOutlet } from '@angular/common';
 
 import { Node } from '../models/models';
 import { LABELS } from '../services/tree.store';
+import { TrPipe } from './tr.pipe';
 
 interface Branch {
   node: Node;
@@ -30,7 +31,7 @@ interface Branch {
               <div class="tb-tree-row">
                 @if (b.children.length) {
                   <button type="button" [class.tb-open]="open(b.node.id)" (click)="toggleOpen(b.node.id)"
-                          [attr.aria-label]="(open(b.node.id) ? 'Replier ' : 'Déplier ') + b.node.name">
+                          [attr.aria-label]="(open(b.node.id) ? ('Replier ' | tr) : ('Déplier ' | tr)) + b.node.name">
                     <i class="pi pi-chevron-right"></i>
                   </button>
                 } @else {
@@ -50,11 +51,11 @@ interface Branch {
       </ng-template>
       <ng-container *ngTemplateOutlet="rendu; context: { $implicit: branches() }" />
       @if (!branches().length) {
-        <p class="tb-muted" style="margin: 12px">Aucun bâtiment pour le moment.</p>
+        <p i18n class="tb-muted" style="margin: 12px">Aucun bâtiment pour le moment.</p>
       }
     </div>
   `,
-  imports: [NgTemplateOutlet],
+  imports: [TrPipe, NgTemplateOutlet],
 })
 export class TbAccessTree {
   /** Every element of the tree (from TreeStore): boxes are left out here. */

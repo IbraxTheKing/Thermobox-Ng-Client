@@ -14,6 +14,7 @@ import { UpdateService } from '../../services/update.service';
 import { TbSheet } from '../../ui/sheet';
 import { Version, updateTypeLabel } from '../../core/version';
 import { Rollback, rollbackOf } from '../../core/release-notes';
+import { TrPipe } from '../../ui/tr.pipe';
 
 /** A channel filter; [couleur] is the tb-channel-* class. */
 interface ChannelChip {
@@ -40,7 +41,7 @@ interface Series {
  */
 @Component({
   selector: 'tb-updates-page',
-  imports: [NgTemplateOutlet, TbSheet],
+  imports: [TrPipe, NgTemplateOutlet, TbSheet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './updates.html',
 })
@@ -254,7 +255,7 @@ export class UpdatesPage implements OnInit, OnDestroy {
     this.launch.set(true);
     try {
       await firstValueFrom(this.api.install(p.version.version, this.save() || p.backupRequired, this.risksAccepted()));
-      this.toasts.info(`Installation de ${p.version.version} lancée`, 'Le déroulement s’affiche ci-dessous.');
+      this.toasts.info($localize`Installation de ${p.version.version} lancée`, 'Le déroulement s’affiche ci-dessous.');
       this.dialog.set(false);
     } catch (e) {
       this.toasts.error('Installation impossible', errorMessage(e));
@@ -301,11 +302,11 @@ export class UpdatesPage implements OnInit, OnDestroy {
   }
 
   protected installationLabel(state: string): string {
-    return { RUNNING: 'En cours', RESTART: 'Redémarrage', DONE: 'Terminée', FAILED: 'Échec' }[state] ?? state;
+    return { RUNNING: $localize`En cours`, RESTART: $localize`Redémarrage`, DONE: $localize`Terminée`, FAILED: $localize`Échec` }[state] ?? state;
   }
 
   protected componentLabel(c: string | null | undefined): string {
-    return c === 'REST' ? 'Serveur REST' : c === 'JSF' ? 'Interface web' : (c ?? 'ThermoBox');
+    return c === 'REST' ? $localize`Serveur REST` : c === 'JSF' ? $localize`Interface web` : (c ?? 'ThermoBox');
   }
 }
 
@@ -329,5 +330,5 @@ function color(c: string): string {
 }
 
 function label(c: string): string {
-  return c === 'rc' ? 'RC' : c === 'nightly' ? 'Nightly' : c.charAt(0).toUpperCase() + c.slice(1);
+  return c === 'rc' ? 'RC' : c === 'nightly' ? $localize`Nightly` : c.charAt(0).toUpperCase() + c.slice(1);
 }

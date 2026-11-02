@@ -2,50 +2,50 @@
   <!-- Desktop app, before any account: the settings of this device (macOS: in the menu bar only) and
        À propos in the bottom right corner, the version of the app in the middle of the bottom -->
   @if (desktop.active) {
-    <p class="tb-auth-version">Thermobox {{ desktop.name() }} {{ version }}</p>
-    <nav class="tb-auth-corner" aria-label="Application">
+    <p i18n class="tb-auth-version">Thermobox {{ desktop.name() }} {{ version }}</p>
+    <nav class="tb-auth-corner" i18n-aria-label aria-label="Application">
       @if (!desktop.settingsInMenu) {
-        <a routerLink="/settings" class="tb-btn tb-flat tb-auth-corner-btn" title="Paramètres de cet appareil : thème, couleurs, unité"><i class="pi pi-cog"></i><span>Paramètres</span></a>
+        <a routerLink="/settings" class="tb-btn tb-flat tb-auth-corner-btn" i18n-title title="Paramètres de cet appareil : thème, couleurs, unité"><i class="pi pi-cog"></i><span i18n>Paramètres</span></a>
       }
-      <a routerLink="/about" class="tb-btn tb-flat tb-auth-corner-btn" title="Versions, code source, crédits"><i class="pi pi-info-circle"></i><span>À propos</span></a>
+      <a routerLink="/about" class="tb-btn tb-flat tb-auth-corner-btn" i18n-title title="Versions, code source, crédits"><i class="pi pi-info-circle"></i><span i18n>À propos</span></a>
     </nav>
   }
   <div class="tb-auth">
     <div class="tb-auth-brand">
       <span class="tb-logo tb-logo-xl" aria-hidden="true"></span>
-      <span class="tb-auth-name">Thermobox</span>
-      <span class="tb-auth-tagline">La température de chaque salle, en un coup d'œil.</span>
+      <span i18n class="tb-auth-name">Thermobox</span>
+      <span i18n class="tb-auth-tagline">La température de chaque salle, en un coup d'œil.</span>
     </div>
 
     @if (deletedAccount() === 'true') {
-      <div class="tb-message"><i class="pi pi-info-circle"></i><div><strong>Compte supprimé</strong>Ton compte a bien été supprimé.</div></div>
+      <div class="tb-message"><i class="pi pi-info-circle"></i><div i18n><strong>Compte supprimé</strong>Ton compte a bien été supprimé.</div></div>
     }
     @if (session() === 'expired') {
-      <div class="tb-message tb-message-warn"><i class="pi pi-clock"></i><div><strong>Session terminée</strong>Reconnecte-toi pour continuer.</div></div>
+      <div class="tb-message tb-message-warn"><i class="pi pi-clock"></i><div i18n><strong>Session terminée</strong>Reconnecte-toi pour continuer.</div></div>
     }
     @if (registered() === 'true') {
-      <div class="tb-message"><i class="pi pi-check-circle"></i><div><strong>Compte créé</strong>Tu peux maintenant te connecter.</div></div>
+      <div class="tb-message"><i class="pi pi-check-circle"></i><div i18n><strong>Compte créé</strong>Tu peux maintenant te connecter.</div></div>
     }
 
     <!-- Accounts saved on this device: one tap to open one -->
     @if (accounts().length) {
       <section class="tb-panel tb-auth-card tb-auth-accounts" aria-labelledby="accounts-title">
-        <h2 class="tb-panel-title" id="accounts-title">Comptes enregistrés</h2>
+        <h2 i18n class="tb-panel-title" id="accounts-title">Comptes enregistrés</h2>
         <ul class="tb-accounts">
           @for (g of servers(); track g.base) {
             <li class="tb-accounts-server"><tb-server-logo [base]="g.base" /><span>{{ g.address }}</span></li>
             @for (l of g.rows; track l.account.key) {
             <li>
               <button type="button" class="tb-account" [class.tb-account-active]="l.current" (click)="openAccount(l)"
-                      [attr.aria-label]="l.account.user.username + ' sur ' + g.address">
+                      [attr.aria-label]="l.account.user.username + (' sur ' | tr) + g.address">
                 <span class="tb-avatar" aria-hidden="true">{{ l.initial }}<tb-server-logo badge [base]="g.base" /></span>
                 <span class="tb-account-text">
                   <strong>{{ l.account.user.username }}</strong>
                 </span>
                 @if (l.current) {
-                  <span class="tb-tag">Ouvert</span>
+                  <span i18n class="tb-tag">Ouvert</span>
                 } @else if (!l.openable) {
-                  <span class="tb-tag">Mot de passe</span>
+                  <span i18n class="tb-tag">Mot de passe</span>
                 } @else {
                   <i class="pi pi-angle-right tb-list-continuation"></i>
                 }
@@ -58,7 +58,7 @@
     }
 
     <section class="tb-panel tb-auth-card">
-      <h1 class="tb-panel-title">{{ chosen() ? 'Se reconnecter' : adding() || accounts().length ? 'Autre compte' : 'Connexion' }}</h1>
+      <h1 class="tb-panel-title">{{ chosen() ? ('Se reconnecter' | tr) : adding() || accounts().length ? ('Autre compte' | tr) : ('Connexion' | tr) }}</h1>
       <form (submit)="logIn($event)" novalidate>
         @if (chosen(); as c) {
           <div class="tb-auth-account-chosen">
@@ -67,52 +67,52 @@
               <strong>{{ c.user.username }}</strong>
               <span class="tb-account-address"><tb-server-logo [base]="c.server" />{{ chosenAddress() }}</span>
             </span>
-            <button type="button" class="tb-text-btn" (click)="choose(null)">Autre compte</button>
+            <button i18n type="button" class="tb-text-btn" (click)="choose(null)">Autre compte</button>
           </div>
         } @else {
           @if (serverField()) {
             <div class="tb-field">
-              <label class="tb-label" for="server">Serveur ThermoBox</label>
+              <label i18n class="tb-label" for="server">Serveur ThermoBox</label>
               <input id="server" class="tb-input" type="url" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false"
-                     [placeholder]="server.defaultBase ? server.readable() : 'thermobox.mon-organisation.fr'" [value]="address()" (input)="address.set($any($event.target).value)" />
-              <span class="tb-field-hint">
+                     [placeholder]="server.defaultBase ? server.readable() : ('thermobox.mon-organisation.fr' | tr)" [value]="address()" (input)="address.set($any($event.target).value)" />
+              <span i18n class="tb-field-hint">
                 L'adresse donnée par ton administrateur, avec le port s'il y en a un.@if (server.defaultBase) { Vide : ce site.}
               </span>
             </div>
           }
           <div class="tb-field">
-            <label class="tb-label" for="username">Nom d'utilisateur</label>
+            <label i18n class="tb-label" for="username">Nom d'utilisateur</label>
             <input id="username" class="tb-input" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false"
                    [value]="username()" (input)="username.set($any($event.target).value)"
                    [class.tb-invalid]="sent() && !username().trim()" required />
             @if (sent() && !username().trim()) {
-              <span class="tb-field-error">Nom d'utilisateur obligatoire</span>
+              <span i18n class="tb-field-error">Nom d'utilisateur obligatoire</span>
             }
           </div>
         }
         <div class="tb-field">
-          <label class="tb-label" for="password">Mot de passe</label>
+          <label i18n class="tb-label" for="password">Mot de passe</label>
           <tb-password inputId="password" [(value)]="password" autocomplete="current-password" [invalid]="sent() && !password()" required />
           @if (sent() && !password()) {
-            <span class="tb-field-error">Mot de passe obligatoire</span>
+            <span i18n class="tb-field-error">Mot de passe obligatoire</span>
           }
         </div>
         @if (error(); as e) {
           <div class="tb-message tb-message-error" role="alert"><i class="pi pi-times-circle"></i><div>{{ e }}</div></div>
         }
-        <button type="submit" class="tb-btn tb-full" [class.tb-busy]="inProgress()" [disabled]="inProgress()">
+        <button i18n type="submit" class="tb-btn tb-full" [class.tb-busy]="inProgress()" [disabled]="inProgress()">
           <i class="pi" [class.pi-sign-in]="!inProgress()" [class.pi-spinner]="inProgress()"></i>Se connecter
         </button>
       </form>
       <div class="tb-panel-footer tb-auth-foot">
         @if (adding()) {
-          <a routerLink="/app/overview"><i class="pi pi-arrow-left"></i> Revenir à {{ auth.user()?.username }}</a>
+          <a i18n routerLink="/app/overview"><i class="pi pi-arrow-left"></i> Revenir à {{ auth.user()?.username }}</a>
         } @else {
-          <span>Pas encore de compte ? <a routerLink="/register">Créer un compte</a></span>
+          <span i18n>Pas encore de compte ? <a routerLink="/register">Créer un compte</a></span>
         }
         @if (!chosen() && !serverField()) {
           <button type="button" class="tb-text-btn tb-server-btn" (click)="changeServer.set(true)">
-            <i class="pi pi-server"></i>{{ platform.native ? 'Changer de serveur' : 'Autre serveur' }}
+            <i class="pi pi-server"></i>{{ platform.native ? ('Changer de serveur' | tr) : ('Autre serveur' | tr) }}
           </button>
         }
       </div>

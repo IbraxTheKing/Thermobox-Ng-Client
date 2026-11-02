@@ -6,6 +6,7 @@ import { NavigationEnd, Router } from '@angular/router';
 import { DesktopService, applyAcrylic } from '../core/desktop';
 import { PreferencesService } from '../core/preferences';
 import { TitleService } from '../core/title';
+import { TrPipe } from './tr.pipe';
 
 /**
  * The frame of the desktop app, drawn by the page:
@@ -22,24 +23,25 @@ import { TitleService } from '../core/title';
  */
 @Component({
   selector: 'tb-desktop-chrome',
+  imports: [TrPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { style: 'display: contents' },
   template: `
     @if (desktop.windows) {
       <header class="tb-titlebar" [class.tb-titlebar-scrolled]="scrolled()" [class.tb-titlebar-inactive]="!focused()" data-tauri-drag-region>
         <!-- As the TitleBar of WinUI 3: back, then the button of the side bar, on the left -->
-        <button type="button" class="tb-titlebar-btn" tabindex="-1" aria-label="Retour" title="Retour (Alt+Gauche)" [disabled]="!canGoBack()" (click)="back()">&#xE72B;</button>
+        <button type="button" class="tb-titlebar-btn" tabindex="-1" i18n-aria-label aria-label="Retour" i18n-title title="Retour (Alt+Gauche)" [disabled]="!canGoBack()" (click)="back()">&#xE72B;</button>
         @if (inApp()) {
-          <button type="button" class="tb-titlebar-btn tb-titlebar-pane" tabindex="-1" aria-label="Navigation" title="Afficher ou réduire la navigation" (click)="desktop.togglePane()">&#xE700;</button>
+          <button type="button" class="tb-titlebar-btn tb-titlebar-pane" tabindex="-1" i18n-aria-label aria-label="Navigation" i18n-title title="Afficher ou réduire la navigation" (click)="desktop.togglePane()">&#xE700;</button>
         }
         <span class="tb-titlebar-icon" aria-hidden="true"></span>
-        <span class="tb-titlebar-title">Thermobox@if (pageTitle.title(); as t) {<span class="tb-titlebar-page"> · {{ t }}</span>}</span>
+        <span i18n class="tb-titlebar-title">Thermobox@if (pageTitle.title(); as t) {<span class="tb-titlebar-page"> · {{ t }}</span>}</span>
         <div class="tb-titlebar-buttons">
-          <button type="button" class="tb-caption" tabindex="-1" aria-label="Réduire" title="Réduire" (click)="desktop.minimize()">&#xE921;</button>
-          <button type="button" class="tb-caption" tabindex="-1" [attr.aria-label]="desktop.maximized() ? 'Niveau inférieur' : 'Agrandir'"
-                  [title]="desktop.maximized() ? 'Niveau inférieur' : 'Agrandir'"
+          <button type="button" class="tb-caption" tabindex="-1" i18n-aria-label aria-label="Réduire" i18n-title title="Réduire" (click)="desktop.minimize()">&#xE921;</button>
+          <button type="button" class="tb-caption" tabindex="-1" [attr.aria-label]="desktop.maximized() ? ('Niveau inférieur' | tr) : ('Agrandir' | tr)"
+                  [title]="desktop.maximized() ? ('Niveau inférieur' | tr) : ('Agrandir' | tr)"
                   (click)="maximize()" (pointerenter)="snapSoon()" (pointerleave)="snapCancel()">{{ desktop.maximized() ? '&#xE923;' : '&#xE922;' }}</button>
-          <button type="button" class="tb-caption tb-caption-close" tabindex="-1" aria-label="Fermer" title="Fermer" (click)="desktop.close()">&#xE8BB;</button>
+          <button type="button" class="tb-caption tb-caption-close" tabindex="-1" i18n-aria-label aria-label="Fermer" i18n-title title="Fermer" (click)="desktop.close()">&#xE8BB;</button>
         </div>
       </header>
       <!-- WinUI scroll bar: a thin line while scrolling, wider under the pointer -->

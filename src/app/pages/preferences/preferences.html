@@ -5,7 +5,7 @@
 @if (standalone()) {
   <main class="tb-main tb-standalone" [class.tb-standalone-window]="desktop.settingsWindow">
     @if (!desktop.settingsWindow) {
-      <button type="button" class="tb-btn tb-flat tb-standalone-back" (click)="back()"><i class="pi pi-arrow-left"></i>Retour</button>
+      <button i18n type="button" class="tb-btn tb-flat tb-standalone-back" (click)="back()"><i class="pi pi-arrow-left"></i>Retour</button>
     }
     <ng-container [ngTemplateOutlet]="page" />
   </main>
@@ -17,21 +17,22 @@
 <div class="tb-narrow">
   <header class="tb-page-head">
     <div class="tb-page-title">
-      <span class="tb-eyebrow">Mon expérience</span>
+      <span i18n class="tb-eyebrow">Mon expérience</span>
       <h1>{{ heading }}</h1>
     </div>
   </header>
 
-  <!-- Kept on this device, applied at once -->
-  <section class="tb-panel">
+  <!-- Kept on this device, applied at once; in four groups -->
+  <section class="tb-panel tb-pref-group" aria-labelledby="tb-pref-look">
+    <h2 i18n class="tb-pref-heading" id="tb-pref-look">Apparence</h2>
     <div class="tb-prefs">
       <div class="tb-pref tb-pref-theme">
         <span class="tb-section-icon"><i class="pi" [class.pi-moon]="prefs.theme() === 'dark'" [class.pi-sun]="prefs.theme() === 'light'"></i></span>
         <div class="tb-pref-text">
-          <strong>Thème</strong>
-          <span class="tb-muted">« Système » suit le réglage clair ou sombre de l'appareil, aussi quand il change le soir.</span>
+          <strong i18n>Thème</strong>
+          <span i18n class="tb-muted">« Système » suit le réglage clair ou sombre de l'appareil, aussi quand il change le soir.</span>
         </div>
-        <div class="tb-segmented tb-theme-choice" role="radiogroup" aria-label="Thème">
+        <div class="tb-segmented tb-theme-choice" role="radiogroup" i18n-aria-label aria-label="Thème">
           @for (c of themes; track c.id) {
             <button type="button" role="radio" [attr.aria-checked]="prefs.themeChoice() === c.id" [class.tb-seg-on]="prefs.themeChoice() === c.id"
                     (click)="prefs.changeTheme(c.id, $any($event.currentTarget))">
@@ -44,14 +45,14 @@
       <div class="tb-pref tb-pref-accent">
         <span class="tb-section-icon"><i class="pi pi-palette"></i></span>
         <div class="tb-pref-text">
-          <strong>Accent de couleur <span class="tb-accent-name">{{ accentName() }}</span></strong>
-          <span class="tb-muted">Teinte du fond, des surfaces et des boutons. Les couleurs des états et des courbes ne changent pas.</span>
-          <div class="tb-accents" role="radiogroup" aria-label="Accent de couleur">
-            <button type="button" role="radio" class="tb-accent" title="ThermoBox" aria-label="ThermoBox"
+          <strong i18n>Accent de couleur <span class="tb-accent-name">{{ accentName() }}</span></strong>
+          <span i18n class="tb-muted">Teinte du fond, des surfaces et des boutons. Les couleurs des états et des courbes ne changent pas.</span>
+          <div class="tb-accents" role="radiogroup" i18n-aria-label aria-label="Accent de couleur">
+            <button type="button" role="radio" class="tb-accent" i18n-title title="ThermoBox" i18n-aria-label aria-label="ThermoBox"
                     [attr.aria-checked]="prefs.accent() === 'default'" [style.--accent]="defaultSwatch" (click)="prefs.accent.set('default')">
               <i class="pi pi-check"></i>
             </button>
-            <button type="button" role="radio" class="tb-accent tb-accent-system" [title]="accent.systemAvailable() ? 'Couleur du système' : accent.systemWhy" aria-label="Couleur du système"
+            <button type="button" role="radio" class="tb-accent tb-accent-system" [title]="accent.systemAvailable() ? ('Couleur du système' | tr) : accent.systemWhy" i18n-aria-label aria-label="Couleur du système"
                     [attr.aria-checked]="prefs.accent() === 'system'" [disabled]="!accent.systemAvailable()" [style.--accent]="accent.systemColor() ?? null" (click)="prefs.accent.set('system')">
               <i class="pi pi-desktop"></i><i class="pi pi-check"></i>
             </button>
@@ -64,9 +65,9 @@
             }
           </div>
           @if (!accent.systemAvailable()) {
-            <span class="tb-pref-note"><i class="pi pi-info-circle"></i> Couleur du système : {{ accent.systemWhy }}</span>
+            <span i18n class="tb-pref-note"><i class="pi pi-info-circle"></i> Couleur du système : {{ accent.systemWhy }}</span>
           } @else if (prefs.accent() === 'system') {
-            <span class="tb-pref-note"><i class="pi pi-info-circle"></i> Suit la couleur d'accent de l'appareil, aussi quand elle change.</span>
+            <span i18n class="tb-pref-note"><i class="pi pi-info-circle"></i> Suit la couleur d'accent de l'appareil, aussi quand elle change.</span>
           }
         </div>
       </div>
@@ -74,140 +75,109 @@
       <div class="tb-pref" [class.tb-pref-off]="panel()">
         <span class="tb-section-icon"><i class="pi pi-palette"></i></span>
         <div class="tb-pref-text">
-          <strong>Couleurs selon l'état</strong>
-          <span class="tb-muted">
+          <strong i18n>Couleurs selon l'état</strong>
+          <span i18n class="tb-muted">
             La page prend la teinte de ce qui est affiché : verte pour une salle stable, orange en chauffe, rouge trop chaude.
             Désactivées, les couleurs restent les mêmes partout.
           </span>
           @if (panel()) {
-            <span class="tb-pref-note tb-pref-note-off"><i class="pi pi-info-circle"></i> Sans effet avec le style panneau de configuration choisi par l'administrateur.</span>
+            <span i18n class="tb-pref-note tb-pref-note-off"><i class="pi pi-info-circle"></i> Sans effet avec le style panneau de configuration choisi par l'administrateur.</span>
           }
         </div>
-        <tb-switch [checked]="prefs.tint() && !panel()" [disabled]="panel()" (checkedChange)="prefs.tint.set($event)" label="Couleurs selon l'état" />
+        <tb-switch [checked]="prefs.tint() && !panel()" [disabled]="panel()" (checkedChange)="prefs.tint.set($event)" i18n-label label="Couleurs selon l'état" />
       </div>
       @if (!panel()) {
         <div class="tb-pref">
           <span class="tb-section-icon"><i class="pi pi-sliders-h"></i></span>
           <div class="tb-pref-text">
-            <strong>Couleur des pièces</strong>
-            <span class="tb-muted">
+            <strong i18n>Couleur des pièces</strong>
+            <span i18n class="tb-muted">
               Selon l'écart à l'objectif : vert quand la pièce est à la bonne température, bleu en dessous, orangé puis rouge au-dessus.
               Selon la température : du bleu frais au rouge, quel que soit l'objectif.
             </span>
           </div>
-          <div class="tb-segmented" role="radiogroup" aria-label="Couleur des pièces">
-            <button type="button" role="radio" [attr.aria-checked]="prefs.homeColors() === 'delta'" [class.tb-seg-on]="prefs.homeColors() === 'delta'" (click)="prefs.homeColors.set('delta')">Écart</button>
-            <button type="button" role="radio" [attr.aria-checked]="prefs.homeColors() === 'temperature'" [class.tb-seg-on]="prefs.homeColors() === 'temperature'" (click)="prefs.homeColors.set('temperature')">Température</button>
+          <div class="tb-segmented" role="radiogroup" i18n-aria-label aria-label="Couleur des pièces">
+            <button i18n type="button" role="radio" [attr.aria-checked]="prefs.homeColors() === 'delta'" [class.tb-seg-on]="prefs.homeColors() === 'delta'" (click)="prefs.homeColors.set('delta')">Écart</button>
+            <button i18n type="button" role="radio" [attr.aria-checked]="prefs.homeColors() === 'temperature'" [class.tb-seg-on]="prefs.homeColors() === 'temperature'" (click)="prefs.homeColors.set('temperature')">Température</button>
           </div>
         </div>
         <!-- Holidays (« Maison » only): SeasonService -->
         <div class="tb-pref">
           <span class="tb-section-icon"><i class="pi pi-star"></i></span>
           <div class="tb-pref-text">
-            <strong>Thèmes de saison</strong>
-            <span class="tb-muted">
+            <strong i18n>Thèmes de saison</strong>
+            <span i18n class="tb-muted">
               Noël, Halloween, Pâques, le Nouvel An… : l'application prend leurs couleurs et quelques décorations pendant ces jours-là, puis reprend son apparence habituelle.
               Les couleurs d'accent choisies ci-dessus restent prioritaires.
             </span>
             @if (seasons.ofToday(); as now) {
-              <span class="tb-pref-note"><i class="pi pi-calendar"></i> En ce moment : {{ now.label }}</span>
+              <span i18n class="tb-pref-note"><i class="pi pi-calendar"></i> En ce moment : {{ now.label }}</span>
             } @else if (seasons.next(); as n) {
-              <span class="tb-pref-note"><i class="pi pi-calendar"></i> Prochain : {{ n.season.label }}, le {{ dayLabel(n.start) }}</span>
+              <span i18n class="tb-pref-note"><i class="pi pi-calendar"></i> Prochain : {{ n.season.label }}, le {{ dayLabel(n.start) }}</span>
             }
           </div>
-          <tb-switch [checked]="prefs.seasons()" (checkedChange)="prefs.seasons.set($event)" label="Thèmes de saison" />
+          <tb-switch [checked]="prefs.seasons()" (checkedChange)="prefs.seasons.set($event)" i18n-label label="Thèmes de saison" />
         </div>
       }
-      <div class="tb-pref">
-        <span class="tb-section-icon"><i class="pi pi-sun"></i></span>
-        <div class="tb-pref-text">
-          <strong>Unité des températures</strong>
-          <span class="tb-muted">
-            Affichage et saisie des températures et des consignes. Elles restent enregistrées en Celsius : les autres utilisateurs gardent
-            leur unité.
-          </span>
-        </div>
-        <div class="tb-segmented tb-unit" role="radiogroup" aria-label="Unité des températures">
-          <button type="button" role="radio" [attr.aria-checked]="!prefs.fahrenheit()" [class.tb-seg-on]="!prefs.fahrenheit()" (click)="prefs.unit.set('C')">°C</button>
-          <button type="button" role="radio" [attr.aria-checked]="prefs.fahrenheit()" [class.tb-seg-on]="prefs.fahrenheit()" (click)="prefs.unit.set('F')">°F</button>
-        </div>
-      </div>
       @if (desktop.windows) {
         <div class="tb-pref">
           <span class="tb-section-icon"><i class="pi pi-clone"></i></span>
           <div class="tb-pref-text">
-            <strong>Effets de transparence</strong>
-            <span class="tb-muted">Le flou de Windows (Acrylic) derrière la barre de navigation et la barre de titre, et le flou de ce qui passe sous les barres. Désactivés, tout est opaque : un peu moins de travail pour la carte graphique.</span>
+            <strong i18n>Effets de transparence</strong>
+            <span i18n class="tb-muted">Le flou de Windows (Acrylic) derrière la barre de navigation et la barre de titre, et le flou de ce qui passe sous les barres. Désactivés, tout est opaque : un peu moins de travail pour la carte graphique.</span>
           </div>
-          <tb-switch [checked]="prefs.windowBlur()" (checkedChange)="prefs.windowBlur.set($event)" label="Effets de transparence" />
+          <tb-switch [checked]="prefs.windowBlur()" (checkedChange)="prefs.windowBlur.set($event)" i18n-label label="Effets de transparence" />
         </div>
-      }
-      @if (hasSidebar) {
-        <div class="tb-pref tb-pref-bar">
-          <span class="tb-section-icon"><i class="pi pi-bars"></i></span>
-          <div class="tb-pref-text">
-            <strong>Barre de navigation</strong>
-            <span class="tb-muted">Sur un grand écran : le nom des pages à côté de leur icône, ou les icônes seules pour laisser plus de place. La flèche en haut de la barre fait la même chose.</span>
-          </div>
-          <div class="tb-segmented" role="radiogroup" aria-label="Barre de navigation">
-            <button type="button" role="radio" [attr.aria-checked]="!prefs.sidebarCollapsed()" [class.tb-seg-on]="!prefs.sidebarCollapsed()" (click)="prefs.sidebarCollapsed.set(false)">Complète</button>
-            <button type="button" role="radio" [attr.aria-checked]="prefs.sidebarCollapsed()" [class.tb-seg-on]="prefs.sidebarCollapsed()" (click)="prefs.sidebarCollapsed.set(true)">Icônes</button>
-          </div>
-        </div>
-      }
-      <!-- Apps: notifications of the setpoint (NotificationService), once logged in -->
-      @if (notifications.available && auth.loggedIn()) {
-        <div class="tb-pref">
-          <span class="tb-section-icon"><i class="pi pi-bell"></i></span>
-          <div class="tb-pref-text">
-            <strong>Notifications de consigne</strong>
-            <span class="tb-muted">
-              Prévient quand une salle atteint sa consigne ou s'en éloigne (trop chaude, ou en dessous) pendant au moins 10 minutes.
-              @if (platform.native) {
-                Le téléphone endort l'application en arrière-plan : ce qui a changé entre-temps est notifié à son retour (jusqu'à 6 heures avant).
-              } @else {
-                Tant que l'application est ouverte, même en arrière-plan.
-              }
-            </span>
-            @if (notifications.supported() === false) {
-              <span class="tb-pref-note tb-pref-note-off"><i class="pi pi-info-circle"></i> Ce serveur ne propose pas encore les notifications (ThermoBox 26.12 ou plus récent).</span>
-            } @else if (notifications.denied()) {
-              <span class="tb-pref-note tb-pref-note-off"><i class="pi pi-info-circle"></i> Bloquées par le système : autorise-les pour Thermobox dans ses réglages.</span>
-            }
-          </div>
-          <tb-switch [checked]="prefs.notifications()" (checkedChange)="toggleNotifications($event)" label="Notifications de consigne" />
-        </div>
-        @if (prefs.notifications()) {
-          <div class="tb-pref">
-            <span class="tb-section-icon"><i class="pi pi-star"></i></span>
-            <div class="tb-pref-text">
-              <strong>Salles suivies</strong>
-              <span class="tb-muted">Les salles en favoris, ou toutes celles que tu peux voir.</span>
-            </div>
-            <div class="tb-segmented" role="radiogroup" aria-label="Salles suivies">
-              <button type="button" role="radio" [attr.aria-checked]="prefs.notifyRooms() === 'favorites'" [class.tb-seg-on]="prefs.notifyRooms() === 'favorites'" (click)="prefs.notifyRooms.set('favorites')">Favoris</button>
-              <button type="button" role="radio" [attr.aria-checked]="prefs.notifyRooms() === 'all'" [class.tb-seg-on]="prefs.notifyRooms() === 'all'" (click)="prefs.notifyRooms.set('all')">Toutes</button>
-            </div>
-          </div>
-        }
       }
     </div>
-    <p class="tb-muted tb-pref-scope">Enregistré sur cet appareil uniquement. Interface : {{ platformName }}.</p>
   </section>
 
-  <!-- Keyboard shortcuts: the list comes from KeyboardService, the only place they are defined -->
-  @if (hasKeyboard) {
-    <section class="tb-panel tb-pref-admin tb-pref-keyboard">
-      <div class="tb-prefs">
+  <section class="tb-panel tb-pref-group" aria-labelledby="tb-pref-tools">
+    <h2 i18n class="tb-pref-heading" id="tb-pref-tools">Utilitaire</h2>
+    <div class="tb-prefs">
+      <!-- Language (core/i18n.ts): the system's, or a chosen one; the app starts again in it -->
+      <div class="tb-pref tb-pref-language">
+        <span class="tb-section-icon"><i class="pi pi-language"></i></span>
+        <div class="tb-pref-text">
+          <strong i18n>Langue</strong>
+          <span i18n class="tb-muted">« Système » suit la langue de l'appareil : français s'il est en français, anglais sinon. L'application redémarre dans la langue choisie.</span>
+        </div>
+        <div class="tb-segmented" role="radiogroup" i18n-aria-label aria-label="Langue">
+          <button type="button" role="radio" [attr.aria-checked]="prefs.language() === 'auto'" [class.tb-seg-on]="prefs.language() === 'auto'" (click)="prefs.changeLanguage('auto')">
+            <ng-container i18n>Système ({{ systemLanguageName }})</ng-container>
+          </button>
+          @for (l of languages; track l.id) {
+            <button type="button" role="radio" [attr.lang]="l.id" [attr.aria-checked]="prefs.language() === l.id" [class.tb-seg-on]="prefs.language() === l.id" (click)="prefs.changeLanguage(l.id)">{{ l.name }}</button>
+          }
+        </div>
+      </div>
+      <div class="tb-pref">
+        <span class="tb-section-icon"><i class="pi pi-sun"></i></span>
+        <div class="tb-pref-text">
+          <strong i18n>Unité des températures</strong>
+          <span i18n class="tb-muted">
+            Affichage et saisie des températures et des consignes. Elles restent enregistrées en Celsius : les autres utilisateurs gardent
+            leur unité.
+          </span>
+        </div>
+        <div class="tb-segmented tb-unit" role="radiogroup" i18n-aria-label aria-label="Unité des températures">
+          <button type="button" role="radio" [attr.aria-checked]="!prefs.fahrenheit()" [class.tb-seg-on]="!prefs.fahrenheit()" (click)="prefs.unit.set('C')">°C</button>
+          <button type="button" role="radio" [attr.aria-checked]="prefs.fahrenheit()" [class.tb-seg-on]="prefs.fahrenheit()" (click)="prefs.unit.set('F')">°F</button>
+        </div>
+      </div>
+      <!-- Keyboard shortcuts: the list comes from KeyboardService, the only place they are defined -->
+      @if (hasKeyboard) {
         <div class="tb-pref">
           <span class="tb-section-icon"><i class="pi pi-desktop"></i></span>
           <div class="tb-pref-text">
-            <strong>Raccourcis clavier</strong>
-            <span class="tb-muted">Sur ordinateur : naviguer, chercher, revenir à l'aperçu… sans la souris. <kbd>?</kbd> affiche cette liste depuis n'importe quelle page.</span>
+            <strong i18n>Raccourcis clavier</strong>
+            <span i18n class="tb-muted">Sur ordinateur : naviguer, chercher, revenir à l'aperçu… sans la souris. <kbd>?</kbd> affiche cette liste depuis n'importe quelle page.</span>
           </div>
-          <tb-switch [checked]="prefs.keyboard()" (checkedChange)="prefs.keyboard.set($event)" label="Raccourcis clavier" />
+          <tb-switch [checked]="prefs.keyboard()" (checkedChange)="prefs.keyboard.set($event)" i18n-label label="Raccourcis clavier" />
         </div>
-      </div>
+      }
+    </div>
+    @if (hasKeyboard && prefs.keyboard()) {
       <div class="tb-shortcuts">
         @for (g of keyboard.groups(); track g.group) {
           <section class="tb-shortcuts-group">
@@ -227,31 +197,65 @@
           </section>
         }
       </div>
+    }
+  </section>
+
+  <!-- Apps only (mobile, desktop), once logged in -->
+  @if (notifications.available && auth.loggedIn()) {
+    <section class="tb-panel tb-pref-group" aria-labelledby="tb-pref-notify">
+      <h2 i18n class="tb-pref-heading" id="tb-pref-notify">Notifications</h2>
+      <div class="tb-prefs">
+        <div class="tb-pref">
+          <span class="tb-section-icon"><i class="pi pi-bell"></i></span>
+          <div class="tb-pref-text">
+            <strong i18n>Notifications de consigne</strong>
+            <span i18n class="tb-muted">
+              Prévient quand une salle atteint sa consigne ou s'en éloigne (trop chaude, ou en dessous) pendant au moins 10 minutes.
+              @if (platform.native) {
+                Le téléphone endort l'application en arrière-plan : ce qui a changé entre-temps est notifié à son retour (jusqu'à 6 heures avant).
+              } @else {
+                Tant que l'application est ouverte, même en arrière-plan.
+              }
+            </span>
+            @if (notifications.supported() === false) {
+              <span i18n class="tb-pref-note tb-pref-note-off"><i class="pi pi-info-circle"></i> Ce serveur ne propose pas encore les notifications (ThermoBox 26.12 ou plus récent).</span>
+            } @else if (notifications.denied()) {
+              <span i18n class="tb-pref-note tb-pref-note-off"><i class="pi pi-info-circle"></i> Bloquées par le système : autorise-les pour Thermobox dans ses réglages.</span>
+            }
+          </div>
+          <tb-switch [checked]="prefs.notifications()" (checkedChange)="toggleNotifications($event)" i18n-label label="Notifications de consigne" />
+        </div>
+        @if (prefs.notifications()) {
+          <div class="tb-pref">
+            <span class="tb-section-icon"><i class="pi pi-star"></i></span>
+            <div class="tb-pref-text">
+              <strong i18n>Salles suivies</strong>
+              <span i18n class="tb-muted">Les salles en favoris, ou toutes celles que tu peux voir.</span>
+            </div>
+            <div class="tb-segmented" role="radiogroup" i18n-aria-label aria-label="Salles suivies">
+              <button i18n type="button" role="radio" [attr.aria-checked]="prefs.notifyRooms() === 'favorites'" [class.tb-seg-on]="prefs.notifyRooms() === 'favorites'" (click)="prefs.notifyRooms.set('favorites')">Favoris</button>
+              <button i18n type="button" role="radio" [attr.aria-checked]="prefs.notifyRooms() === 'all'" [class.tb-seg-on]="prefs.notifyRooms() === 'all'" (click)="prefs.notifyRooms.set('all')">Toutes</button>
+            </div>
+          </div>
+        }
+      </div>
     </section>
   }
 
-  <!-- Every user's look, chosen by an ADMIN -->
-  @if (auth.admin() && !standalone()) {
-
-    <!-- The server itself: its resources, updates, logo and limits have their own page -->
-    <a routerLink="/app/server" class="tb-list-group tb-pref-about">
-      <span class="tb-list-row">
-        <span class="tb-list-icon"><i class="pi pi-server"></i></span>
-        <span class="tb-list-text"><strong>Serveur ThermoBox</strong><span class="tb-muted">Ressources, mises à jour, températures acceptées, logo</span></span>
-        <i class="pi pi-angle-right tb-list-continuation"></i>
-      </span>
-    </a>
-  }
-  <!-- Versions, repositories and credits (also behind « Plus » on phones); not in the settings of
-       the login page nor in the settings window: « À propos » has its own button there -->
-  @if (!standalone()) {
-  <a routerLink="/app/about" class="tb-list-group tb-pref-about">
-    <span class="tb-list-row">
-      <span class="tb-list-icon"><i class="pi pi-info-circle"></i></span>
-      <span class="tb-list-text"><strong>À propos de Thermobox</strong><span class="tb-muted">Versions du client et du serveur, code source, crédits</span></span>
-      <i class="pi pi-angle-right tb-list-continuation"></i>
-    </span>
-  </a>
-  }
+  <section class="tb-panel tb-pref-group" aria-labelledby="tb-pref-misc">
+    <h2 i18n class="tb-pref-heading" id="tb-pref-misc">Divers</h2>
+    <!-- Versions, repositories and credits (also behind « Plus » on phones); not in the settings of
+         the login page nor in the settings window: « À propos » has its own button there -->
+    @if (!standalone()) {
+      <div class="tb-prefs">
+        <a routerLink="/app/about" class="tb-pref tb-pref-link">
+          <span class="tb-section-icon"><i class="pi pi-info-circle"></i></span>
+          <span class="tb-pref-text"><strong i18n>À propos de Thermobox</strong><span i18n class="tb-muted">Versions du client et du serveur, code source, crédits</span></span>
+          <i class="pi pi-angle-right tb-pref-chevron" aria-hidden="true"></i>
+        </a>
+      </div>
+    }
+    <p i18n class="tb-muted tb-pref-scope">Enregistré sur cet appareil uniquement. Interface : {{ platformName }}.</p>
+  </section>
 </div>
 </ng-template>

@@ -3,6 +3,8 @@ import { ChangeDetectionStrategy, Component, Directive, ElementRef, afterNextRen
 import { PlatformService } from '../core/platform';
 import { PreferencesService } from '../core/preferences';
 import { UnitService, parseNumber } from '../core/unit';
+import { locale } from '../core/i18n';
+import { TrPipe } from './tr.pipe';
 
 /** On / off switch (p:toggleSwitch), restyled per platform. */
 @Component({
@@ -35,11 +37,12 @@ export class TbSwitch {
 
 /** Setpoint stepper (p:spinner): − 20,5 °C +, in the unit of the Preferences page. */
 @Component({
+  imports: [TrPipe],
   selector: 'tb-stepper',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <span class="tb-stepper">
-      <button type="button" [class.tb-held]="held() === -1" (pointerdown)="press(-1, $event)" (click)="click(-1, $event)" aria-label="Moins"><i class="pi pi-minus"></i></button>
+      <button type="button" [class.tb-held]="held() === -1" (pointerdown)="press(-1, $event)" (click)="click(-1, $event)" i18n-aria-label aria-label="Moins"><i class="pi pi-minus"></i></button>
       <input
         type="text"
         inputmode="decimal"
@@ -48,10 +51,10 @@ export class TbSwitch {
         (change)="enter($any($event.target).value)"
         (keydown.arrowup)="step(1); $event.preventDefault()"
         (keydown.arrowdown)="step(-1); $event.preventDefault()"
-        [attr.aria-label]="'Consigne en ' + unit.symbol()"
+        [attr.aria-label]="('Consigne en ' | tr) + unit.symbol()"
       />
       <span class="tb-stepper-unit">{{ unit.symbol() }}</span>
-      <button type="button" [class.tb-held]="held() === 1" (pointerdown)="press(1, $event)" (click)="click(1, $event)" aria-label="Plus"><i class="pi pi-plus"></i></button>
+      <button type="button" [class.tb-held]="held() === 1" (pointerdown)="press(1, $event)" (click)="click(1, $event)" i18n-aria-label aria-label="Plus"><i class="pi pi-plus"></i></button>
     </span>
   `,
 })
@@ -64,7 +67,7 @@ export class TbStepper {
 
   protected readonly text = computed(() => {
     const v = this.value();
-    return v == null ? '' : v.toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    return v == null ? '' : v.toLocaleString(locale(), { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   });
 
   /** − or + held down: it repeats, faster and faster (as the dial of « Maison »). */
@@ -158,6 +161,7 @@ export class TbWatch {
 
 /** Password field with its eye (p:password toggleMask). */
 @Component({
+  imports: [TrPipe],
   selector: 'tb-password',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -173,7 +177,7 @@ export class TbWatch {
         [attr.aria-invalid]="invalid()"
         [required]="required()"
       />
-      <button type="button" (click)="visible = !visible" [attr.aria-label]="visible ? 'Masquer le mot de passe' : 'Afficher le mot de passe'">
+      <button type="button" (click)="visible = !visible" [attr.aria-label]="visible ? ('Masquer le mot de passe' | tr) : ('Afficher le mot de passe' | tr)">
         <i class="pi" [class.pi-eye]="!visible" [class.pi-eye-slash]="visible"></i>
       </button>
     </span>

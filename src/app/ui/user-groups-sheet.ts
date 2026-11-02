@@ -7,6 +7,7 @@ import { AccessStore, UserRow } from '../services/access.store';
 import { GroupService } from '../services/group.service';
 import { TbMultipleChoice } from './multiple-choice';
 import { TbSheet } from './sheet';
+import { TrPipe } from './tr.pipe';
 
 /**
  * The groups of one user (ADMIN), ticked in the list of all the groups. Opened from the
@@ -17,25 +18,25 @@ import { TbSheet } from './sheet';
  */
 @Component({
   selector: 'tb-user-groups-sheet',
-  imports: [TbSheet, TbMultipleChoice],
+  imports: [TrPipe, TbSheet, TbMultipleChoice],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <tb-sheet [(open)]="shown" title="Groupes" [width]="460">
+    <tb-sheet [(open)]="shown" i18n-title title="Groupes" [width]="460">
       @if (row(); as l) {
-        <p class="tb-muted tb-access-intro">
-          Les groupes de <strong>{{ l.user.username }}</strong> : il voit en plus ce que chacun d'eux donne{{ l.unlimited ? ' (il voit déjà tout ThermoBox)' : '' }}.
+        <p i18n class="tb-muted tb-access-intro">
+          Les groupes de <strong>{{ l.user.username }}</strong> : il voit en plus ce que chacun d'eux donne{{ l.unlimited ? (' (il voit déjà tout ThermoBox)' | tr) : '' }}.
         </p>
         @if (options().length) {
-          <tb-choice-multiple [options]="options()" [(value)]="checked" placeholder="Rechercher un groupe…" empty="Aucun groupe" />
+          <tb-choice-multiple [options]="options()" [(value)]="checked" i18n-placeholder placeholder="Rechercher un groupe…" i18n-empty empty="Aucun groupe" />
         } @else {
-          <p class="tb-empty tb-empty-sm">Aucun groupe pour l'instant.</p>
+          <p i18n class="tb-empty tb-empty-sm">Aucun groupe pour l'instant.</p>
         }
         <div class="tb-actions">
           @if (canCreate()) {
-            <button type="button" class="tb-btn tb-flat tb-actions-start" (click)="shown.set(false); create.emit(l)"><i class="pi pi-plus"></i>Nouveau groupe</button>
+            <button i18n type="button" class="tb-btn tb-flat tb-actions-start" (click)="shown.set(false); create.emit(l)"><i class="pi pi-plus"></i>Nouveau groupe</button>
           }
-          <button type="button" class="tb-btn tb-flat" (click)="shown.set(false)">Annuler</button>
-          <button type="button" class="tb-btn" [disabled]="saving()" (click)="save()"><i class="pi pi-check"></i>Enregistrer</button>
+          <button i18n type="button" class="tb-btn tb-flat" (click)="shown.set(false)">Annuler</button>
+          <button i18n type="button" class="tb-btn" [disabled]="saving()" (click)="save()"><i class="pi pi-check"></i>Enregistrer</button>
         </div>
       }
     </tb-sheet>
@@ -90,8 +91,8 @@ export class TbUserGroupsSheet {
       const added = changed.filter((g) => now.has(g.id)).length;
       const removed = changed.length - added;
       this.toasts.info(
-        `Groupes de « ${l.user.username} » enregistrés`,
-        [added ? `ajouté à ${added} groupe(s)` : null, removed ? `retiré de ${removed} groupe(s)` : null].filter(Boolean).join(', '),
+        $localize`Groupes de « ${l.user.username} » enregistrés`,
+        [added ? $localize`ajouté à ${added} groupe(s)` : null, removed ? $localize`retiré de ${removed} groupe(s)` : null].filter(Boolean).join(', '),
       );
       this.shown.set(false);
       this.saved.emit();

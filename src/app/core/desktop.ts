@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 
 import { AuthService } from './auth';
 import { DESKTOP_OS, TAURI } from './tauri';
+import { language } from './i18n';
 
 export { DESKTOP_OS, TAURI } from './tauri';
 export type { DesktopOs } from './tauri';
@@ -131,10 +132,12 @@ export class DesktopService {
 
   /** Windows: the window fills the screen (the maximize button becomes « restore »). */
   readonly maximized = signal(false);
-  readonly name = computed(() => ({ macos: 'macOS', windows: 'Windows', linux: 'Linux' })[this.os ?? 'linux']);
+  readonly name = computed(() => ({ macos: 'macOS', windows: $localize`Windows`, linux: $localize`Linux` })[this.os ?? 'linux']);
 
   start(): void {
     if (!this.active) return;
+    // The menu bar of macOS and the titles of the windows in the language of the page
+    void import('@tauri-apps/api/core').then(({ invoke }) => invoke('app_language', { lang: language() }).catch(() => undefined));
     // External links: the browser of the system, not a window of the app
     this.doc.addEventListener('click', (e) => this.externalLink(e), true);
     void this.listen();

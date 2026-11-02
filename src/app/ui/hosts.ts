@@ -19,7 +19,7 @@ import { TbSheet } from './sheet';
               <span>{{ t.detail }}</span>
             }
           </div>
-          <button type="button" class="tb-toast-close" (click)="toasts.close(t.id)" aria-label="Fermer"><i class="pi pi-times"></i></button>
+          <button type="button" class="tb-toast-close" (click)="toasts.close(t.id)" i18n-aria-label aria-label="Fermer"><i class="pi pi-times"></i></button>
         </div>
       }
     </div>
@@ -42,7 +42,7 @@ export class TbToasts {
           <p>{{ c.message }}</p>
         </div>
         <div class="tb-actions">
-          <button type="button" class="tb-btn tb-flat" (click)="confirm.answer(false)">Annuler</button>
+          <button i18n type="button" class="tb-btn tb-flat" (click)="confirm.answer(false)">Annuler</button>
           <button type="button" class="tb-btn" [class.tb-btn-danger]="c.danger" (click)="confirm.answer(true)">{{ c.confirm }}</button>
         </div>
       }

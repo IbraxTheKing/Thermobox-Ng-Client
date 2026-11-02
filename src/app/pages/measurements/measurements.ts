@@ -22,6 +22,7 @@ import { ChartSeries, TbChart } from '../../ui/chart';
 import { TbSheet } from '../../ui/sheet';
 import { ShownCount, TbMore } from '../../ui/more';
 import { RawFeed } from './raw-feed';
+import { TrPipe } from '../../ui/tr.pipe';
 
 /** One curve: a room or a building, with its figures over the period (Celsius). */
 interface Row {
@@ -81,7 +82,7 @@ const NO_BUILDING = -1;
  */
 @Component({
   selector: 'tb-measurements',
-  imports: [RouterLink, DecimalPipe, TbChart, TbSheet, TbMore],
+  imports: [TrPipe, RouterLink, DecimalPipe, TbChart, TbSheet, TbMore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './measurements.html',
 })
@@ -201,7 +202,7 @@ export class MeasurementsPage implements OnInit {
     return this.curves().instants.map((t) => format(new Date(t)));
   });
 
-  protected readonly stepText = computed(() => (this.periodHours() <= 24 ? "quart d'heure" : this.periodHours() <= 168 ? 'heure' : 'tranche de 4 h'));
+  protected readonly stepText = computed(() => (this.periodHours() <= 24 ? "quart d'heure" : this.periodHours() <= 168 ? 'heure' : $localize`tranche de 4 h`));
 
   constructor() {
     // Rows shown without their curve: read (a little later, the table may still grow)
@@ -367,7 +368,7 @@ export class MeasurementsPage implements OnInit {
     const rowsOut = this.rows().filter((l) => l.curve);
     const symbol = this.unit.symbol();
     const cell = (t: string) => `"${t.replace(/"/g, '""')}"`;
-    const rows = [['Moment', ...rowsOut.map((l) => `${l.element.name} (${symbol})`)].map(cell).join(';')];
+    const rows = [[$localize`Moment`, ...rowsOut.map((l) => `${l.element.name} (${symbol})`)].map(cell).join(';')];
     this.curves().instants.forEach((t, k) => {
       rows.push(
         [
@@ -462,9 +463,9 @@ export class MeasurementsPage implements OnInit {
 
   protected readonly formError = computed(() => {
     const v = parseNumber(this.formValue());
-    if (v == null) return 'Valeur obligatoire';
-    if (v < this.unit.minValue() || v > this.unit.maxValue()) return `Entre ${this.unit.minValue()} et ${this.unit.maxValue()} ${this.unit.symbol()}`;
-    if (!this.formDate()) return 'Date obligatoire';
+    if (v == null) return $localize`Valeur obligatoire`;
+    if (v < this.unit.minValue() || v > this.unit.maxValue()) return $localize`Entre ${this.unit.minValue()} et ${this.unit.maxValue()} ${this.unit.symbol()}`;
+    if (!this.formDate()) return $localize`Date obligatoire`;
     return null;
   });
 
@@ -493,7 +494,7 @@ export class MeasurementsPage implements OnInit {
 
   protected async remove(t: TemperatureTyped): Promise<void> {
     if (t.id == null) return;
-    if (!(await this.confirm.ask('Supprimer', 'Supprimer cette température ?', { confirm: 'Supprimer' }))) return;
+    if (!(await this.confirm.ask($localize`Supprimer`, $localize`Supprimer cette température ?`, { confirm: $localize`Supprimer` }))) return;
     try {
       await firstValueFrom(this.temperatures.remove(t.id));
       this.toasts.info('Température supprimée');

@@ -8,8 +8,9 @@ import { ConfirmService } from '../core/messages';
 import { initial } from '../core/text';
 import { TbServerLogo } from './server-logo';
 import { TbSheet } from './sheet';
+import { TrPipe } from './tr.pipe';
 
-const ROLE: Record<string, string> = { ADMIN: 'Administrateur', MANAGER: 'Gestionnaire', VIEWER: 'Lecteur' };
+const ROLE: Record<string, string> = { ADMIN: $localize`Administrateur`, MANAGER: $localize`Gestionnaire`, VIEWER: $localize`Lecteur` };
 
 /**
  * « Changer de compte »: the accounts saved on this device (one per server and user), in one
@@ -25,7 +26,7 @@ const ROLE: Record<string, string> = { ADMIN: 'Administrateur', MANAGER: 'Gestio
  */
 @Component({
   selector: 'tb-accounts',
-  imports: [TbSheet, RouterLink, NgTemplateOutlet, TbServerLogo],
+  imports: [TrPipe, TbSheet, RouterLink, NgTemplateOutlet, TbServerLogo],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <ng-template #list>
@@ -35,20 +36,20 @@ const ROLE: Record<string, string> = { ADMIN: 'Administrateur', MANAGER: 'Gestio
           @for (c of g.rows; track c.key) {
           <li>
             <button type="button" class="tb-account" [class.tb-account-active]="c.active" [attr.aria-current]="c.active ? 'true' : null" (click)="choose(c)"
-                    [attr.aria-label]="c.account.user.username + ' sur ' + g.address">
+                    [attr.aria-label]="c.account.user.username + (' sur ' | tr) + g.address">
               <span class="tb-avatar" aria-hidden="true">{{ c.initial }}<tb-server-logo badge [base]="g.base" /></span>
               <span class="tb-account-text">
                 <strong>{{ c.account.user.username }}</strong>
                 <span class="tb-account-address">{{ c.role }}</span>
               </span>
               @if (c.active) {
-                <i class="pi pi-check tb-account-check" aria-label="Compte actuel"></i>
+                <i class="pi pi-check tb-account-check" i18n-aria-label aria-label="Compte actuel"></i>
               } @else if (!c.openable) {
-                <span class="tb-tag">Mot de passe</span>
+                <span i18n class="tb-tag">Mot de passe</span>
               }
             </button>
             <button type="button" class="tb-btn tb-icon tb-flat tb-account-forget" (click)="forget(c.account)"
-                    [title]="'Oublier ' + c.account.user.username + ' sur cet appareil'" [attr.aria-label]="'Oublier ' + c.account.user.username">
+                    [title]="('Oublier ' | tr) + c.account.user.username + (' sur cet appareil' | tr)" [attr.aria-label]="('Oublier ' | tr) + c.account.user.username">
               <i class="pi pi-times"></i>
             </button>
           </li>
@@ -59,22 +60,22 @@ const ROLE: Record<string, string> = { ADMIN: 'Administrateur', MANAGER: 'Gestio
 
     @if (mode() === 'menu') {
       @if (open()) {
-        <div class="tb-accounts-menu" role="dialog" aria-label="Comptes" animate.enter="tb-menu-enter" animate.leave="tb-menu-sort">
+        <div class="tb-accounts-menu" role="dialog" i18n-aria-label aria-label="Comptes" animate.enter="tb-menu-enter" animate.leave="tb-menu-sort">
           <ng-container *ngTemplateOutlet="list" />
           <div class="tb-accounts-menu-foot">
-            <button type="button" class="tb-sheet-item tb-account-adding" (click)="add()"><i class="pi pi-user-plus"></i>Ajouter un compte</button>
-            <a routerLink="/app/profile" class="tb-sheet-item" (click)="open.set(false)"><i class="pi pi-user"></i>Mon profil</a>
+            <button i18n type="button" class="tb-sheet-item tb-account-adding" (click)="add()"><i class="pi pi-user-plus"></i>Ajouter un compte</button>
+            <a i18n routerLink="/app/profile" class="tb-sheet-item" (click)="open.set(false)"><i class="pi pi-user"></i>Mon profil</a>
             <!-- Desktop app: the account is the last item of the side bar, its menu has the logout -->
             @if (logoutHere()) {
-              <button type="button" class="tb-sheet-item tb-account-logout" (click)="logout()"><i class="pi pi-sign-out"></i>Se déconnecter</button>
+              <button i18n type="button" class="tb-sheet-item tb-account-logout" (click)="logout()"><i class="pi pi-sign-out"></i>Se déconnecter</button>
             }
           </div>
         </div>
       }
     } @else {
-      <tb-sheet [(open)]="open" title="Comptes" [width]="440">
+      <tb-sheet [(open)]="open" i18n-title title="Comptes" [width]="440">
         <ng-container *ngTemplateOutlet="list" />
-        <button type="button" class="tb-sheet-item tb-account-adding" (click)="add()">
+        <button i18n type="button" class="tb-sheet-item tb-account-adding" (click)="add()">
           <i class="pi pi-user-plus"></i>Ajouter un compte
         </button>
       </tb-sheet>
@@ -135,9 +136,9 @@ export class TbAccounts {
   protected async forget(c: Account): Promise<void> {
     const current = c.key === this.auth.key();
     const ok = await this.confirm.ask(
-      'Oublier ce compte',
-      `« ${c.user.username} » (${readableAddress(c.server)}) ne sera plus proposé sur cet appareil${current ? ' et tu seras déconnecté' : ''}. Le compte lui-même n'est pas supprimé.`,
-      { confirm: 'Oublier', danger: true },
+      $localize`Oublier ce compte`,
+      $localize`« ${c.user.username} » (${readableAddress(c.server)}) ne sera plus proposé sur cet appareil${current ? $localize` et tu seras déconnecté` : ''}. Le compte lui-même n'est pas supprimé.`,
+      { confirm: $localize`Oublier`, danger: true },
     );
     if (!ok) return;
     if (current) this.open.set(false);

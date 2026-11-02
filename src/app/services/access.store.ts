@@ -119,12 +119,12 @@ export class AccessStore {
 
   /** « Tout (administrateur) », « Tout ThermoBox », « 2 élément(s) + 1 groupe(s) », « Aucun accès » */
   static shortSummary(l: UserRow): string {
-    if (l.user.type === 'ADMIN') return 'Tout (administrateur)';
+    if (l.user.type === 'ADMIN') return $localize`Tout (administrateur)`;
     if (!l.read && !l.access) return '…';
-    if (l.unlimited) return 'Tout ThermoBox';
+    if (l.unlimited) return $localize`Tout ThermoBox`;
     const n = l.access?.elements.length ?? 0;
-    if (!n && !l.groups.length) return 'Aucun accès';
-    return [n ? `${n} élément(s)` : null, l.groups.length ? `${l.groups.length} groupe(s)` : null].filter(Boolean).join(' + ');
+    if (!n && !l.groups.length) return $localize`Aucun accès`;
+    return [n ? $localize`${n} élément(s)` : null, l.groups.length ? $localize`${l.groups.length} groupe(s)` : null].filter(Boolean).join(' + ');
   }
 
   static noAccess(l: UserRow): boolean {
@@ -133,12 +133,12 @@ export class AccessStore {
 
   /** « Accès à tout », « Accès : Bâtiment A, Salle 12 », « Aucun accès »… shown under each user. */
   static longSummary(l: UserRow): string {
-    if (l.user.type === 'ADMIN') return 'Accès à tout (administrateur)';
-    if (!l.read && !l.access) return 'Accès…';
-    if (l.unlimited) return 'Accès à tout';
+    if (l.user.type === 'ADMIN') return $localize`Accès à tout (administrateur)`;
+    if (!l.read && !l.access) return $localize`Accès…`;
+    if (l.unlimited) return $localize`Accès à tout`;
     const names = (l.access?.elements ?? []).map((e) => e.name ?? '').sort((a, b) => a.localeCompare(b, 'fr'));
-    if (!names.length) return 'Aucun accès';
-    if (names.length <= 3) return 'Accès : ' + names.join(', ');
-    return `Accès : ${names.slice(0, 3).join(', ')} et ${names.length - 3} autre(s)`;
+    if (!names.length) return $localize`Aucun accès`;
+    if (names.length <= 3) return $localize`Accès : ` + names.join(', ');
+    return $localize`Accès : ${names.slice(0, 3).join(', ')} et ${names.length - 3} autre(s)`;
   }
 }

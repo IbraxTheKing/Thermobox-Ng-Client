@@ -72,8 +72,8 @@ const CONFETTI = 'M9 4h6v16H9z';
 export const SEASONS: readonly Season[] = [
   {
     id: 'new-year',
-    label: 'Nouvel An',
-    greeting: 'Bonne année !',
+    label: $localize`Nouvel An`,
+    greeting: $localize`Bonne année !`,
     start: (y) => day(y, 12, 31),
     end: (y) => day(y + 1, 1, 3),
     accent: { h: 85, c: 0.1 },
@@ -81,8 +81,8 @@ export const SEASONS: readonly Season[] = [
   },
   {
     id: 'valentine',
-    label: 'Saint-Valentin',
-    greeting: 'Bonne Saint-Valentin',
+    label: $localize`Saint-Valentin`,
+    greeting: $localize`Bonne Saint-Valentin`,
     start: (y) => day(y, 2, 13),
     end: (y) => day(y, 2, 15),
     accent: { h: 5, c: 0.12 },
@@ -90,8 +90,8 @@ export const SEASONS: readonly Season[] = [
   },
   {
     id: 'easter',
-    label: 'Pâques',
-    greeting: 'Joyeuses Pâques',
+    label: $localize`Pâques`,
+    greeting: $localize`Joyeuses Pâques`,
     // Good Friday to Easter Monday
     start: (y) => plus(easter(y), -2),
     end: (y) => plus(easter(y), 2),
@@ -100,8 +100,8 @@ export const SEASONS: readonly Season[] = [
   },
   {
     id: 'bastille-day',
-    label: 'Fête nationale',
-    greeting: 'Bonne fête nationale',
+    label: $localize`Fête nationale`,
+    greeting: $localize`Bonne fête nationale`,
     start: (y) => day(y, 7, 13),
     end: (y) => day(y, 7, 15),
     accent: { h: 260, c: 0.11 },
@@ -109,8 +109,8 @@ export const SEASONS: readonly Season[] = [
   },
   {
     id: 'halloween',
-    label: 'Halloween',
-    greeting: 'Joyeux Halloween',
+    label: $localize`Halloween`,
+    greeting: $localize`Joyeux Halloween`,
     start: (y) => day(y, 10, 25),
     end: (y) => day(y, 11, 2),
     accent: { h: 55, c: 0.14 },
@@ -118,8 +118,8 @@ export const SEASONS: readonly Season[] = [
   },
   {
     id: 'christmas',
-    label: 'Noël',
-    greeting: 'Joyeux Noël',
+    label: $localize`Noël`,
+    greeting: $localize`Joyeux Noël`,
     start: (y) => day(y, 12, 1),
     end: (y) => day(y, 12, 27),
     accent: { h: 25, c: 0.12 },

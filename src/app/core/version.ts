@@ -70,5 +70,5 @@ export class Version {
 
 /** « Corrective » / « Fonctionnelle » for the type of an update (the server's typeLabel is English since 26.12). */
 export function updateTypeLabel(type: string): string {
-  return ({ PATCH: 'Corrective', FEATURE: 'Fonctionnelle' } as Record<string, string>)[type] ?? type;
+  return ({ PATCH: $localize`Corrective`, FEATURE: $localize`Fonctionnelle` } as Record<string, string>)[type] ?? type;
 }

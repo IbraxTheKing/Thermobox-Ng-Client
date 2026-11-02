@@ -31,7 +31,10 @@
             "define": {
               "THERMOBOX_VERSION": "\"dev\"",
               "THERMOBOX_COMMIT": "\"\""
-            }
+            },
+            "polyfills": [
+              "@angular/localize/init"
+            ]
           },
           "configurations": {
             "production": {
@@ -75,6 +78,12 @@
         },
         "test": {
           "builder": "@angular/build:unit-test"
+        }
+      },
+      "i18n": {
+        "sourceLocale": {
+          "code": "fr",
+          "baseHref": ""
         }
       }
     }

@@ -1,0 +1,3534 @@
+{
+  "6103118278620987967": {
+    "fr": "Connexion",
+    "en": "Sign in"
+  },
+  "6474835368012891360": {
+    "fr": "Inscription",
+    "en": "Sign up"
+  },
+  "5460349843625378822": {
+    "fr": "Paramètres",
+    "en": "Settings"
+  },
+  "7131503233535545455": {
+    "fr": "À propos",
+    "en": "About"
+  },
+  "5326805816398599201": {
+    "fr": "Aperçu",
+    "en": "Overview"
+  },
+  "5299076837277482336": {
+    "fr": "Bâtiments et salles",
+    "en": "Buildings and rooms"
+  },
+  "7237554351610528045": {
+    "fr": "Salle",
+    "en": "Room"
+  },
+  "7872983426599866946": {
+    "fr": "Températures",
+    "en": "Temperatures"
+  },
+  "6712266296133501935": {
+    "fr": "Gestion des salles",
+    "en": "Room management"
+  },
+  "2789019178438540452": {
+    "fr": "Serveur",
+    "en": "Server"
+  },
+  "1385594240385466640": {
+    "fr": "Mon profil",
+    "en": "My profile"
+  },
+  "2013119162535890375": {
+    "fr": "Plus",
+    "en": "More"
+  },
+  "7018050884147735331": {
+    "fr": "Préférences",
+    "en": "Preferences"
+  },
+  "4606916689314514635": {
+    "fr": "Océan",
+    "en": "Ocean"
+  },
+  "5438606062194512193": {
+    "fr": "Lagon",
+    "en": "Lagoon"
+  },
+  "5041849131210136086": {
+    "fr": "Mousse",
+    "en": "Moss"
+  },
+  "4783691358102249781": {
+    "fr": "Ambre",
+    "en": "Amber"
+  },
+  "1060614352141782909": {
+    "fr": "Corail",
+    "en": "Coral"
+  },
+  "5786363460327756403": {
+    "fr": "Rose",
+    "en": "Pink"
+  },
+  "6177108136401598006": {
+    "fr": "Lavande",
+    "en": "Lavender"
+  },
+  "371083623089400819": {
+    "fr": "Ardoise",
+    "en": "Slate"
+  },
+  "4288726053584380122": {
+    "fr": "iOS ne donne pas sa couleur d'accent aux applications.",
+    "en": "iOS does not share its accent colour with apps."
+  },
+  "2277580361247905203": {
+    "fr": "Couleurs du fond d'écran à partir d'Android 12.",
+    "en": "Wallpaper colours from Android 12."
+  },
+  "8443718862707583046": {
+    "fr": "Ce système ne donne pas sa couleur d'accent à l'application.",
+    "en": "This system does not share its accent colour with the app."
+  },
+  "1642377808028774180": {
+    "fr": "Ce navigateur ne donne pas la couleur d'accent du système (Firefox et Safari la donnent).",
+    "en": "This browser does not share the system accent colour (Firefox and Safari do)."
+  },
+  "1711750570766225138": {
+    "fr": "Annuler",
+    "en": "Cancel"
+  },
+  "131577115706825034": {
+    "fr": "Erreur inattendue",
+    "en": "Unexpected error"
+  },
+  "2664497375127070803": {
+    "fr": "Le serveur ThermoBox ne répond pas",
+    "en": "The ThermoBox server is not responding"
+  },
+  "8383370810868591889": {
+    "fr": "Action non autorisée",
+    "en": "Action not allowed"
+  },
+  "5679442000217380835": {
+    "fr": "Élément introuvable",
+    "en": "Item not found"
+  },
+  "4343556618804450079": {
+    "fr": "Limite de requêtes GitHub atteinte, réessayez plus tard",
+    "en": "GitHub request limit reached, try again later"
+  },
+  "3822047388715303940": {
+    "fr": "GitHub a répondu {$PH}",
+    "en": "GitHub answered {$PH}"
+  },
+  "8188549017069899915": {
+    "fr": "{$date} à {$time}",
+    "en": "{$date} at {$time}"
+  },
+  "7840599893748794712": {
+    "fr": "jamais",
+    "en": "never"
+  },
+  "6727641887847285250": {
+    "fr": "Windows",
+    "en": "Windows"
+  },
+  "9031750643984675020": {
+    "fr": "Linux",
+    "en": "Linux"
+  },
+  "2213098669031867704": {
+    "fr": "Partout",
+    "en": "Everywhere"
+  },
+  "3096904438722084960": {
+    "fr": "Ouvrir la 1ʳᵉ à la 6ᵉ entrée du menu (Aperçu, Salles, Mesures…)",
+    "en": "Open the 1st to 6th menu entry (Overview, Rooms, Measurements…)"
+  },
+  "3619693195353217320": {
+    "fr": "Aller au champ de recherche de la page",
+    "en": "Go to the search field of the page"
+  },
+  "2676184046692620487": {
+    "fr": "Actualiser les données de la page",
+    "en": "Refresh the data of the page"
+  },
+  "4669314378889471955": {
+    "fr": "Action principale de la page (nouvel élément, nouvel utilisateur…)",
+    "en": "Main action of the page (new item, new user…)"
+  },
+  "1120999560548777839": {
+    "fr": "Passer du thème clair au thème sombre",
+    "en": "Switch between the light and dark themes"
+  },
+  "6338490065440299005": {
+    "fr": "Ouvrir les Réglages (comme ⌘,)",
+    "en": "Open Settings (like ⌘,)"
+  },
+  "3405527026837778451": {
+    "fr": "Ouvrir les Préférences",
+    "en": "Open Preferences"
+  },
+  "5281641197470589262": {
+    "fr": "Afficher ou cacher cette liste",
+    "en": "Show or hide this list"
+  },
+  "9083757686923501079": {
+    "fr": "Échap",
+    "en": "Esc"
+  },
+  "6247047314469975100": {
+    "fr": "Fermer cette liste",
+    "en": "Close this list"
+  },
+  "6238693840843285054": {
+    "fr": "Page d'une salle",
+    "en": "Room page"
+  },
+  "4014480891275496300": {
+    "fr": "Espace",
+    "en": "Space"
+  },
+  "384410685098834048": {
+    "fr": "Revenir à l'aperçu",
+    "en": "Back to the overview"
+  },
+  "2776399349690086272": {
+    "fr": "Retour arrière",
+    "en": "Backspace"
+  },
+  "7499882506016603259": {
+    "fr": "Revenir à l'aperçu (comme Espace)",
+    "en": "Back to the overview (like Space)"
+  },
+  "2675575085747129643": {
+    "fr": "Ajouter aux favoris ou en retirer",
+    "en": "Add to or remove from favourites"
+  },
+  "3826431920918628986": {
+    "fr": "Replier ou déplier toutes les sections sauf les favoris",
+    "en": "Fold or unfold every section except favourites"
+  },
+  "1500377482010180527": {
+    "fr": "Remarque",
+    "en": "Note"
+  },
+  "6200854119043061551": {
+    "fr": "Astuce",
+    "en": "Tip"
+  },
+  "6914364962936278074": {
+    "fr": "Important",
+    "en": "Important"
+  },
+  "5871928281314022227": {
+    "fr": "Attention",
+    "en": "Warning"
+  },
+  "1737399649114536906": {
+    "fr": "Prudence",
+    "en": "Caution"
+  },
+  "9017277929176667880": {
+    "fr": "<p class=\"tb-muted\">Pas de notes de version.</p>",
+    "en": "<p class=\"tb-muted\">No release notes.</p>"
+  },
+  "4247263368529700262": {
+    "fr": "Confirmer",
+    "en": "Confirm"
+  },
+  "4601537828709514981": {
+    "fr": "ont atteint leur consigne",
+    "en": "reached their setpoint"
+  },
+  "415755682695125828": {
+    "fr": "a atteint sa consigne",
+    "en": "reached its setpoint"
+  },
+  "3245278518173862622": {
+    "fr": "s'en sont éloignées",
+    "en": "moved away from it"
+  },
+  "5113793175235566655": {
+    "fr": "s'en est éloignée",
+    "en": "moved away from it"
+  },
+  "4633531639412888021": {
+    "fr": "{$PH} salles ont changé",
+    "en": "{$PH} rooms changed"
+  },
+  "1020675305227320123": {
+    "fr": "{$PH} a atteint sa consigne",
+    "en": "{$PH} reached its setpoint"
+  },
+  "3847443563107422090": {
+    "fr": "{$PH} pour {$PH_1}{$PH_2}",
+    "en": "{$PH} for {$PH_1}{$PH_2}"
+  },
+  "519113553268203072": {
+    "fr": "{$PH} est sous sa consigne",
+    "en": "{$PH} is below its setpoint"
+  },
+  "8463581799770755349": {
+    "fr": "{$PH} pour {$PH_1} ({$PH_2}){$PH_3}",
+    "en": "{$PH} for {$PH_1} ({$PH_2}){$PH_3}"
+  },
+  "2553125743141406598": {
+    "fr": "{$PH} est trop chaude",
+    "en": "{$PH} is too warm"
+  },
+  "4304065077982855680": {
+    "fr": "Nouvel An",
+    "en": "New Year"
+  },
+  "264006303587320014": {
+    "fr": "Bonne année !",
+    "en": "Happy New Year!"
+  },
+  "1360249086532869768": {
+    "fr": "Saint-Valentin",
+    "en": "Valentine's Day"
+  },
+  "7349030843264036389": {
+    "fr": "Bonne Saint-Valentin",
+    "en": "Happy Valentine's Day"
+  },
+  "2769306687211526272": {
+    "fr": "Pâques",
+    "en": "Easter"
+  },
+  "5995735792235072415": {
+    "fr": "Joyeuses Pâques",
+    "en": "Happy Easter"
+  },
+  "6308266212126961646": {
+    "fr": "Fête nationale",
+    "en": "Bastille Day"
+  },
+  "2805134502666790399": {
+    "fr": "Bonne fête nationale",
+    "en": "Happy Bastille Day"
+  },
+  "8180162587413296657": {
+    "fr": "Halloween",
+    "en": "Halloween"
+  },
+  "2822400008167021270": {
+    "fr": "Joyeux Halloween",
+    "en": "Happy Halloween"
+  },
+  "5737526992758767493": {
+    "fr": "Noël",
+    "en": "Christmas"
+  },
+  "2707735591768808379": {
+    "fr": "Joyeux Noël",
+    "en": "Merry Christmas"
+  },
+  "3905239345805877394": {
+    "fr": "Stable",
+    "en": "Stable"
+  },
+  "7344790139664902732": {
+    "fr": "En chauffe",
+    "en": "Heating"
+  },
+  "5152458275392322707": {
+    "fr": "en chauffe",
+    "en": "heating"
+  },
+  "7870234611217937417": {
+    "fr": "Trop chaud",
+    "en": "Too warm"
+  },
+  "2968442572721133009": {
+    "fr": "Pas de données",
+    "en": "No data"
+  },
+  "8010737169294591362": {
+    "fr": "sans données",
+    "en": "without data"
+  },
+  "671106503328243572": {
+    "fr": "Maison",
+    "en": "Home"
+  },
+  "3047621821416947657": {
+    "fr": "Pièces",
+    "en": "Rooms"
+  },
+  "7831615079320449369": {
+    "fr": "Historique",
+    "en": "History"
+  },
+  "6157803967017724460": {
+    "fr": "Thermobox",
+    "en": "Thermobox"
+  },
+  "6523791569554664385": {
+    "fr": ", recommandée",
+    "en": ", recommended"
+  },
+  "3662996923280528739": {
+    "fr": " et ",
+    "en": " and "
+  },
+  "325033632446377221": {
+    "fr": "Corrective",
+    "en": "Patch"
+  },
+  "6155082375816993984": {
+    "fr": "Fonctionnelle",
+    "en": "Feature"
+  },
+  "417562292679571705": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Retour",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Back"
+  },
+  "5310433711568403252": {
+    "fr": "La température de chaque salle, en un coup d'œil.",
+    "en": "The temperature of every room, at a glance."
+  },
+  "2369423116644077158": {
+    "fr": "Versions",
+    "en": "Versions"
+  },
+  "6680677202737904168": {
+    "fr": "Client Thermobox",
+    "en": "Thermobox client"
+  },
+  "3448918014226251014": {
+    "fr": "{$INTERPOLATION} · Angular {$INTERPOLATION_1}{$START_BLOCK_IF} · {$INTERPOLATION_2} {$CLOSE_BLOCK_IF}{$START_BLOCK_IF_1} · application {$INTERPOLATION_3} {$CLOSE_BLOCK_IF}",
+    "en": "{$INTERPOLATION} · Angular {$INTERPOLATION_1}{$START_BLOCK_IF} · {$INTERPOLATION_2} {$CLOSE_BLOCK_IF}{$START_BLOCK_IF_1} · {$INTERPOLATION_3} app {$CLOSE_BLOCK_IF}"
+  },
+  "3039190828842870996": {
+    "fr": "Client à jour",
+    "en": "Client up to date"
+  },
+  "342052758928964436": {
+    "fr": "Aucune version plus récente sur GitHub",
+    "en": "No newer version on GitHub"
+  },
+  "408597014328185452": {
+    "fr": "Versions du client",
+    "en": "Client versions"
+  },
+  "6792887179410602383": {
+    "fr": "Serveur REST",
+    "en": "REST server"
+  },
+  "4462774289392526993": {
+    "fr": " Canal {$INTERPOLATION}{$START_BLOCK_IF} · {$INTERPOLATION_1} {$CLOSE_BLOCK_IF}",
+    "en": " Channel {$INTERPOLATION}{$START_BLOCK_IF} · {$INTERPOLATION_1} {$CLOSE_BLOCK_IF}"
+  },
+  "7784499920085823606": {
+    "fr": " Version non communiquée par le serveur ",
+    "en": " Version not given by the server "
+  },
+  "8701026722228217596": {
+    "fr": " Chargement… ",
+    "en": " Loading… "
+  },
+  "5921041691783923100": {
+    "fr": "Interface JSF",
+    "en": "JSF interface"
+  },
+  "1505392666147868380": {
+    "fr": "Publiée avec le serveur dans les versions de ThermoBox ; elle tourne et se met à jour à part.",
+    "en": "Released with the server in the ThermoBox versions; it runs and updates separately."
+  },
+  "7067754420987149148": {
+    "fr": "Code source",
+    "en": "Source code"
+  },
+  "2215572500670729706": {
+    "fr": "Dépôts GitHub",
+    "en": "GitHub repositories"
+  },
+  "6832369903253088923": {
+    "fr": "Crédits",
+    "en": "Credits"
+  },
+  "8290344019832484876": {
+    "fr": "ib · IbraxTheKing",
+    "en": "ib · IbraxTheKing"
+  },
+  "3631445087152158950": {
+    "fr": "Conception et développement de ThermoBox",
+    "en": "Design and development of ThermoBox"
+  },
+  "1152114459773085403": {
+    "fr": "ThermoBox est distribué sous licence MIT. © 2026 ib.",
+    "en": "ThermoBox is distributed under the MIT licence. © 2026 ib."
+  },
+  "9167786874272926575": {
+    "fr": "Web",
+    "en": "Web"
+  },
+  "784398267473732190": {
+    "fr": "Serveur REST, interface JSF, base de données et boîtiers",
+    "en": "REST server, JSF interface, database and boxes"
+  },
+  "1181506289212936426": {
+    "fr": "Serveur REST, base de données et boîtiers",
+    "en": "REST server, database and boxes"
+  },
+  "570324292906412860": {
+    "fr": "Ce client : web, PWA, iOS, Android, Windows, macOS et Linux",
+    "en": "This client: web, PWA, iOS, Android, Windows, macOS and Linux"
+  },
+  "8413653130434546022": {
+    "fr": "Angular",
+    "en": "Angular"
+  },
+  "8913625123353626474": {
+    "fr": "Capacitor",
+    "en": "Capacitor"
+  },
+  "2872538665497839245": {
+    "fr": "applications iOS et Android",
+    "en": "iOS and Android apps"
+  },
+  "1896930668790222594": {
+    "fr": "Tauri",
+    "en": "Tauri"
+  },
+  "2529135480717691428": {
+    "fr": "applications Windows, macOS et Linux",
+    "en": "Windows, macOS and Linux apps"
+  },
+  "6897969530855285876": {
+    "fr": "icônes",
+    "en": "icons"
+  },
+  "3457548329974271476": {
+    "fr": "Manrope",
+    "en": "Manrope"
+  },
+  "4888957133567325826": {
+    "fr": "utilitaires de style",
+    "en": "style utilities"
+  },
+  "7524573943082691135": {
+    "fr": "serveur REST",
+    "en": "REST server"
+  },
+  "8202622375541756019": {
+    "fr": "Jakarta Faces et PrimeFaces",
+    "en": "Jakarta Faces and PrimeFaces"
+  },
+  "1425648060541457874": {
+    "fr": "préversions",
+    "en": "pre-releases"
+  },
+  "899580004957500607": {
+    "fr": "Thermobox {$INTERPOLATION} {$INTERPOLATION_1}",
+    "en": "Thermobox {$INTERPOLATION} {$INTERPOLATION_1}"
+  },
+  "5710550455494461439": {
+    "fr": "Application",
+    "en": "Application"
+  },
+  "2672221731891635568": {
+    "fr": "Paramètres de cet appareil : thème, couleurs, unité",
+    "en": "Settings of this device: theme, colours, unit"
+  },
+  "254242377789421454": {
+    "fr": "Versions, code source, crédits",
+    "en": "Versions, source code, credits"
+  },
+  "2184882498561080881": {
+    "fr": "{$START_TAG_STRONG}Compte supprimé{$CLOSE_TAG_STRONG}Ton compte a bien été supprimé.",
+    "en": "{$START_TAG_STRONG}Account deleted{$CLOSE_TAG_STRONG}Your account has been deleted."
+  },
+  "6007081584690849139": {
+    "fr": "{$START_TAG_STRONG}Session terminée{$CLOSE_TAG_STRONG}Reconnecte-toi pour continuer.",
+    "en": "{$START_TAG_STRONG}Session ended{$CLOSE_TAG_STRONG}Sign in again to continue."
+  },
+  "3306231975988423938": {
+    "fr": "{$START_TAG_STRONG}Compte créé{$CLOSE_TAG_STRONG}Tu peux maintenant te connecter.",
+    "en": "{$START_TAG_STRONG}Account created{$CLOSE_TAG_STRONG}You can now sign in."
+  },
+  "2513936637976567190": {
+    "fr": "Comptes enregistrés",
+    "en": "Saved accounts"
+  },
+  "3818334830534552591": {
+    "fr": "Ouvert",
+    "en": "Open"
+  },
+  "5249891717669571568": {
+    "fr": "Mot de passe",
+    "en": "Password"
+  },
+  "690571000676485325": {
+    "fr": "Autre compte",
+    "en": "Other account"
+  },
+  "4296788408396749461": {
+    "fr": "Serveur ThermoBox",
+    "en": "ThermoBox server"
+  },
+  "3324908643013887927": {
+    "fr": " L'adresse donnée par ton administrateur, avec le port s'il y en a un.{$START_BLOCK_IF} Vide : ce site.{$CLOSE_BLOCK_IF}",
+    "en": " The address given by your administrator, with the port if there is one.{$START_BLOCK_IF} Empty: this site.{$CLOSE_BLOCK_IF}"
+  },
+  "3704797194560734590": {
+    "fr": "Nom d'utilisateur",
+    "en": "Username"
+  },
+  "2629359845910294475": {
+    "fr": "Nom d'utilisateur obligatoire",
+    "en": "Username required"
+  },
+  "320205788531765645": {
+    "fr": "Mot de passe obligatoire",
+    "en": "Password required"
+  },
+  "4381086262523638542": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Se connecter ",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Sign in "
+  },
+  "8805978714994295668": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Revenir à {$INTERPOLATION}",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Back to {$INTERPOLATION}"
+  },
+  "5583178941455817047": {
+    "fr": "Pas encore de compte ? {$START_LINK}Créer un compte{$CLOSE_LINK}",
+    "en": "No account yet? {$START_LINK}Create an account{$CLOSE_LINK}"
+  },
+  "8002842172879713198": {
+    "fr": "Indique l'adresse du serveur ThermoBox",
+    "en": "Enter the address of the ThermoBox server"
+  },
+  "7127168740370632482": {
+    "fr": "Connexion impossible",
+    "en": "Cannot sign in"
+  },
+  "577860728605162174": {
+    "fr": "Nom d'utilisateur ou mot de passe incorrect",
+    "en": "Wrong username or password"
+  },
+  "7805436466006262024": {
+    "fr": "Trop de tentatives : réessaie dans quelques minutes",
+    "en": "Too many attempts: try again in a few minutes"
+  },
+  "1847466303514167048": {
+    "fr": "Créer un compte",
+    "en": "Create an account"
+  },
+  "2883217415663265248": {
+    "fr": " Le serveur où créer le compte, avec le port s'il y en a un.{$START_BLOCK_IF} Vide : ce site.{$CLOSE_BLOCK_IF}",
+    "en": " The server to create the account on, with the port if there is one.{$START_BLOCK_IF} Empty: this site.{$CLOSE_BLOCK_IF}"
+  },
+  "2213577223066046413": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Sur {$START_TAG_STRONG}{$INTERPOLATION}{$CLOSE_TAG_STRONG}",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} On {$START_TAG_STRONG}{$INTERPOLATION}{$CLOSE_TAG_STRONG}"
+  },
+  "4876453302918318592": {
+    "fr": "Autre serveur",
+    "en": "Other server"
+  },
+  "8242586129199064580": {
+    "fr": "Choisis un mot de passe (8 caractères au moins)",
+    "en": "Choose a password (at least 8 characters)"
+  },
+  "1234709746630139322": {
+    "fr": "Confirmation",
+    "en": "Confirmation"
+  },
+  "6583583426682756218": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Créer mon compte ",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Create my account "
+  },
+  "4802250354981706171": {
+    "fr": "Déjà inscrit ? {$START_LINK}Se connecter{$CLOSE_LINK}",
+    "en": "Already registered? {$START_LINK}Sign in{$CLOSE_LINK}"
+  },
+  "7448528993425575242": {
+    "fr": "Entre 3 et 50 caractères",
+    "en": "Between 3 and 50 characters"
+  },
+  "7752009554265742121": {
+    "fr": "Le nom d'utilisateur ne peut pas contenir d'espace",
+    "en": "The username cannot contain spaces"
+  },
+  "6788983491074448807": {
+    "fr": "Au moins 8 caractères",
+    "en": "At least 8 characters"
+  },
+  "5413673893979494247": {
+    "fr": "Trop long (72 octets au plus, les lettres accentuées comptent double)",
+    "en": "Too long (72 bytes at most, accented letters count twice)"
+  },
+  "7075852204414495662": {
+    "fr": "Confirmation obligatoire",
+    "en": "Confirmation required"
+  },
+  "4394838622216418755": {
+    "fr": "Les mots de passe ne correspondent pas",
+    "en": "The passwords do not match"
+  },
+  "3418310741398756793": {
+    "fr": "Inscription impossible",
+    "en": "Cannot sign up"
+  },
+  "5008418155065539471": {
+    "fr": "Ce nom d'utilisateur est déjà pris",
+    "en": "This username is already taken"
+  },
+  "2474233905515036495": {
+    "fr": ", dernier relevé à {$INTERPOLATION}",
+    "en": ", last reading at {$INTERPOLATION}"
+  },
+  "6926180521761569399": {
+    "fr": "Taille des cartes",
+    "en": "Card size"
+  },
+  "5925860946277274949": {
+    "fr": "Actualiser",
+    "en": "Refresh"
+  },
+  "6080978749403157279": {
+    "fr": "Nouvelle version de ThermoBox disponible",
+    "en": "New version of ThermoBox available"
+  },
+  "3926533736832482089": {
+    "fr": "Voir",
+    "en": "View"
+  },
+  "5853153545632452890": {
+    "fr": "Salles par état",
+    "en": "Rooms by state"
+  },
+  "5829380065548494521": {
+    "fr": "Rechercher",
+    "en": "Search"
+  },
+  "4574043683605876869": {
+    "fr": "Bâtiment",
+    "en": "Building"
+  },
+  "267395622728984315": {
+    "fr": "Tous les bâtiments",
+    "en": "All buildings"
+  },
+  "6763537362838379341": {
+    "fr": "Sans bâtiment",
+    "en": "No building"
+  },
+  "1613763221131545084": {
+    "fr": "Écart minimal à la consigne",
+    "en": "Smallest gap to the setpoint"
+  },
+  "6323607855240262810": {
+    "fr": "Écart maximal à la consigne",
+    "en": "Largest gap to the setpoint"
+  },
+  "3443955858572622995": {
+    "fr": "Trop froid {$START_SMALL_TEXT}{$INTERPOLATION}{$CLOSE_SMALL_TEXT}",
+    "en": "Too cold {$START_SMALL_TEXT}{$INTERPOLATION}{$CLOSE_SMALL_TEXT}"
+  },
+  "2345658504489085443": {
+    "fr": "À la consigne",
+    "en": "At the setpoint"
+  },
+  "8536219957202474544": {
+    "fr": "{$START_SMALL_TEXT}{$INTERPOLATION}{$CLOSE_SMALL_TEXT} Trop chaud",
+    "en": "{$START_SMALL_TEXT}{$INTERPOLATION}{$CLOSE_SMALL_TEXT} Too warm"
+  },
+  "3035007874042619873": {
+    "fr": "{$START_BOLD_TEXT}{$INTERPOLATION}{$CLOSE_BOLD_TEXT} · {$INTERPOLATION_1} {$INTERPOLATION_2} sur {$INTERPOLATION_3} {$START_TAG_BUTTON}Tout afficher{$CLOSE_TAG_BUTTON}",
+    "en": "{$START_BOLD_TEXT}{$INTERPOLATION}{$CLOSE_BOLD_TEXT} · {$INTERPOLATION_1} {$INTERPOLATION_2} of {$INTERPOLATION_3} {$START_TAG_BUTTON}Show all{$CLOSE_TAG_BUTTON}"
+  },
+  "5636773698510772625": {
+    "fr": "Glisse les poignées de la barre pour ne garder que certains écarts.",
+    "en": "Drag the handles of the bar to keep only some gaps."
+  },
+  "6348125432758321940": {
+    "fr": " Tolérance {$TAG_INPUT}{$START_TAG_OUTPUT}±{$INTERPOLATION}{$CLOSE_TAG_OUTPUT}",
+    "en": " Tolerance {$TAG_INPUT}{$START_TAG_OUTPUT}±{$INTERPOLATION}{$CLOSE_TAG_OUTPUT}"
+  },
+  "1092860736966297322": {
+    "fr": "Tolérance : écart qui colore une salle à moitié",
+    "en": "Tolerance: the gap that colours a room halfway"
+  },
+  "5312662642901929343": {
+    "fr": "{$INTERPOLATION} boîtier(s) non rattaché(s)",
+    "en": "{$INTERPOLATION} unattached box(es)"
+  },
+  "6857449438517958529": {
+    "fr": "Leurs mesures ne comptent dans aucune salle tant qu'ils ne sont pas rattachés.",
+    "en": "Their measurements count in no room until they are attached."
+  },
+  "4950050833857661315": {
+    "fr": "Les ranger",
+    "en": "Sort them out"
+  },
+  "1837516096643263283": {
+    "fr": "Un administrateur vous donne accès aux bâtiments, étages ou salles à suivre.",
+    "en": "An administrator gives you access to the buildings, floors or rooms to follow."
+  },
+  "7860349635756520061": {
+    "fr": "Gérer les bâtiments et salles",
+    "en": "Manage buildings and rooms"
+  },
+  "7651731176635339447": {
+    "fr": "Rien ne correspond à ta recherche",
+    "en": "Nothing matches your search"
+  },
+  "8416277605054139046": {
+    "fr": "Effacer les filtres",
+    "en": "Clear the filters"
+  },
+  "1227814836184590014": {
+    "fr": "{$START_TAG_SPAN}{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}{$CLOSE_TAG_SPAN} Favoris {$START_TAG_SPAN_1}{$INTERPOLATION}{$CLOSE_TAG_SPAN}{$START_ITALIC_TEXT_1}{$CLOSE_ITALIC_TEXT}",
+    "en": "{$START_TAG_SPAN}{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}{$CLOSE_TAG_SPAN} Favourites {$START_TAG_SPAN_1}{$INTERPOLATION}{$CLOSE_TAG_SPAN}{$START_ITALIC_TEXT_1}{$CLOSE_ITALIC_TEXT}"
+  },
+  "4474804019393362662": {
+    "fr": ", moyenne {$INTERPOLATION} {$INTERPOLATION_1}",
+    "en": ", average {$INTERPOLATION} {$INTERPOLATION_1}"
+  },
+  "4781526624154906682": {
+    "fr": "{$PH} et moins",
+    "en": "{$PH} and below"
+  },
+  "4147222232303494411": {
+    "fr": "{$PH} et plus",
+    "en": "{$PH} and above"
+  },
+  "1209904153314047530": {
+    "fr": "De {$PH} à {$PH_1}",
+    "en": "From {$PH} to {$PH_1}"
+  },
+  "7565086746050202388": {
+    "fr": "Trop chaudes",
+    "en": "Too warm"
+  },
+  "776487723400717734": {
+    "fr": "Stables",
+    "en": "Stable"
+  },
+  "978743240270719611": {
+    "fr": "Sans mesure",
+    "en": "No measurement"
+  },
+  "7638836405112334027": {
+    "fr": "Il fait bon partout.",
+    "en": "It is comfortable everywhere."
+  },
+  "7663504623530028361": {
+    "fr": "Il fait bon.",
+    "en": "It is comfortable."
+  },
+  "4186297469038249459": {
+    "fr": "{$PH} pièces",
+    "en": "{$PH} rooms"
+  },
+  "7241214568817794272": {
+    "fr": "il fait un peu chaud dans ",
+    "en": "it is a little warm in "
+  },
+  "8359542455836436059": {
+    "fr": "pas de mesure pour ",
+    "en": "no measurement for "
+  },
+  "5383487753053731711": {
+    "fr": "Ouvrir {$INTERPOLATION}",
+    "en": "Open {$INTERPOLATION}"
+  },
+  "8369200539656188039": {
+    "fr": "Favori",
+    "en": "Favourite"
+  },
+  "2798758298718105959": {
+    "fr": " Confortable ",
+    "en": " Comfortable "
+  },
+  "8564728265588823271": {
+    "fr": "pas de mesure",
+    "en": "no measurement"
+  },
+  "8160937909256595211": {
+    "fr": "sans consigne",
+    "en": "no setpoint"
+  },
+  "3517773112934414788": {
+    "fr": "à la consigne",
+    "en": "at the setpoint"
+  },
+  "4918109305814758653": {
+    "fr": "Chauffe",
+    "en": "Heating"
+  },
+  "2900888838923093259": {
+    "fr": "Un peu chaud",
+    "en": "A little warm"
+  },
+  "5039762145827317235": {
+    "fr": "Pas de mesure",
+    "en": "No measurement"
+  },
+  "4949474565798340693": {
+    "fr": "Confortable",
+    "en": "Comfortable"
+  },
+  "2342295081433476442": {
+    "fr": "Maintenant",
+    "en": "Now"
+  },
+  "409044656642796347": {
+    "fr": "Objectif",
+    "en": "Target"
+  },
+  "2333360249862753741": {
+    "fr": "Écart",
+    "en": "Gap"
+  },
+  "3603731336853282189": {
+    "fr": "Sur une heure",
+    "en": "Over an hour"
+  },
+  "3040076995395719515": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Chargement des 24 dernières heures…",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Loading the last 24 hours…"
+  },
+  "3938803713786392160": {
+    "fr": "Pas de mesure ces dernières 24 heures.",
+    "en": "No measurement in the last 24 hours."
+  },
+  "7813133139184836188": {
+    "fr": "Plus bas (24 h)",
+    "en": "Lowest (24 h)"
+  },
+  "6134337927219392663": {
+    "fr": "Plus haut (24 h)",
+    "en": "Highest (24 h)"
+  },
+  "8453670872955663117": {
+    "fr": "Moyenne (24 h)",
+    "en": "Average (24 h)"
+  },
+  "4990691145836962711": {
+    "fr": "À l'objectif",
+    "en": "At the target"
+  },
+  "2142937105164714751": {
+    "fr": " · dernière mesure {$INTERPOLATION} ",
+    "en": " · last measurement {$INTERPOLATION} "
+  },
+  "2685580475199562066": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Ouvrir",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Open"
+  },
+  "6825600395474467461": {
+    "fr": "Température",
+    "en": "Temperature"
+  },
+  "6912958813612481378": {
+    "fr": " Rôles et accès de plusieurs utilisateurs à la fois, et groupes : chaque membre d'un groupe voit en plus les bâtiments, étages et salles du groupe. Un utilisateur qui voit tout n'est pas limité par ses groupes.\n",
+    "en": " Roles and accesses of several users at once, and groups: each member of a group also sees the buildings, floors and rooms of the group. A user who sees everything is not limited by their groups.\n"
+  },
+  "4520147773246596950": {
+    "fr": "Utilisateurs ou groupes",
+    "en": "Users or groups"
+  },
+  "1515732632222268172": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Utilisateurs {$START_TAG_SPAN}{$INTERPOLATION}{$CLOSE_TAG_SPAN}",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Users {$START_TAG_SPAN}{$INTERPOLATION}{$CLOSE_TAG_SPAN}"
+  },
+  "7941410464090705871": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Groupes {$START_TAG_SPAN}{$INTERPOLATION}{$CLOSE_TAG_SPAN}",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Groups {$START_TAG_SPAN}{$INTERPOLATION}{$CLOSE_TAG_SPAN}"
+  },
+  "6598029667156193694": {
+    "fr": "Rechercher un utilisateur ou un groupe…",
+    "en": "Search for a user or a group…"
+  },
+  "878506762194566083": {
+    "fr": "Rechercher un groupe…",
+    "en": "Search for a group…"
+  },
+  "812110498939981456": {
+    "fr": "Tous les groupes",
+    "en": "All groups"
+  },
+  "6138499329351915795": {
+    "fr": "Un utilisateur s'affiche s'il est dans l'un des groupes cochés.",
+    "en": "A user is shown if they are in one of the ticked groups."
+  },
+  "6978134356257125264": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Effacer les filtres",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Clear the filters"
+  },
+  "9216518043932454024": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Coche des utilisateurs pour changer leur rôle, leurs accès ou leurs groupes : les actions apparaissent en bas de l'écran. ",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Tick users to change their role, accesses or groups: the actions appear at the bottom of the screen. "
+  },
+  "597725197542418014": {
+    "fr": "{$INTERPOLATION} utilisateur(s)",
+    "en": "{$INTERPOLATION} user(s)"
+  },
+  "7707327496565279819": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Rôle",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Role"
+  },
+  "8778999631388620449": {
+    "fr": "Ils voient tout ThermoBox",
+    "en": "They see all of ThermoBox"
+  },
+  "6392762874202979419": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Tout voir",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}See everything"
+  },
+  "2268579014368105586": {
+    "fr": "Ils ne voient que leurs accès et ceux de leurs groupes",
+    "en": "They only see their accesses and those of their groups"
+  },
+  "6171803093839681102": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Limiter",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Limit"
+  },
+  "6036516371571265466": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Groupe",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Group"
+  },
+  "4853290336919370801": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Nouveau groupe avec eux",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}New group with them"
+  },
+  "2868142018717989381": {
+    "fr": "Tout décocher",
+    "en": "Untick all"
+  },
+  "8135274674997676529": {
+    "fr": "vous",
+    "en": "you"
+  },
+  "6597464606357331706": {
+    "fr": "Tout cocher",
+    "en": "Tick all"
+  },
+  "1400985143937692313": {
+    "fr": "Utilisateur",
+    "en": "User"
+  },
+  "8546041164867999964": {
+    "fr": "Rôle",
+    "en": "Role"
+  },
+  "1497343341817014374": {
+    "fr": "Accès",
+    "en": "Access"
+  },
+  "5783609750670031622": {
+    "fr": "Groupes",
+    "en": "Groups"
+  },
+  "3193976279273491157": {
+    "fr": "Actions",
+    "en": "Actions"
+  },
+  "5272662641528818074": {
+    "fr": "Rechercher un groupe ou un membre…",
+    "en": "Search for a group or a member…"
+  },
+  "9193687838882852780": {
+    "fr": "Rechercher un groupe",
+    "en": "Search for a group"
+  },
+  "7556554253162752169": {
+    "fr": "{$INTERPOLATION} membre(s) · {$INTERPOLATION_1} élément(s)",
+    "en": "{$INTERPOLATION} member(s) · {$INTERPOLATION_1} item(s)"
+  },
+  "5712320245580483957": {
+    "fr": "Groupe",
+    "en": "Group"
+  },
+  "7292133942591917693": {
+    "fr": "Membres",
+    "en": "Members"
+  },
+  "6094814068769665733": {
+    "fr": "Donne accès à",
+    "en": "Gives access to"
+  },
+  "1945946484080356088": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Membres",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Members"
+  },
+  "1214138846811429466": {
+    "fr": "Rien",
+    "en": "Nothing"
+  },
+  "2967128886246409531": {
+    "fr": "Rôle des utilisateurs sélectionnés",
+    "en": "Role of the selected users"
+  },
+  "2647644617351333514": {
+    "fr": "Votre propre compte reste administrateur.",
+    "en": "Your own account stays administrator."
+  },
+  "11140629255945401": {
+    "fr": "Choisir…",
+    "en": "Choose…"
+  },
+  "6739586950717648062": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Appliquer",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Apply"
+  },
+  "2541781624728471863": {
+    "fr": "Groupe des utilisateurs sélectionnés",
+    "en": "Group of the selected users"
+  },
+  "1114166400557324294": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Retirer du groupe",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Remove from the group"
+  },
+  "4674349538337226594": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Ajouter au groupe",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Add to the group"
+  },
+  "5363451304863092478": {
+    "fr": "Nom",
+    "en": "Name"
+  },
+  "7627580191513759391": {
+    "fr": "Nom obligatoire",
+    "en": "Name required"
+  },
+  "7845311580215674345": {
+    "fr": "Description (facultative)",
+    "en": "Description (optional)"
+  },
+  "3655508178640072740": {
+    "fr": "Rechercher un utilisateur…",
+    "en": "Search for a user…"
+  },
+  "8869391873206676164": {
+    "fr": "Aucun membre",
+    "en": "No member"
+  },
+  "3603998432839612000": {
+    "fr": "Ses membres voient en plus ce qui est coché, avec tout ce que cela contient (sauf ceux qui voient déjà tout).",
+    "en": "Its members also see what is ticked, with everything it contains (except those who already see everything)."
+  },
+  "8139641979617043620": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Enregistrer",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Save"
+  },
+  "8774514848853722533": {
+    "fr": "Voit tout ThermoBox",
+    "en": "Sees all of ThermoBox"
+  },
+  "9167297816854559088": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Un administrateur voit tout ThermoBox.",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} An administrator sees all of ThermoBox."
+  },
+  "461255407370483369": {
+    "fr": "Aucun groupe",
+    "en": "No group"
+  },
+  "493745449070940717": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Groupes",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Groups"
+  },
+  "7545676459644380969": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Supprimer",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Delete"
+  },
+  "734757051838115328": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Nom, rôle, mot de passe",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Name, role, password"
+  },
+  "2701256089672539378": {
+    "fr": "Sans groupe",
+    "en": "No group"
+  },
+  "5431634898619297743": {
+    "fr": "{$PH} et {$PH_1} autre(s)",
+    "en": "{$PH} and {$PH_1} other(s)"
+  },
+  "5041354590769758251": {
+    "fr": "Admin",
+    "en": "Admin"
+  },
+  "1161984780845954496": {
+    "fr": "Gestionnaire",
+    "en": "Manager"
+  },
+  "547104896981761782": {
+    "fr": "Lecteur",
+    "en": "Viewer"
+  },
+  "4235784286933587745": {
+    "fr": "{$PH} (votre propre compte)",
+    "en": "{$PH} (your own account)"
+  },
+  "3156404690476765117": {
+    "fr": "Rôle {$PH} pour {$PH_1} utilisateur(s)",
+    "en": "Role {$PH} for {$PH_1} user(s)"
+  },
+  "8230688540699879996": {
+    "fr": "Un ancien administrateur n'a plus accès à rien tant que vous ne lui en donnez pas.",
+    "en": "A former administrator has access to nothing until you give them some."
+  },
+  "4446893508613479613": {
+    "fr": "Accès de {$PH} non modifiés",
+    "en": "Accesses of {$PH} not changed"
+  },
+  "8500474115759742444": {
+    "fr": "{$PH} utilisateur(s) voient tout ThermoBox",
+    "en": "{$PH} user(s) see all of ThermoBox"
+  },
+  "3610966050496296235": {
+    "fr": "{$PH} utilisateur(s) limités à leurs accès et groupes",
+    "en": "{$PH} user(s) limited to their accesses and groups"
+  },
+  "6677930115641379781": {
+    "fr": "{$PH} utilisateur(s) ajouté(s) à « {$PH_1} »",
+    "en": "{$PH} user(s) added to “{$PH_1}”"
+  },
+  "5845506747595542198": {
+    "fr": "{$PH} utilisateur(s) retiré(s) de « {$PH_1} »",
+    "en": "{$PH} user(s) removed from “{$PH_1}”"
+  },
+  "2565195035545091779": {
+    "fr": "Groupe « {$PH} » enregistré",
+    "en": "Group “{$PH}” saved"
+  },
+  "4109225994454327906": {
+    "fr": "{$PH} membre(s), {$PH_1} élément(s) et leur contenu",
+    "en": "{$PH} member(s), {$PH_1} item(s) and their contents"
+  },
+  "180879386399550529": {
+    "fr": "Supprimer",
+    "en": "Delete"
+  },
+  "3156716088754617786": {
+    "fr": "Supprimer le groupe « {$PH} » ? Ses membres gardent leurs propres accès.",
+    "en": "Delete the group “{$PH}”? Its members keep their own accesses."
+  },
+  "1937370218388241197": {
+    "fr": "Groupe « {$PH} » supprimé",
+    "en": "Group “{$PH}” deleted"
+  },
+  "5578299683751045756": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Nouveau groupe",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}New group"
+  },
+  "7205695106013475120": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Nouvel utilisateur",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}New user"
+  },
+  "1987337819391694933": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Nouvel élément",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}New item"
+  },
+  "5370761747032986627": {
+    "fr": "Rechercher un élément ou un emplacement…",
+    "en": "Search for an item or a location…"
+  },
+  "6588891261725260082": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Filtres {$START_BLOCK_IF}{$START_TAG_SPAN}{$INTERPOLATION}{$CLOSE_TAG_SPAN}{$CLOSE_BLOCK_IF}",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Filters {$START_BLOCK_IF}{$START_TAG_SPAN}{$INTERPOLATION}{$CLOSE_TAG_SPAN}{$CLOSE_BLOCK_IF}"
+  },
+  "720759605352885451": {
+    "fr": "Tous",
+    "en": "All"
+  },
+  "3480682536108319081": {
+    "fr": "État",
+    "en": "State"
+  },
+  "34381323846579708": {
+    "fr": "Consigne",
+    "en": "Setpoint"
+  },
+  "1792587463641430045": {
+    "fr": "Toutes",
+    "en": "All"
+  },
+  "1952812518811202703": {
+    "fr": "Propre à l'élément",
+    "en": "Its own"
+  },
+  "5918234408662551279": {
+    "fr": "Héritée",
+    "en": "Inherited"
+  },
+  "4375735510566828155": {
+    "fr": "Aucune",
+    "en": "None"
+  },
+  "6368260630327188677": {
+    "fr": "{$TAG_INPUT}Non rattachés seulement ",
+    "en": "{$TAG_INPUT}Unattached only "
+  },
+  "764632982001105271": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Tout{$START_TAG_SPAN}{$INTERPOLATION}{$CLOSE_TAG_SPAN}",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}All{$START_TAG_SPAN}{$INTERPOLATION}{$CLOSE_TAG_SPAN}"
+  },
+  "1887790802929412017": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}À traiter{$START_TAG_SPAN}{$INTERPOLATION}{$CLOSE_TAG_SPAN}",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}To handle{$START_TAG_SPAN}{$INTERPOLATION}{$CLOSE_TAG_SPAN}"
+  },
+  "7597361439084185727": {
+    "fr": "Boîtiers de {$START_TAG_STRONG}{$INTERPOLATION}{$CLOSE_TAG_STRONG} : {$INTERPOLATION_1}",
+    "en": "Boxes of {$START_TAG_STRONG}{$INTERPOLATION}{$CLOSE_TAG_STRONG}: {$INTERPOLATION_1}"
+  },
+  "5393646059380236092": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Tout afficher",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Show all"
+  },
+  "8045597389709388850": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Coche des lignes pour agir sur plusieurs éléments à la fois : les actions apparaissent en bas de l'écran. ",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Tick rows to act on several items at once: the actions appear at the bottom of the screen. "
+  },
+  "7024941366944942795": {
+    "fr": "{$INTERPOLATION} sélectionné(s)",
+    "en": "{$INTERPOLATION} selected"
+  },
+  "5208244103010603556": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Consigne",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Setpoint"
+  },
+  "1068008330076213282": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Déplacer",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Move"
+  },
+  "9177602316382016818": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Accès",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Access"
+  },
+  "4721197416157256221": {
+    "fr": " {$INTERPOLATION} élément(s) ",
+    "en": " {$INTERPOLATION} item(s) "
+  },
+  "1663991473586639916": {
+    "fr": " · {$INTERPOLATION} élément{$INTERPOLATION_1}{$START_BLOCK_IF} (replié){$CLOSE_BLOCK_IF}",
+    "en": " · {$INTERPOLATION} item{$INTERPOLATION_1}{$START_BLOCK_IF} (folded){$CLOSE_BLOCK_IF}"
+  },
+  "5730443350176791557": {
+    "fr": "Non rattaché",
+    "en": "Unattached"
+  },
+  "3342380147013166181": {
+    "fr": "Élément",
+    "en": "Item"
+  },
+  "5578328379425766280": {
+    "fr": "Voir la page",
+    "en": "Open the page"
+  },
+  "5009014655174364721": {
+    "fr": "Envoyer la consigne",
+    "en": "Send the setpoint"
+  },
+  "7259565620486570271": {
+    "fr": "Suit sa salle",
+    "en": "Follows its room"
+  },
+  "8541618512301043437": {
+    "fr": " Consigne : {$INTERPOLATION} {$INTERPOLATION_1} {$START_BLOCK_IF}{$START_TAG_SPAN}· héritée de {$INTERPOLATION_2}{$CLOSE_TAG_SPAN}{$CLOSE_BLOCK_IF}",
+    "en": " Setpoint: {$INTERPOLATION} {$INTERPOLATION_1} {$START_BLOCK_IF}{$START_TAG_SPAN}· inherited from {$INTERPOLATION_2}{$CLOSE_TAG_SPAN}{$CLOSE_BLOCK_IF}"
+  },
+  "8878153989789806280": {
+    "fr": "Remplacer aussi les consignes propres des éléments contenus",
+    "en": "Also replace the own setpoints of the items inside"
+  },
+  "3927852971629858535": {
+    "fr": "Remplacer aussi celles des éléments contenus",
+    "en": "Also replace those of the items inside"
+  },
+  "8705441637385232277": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Envoyer la consigne ",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Send the setpoint "
+  },
+  "8047981842712272802": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Régler la consigne",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Set the setpoint"
+  },
+  "2414996240299003532": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Voir la page",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Open the page"
+  },
+  "5448970679632878800": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Ses {$INTERPOLATION} boîtier(s)",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Its {$INTERPOLATION} box(es)"
+  },
+  "5809018980390911213": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Renommer ou déplacer",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Rename or move"
+  },
+  "606201253337218055": {
+    "fr": "Consigne pour la sélection",
+    "en": "Setpoint for the selection"
+  },
+  "8440339229829440854": {
+    "fr": "Les bâtiments, étages et salles sélectionnés la reçoivent ; les boîtiers suivent leur salle.",
+    "en": "The selected buildings, floors and rooms receive it; the boxes follow their room."
+  },
+  "658302878536166775": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Envoyer",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Send"
+  },
+  "8907186811228556839": {
+    "fr": "Déplacer la sélection",
+    "en": "Move the selection"
+  },
+  "859094215948793301": {
+    "fr": "Seules les destinations possibles pour tous les éléments sélectionnés sont proposées.",
+    "en": "Only the destinations possible for every selected item are offered."
+  },
+  "7802659814467905251": {
+    "fr": "Dans",
+    "en": "Into"
+  },
+  "4158040902116448928": {
+    "fr": "Rien (non rattachés)",
+    "en": "Nothing (unattached)"
+  },
+  "4158351059609014455": {
+    "fr": "Accès à la sélection",
+    "en": "Access to the selection"
+  },
+  "2899035066085914579": {
+    "fr": "Les éléments sélectionnés, avec tout ce qu'ils contiennent, pour ces utilisateurs et ces groupes.",
+    "en": "The selected items, with everything they contain, for these users and these groups."
+  },
+  "3286523266994130553": {
+    "fr": "Utilisateurs",
+    "en": "Users"
+  },
+  "471808695554654304": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Retirer l'accès",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Remove the access"
+  },
+  "3981531532120673250": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Donner l'accès",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Give the access"
+  },
+  "5516302231642669358": {
+    "fr": "Indique une consigne pour « {$PH} »",
+    "en": "Enter a setpoint for “{$PH}”"
+  },
+  "9149761126854375345": {
+    "fr": "Consigne de {$PH} pour {$PH_1} élément(s)",
+    "en": "Setpoint of {$PH} for {$PH_1} item(s)"
+  },
+  "8930954821261789455": {
+    "fr": "Envoyée à {$PH} boîtier(s)",
+    "en": "Sent to {$PH} box(es)"
+  },
+  "2231274270309239849": {
+    "fr": "{$PH} élément(s) déplacé(s) dans « {$PH_1} »",
+    "en": "{$PH} item(s) moved into “{$PH_1}”"
+  },
+  "5736709906167531148": {
+    "fr": "{$PH} élément(s) détaché(s)",
+    "en": "{$PH} item(s) detached"
+  },
+  "6885199480468722776": {
+    "fr": "Supprimer « {$PH} » ? Ce qu'il contient est gardé, sans rattachement.",
+    "en": "Delete “{$PH}”? What it contains is kept, unattached."
+  },
+  "694999317287692640": {
+    "fr": "Supprimer les {$PH} éléments sélectionnés ? Ce qu'ils contiennent est gardé, sans rattachement.",
+    "en": "Delete the {$PH} selected items? What they contain is kept, unattached."
+  },
+  "7686594080563391081": {
+    "fr": "{$PH} élément(s) supprimé(s)",
+    "en": "{$PH} item(s) deleted"
+  },
+  "5517706740484709433": {
+    "fr": "{$PH} (voit déjà tout)",
+    "en": "{$PH} (already sees everything)"
+  },
+  "254316813583103732": {
+    "fr": "groupe {$PH}",
+    "en": "group {$PH}"
+  },
+  "1475626812525385653": {
+    "fr": "groupe {$PH} ({$PH_1})",
+    "en": "group {$PH} ({$PH_1})"
+  },
+  "6379052784894276431": {
+    "fr": "Accès donné à ",
+    "en": "Access given to "
+  },
+  "13597802051934686": {
+    "fr": "Accès retiré à ",
+    "en": "Access removed from "
+  },
+  "1297909054514602113": {
+    "fr": "{$PH} élément(s) et leur contenu",
+    "en": "{$PH} item(s) and their contents"
+  },
+  "1060709274691264736": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Moyenne actuelle",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Current average"
+  },
+  "3549745064120222710": {
+    "fr": "{$INTERPOLATION} sur {$INTERPOLATION_1} avec des mesures",
+    "en": "{$INTERPOLATION} of {$INTERPOLATION_1} with measurements"
+  },
+  "881868024114131935": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} La plus chaude",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} The warmest"
+  },
+  "892136728680028718": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} La plus froide",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} The coldest"
+  },
+  "6215519566846230974": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Loin de la consigne",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Far from the setpoint"
+  },
+  "4826267209609479735": {
+    "fr": "à plus d'un demi-degré, en chauffe ou trop chaudes",
+    "en": "more than half a degree off, heating or too warm"
+  },
+  "8442888365414549289": {
+    "fr": "Courbes",
+    "en": "Curves"
+  },
+  "4129381099062567873": {
+    "fr": "Période",
+    "en": "Period"
+  },
+  "4737932075727333157": {
+    "fr": "Une courbe par",
+    "en": "One curve per"
+  },
+  "6639173173800251254": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Salles",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Rooms"
+  },
+  "2027773996716213253": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Bâtiments",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Buildings"
+  },
+  "2416740439634624130": {
+    "fr": "Les points de la période, une colonne par courbe",
+    "en": "The points of the period, one column per curve"
+  },
+  "1138620849844877274": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Exporter (CSV) ",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Export (CSV) "
+  },
+  "5713297177038909167": {
+    "fr": "Températures de toutes les salles",
+    "en": "Temperatures of all the rooms"
+  },
+  "6081697647486005114": {
+    "fr": "Chargement…",
+    "en": "Loading…"
+  },
+  "8873250105194473002": {
+    "fr": " Moyenne des boîtiers par {$INTERPOLATION}. Touche une couleur dans le tableau (ou la légende) pour masquer ou afficher sa courbe. ",
+    "en": " Average of the boxes per {$INTERPOLATION}. Touch a colour in the table (or the legend) to hide or show its curve. "
+  },
+  "3203209779616041240": {
+    "fr": "Actuelle{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}",
+    "en": "Current{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}"
+  },
+  "5389340905209984866": {
+    "fr": "Consigne{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}",
+    "en": "Setpoint{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}"
+  },
+  "1953148214112136664": {
+    "fr": "Min{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}",
+    "en": "Min{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}"
+  },
+  "5270140300623349315": {
+    "fr": "Max{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}",
+    "en": "Max{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}"
+  },
+  "5771769188446420083": {
+    "fr": "Moyenne{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}",
+    "en": "Average{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}"
+  },
+  "3968897973706646256": {
+    "fr": "À la consigne{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}",
+    "en": "At the setpoint{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}"
+  },
+  "1356308905753232069": {
+    "fr": "Voir le détail",
+    "en": "See the details"
+  },
+  "2615387064588141124": {
+    "fr": "Actuelle",
+    "en": "Current"
+  },
+  "4221584972513542369": {
+    "fr": "À la cible",
+    "en": "On target"
+  },
+  "2920469644147400604": {
+    "fr": "Part de la période à moins d'un demi-degré de la consigne actuelle",
+    "en": "Share of the period within half a degree of the current setpoint"
+  },
+  "1956992772772067215": {
+    "fr": " Températures en {$INTERPOLATION} ; minimum, maximum et moyenne sur la période choisie. {$START_BLOCK_IF} Le graphique montre les {$INTERPOLATION_1} premières lignes du tableau ; un tri sur le minimum, le maximum, la moyenne ou la part à la consigne porte sur les lignes déjà chargées. {$CLOSE_BLOCK_IF}",
+    "en": " Temperatures in {$INTERPOLATION}; minimum, maximum and average over the chosen period. {$START_BLOCK_IF} The chart shows the first {$INTERPOLATION_1} rows of the table; sorting by minimum, maximum, average or share at the setpoint applies to the rows already loaded. {$CLOSE_BLOCK_IF}"
+  },
+  "8250389386870446316": {
+    "fr": "Historique brut",
+    "en": "Raw history"
+  },
+  "31186525457371282": {
+    "fr": "Chaque mesure et chaque consigne enregistrée",
+    "en": "Every measurement and every setpoint saved"
+  },
+  "8650499415827640724": {
+    "fr": "Type",
+    "en": "Type"
+  },
+  "4219144114605760638": {
+    "fr": "Mesures",
+    "en": "Measurements"
+  },
+  "3069404814865522603": {
+    "fr": "Consignes",
+    "en": "Setpoints"
+  },
+  "1090741562860667739": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Ajouter",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Add"
+  },
+  "3717603792840045364": {
+    "fr": "Valeur",
+    "en": "Value"
+  },
+  "3973931101896534797": {
+    "fr": "Date",
+    "en": "Date"
+  },
+  "1785052497460968940": {
+    "fr": "Modifier",
+    "en": "Edit"
+  },
+  "3213135682062096259": {
+    "fr": "Aucune température",
+    "en": "No temperature"
+  },
+  "6192588720783125155": {
+    "fr": "Première page",
+    "en": "First page"
+  },
+  "7552263467224867927": {
+    "fr": "Page précédente",
+    "en": "Previous page"
+  },
+  "1473859770372031045": {
+    "fr": "Page suivante",
+    "en": "Next page"
+  },
+  "4719456209194625968": {
+    "fr": "Mesure",
+    "en": "Measurement"
+  },
+  "3871461229940796048": {
+    "fr": "Valeur ({$INTERPOLATION})",
+    "en": "Value ({$INTERPOLATION})"
+  },
+  "7258177364040874833": {
+    "fr": "tranche de 4 h",
+    "en": "4-hour slot"
+  },
+  "7646430375120621776": {
+    "fr": "Moment",
+    "en": "Time"
+  },
+  "4098433181436267436": {
+    "fr": "Valeur obligatoire",
+    "en": "Value required"
+  },
+  "3011354989610566206": {
+    "fr": "Entre {$PH} et {$PH_1} {$PH_2}",
+    "en": "Between {$PH} and {$PH_1} {$PH_2}"
+  },
+  "2010510490092568729": {
+    "fr": "Date obligatoire",
+    "en": "Date required"
+  },
+  "2844207811170584090": {
+    "fr": "Supprimer cette température ?",
+    "en": "Delete this temperature?"
+  },
+  "3630208426772363579": {
+    "fr": "{$INTERPOLATION} · Mon profil",
+    "en": "{$INTERPOLATION} · My profile"
+  },
+  "7301661469583132020": {
+    "fr": "Changer de compte",
+    "en": "Switch account"
+  },
+  "2917783582724524878": {
+    "fr": "Autres pages",
+    "en": "Other pages"
+  },
+  "5468208559383441758": {
+    "fr": "Nouvelle version",
+    "en": "New version"
+  },
+  "2332866508838027590": {
+    "fr": "Compte",
+    "en": "Account"
+  },
+  "8358129862638032267": {
+    "fr": "Thème, unité, couleurs",
+    "en": "Theme, unit, colours"
+  },
+  "6446192435648820310": {
+    "fr": "Déconnexion",
+    "en": "Sign out"
+  },
+  "7982522184978073249": {
+    "fr": "Administrateur",
+    "en": "Administrator"
+  },
+  "864350178004485878": {
+    "fr": "Mon expérience",
+    "en": "My experience"
+  },
+  "5552180613117457843": {
+    "fr": "Apparence",
+    "en": "Appearance"
+  },
+  "8886636099339818804": {
+    "fr": "Thème",
+    "en": "Theme"
+  },
+  "5469222181544551075": {
+    "fr": "« Système » suit le réglage clair ou sombre de l'appareil, aussi quand il change le soir.",
+    "en": "“System” follows the light or dark setting of the device, also when it changes in the evening."
+  },
+  "1947628127243679122": {
+    "fr": "Accent de couleur {$START_TAG_SPAN}{$INTERPOLATION}{$CLOSE_TAG_SPAN}",
+    "en": "Accent colour {$START_TAG_SPAN}{$INTERPOLATION}{$CLOSE_TAG_SPAN}"
+  },
+  "8706254270589558171": {
+    "fr": "Teinte du fond, des surfaces et des boutons. Les couleurs des états et des courbes ne changent pas.",
+    "en": "Tint of the background, the surfaces and the buttons. The colours of the states and the curves do not change."
+  },
+  "8101673460567019475": {
+    "fr": "Accent de couleur",
+    "en": "Accent colour"
+  },
+  "8775352138813492924": {
+    "fr": "ThermoBox",
+    "en": "ThermoBox"
+  },
+  "8869735381476040155": {
+    "fr": "Couleur du système",
+    "en": "System colour"
+  },
+  "1213582004431134470": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Couleur du système : {$INTERPOLATION}",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} System colour: {$INTERPOLATION}"
+  },
+  "244757027128692893": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Suit la couleur d'accent de l'appareil, aussi quand elle change.",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Follows the accent colour of the device, also when it changes."
+  },
+  "1969443142938618319": {
+    "fr": "Couleurs selon l'état",
+    "en": "Colours by state"
+  },
+  "4758862687136975148": {
+    "fr": " La page prend la teinte de ce qui est affiché : verte pour une salle stable, orange en chauffe, rouge trop chaude. Désactivées, les couleurs restent les mêmes partout. ",
+    "en": " The page takes the tint of what is shown: green for a stable room, orange when heating, red when too warm. Turned off, the colours stay the same everywhere. "
+  },
+  "826698338795263308": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Sans effet avec le style panneau de configuration choisi par l'administrateur.",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} No effect with the control panel style chosen by the administrator."
+  },
+  "8843753180417342333": {
+    "fr": "Couleur des pièces",
+    "en": "Colour of the rooms"
+  },
+  "5083087137379571136": {
+    "fr": " Selon l'écart à l'objectif : vert quand la pièce est à la bonne température, bleu en dessous, orangé puis rouge au-dessus. Selon la température : du bleu frais au rouge, quel que soit l'objectif. ",
+    "en": " By the gap to the target: green when the room is at the right temperature, blue below, orange then red above. By the temperature: from cool blue to red, whatever the target. "
+  },
+  "5159596893812948398": {
+    "fr": "Thèmes de saison",
+    "en": "Seasonal themes"
+  },
+  "5471035886525858110": {
+    "fr": " Noël, Halloween, Pâques, le Nouvel An… : l'application prend leurs couleurs et quelques décorations pendant ces jours-là, puis reprend son apparence habituelle. Les couleurs d'accent choisies ci-dessus restent prioritaires. ",
+    "en": " Christmas, Halloween, Easter, New Year…: the app takes their colours and a few decorations on those days, then returns to its usual look. The accent colours chosen above come first. "
+  },
+  "6648099523753934212": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} En ce moment : {$INTERPOLATION}",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Right now: {$INTERPOLATION}"
+  },
+  "7310262514886697010": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Prochain : {$INTERPOLATION}, le {$INTERPOLATION_1}",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Next: {$INTERPOLATION}, on {$INTERPOLATION_1}"
+  },
+  "2602599450903471544": {
+    "fr": "Effets de transparence",
+    "en": "Transparency effects"
+  },
+  "7456858392688208340": {
+    "fr": "Le flou de Windows (Acrylic) derrière la barre de navigation et la barre de titre, et le flou de ce qui passe sous les barres. Désactivés, tout est opaque : un peu moins de travail pour la carte graphique.",
+    "en": "The Windows blur (Acrylic) behind the navigation bar and the title bar, and the blur of what goes under the bars. Turned off, everything is opaque: a little less work for the graphics card."
+  },
+  "2353943056199595059": {
+    "fr": "Utilitaire",
+    "en": "Utilities"
+  },
+  "3807522369121443545": {
+    "fr": "Langue",
+    "en": "Language"
+  },
+  "4491681418627670950": {
+    "fr": "« Système » suit la langue de l'appareil : français s'il est en français, anglais sinon. L'application redémarre dans la langue choisie.",
+    "en": "“System” follows the language of the device: French if it is in French, English otherwise. The app restarts in the chosen language."
+  },
+  "6623088119069732714": {
+    "fr": "Système ({$INTERPOLATION})",
+    "en": "System ({$INTERPOLATION})"
+  },
+  "4486611416574219321": {
+    "fr": "Unité des températures",
+    "en": "Temperature unit"
+  },
+  "6153262795393836975": {
+    "fr": " Affichage et saisie des températures et des consignes. Elles restent enregistrées en Celsius : les autres utilisateurs gardent leur unité. ",
+    "en": " Display and entry of temperatures and setpoints. They stay saved in Celsius: the other users keep their unit. "
+  },
+  "4614707419003618549": {
+    "fr": "Raccourcis clavier",
+    "en": "Keyboard shortcuts"
+  },
+  "4155375298641848652": {
+    "fr": "Sur ordinateur : naviguer, chercher, revenir à l'aperçu… sans la souris. {$START_TAG_KBD}?{$CLOSE_TAG_KBD} affiche cette liste depuis n'importe quelle page.",
+    "en": "On a computer: navigate, search, go back to the overview… without the mouse. {$START_TAG_KBD}?{$CLOSE_TAG_KBD} shows this list from any page."
+  },
+  "5851560788527570644": {
+    "fr": "Notifications",
+    "en": "Notifications"
+  },
+  "7071396184937183945": {
+    "fr": "Notifications de consigne",
+    "en": "Setpoint notifications"
+  },
+  "3537202326139866570": {
+    "fr": " Prévient quand une salle atteint sa consigne ou s'en éloigne (trop chaude, ou en dessous) pendant au moins 10 minutes. {$START_BLOCK_IF} Le téléphone endort l'application en arrière-plan : ce qui a changé entre-temps est notifié à son retour (jusqu'à 6 heures avant). {$CLOSE_BLOCK_IF}{$START_BLOCK_ELSE} Tant que l'application est ouverte, même en arrière-plan. {$CLOSE_BLOCK_ELSE}",
+    "en": " Tells you when a room reaches its setpoint or moves away from it (too warm, or below) for at least 10 minutes. {$START_BLOCK_IF} The phone puts the app to sleep in the background: what changed meanwhile is notified when it comes back (up to 6 hours before). {$CLOSE_BLOCK_IF}{$START_BLOCK_ELSE} As long as the app is open, even in the background. {$CLOSE_BLOCK_ELSE}"
+  },
+  "6804134701522799185": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Ce serveur ne propose pas encore les notifications (ThermoBox 26.12 ou plus récent).",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} This server does not offer notifications yet (ThermoBox 26.12 or newer)."
+  },
+  "4065501230275634723": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Bloquées par le système : autorise-les pour Thermobox dans ses réglages.",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Blocked by the system: allow them for Thermobox in its settings."
+  },
+  "2110150414997987647": {
+    "fr": "Salles suivies",
+    "en": "Rooms followed"
+  },
+  "25852811987778146": {
+    "fr": "Les salles en favoris, ou toutes celles que tu peux voir.",
+    "en": "Your favourite rooms, or all the rooms you can see."
+  },
+  "588207140585847047": {
+    "fr": "Favoris",
+    "en": "Favourites"
+  },
+  "7522974210957794701": {
+    "fr": "Divers",
+    "en": "Other"
+  },
+  "2062146808387404504": {
+    "fr": "À propos de Thermobox",
+    "en": "About Thermobox"
+  },
+  "6696756700619625637": {
+    "fr": "Versions du client et du serveur, code source, crédits",
+    "en": "Versions of the client and the server, source code, credits"
+  },
+  "9059591462371468557": {
+    "fr": "Enregistré sur cet appareil uniquement. Interface : {$INTERPOLATION}.",
+    "en": "Saved on this device only. Interface: {$INTERPOLATION}."
+  },
+  "579677791251407429": {
+    "fr": "Réglages",
+    "en": "Settings"
+  },
+  "1457465744784609195": {
+    "fr": "Clair",
+    "en": "Light"
+  },
+  "1340402315065808486": {
+    "fr": "Sombre",
+    "en": "Dark"
+  },
+  "1894701547497580370": {
+    "fr": "Système",
+    "en": "System"
+  },
+  "3530042965492468435": {
+    "fr": "Application {$PH}",
+    "en": "{$PH} app"
+  },
+  "6088962790205997652": {
+    "fr": "Rôle : {$START_TAG_STRONG}{$INTERPOLATION}{$CLOSE_TAG_STRONG}",
+    "en": "Role: {$START_TAG_STRONG}{$INTERPOLATION}{$CLOSE_TAG_STRONG}"
+  },
+  "6511544804585083266": {
+    "fr": "Nouveau mot de passe (laisser vide pour ne pas changer)",
+    "en": "New password (leave empty to keep it)"
+  },
+  "6964270031359042504": {
+    "fr": "Zone de danger",
+    "en": "Danger zone"
+  },
+  "4831132073702208374": {
+    "fr": "La suppression de ton compte est définitive.",
+    "en": "Deleting your account is permanent."
+  },
+  "8432020522320473221": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Supprimer mon compte",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Delete my account"
+  },
+  "975197668752695737": {
+    "fr": "Trop long (72 octets au plus)",
+    "en": "Too long (72 bytes at most)"
+  },
+  "2676702226428589836": {
+    "fr": "Mise à jour impossible",
+    "en": "Cannot update"
+  },
+  "4898198551118005690": {
+    "fr": "Supprimer mon compte",
+    "en": "Delete my account"
+  },
+  "2827131011491535776": {
+    "fr": "Es-tu sûr ? Cette action est irréversible.",
+    "en": "Are you sure? This cannot be undone."
+  },
+  "4276265612180962288": {
+    "fr": "Cet élément n'existe pas ou a été supprimé.",
+    "en": "This item does not exist or has been deleted."
+  },
+  "5662467722633842764": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Retour aux bâtiments et salles",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Back to buildings and rooms"
+  },
+  "8168765646794661881": {
+    "fr": "Retour",
+    "en": "Back"
+  },
+  "7292948510706319360": {
+    "fr": "Emplacement",
+    "en": "Location"
+  },
+  "5859383440284818980": {
+    "fr": "Contient",
+    "en": "Contains"
+  },
+  "6562991695686977251": {
+    "fr": "{$INTERPOLATION} élément(s) ont leur propre consigne",
+    "en": "{$INTERPOLATION} item(s) have their own setpoint"
+  },
+  "6368101450910710136": {
+    "fr": "Toutes les salles suivent cette consigne",
+    "en": "Every room follows this setpoint"
+  },
+  "3469006162300417430": {
+    "fr": "Aucun étage ni aucune salle n'a de consigne propre ici.",
+    "en": "No floor and no room has its own setpoint here."
+  },
+  "1546295740329816835": {
+    "fr": "Forcer la consigne pour toutes les salles",
+    "en": "Force the setpoint for every room"
+  },
+  "6575363330028909272": {
+    "fr": "{$INTERPOLATION} {$INTERPOLATION_1} de la consigne",
+    "en": "{$INTERPOLATION} {$INTERPOLATION_1} the setpoint"
+  },
+  "3627845365545456711": {
+    "fr": "héritée de {$INTERPOLATION}",
+    "en": "inherited from {$INTERPOLATION}"
+  },
+  "3357825238187103099": {
+    "fr": " Mesuré le {$INTERPOLATION} ",
+    "en": " Measured on {$INTERPOLATION} "
+  },
+  "5667856553620337848": {
+    "fr": " Aucun boîtier rattaché ",
+    "en": " No box attached "
+  },
+  "6606846812173260071": {
+    "fr": " Pas encore de mesure ",
+    "en": " No measurement yet "
+  },
+  "7124520205916131688": {
+    "fr": "Consigne depuis le {$INTERPOLATION}",
+    "en": "Setpoint since {$INTERPOLATION}"
+  },
+  "3994843408559947605": {
+    "fr": "Nouvelle consigne",
+    "en": "New setpoint"
+  },
+  "6840832992793906863": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Envoyer ",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Send "
+  },
+  "830055619817045992": {
+    "fr": "Pas encore de photo",
+    "en": "No photo yet"
+  },
+  "925386844978292850": {
+    "fr": "Retirer la photo",
+    "en": "Remove the photo"
+  },
+  "7804757991325163407": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Régler sur {$INTERPOLATION}° ",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Set to {$INTERPOLATION}° "
+  },
+  "5788988620444130887": {
+    "fr": " · objectif de {$START_LINK}{$INTERPOLATION}{$CLOSE_LINK}",
+    "en": " · target of {$START_LINK}{$INTERPOLATION}{$CLOSE_LINK}"
+  },
+  "1623969728378385528": {
+    "fr": "Ce qui est dedans",
+    "en": "What is inside"
+  },
+  "7896506432091488568": {
+    "fr": "{$START_TAG_SPAN}{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}{$CLOSE_TAG_SPAN} Boîtiers {$START_TAG_SPAN_1}{$INTERPOLATION}{$CLOSE_TAG_SPAN}",
+    "en": "{$START_TAG_SPAN}{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}{$CLOSE_TAG_SPAN} Boxes {$START_TAG_SPAN_1}{$INTERPOLATION}{$CLOSE_TAG_SPAN}"
+  },
+  "8326611593412743736": {
+    "fr": "Aucun boîtier rattaché. Rattache-les depuis « Bâtiments et salles ».",
+    "en": "No box attached. Attach them from “Buildings and rooms”."
+  },
+  "4129565689019618962": {
+    "fr": "{$START_TAG_SPAN}{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}{$CLOSE_TAG_SPAN} Salles {$START_TAG_SPAN_1}{$INTERPOLATION}{$CLOSE_TAG_SPAN}",
+    "en": "{$START_TAG_SPAN}{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}{$CLOSE_TAG_SPAN} Rooms {$START_TAG_SPAN_1}{$INTERPOLATION}{$CLOSE_TAG_SPAN}"
+  },
+  "8824972481358321552": {
+    "fr": "Aucune salle ici pour le moment.",
+    "en": "No room here yet."
+  },
+  "3708550488535198293": {
+    "fr": "Afficher d'autres salles",
+    "en": "Show other rooms"
+  },
+  "1863342667917524434": {
+    "fr": "Autre période",
+    "en": "Other period"
+  },
+  "8473365310065561633": {
+    "fr": "Du",
+    "en": "From"
+  },
+  "3871818072096928629": {
+    "fr": "Au",
+    "en": "To"
+  },
+  "7469847288280960071": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Afficher",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Show"
+  },
+  "338630842874110805": {
+    "fr": "Aucune mesure sur la période",
+    "en": "No measurement over the period"
+  },
+  "7525870967087905087": {
+    "fr": "Consignes de la période",
+    "en": "Setpoints of the period"
+  },
+  "2077457120564698304": {
+    "fr": "Aucune consigne sur la période",
+    "en": "No setpoint over the period"
+  },
+  "299595458637860428": {
+    "fr": "Chauffe pour atteindre {$PH} {$PH_1}.",
+    "en": "Heating to reach {$PH} {$PH_1}."
+  },
+  "8726410203112747263": {
+    "fr": "Un peu chaud : {$PH} au-dessus de l'objectif.",
+    "en": "A little warm: {$PH} above the target."
+  },
+  "1003662204018745912": {
+    "fr": "Pas encore de mesure.",
+    "en": "No measurement yet."
+  },
+  "1017742145875389824": {
+    "fr": "Pas d'objectif réglé.",
+    "en": "No target set."
+  },
+  "786893800325470195": {
+    "fr": "Moyenne de l'étage",
+    "en": "Average of the floor"
+  },
+  "9115103014226097531": {
+    "fr": "Moyenne du bâtiment",
+    "en": "Average of the building"
+  },
+  "2887229103754366767": {
+    "fr": "Moyenne de la salle",
+    "en": "Average of the room"
+  },
+  "8142135470871835095": {
+    "fr": "Consigne de {$PH} {$PH_1} enregistrée",
+    "en": "Setpoint of {$PH} {$PH_1} saved"
+  },
+  "6204897407057310193": {
+    "fr": "envoyée à {$PH} boîtier(s)",
+    "en": "sent to {$PH} box(es)"
+  },
+  "1693494538370929077": {
+    "fr": "aucun boîtier à prévenir",
+    "en": "no box to notify"
+  },
+  "8786292369242874374": {
+    "fr": "remplace celle de {$PH}",
+    "en": "replaces that of {$PH}"
+  },
+  "3574149870538308021": {
+    "fr": "{$PH} garde(nt) sa consigne",
+    "en": "{$PH} keep(s) its setpoint"
+  },
+  "1239807940072430408": {
+    "fr": "{$PH}. Non transmise à : {$PH_1}",
+    "en": "{$PH}. Not sent to: {$PH_1}"
+  },
+  "4331084010036535958": {
+    "fr": "La photo de « {$PH} » sera supprimée.",
+    "en": "The photo of “{$PH}” will be deleted."
+  },
+  "9087963924191376133": {
+    "fr": "Retirer",
+    "en": "Remove"
+  },
+  "7637809747809824801": {
+    "fr": "Le nom est obligatoire",
+    "en": "The name is required"
+  },
+  "7425147566148248309": {
+    "fr": "Dans ({$INTERPOLATION})",
+    "en": "Into ({$INTERPOLATION})"
+  },
+  "3681402105111667981": {
+    "fr": "— Non rattaché —",
+    "en": "— Unattached —"
+  },
+  "7494709904734298623": {
+    "fr": "{$PH} « {$PH_1} » enregistré(e)",
+    "en": "{$PH} “{$PH_1}” saved"
+  },
+  "8021290663591442151": {
+    "fr": "Enregistrement impossible",
+    "en": "Cannot save"
+  },
+  "8878650520696110634": {
+    "fr": "Rattachement impossible",
+    "en": "Cannot attach"
+  },
+  "1593487004300420140": {
+    "fr": "Organisation",
+    "en": "Organisation"
+  },
+  "7777777513292049145": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Gérer en tableau",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Manage as a table"
+  },
+  "6460718014106325068": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Nouveau bâtiment",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}New building"
+  },
+  "7527401949419397016": {
+    "fr": " Un bâtiment contient des étages ou directement des salles, une salle contient des boîtiers. La température d'une salle est la moyenne de ses boîtiers. Les boîtiers apparaissent ici d'eux-mêmes dès qu'ils se connectent. ",
+    "en": " A building contains floors or directly rooms, a room contains boxes. The temperature of a room is the average of its boxes. The boxes appear here by themselves as soon as they connect. "
+  },
+  "6129308035485379264": {
+    "fr": " Un bâtiment contient des étages ou directement des salles. Touche un élément pour voir sa température. ",
+    "en": " A building contains floors or directly rooms. Touch an item to see its temperature. "
+  },
+  "1375046663282124647": {
+    "fr": " Glisse un élément sur un autre pour l'y ranger, ou sur « Premier niveau » pour le détacher.",
+    "en": " Drag an item onto another to put it there, or onto “Top level” to detach it."
+  },
+  "5485469099818718498": {
+    "fr": " Touche un bâtiment ou un étage pour l'ouvrir, ⋮ pour ajouter, modifier, déplacer ou supprimer.",
+    "en": " Touch a building or a floor to open it, ⋮ to add, edit, move or delete."
+  },
+  "3812837388296426635": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Tout",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}All"
+  },
+  "4809411505270181532": {
+    "fr": "Remonter",
+    "en": "Up"
+  },
+  "1595117281192659983": {
+    "fr": "Chargement des bâtiments et salles",
+    "en": "Loading buildings and rooms"
+  },
+  "9066348617584606624": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Ajouter dans « {$INTERPOLATION} » ",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Add into “{$INTERPOLATION}” "
+  },
+  "1222224563003332095": {
+    "fr": " · {$INTERPOLATION} élément(s) ",
+    "en": " · {$INTERPOLATION} item(s) "
+  },
+  "8350860801180614355": {
+    "fr": " · {$INTERPOLATION} boîtier(s) ",
+    "en": " · {$INTERPOLATION} box(es) "
+  },
+  "1035891083795020681": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Premier niveau : déposer ici détache l'élément ",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Top level: dropping here detaches the item "
+  },
+  "796201441827858047": {
+    "fr": "Aucun bâtiment pour le moment.",
+    "en": "No building yet."
+  },
+  "7067720696676027371": {
+    "fr": "Non rattachés",
+    "en": "Unattached"
+  },
+  "5286899159490065257": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Non rattachés {$START_TAG_SPAN}{$INTERPOLATION}{$CLOSE_TAG_SPAN}",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Unattached {$START_TAG_SPAN}{$INTERPOLATION}{$CLOSE_TAG_SPAN}"
+  },
+  "1852462443762498436": {
+    "fr": "Glisse-les sur un bâtiment, un étage ou une salle. Garde-le au-dessus d'un élément replié pour l'ouvrir.",
+    "en": "Drag them onto a building, a floor or a room. Hold one over a folded item to open it."
+  },
+  "4787432740651492992": {
+    "fr": "Rechercher…",
+    "en": "Search…"
+  },
+  "884778876846847948": {
+    "fr": "Rechercher parmi les non rattachés",
+    "en": "Search the unattached ones"
+  },
+  "2848906116842757546": {
+    "fr": "Aucun ne correspond.",
+    "en": "None matches."
+  },
+  "545042245910239318": {
+    "fr": "{$INTERPOLATION} boîtier(s)",
+    "en": "{$INTERPOLATION} box(es)"
+  },
+  "2484506976801181033": {
+    "fr": "Modifier / déplacer",
+    "en": "Edit / move"
+  },
+  "2063690830177898072": {
+    "fr": "Détacher",
+    "en": "Detach"
+  },
+  "7330590880739329177": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Afficher la suite ({$INTERPOLATION} de plus)",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Show more ({$INTERPOLATION} more)"
+  },
+  "5735024834673876835": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Voir le détail",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}See the details"
+  },
+  "8179906153231301917": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Ajouter dedans",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Add inside"
+  },
+  "3037030490026460321": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Modifier ou déplacer",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Edit or move"
+  },
+  "163327446617770765": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Détacher",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Detach"
+  },
+  "6841373028560609340": {
+    "fr": "« {$PH} » n'est plus rattaché(e)",
+    "en": "“{$PH}” is no longer attached"
+  },
+  "7626129059739744254": {
+    "fr": "Supprimer « {$PH} »",
+    "en": "Delete “{$PH}”"
+  },
+  "517992463004925548": {
+    "fr": "Son historique est supprimé ; ce qu'il contient est gardé mais n'est plus rattaché.",
+    "en": "Its history is deleted; what it contains is kept but no longer attached."
+  },
+  "4246228538980630243": {
+    "fr": "« {$PH} » supprimé(e)",
+    "en": "“{$PH}” deleted"
+  },
+  "4707212054573210051": {
+    "fr": "« {$PH} » déplacé(e) dans « {$PH_1} »",
+    "en": "“{$PH}” moved into “{$PH_1}”"
+  },
+  "3105066162468003472": {
+    "fr": "Logo du serveur",
+    "en": "Server logo"
+  },
+  "4550958265168690830": {
+    "fr": "Logo",
+    "en": "Logo"
+  },
+  "2209323787314769945": {
+    "fr": "{$INTERPOLATION} Affiché à côté du serveur dans la liste des comptes de chacun.",
+    "en": "{$INTERPOLATION} Shown next to the server in everyone's list of accounts."
+  },
+  "7952252353640215003": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Changer {$TAG_INPUT}",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Change {$TAG_INPUT}"
+  },
+  "2725946787939964395": {
+    "fr": "Automatique",
+    "en": "Automatic"
+  },
+  "132527322677131885": {
+    "fr": "Températures acceptées",
+    "en": "Accepted temperatures"
+  },
+  "1192065282467644189": {
+    "fr": " Une consigne hors de ces bornes est refusée ; une mesure hors bornes est prise pour une erreur de capteur et ignorée. ",
+    "en": " A setpoint outside these limits is refused; a measurement outside them is taken for a sensor error and ignored. "
+  },
+  "1612483175760862209": {
+    "fr": "de {$TAG_INPUT}",
+    "en": "from {$TAG_INPUT}"
+  },
+  "2648812615662880720": {
+    "fr": "à {$TAG_INPUT}",
+    "en": "to {$TAG_INPUT}"
+  },
+  "4977912145007192180": {
+    "fr": "Enregistrer",
+    "en": "Save"
+  },
+  "7532284812892965574": {
+    "fr": "Valeurs par défaut",
+    "en": "Default values"
+  },
+  "1778597973847119963": {
+    "fr": "Choisi par un administrateur.",
+    "en": "Chosen by an administrator."
+  },
+  "6905943246967179686": {
+    "fr": "Celui du site du serveur.",
+    "en": "The one of the server's website."
+  },
+  "5766119186325052674": {
+    "fr": "Celui de ThermoBox.",
+    "en": "The ThermoBox one."
+  },
+  "1867897483179013181": {
+    "fr": "Chaque borne doit être un nombre",
+    "en": "Each limit must be a number"
+  },
+  "3363856211866996119": {
+    "fr": "{$PH} : le minimum doit être plus bas que le maximum",
+    "en": "{$PH}: the minimum must be lower than the maximum"
+  },
+  "8218226942897106725": {
+    "fr": "Les bornes restent entre {$PH} et {$PH_1}",
+    "en": "The limits stay between {$PH} and {$PH_1}"
+  },
+  "7844706011418789951": {
+    "fr": "Administration",
+    "en": "Administration"
+  },
+  "6395160381056868140": {
+    "fr": "{$START_TAG_TB_SERVER_LOGO}{$CLOSE_TAG_TB_SERVER_LOGO}Serveur",
+    "en": "{$START_TAG_TB_SERVER_LOGO}{$CLOSE_TAG_TB_SERVER_LOGO}Server"
+  },
+  "3516245558682414066": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Ressources ",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Resources "
+  },
+  "5167331273202555262": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Mises à jour {$START_BLOCK_IF}{$START_TAG_SPAN}{$CLOSE_TAG_SPAN}{$CLOSE_BLOCK_IF}",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Updates {$START_BLOCK_IF}{$START_TAG_SPAN}{$CLOSE_TAG_SPAN}{$CLOSE_BLOCK_IF}"
+  },
+  "3727253448677130908": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Réglages ",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Settings "
+  },
+  "4725793968405907174": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Processeur",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Processor"
+  },
+  "4711701598953364040": {
+    "fr": "machine : {$INTERPOLATION} % · {$INTERPOLATION_1} processeur(s)",
+    "en": "machine: {$INTERPOLATION} % · {$INTERPOLATION_1} processor(s)"
+  },
+  "9064962103479200949": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Mémoire Java",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Java memory"
+  },
+  "8152733338893421278": {
+    "fr": " Mo",
+    "en": " MB"
+  },
+  "6587453116530031261": {
+    "fr": "{$START_BLOCK_IF} {$INTERPOLATION} % de {$INTERPOLATION_1} Mo · {$CLOSE_BLOCK_IF} hors tas : {$INTERPOLATION_2} Mo ",
+    "en": "{$START_BLOCK_IF} {$INTERPOLATION} % of {$INTERPOLATION_1} MB · {$CLOSE_BLOCK_IF} off-heap: {$INTERPOLATION_2} MB "
+  },
+  "7248907059464382684": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Threads",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Threads"
+  },
+  "5142580515654195989": {
+    "fr": "pauses du ramasse-miettes : {$INTERPOLATION} ms sur la période",
+    "en": "garbage collector pauses: {$INTERPOLATION} ms over the period"
+  },
+  "4475504664050657981": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} En marche depuis",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Running for"
+  },
+  "8574909551288624647": {
+    "fr": "{$INTERPOLATION} · {$INTERPOLATION_1} passages du ramasse-miettes",
+    "en": "{$INTERPOLATION} · {$INTERPOLATION_1} garbage collections"
+  },
+  "1956378003822481888": {
+    "fr": "Relevés en cours… (toutes les 3 secondes)",
+    "en": "Reading… (every 3 seconds)"
+  },
+  "489345924039794949": {
+    "fr": "Processeur",
+    "en": "Processor"
+  },
+  "912008587769976031": {
+    "fr": "Processeur du serveur",
+    "en": "Server processor"
+  },
+  "6978204420913587815": {
+    "fr": "Mémoire Java",
+    "en": "Java memory"
+  },
+  "4197236438302165051": {
+    "fr": "Mo",
+    "en": "MB"
+  },
+  "3148356694766867739": {
+    "fr": "Mémoire du serveur",
+    "en": "Server memory"
+  },
+  "7221448465561846145": {
+    "fr": "Threads",
+    "en": "Threads"
+  },
+  "1704077046464193398": {
+    "fr": "Threads du serveur",
+    "en": "Server threads"
+  },
+  "5257357089238445385": {
+    "fr": "Pauses du ramasse-miettes",
+    "en": "Garbage collector pauses"
+  },
+  "3011034596318842706": {
+    "fr": " Relevé toutes les 3 secondes tant que cette page est ouverte, les 10 dernières minutes. Dans un conteneur, les chiffres sont ceux du conteneur (sa part de processeur, sa limite de mémoire). {$START_BLOCK_IF}{$START_TAG_STRONG} {$INTERPOLATION}.{$CLOSE_TAG_STRONG}{$CLOSE_BLOCK_IF}",
+    "en": " Read every 3 seconds while this page is open, the last 10 minutes. In a container, the figures are those of the container (its share of processor, its memory limit). {$START_BLOCK_IF}{$START_TAG_STRONG} {$INTERPOLATION}.{$CLOSE_TAG_STRONG}{$CLOSE_BLOCK_IF}"
+  },
+  "1014808768193869618": {
+    "fr": "Disponible avec ThermoBox 26.12",
+    "en": "Available with ThermoBox 26.12"
+  },
+  "7723076325990247286": {
+    "fr": "Ce serveur ({$INTERPOLATION}) ne donne ni ses ressources ni ces réglages. Ses mises à jour sont dans l'onglet voisin.",
+    "en": "This server ({$INTERPOLATION}) gives neither its resources nor these settings. Its updates are in the next tab."
+  },
+  "3406838874142313050": {
+    "fr": "Machine entière",
+    "en": "Whole machine"
+  },
+  "4161016712916405864": {
+    "fr": "Utilisée",
+    "en": "Used"
+  },
+  "6088170701638778215": {
+    "fr": "Réservée",
+    "en": "Reserved"
+  },
+  "4174451733672669864": {
+    "fr": "Maximum",
+    "en": "Maximum"
+  },
+  "6262006260547215161": {
+    "fr": "Pauses",
+    "en": "Pauses"
+  },
+  "8736004799623884837": {
+    "fr": "Style panneau de configuration",
+    "en": "Control panel style"
+  },
+  "7533279381360755804": {
+    "fr": " Pour tous les utilisateurs : surfaces unies, sans effet de verre, de flou ni de fond coloré, coins plus droits. Le thème clair ou sombre et l'accent de couleur de chacun sont conservés. ",
+    "en": " For every user: plain surfaces, without glass, blur or coloured background, squarer corners. Everyone keeps their light or dark theme and their accent colour. "
+  },
+  "773964757732366213": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Réglage administrateur : s'applique à tout le monde, sur tous les appareils.",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Administrator setting: applies to everyone, on every device."
+  },
+  "5903245906810632704": {
+    "fr": "Style panneau de configuration pour tout le monde",
+    "en": "Control panel style for everyone"
+  },
+  "4713705096146238204": {
+    "fr": "Style d'origine pour tout le monde",
+    "en": "Original style for everyone"
+  },
+  "1210526375101082699": {
+    "fr": "Mises à jour",
+    "en": "Updates"
+  },
+  "570045909749318667": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Rechercher maintenant ",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Check now "
+  },
+  "3707639796670878879": {
+    "fr": "{$INTERPOLATION} · version installée",
+    "en": "{$INTERPOLATION} · installed version"
+  },
+  "2481878638373414098": {
+    "fr": "Ses notes l'annoncent : revenir à une version plus ancienne n'est plus possible sans restaurer une sauvegarde.",
+    "en": "Its notes say so: going back to an older version is no longer possible without restoring a backup."
+  },
+  "8650679682961868700": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Sans retour arrière",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}No going back"
+  },
+  "5378884854702076819": {
+    "fr": "Ses notes l'annoncent : revenir à la version précédente reste possible.",
+    "en": "Its notes say so: going back to the previous version remains possible."
+  },
+  "4704506416542066614": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Rétrocompatible",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Backward compatible"
+  },
+  "8474770697969129591": {
+    "fr": " Dernière vérification : {$INTERPOLATION} · {$INTERPOLATION_1} · {$INTERPOLATION_2} ",
+    "en": " Last check: {$INTERPOLATION} · {$INTERPOLATION_1} · {$INTERPOLATION_2} "
+  },
+  "1234368797902094071": {
+    "fr": "Notes de cette version",
+    "en": "Notes of this version"
+  },
+  "5351574273229923467": {
+    "fr": "La dernière vérification a échoué",
+    "en": "The last check failed"
+  },
+  "5056486323107915812": {
+    "fr": "Installation automatique impossible sur ce serveur",
+    "en": "Automatic installation impossible on this server"
+  },
+  "61120970517633602": {
+    "fr": "Le serveur redémarre sur la nouvelle version",
+    "en": "The server is restarting on the new version"
+  },
+  "4422644210807340964": {
+    "fr": "Cette page reprend d'elle-même dès qu'il répond.",
+    "en": "This page resumes by itself as soon as it answers."
+  },
+  "4501185481533466385": {
+    "fr": "Par {$INTERPOLATION}, le {$INTERPOLATION_1}",
+    "en": "By {$INTERPOLATION}, on {$INTERPOLATION_1}"
+  },
+  "8746934614077121802": {
+    "fr": "Installation de {$INTERPOLATION}",
+    "en": "Installing {$INTERPOLATION}"
+  },
+  "1337662779523159344": {
+    "fr": " Lancée par {$INTERPOLATION} le {$INTERPOLATION_1} depuis {$INTERPOLATION_2}{$INTERPOLATION_3} ",
+    "en": " Started by {$INTERPOLATION} on {$INTERPOLATION_1} from {$INTERPOLATION_2}{$INTERPOLATION_3} "
+  },
+  "6978288363309740080": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Sauvegarde de la base : {$START_TAG_CODE}{$INTERPOLATION}{$CLOSE_TAG_CODE}",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Database backup: {$START_TAG_CODE}{$INTERPOLATION}{$CLOSE_TAG_CODE}"
+  },
+  "8592791334884525383": {
+    "fr": "{$START_TAG_SPAN}{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}{$CLOSE_TAG_SPAN} Versions disponibles {$START_TAG_SPAN_1}{$INTERPOLATION}{$CLOSE_TAG_SPAN}",
+    "en": "{$START_TAG_SPAN}{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}{$CLOSE_TAG_SPAN} Available versions {$START_TAG_SPAN_1}{$INTERPOLATION}{$CLOSE_TAG_SPAN}"
+  },
+  "9214253567680514380": {
+    "fr": "Affichage des versions",
+    "en": "Version display"
+  },
+  "1300910899447901240": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Par série",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}By series"
+  },
+  "3062747515507681631": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Toutes",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}All"
+  },
+  "7933092299601097787": {
+    "fr": "Série {$INTERPOLATION}",
+    "en": "Series {$INTERPOLATION}"
+  },
+  "6505141678485379886": {
+    "fr": "Série installée",
+    "en": "Installed series"
+  },
+  "5884861686881757177": {
+    "fr": "Antérieure",
+    "en": "Older"
+  },
+  "3808753602760262467": {
+    "fr": "{$INTERPOLATION} version(s) · la plus récente : {$INTERPOLATION_1}",
+    "en": "{$INTERPOLATION} version(s) · the latest: {$INTERPOLATION_1}"
+  },
+  "1777589190301726251": {
+    "fr": "Autres versions de la série {$INTERPOLATION} {$START_TAG_SPAN}{$INTERPOLATION_1}{$CLOSE_TAG_SPAN}",
+    "en": "Other versions of the {$INTERPOLATION} series {$START_TAG_SPAN}{$INTERPOLATION_1}{$CLOSE_TAG_SPAN}"
+  },
+  "2279080401323901933": {
+    "fr": "{$START_TAG_SPAN}{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}{$CLOSE_TAG_SPAN} Versions antérieures {$START_TAG_SPAN_1}{$INTERPOLATION}{$CLOSE_TAG_SPAN}",
+    "en": "{$START_TAG_SPAN}{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}{$CLOSE_TAG_SPAN} Older versions {$START_TAG_SPAN_1}{$INTERPOLATION}{$CLOSE_TAG_SPAN}"
+  },
+  "6001140631759161183": {
+    "fr": " Plus anciennes que la version installée. Revenir dessus est un retour arrière : la base de données a pu être modifiée depuis, une sauvegarde est faite avant. ",
+    "en": " Older than the installed version. Going back to one is a rollback: the database may have changed since, a backup is made first. "
+  },
+  "957901817248567955": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Recommandée",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Recommended"
+  },
+  "4816394096742323035": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Incompatible depuis {$INTERPOLATION}",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Incompatible since {$INTERPOLATION}"
+  },
+  "6785140606793337073": {
+    "fr": "Les notes l'annoncent : une fois installée, revenir à une version plus ancienne ne sera plus possible.",
+    "en": "The notes say so: once installed, going back to an older version will no longer be possible."
+  },
+  "4744501420492061526": {
+    "fr": "Les notes l'annoncent : on peut revenir à la version actuelle sans rien faire.",
+    "en": "The notes say so: you can go back to the current version without doing anything."
+  },
+  "8018841963184770692": {
+    "fr": "Corrective de la même série : la base de données n'est pas modifiée, revenir en arrière reste possible.",
+    "en": "Patch of the same series: the database is not changed, going back remains possible."
+  },
+  "1012995655633534530": {
+    "fr": "Les notes ne le disent pas : revenir en arrière peut demander de restaurer la sauvegarde.",
+    "en": "The notes do not say: going back may require restoring the backup."
+  },
+  "422640717982898269": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Retour arrière non garanti",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Rollback not guaranteed"
+  },
+  "6922938206168750421": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Sur GitHub",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}On GitHub"
+  },
+  "7232191974289518755": {
+    "fr": "{$START_BLOCK_IF} {$INTERPOLATION} · {$CLOSE_BLOCK_IF} publiée le {$INTERPOLATION_1}. {$INTERPOLATION_2} ",
+    "en": "{$START_BLOCK_IF} {$INTERPOLATION} · {$CLOSE_BLOCK_IF} published on {$INTERPOLATION_1}. {$INTERPOLATION_2} "
+  },
+  "896837096854390816": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Opérations à prévoir",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Operations to plan"
+  },
+  "8656318969078026221": {
+    "fr": "Notes de version",
+    "en": "Release notes"
+  },
+  "2462171959697216717": {
+    "fr": "Installer une version",
+    "en": "Install a version"
+  },
+  "5634388794505147151": {
+    "fr": "Retour arrière non garanti",
+    "en": "Rollback not guaranteed"
+  },
+  "2002136092335743772": {
+    "fr": " Cette version peut modifier la base de données. Revenir à la version actuelle pourra demander de restaurer la sauvegarde faite avant l'installation, et perdre les données enregistrées depuis. Une sauvegarde de la base est faite d'office. ",
+    "en": " This version may change the database. Going back to the current version may require restoring the backup made before the installation, and losing the data saved since. A backup of the database is always made. "
+  },
+  "4943828682836370927": {
+    "fr": "{$TAG_INPUT} J'ai lu les avertissements et les notes de version, et je lance l'installation en connaissance de cause ",
+    "en": "{$TAG_INPUT} I have read the warnings and the release notes, and I start the installation knowingly "
+  },
+  "4559650648768075636": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Installer {$INTERPOLATION} ",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Install {$INTERPOLATION} "
+  },
+  "379393710404623418": {
+    "fr": "Installation de {$PH} lancée",
+    "en": "Installation of {$PH} started"
+  },
+  "5136231281217932237": {
+    "fr": "En cours",
+    "en": "In progress"
+  },
+  "8145732787086784744": {
+    "fr": "Redémarrage",
+    "en": "Restarting"
+  },
+  "3252347424765778775": {
+    "fr": "Terminée",
+    "en": "Done"
+  },
+  "1134723487515838852": {
+    "fr": "Échec",
+    "en": "Failed"
+  },
+  "6886087958768403512": {
+    "fr": "Interface web",
+    "en": "Web interface"
+  },
+  "6603147664824613497": {
+    "fr": "Nightly",
+    "en": "Nightly"
+  },
+  "8100419939780124251": {
+    "fr": "Tout (administrateur)",
+    "en": "All (administrator)"
+  },
+  "8494626563939129371": {
+    "fr": "Tout ThermoBox",
+    "en": "All of ThermoBox"
+  },
+  "8262218549180967591": {
+    "fr": "Aucun accès",
+    "en": "No access"
+  },
+  "1216216567342277752": {
+    "fr": "{$PH} élément(s)",
+    "en": "{$PH} item(s)"
+  },
+  "5481962286830054326": {
+    "fr": "{$PH} groupe(s)",
+    "en": "{$PH} group(s)"
+  },
+  "2244741134496681207": {
+    "fr": "Accès à tout (administrateur)",
+    "en": "Access to everything (administrator)"
+  },
+  "7371606113449886263": {
+    "fr": "Accès…",
+    "en": "Access…"
+  },
+  "505320941397074414": {
+    "fr": "Accès à tout",
+    "en": "Access to everything"
+  },
+  "2097368991115626958": {
+    "fr": "Accès : ",
+    "en": "Access: "
+  },
+  "2015417416824578538": {
+    "fr": "Accès : {$PH} et {$PH_1} autre(s)",
+    "en": "Access: {$PH} and {$PH_1} other(s)"
+  },
+  "5420975180207147388": {
+    "fr": "Le serveur ne répond pas",
+    "en": "The server is not responding"
+  },
+  "5464055894299075873": {
+    "fr": "Étage",
+    "en": "Floor"
+  },
+  "6909885285127467295": {
+    "fr": "Boîtier",
+    "en": "Box"
+  },
+  "4584891950177848495": {
+    "fr": "un bâtiment",
+    "en": "a building"
+  },
+  "5514108246068024831": {
+    "fr": "un étage",
+    "en": "a floor"
+  },
+  "9130335784562647839": {
+    "fr": "une salle",
+    "en": "a room"
+  },
+  "1884004014742563073": {
+    "fr": "un boîtier",
+    "en": "a box"
+  },
+  "1755160103373095439": {
+    "fr": "Impossible de charger les bâtiments et salles",
+    "en": "Cannot load the buildings and rooms"
+  },
+  "2633939512787634007": {
+    "fr": "Salles",
+    "en": "Rooms"
+  },
+  "7604018909391382550": {
+    "fr": "Gérer",
+    "en": "Manage"
+  },
+  "2325396302111131524": {
+    "fr": "Navigation principale",
+    "en": "Main navigation"
+  },
+  "7223867857897481290": {
+    "fr": "Compte actuel",
+    "en": "Current account"
+  },
+  "6245262151918764849": {
+    "fr": "Comptes",
+    "en": "Accounts"
+  },
+  "7976395102434881372": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Ajouter un compte",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Add an account"
+  },
+  "2381215277455412980": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Mon profil",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}My profile"
+  },
+  "3955958679696743040": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Se déconnecter",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Sign out"
+  },
+  "1482721639166433890": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Ajouter un compte ",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Add an account "
+  },
+  "7067927242083737411": {
+    "fr": "Oublier ce compte",
+    "en": "Forget this account"
+  },
+  "8816809110604443464": {
+    "fr": "« {$PH} » ({$PH_1}) ne sera plus proposé sur cet appareil{$PH_2}. Le compte lui-même n'est pas supprimé.",
+    "en": "“{$PH}” ({$PH_1}) will no longer be offered on this device{$PH_2}. The account itself is not deleted."
+  },
+  "3479319917464118049": {
+    "fr": " et tu seras déconnecté",
+    "en": " and you will be signed out"
+  },
+  "2181042333039871943": {
+    "fr": "Oublier",
+    "en": "Forget"
+  },
+  "16694699619925492": {
+    "fr": "Graphique des températures",
+    "en": "Temperature chart"
+  },
+  "6259292654092434415": {
+    "fr": "Dernières valeurs",
+    "en": "Latest values"
+  },
+  "5999701741721176561": {
+    "fr": "Moins",
+    "en": "Less"
+  },
+  "5157829887517927872": {
+    "fr": "Retour (Alt+Gauche)",
+    "en": "Back (Alt+Left)"
+  },
+  "1348774649041038169": {
+    "fr": "Navigation",
+    "en": "Navigation"
+  },
+  "1358099129174798424": {
+    "fr": "Afficher ou réduire la navigation",
+    "en": "Show or collapse the navigation"
+  },
+  "455864947852695727": {
+    "fr": "Thermobox{$START_BLOCK_IF}{$START_TAG_SPAN} · {$INTERPOLATION}{$CLOSE_TAG_SPAN}{$CLOSE_BLOCK_IF}",
+    "en": "Thermobox{$START_BLOCK_IF}{$START_TAG_SPAN} · {$INTERPOLATION}{$CLOSE_TAG_SPAN}{$CLOSE_BLOCK_IF}"
+  },
+  "7362122314560708990": {
+    "fr": "Réduire",
+    "en": "Minimize"
+  },
+  "9059155436017318544": {
+    "fr": "Fermer",
+    "en": "Close"
+  },
+  "7470861785775411392": {
+    "fr": "Il fait {$INTERPOLATION}°",
+    "en": "It is {$INTERPOLATION}°"
+  },
+  "4192261801253288312": {
+    "fr": "Il fait",
+    "en": "It is"
+  },
+  "2772329777785128537": {
+    "fr": "Objectif {$INTERPOLATION}°",
+    "en": "Target {$INTERPOLATION}°"
+  },
+  "8334766180528790134": {
+    "fr": "Pas d'objectif",
+    "en": "No target"
+  },
+  "6018798359431426517": {
+    "fr": "Baisser la consigne",
+    "en": "Lower the setpoint"
+  },
+  "1697748749827805257": {
+    "fr": "Monter la consigne",
+    "en": "Raise the setpoint"
+  },
+  "6369304702175101398": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}{$INTERPOLATION} ({$INTERPOLATION_1} de plus) ",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}{$INTERPOLATION} ({$INTERPOLATION_1} more) "
+  },
+  "7170003222905485444": {
+    "fr": "Afficher la suite",
+    "en": "Show more"
+  },
+  "4574589003110423438": {
+    "fr": "Aucun",
+    "en": "None"
+  },
+  "3817498941817715969": {
+    "fr": "Pages",
+    "en": "Pages"
+  },
+  "345382201476557852": {
+    "fr": " Ce que {$START_TAG_STRONG}{$INTERPOLATION}{$CLOSE_TAG_STRONG} ({$INTERPOLATION_1}) peut consulter{$INTERPOLATION_2}. ",
+    "en": " What {$START_TAG_STRONG}{$INTERPOLATION}{$CLOSE_TAG_STRONG} ({$INTERPOLATION_1}) can see{$INTERPOLATION_2}. "
+  },
+  "7875915249684685349": {
+    "fr": "{$TAG_INPUT}Tout ThermoBox",
+    "en": "{$TAG_INPUT}All of ThermoBox"
+  },
+  "3675253121123834115": {
+    "fr": "{$TAG_INPUT}Seulement les éléments cochés",
+    "en": "{$TAG_INPUT}Only the ticked items"
+  },
+  "3992628896188415194": {
+    "fr": " Cocher un bâtiment ou un étage donne accès à tout ce qu'il contient, y compris ce qui y sera ajouté plus tard. Décocher une salle limite l'accès aux autres. ",
+    "en": " Ticking a building or a floor gives access to everything it contains, including what will be added later. Unticking a room limits the access to the others. "
+  },
+  "5491290114483197196": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} En plus, par ses groupes : {$INTERPOLATION}.",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Also, through their groups: {$INTERPOLATION}."
+  },
+  "4067985314402719617": {
+    "fr": "Accès de « {$PH} » enregistrés",
+    "en": "Accesses of “{$PH}” saved"
+  },
+  "3217688542216827651": {
+    "fr": "Rôle obligatoire",
+    "en": "Role required"
+  },
+  "8642962368206453416": {
+    "fr": "Groupes (facultatif)",
+    "en": "Groups (optional)"
+  },
+  "2317206824271010478": {
+    "fr": "{$TAG_INPUT}Seulement les éléments cochés{$INTERPOLATION}",
+    "en": "{$TAG_INPUT}Only the ticked items{$INTERPOLATION}"
+  },
+  "9086069967037570022": {
+    "fr": "Utilisateur « {$PH} » créé",
+    "en": "User “{$PH}” created"
+  },
+  "2611942623995388874": {
+    "fr": "Il n'a encore accès à aucune salle : touche ses accès pour lui en donner.",
+    "en": "They do not have access to any room yet: touch their accesses to give them some."
+  },
+  "1038615548357551562": {
+    "fr": "Utilisateur « {$PH} » modifié",
+    "en": "User “{$PH}” updated"
+  },
+  "5187468483318981620": {
+    "fr": "Ajout à « {$PH} » impossible",
+    "en": "Cannot add to “{$PH}”"
+  },
+  "3304398988148152117": {
+    "fr": "dans {$PH} groupe(s)",
+    "en": "in {$PH} group(s)"
+  },
+  "1604505594404101814": {
+    "fr": "accès à {$PH} élément(s)",
+    "en": "access to {$PH} item(s)"
+  },
+  "1399603543433002118": {
+    "fr": "accès à tout",
+    "en": "access to everything"
+  },
+  "4000097406722986306": {
+    "fr": "Supprimer l'utilisateur « {$PH} » ?",
+    "en": "Delete the user “{$PH}”?"
+  },
+  "2222442644277410537": {
+    "fr": "Utilisateur « {$PH} » supprimé",
+    "en": "User “{$PH}” deleted"
+  },
+  "6377784617349684890": {
+    "fr": " Les groupes de {$START_TAG_STRONG}{$INTERPOLATION}{$CLOSE_TAG_STRONG} : il voit en plus ce que chacun d'eux donne{$INTERPOLATION_1}. ",
+    "en": " The groups of {$START_TAG_STRONG}{$INTERPOLATION}{$CLOSE_TAG_STRONG}: they also see what each of them gives{$INTERPOLATION_1}. "
+  },
+  "9104658026888442491": {
+    "fr": "Aucun groupe pour l'instant.",
+    "en": "No group yet."
+  },
+  "8947024238200321972": {
+    "fr": "Groupes de « {$PH} » enregistrés",
+    "en": "Groups of “{$PH}” saved"
+  },
+  "3258288413622587338": {
+    "fr": "ajouté à {$PH} groupe(s)",
+    "en": "added to {$PH} group(s)"
+  },
+  "1779149028430688095": {
+    "fr": "retiré de {$PH} groupe(s)",
+    "en": "removed from {$PH} group(s)"
+  },
+  "4400564979333262351": {
+    "fr": "Nouvelle version du client",
+    "en": "New client version"
+  },
+  "3783042854089147367": {
+    "fr": "Dernière version publiée du client",
+    "en": "Latest published client version"
+  },
+  "3098115779394756108": {
+    "fr": " sur ",
+    "en": " on "
+  },
+  "7162166438010576850": {
+    "fr": "Se reconnecter",
+    "en": "Sign in again"
+  },
+  "2298795670869720870": {
+    "fr": "thermobox.mon-organisation.fr",
+    "en": "thermobox.my-organisation.com"
+  },
+  "5317041288301669953": {
+    "fr": "Changer de serveur",
+    "en": "Change server"
+  },
+  "5743011427934270645": {
+    "fr": "Fort",
+    "en": "Strong"
+  },
+  "6326663145809601756": {
+    "fr": "Moyen",
+    "en": "Medium"
+  },
+  "558717122532609198": {
+    "fr": "Faible",
+    "en": "Weak"
+  },
+  "7083475508669469456": {
+    "fr": "salle",
+    "en": "room"
+  },
+  "5370670328825836201": {
+    "fr": "salles",
+    "en": "rooms"
+  },
+  "7596687898496420645": {
+    "fr": "Rechercher une salle, un étage, un bâtiment",
+    "en": "Search for a room, a floor, a building"
+  },
+  "4817493939459174135": {
+    "fr": "Rechercher une pièce",
+    "en": "Search for a room"
+  },
+  "6559644442436079703": {
+    "fr": "Sans limite",
+    "en": "No limit"
+  },
+  "6141881470514989669": {
+    "fr": "Aucune salle pour le moment",
+    "en": "No room yet"
+  },
+  "5169635779567287905": {
+    "fr": "Aucune salle ne vous est accessible pour le moment",
+    "en": "No room is available to you yet"
+  },
+  "4862769212693457364": {
+    "fr": "Toutes les pièces",
+    "en": "All rooms"
+  },
+  "1624193268467943060": {
+    "fr": "Déplacer ",
+    "en": "Move "
+  },
+  "6538858181838664735": {
+    "fr": " (flèches haut et bas)",
+    "en": " (up and down arrows)"
+  },
+  "1105180399584593747": {
+    "fr": "Ouvrir ",
+    "en": "Open "
+  },
+  "3172960372084603025": {
+    "fr": "Retirer des favoris",
+    "en": "Remove from favourites"
+  },
+  "612493708982639728": {
+    "fr": "Ajouter aux favoris",
+    "en": "Add to favourites"
+  },
+  "8800511076379851987": {
+    "fr": "Dernières 24 heures de ",
+    "en": "Last 24 hours of "
+  },
+  "5976369388574931680": {
+    "fr": " du temps",
+    "en": " of the time"
+  },
+  "5856411542139881363": {
+    "fr": "boîtiers",
+    "en": "boxes"
+  },
+  "5071958320939415208": {
+    "fr": "boîtier",
+    "en": "box"
+  },
+  "6999296574516326076": {
+    "fr": "Aucun utilisateur ne correspond",
+    "en": "No user matches"
+  },
+  "65568306897189721": {
+    "fr": "Sélectionner ",
+    "en": "Select "
+  },
+  "9087295853052910516": {
+    "fr": "Rôle de ",
+    "en": "Role of "
+  },
+  "2461866540403232784": {
+    "fr": "Changer les accès de ",
+    "en": "Change the accesses of "
+  },
+  "8685814351772745479": {
+    "fr": "Changer les groupes de ",
+    "en": "Change the groups of "
+  },
+  "2725097373630167961": {
+    "fr": "Modifier ",
+    "en": "Edit "
+  },
+  "8726507972322583535": {
+    "fr": "Supprimer ",
+    "en": "Delete "
+  },
+  "3784545227575216689": {
+    "fr": "Aucun groupe ne correspond",
+    "en": "No group matches"
+  },
+  "4434415280496684825": {
+    "fr": "Aucun groupe. Un groupe donne les mêmes accès à plusieurs utilisateurs : « Nouveau groupe ».",
+    "en": "No group. A group gives the same accesses to several users: “New group”."
+  },
+  "230760508613775267": {
+    "fr": "Membres de ",
+    "en": "Members of "
+  },
+  "8575241297747115483": {
+    "fr": "Nouveau groupe",
+    "en": "New group"
+  },
+  "3943521149039151436": {
+    "fr": "Modifier le groupe",
+    "en": "Edit the group"
+  },
+  "6907712459711218528": {
+    "fr": "Éléments",
+    "en": "Items"
+  },
+  "7109907228491806204": {
+    "fr": "Salles et bâtiments",
+    "en": "Rooms and buildings"
+  },
+  "6522032669216828498": {
+    "fr": "Utilisateurs et groupes",
+    "en": "Users and groups"
+  },
+  "5696252763908842527": {
+    "fr": "Tous les bâtiments, étages, salles et boîtiers sur une page : consignes, noms, emplacements. Coche plusieurs lignes pour agir sur toutes à la fois.",
+    "en": "Every building, floor, room and box on one page: setpoints, names, locations. Tick several rows to act on all of them at once."
+  },
+  "5827437302623355483": {
+    "fr": "Les consignes de toutes vos salles sur une page. Coche plusieurs lignes pour leur envoyer la même consigne.",
+    "en": "The setpoints of all your rooms on one page. Tick several rows to send them the same setpoint."
+  },
+  "1589734424133384776": {
+    "fr": " sélectionné(s)",
+    "en": " selected"
+  },
+  "5864667518208243228": {
+    "fr": "Touche les éléments",
+    "en": "Touch the items"
+  },
+  "7995613001278383127": {
+    "fr": "Tout",
+    "en": "All"
+  },
+  "7595911884418843153": {
+    "fr": "Sélectionner",
+    "en": "Select"
+  },
+  "4055414388805324111": {
+    "fr": "Déplier ",
+    "en": "Unfold "
+  },
+  "8480470071397740030": {
+    "fr": "Replier ",
+    "en": "Fold "
+  },
+  "2395915460762308355": {
+    "fr": "Aucun élément ne correspond",
+    "en": "No item matches"
+  },
+  "1036244508959968935": {
+    "fr": "Voir les ",
+    "en": "See the "
+  },
+  "2096109714538282909": {
+    "fr": " boîtier(s) de ",
+    "en": " box(es) of "
+  },
+  "7281099204865538449": {
+    "fr": "Nouvelle consigne pour les ",
+    "en": "New setpoint for the "
+  },
+  "1192935132313900334": {
+    "fr": " éléments cochés",
+    "en": " ticked items"
+  },
+  "2209140145301850000": {
+    "fr": "Nouvelle consigne pour ",
+    "en": "New setpoint for "
+  },
+  "1594656296269537525": {
+    "fr": "Forcée : remplace aussi les consignes propres des éléments contenus",
+    "en": "Forced: also replaces the own setpoints of the items inside"
+  },
+  "3682987754425141635": {
+    "fr": "Forcer : remplacer aussi les consignes propres des éléments contenus",
+    "en": "Force: also replace the own setpoints of the items inside"
+  },
+  "8314040858774555340": {
+    "fr": "Pour ",
+    "en": "For "
+  },
+  "7243381769177289361": {
+    "fr": "Envoyer",
+    "en": "Send"
+  },
+  "3591431661811203472": {
+    "fr": "Héritée de ",
+    "en": "Inherited from "
+  },
+  "8380457578913347625": {
+    "fr": "Changer la consigne des ",
+    "en": "Change the setpoint of the "
+  },
+  "7206817728042951294": {
+    "fr": "Changer la consigne de ",
+    "en": "Change the setpoint of "
+  },
+  "5421212599709128356": {
+    "fr": "Renommer ou déplacer ",
+    "en": "Rename or move "
+  },
+  "4070514745736611652": {
+    "fr": "Toutes les salles",
+    "en": "All rooms"
+  },
+  "1937232366398429466": {
+    "fr": "Aucun bâtiment entièrement accessible.",
+    "en": "No building fully accessible."
+  },
+  "5569811104577848236": {
+    "fr": "Aucune salle à afficher.",
+    "en": "No room to show."
+  },
+  "6572669667459893336": {
+    "fr": "Masquer ou afficher la courbe de ",
+    "en": "Hide or show the curve of "
+  },
+  "5636627590260411773": {
+    "fr": "Afficher d'autres bâtiments",
+    "en": "Show other buildings"
+  },
+  "3907651074164776323": {
+    "fr": " autre",
+    "en": " other"
+  },
+  "7697670765558951703": {
+    "fr": " sur cet appareil",
+    "en": " on this device"
+  },
+  "3980097344069143041": {
+    "fr": "Ajouter un compte, sur ce serveur ou un autre",
+    "en": "Add an account, on this server or another one"
+  },
+  "4431218269864510098": {
+    "fr": "au-dessus",
+    "en": "above"
+  },
+  "6689451478296407152": {
+    "fr": "en dessous",
+    "en": "below"
+  },
+  "4568846574112883206": {
+    "fr": "Mesurée",
+    "en": "Measured"
+  },
+  "9037691847006585242": {
+    "fr": "Moyenne des boîtiers",
+    "en": "Average of the boxes"
+  },
+  "7949241689735545681": {
+    "fr": "Les salles sans consigne propre la suivent, et leurs boîtiers la reçoivent.",
+    "en": "The rooms without their own setpoint follow it, and their boxes receive it."
+  },
+  "4136981009093765327": {
+    "fr": "Enregistrée sur la salle et envoyée à chacun de ses boîtiers.",
+    "en": "Saved on the room and sent to each of its boxes."
+  },
+  "7264101943361472659": {
+    "fr": "Photo de ",
+    "en": "Photo of "
+  },
+  "4142863621251590306": {
+    "fr": "Ajouter une photo",
+    "en": "Add a photo"
+  },
+  "9004334984468055592": {
+    "fr": "Changer",
+    "en": "Change"
+  },
+  "7641599530594591506": {
+    "fr": "Pas encore de mesure",
+    "en": "No measurement yet"
+  },
+  "2034198357242213770": {
+    "fr": "Consigne héritée de « {name} »",
+    "en": "Setpoint inherited from “{name}”"
+  },
+  "533364270770659266": {
+    "fr": "Consigne de la salle",
+    "en": "Setpoint of the room"
+  },
+  "5583621315025727357": {
+    "fr": "Historique de ",
+    "en": "History of "
+  },
+  "70397346439942337": {
+    "fr": "Ajouter",
+    "en": "Add"
+  },
+  "4905509661236607310": {
+    "fr": "Rien ici pour le moment.",
+    "en": "Nothing here yet."
+  },
+  "7288795138836505485": {
+    "fr": "Ranger « {name} »",
+    "en": "Put away “{name}”"
+  },
+  "6187609003715904674": {
+    "fr": "Ajouter dans « {name} »",
+    "en": "Add into “{name}”"
+  },
+  "7068936762750771567": {
+    "fr": " minimale",
+    "en": " minimum"
+  },
+  "6486369438880715062": {
+    "fr": " maximale",
+    "en": " maximum"
+  },
+  "1635229134440801362": {
+    "fr": "version antérieure",
+    "en": "older version"
+  },
+  "7477035611287114161": {
+    "fr": "Développement",
+    "en": "Development"
+  },
+  "7047860033496375690": {
+    "fr": "vérification quotidienne",
+    "en": "daily check"
+  },
+  "5135774926421486860": {
+    "fr": "vérification automatique désactivée",
+    "en": "automatic check turned off"
+  },
+  "621149787461075551": {
+    "fr": "versions stables et de test",
+    "en": "stable and test versions"
+  },
+  "179835844498341956": {
+    "fr": "versions stables",
+    "en": "stable versions"
+  },
+  "2263413764157547920": {
+    "fr": "Passé de ",
+    "en": "Went from "
+  },
+  "3100848786937916224": {
+    "fr": " installée",
+    "en": " installed"
+  },
+  "7364096328976864547": {
+    "fr": "Installation de ",
+    "en": "Installation of "
+  },
+  "15383978776928257": {
+    "fr": " échouée",
+    "en": " failed"
+  },
+  "1927384129139928624": {
+    "fr": ", depuis la version ",
+    "en": ", from version "
+  },
+  "5251935927062044286": {
+    "fr": "ThermoBox est à jour",
+    "en": "ThermoBox is up to date"
+  },
+  "5110713256866018476": {
+    "fr": "Pas encore vérifié",
+    "en": "Not checked yet"
+  },
+  "4932807130047821826": {
+    "fr": "Aucune version plus récente sur GitHub.",
+    "en": "No newer version on GitHub."
+  },
+  "1981389854882708732": {
+    "fr": "La première vérification a lieu une minute après le démarrage. Lancez-la maintenant avec « Rechercher maintenant ».",
+    "en": "The first check happens one minute after start-up. Run it now with “Check now”."
+  },
+  "5759031388058272919": {
+    "fr": "Revenir à",
+    "en": "Go back to"
+  },
+  "5309977433967237512": {
+    "fr": "Installer",
+    "en": "Install"
+  },
+  "6569516258852271683": {
+    "fr": "Version antérieure",
+    "en": "Older version"
+  },
+  "911696481404358943": {
+    "fr": " ne permet pas de revenir en arrière : ses notes l'annoncent. Cette version ne fonctionnerait plus avec les données.",
+    "en": " cannot be rolled back: its notes say so. This version would no longer work with the data."
+  },
+  "9183300865750086131": {
+    "fr": "Réinstaller…",
+    "en": "Reinstall…"
+  },
+  "1023477359868839802": {
+    "fr": "Installer…",
+    "en": "Install…"
+  },
+  "7405943678457125906": {
+    "fr": "Plus ancienne que la version installée.",
+    "en": "Older than the installed version."
+  },
+  "7247999608529633670": {
+    "fr": "Corrections de bugs et de sécurité seulement : la base de données n’est pas modifiée.",
+    "en": "Bug and security fixes only: the database is not changed."
+  },
+  "1129802609366780067": {
+    "fr": "Nouvelle série : peut modifier la base de données.",
+    "en": "New series: may change the database."
+  },
+  "294121493981189348": {
+    "fr": "Sauvegarde de la base (obligatoire pour cette version)",
+    "en": "Database backup (required for this version)"
+  },
+  "6040762625213540018": {
+    "fr": "Sauvegarder aussi la base de données (facultatif : une corrective ne la modifie pas)",
+    "en": "Also back up the database (optional: a patch does not change it)"
+  },
+  "5674489727898568930": {
+    "fr": "Afficher le nom des pages",
+    "en": "Show the page names"
+  },
+  "4505412270201412207": {
+    "fr": "Réduire la barre",
+    "en": "Collapse the bar"
+  },
+  "5375002985211262043": {
+    "fr": "Nouvelle version disponible",
+    "en": "New version available"
+  },
+  "5961380999119489545": {
+    "fr": "Comptes (",
+    "en": "Accounts ("
+  },
+  "3910369550982716095": {
+    "fr": "Oublier ",
+    "en": "Forget "
+  },
+  "5436050457925260387": {
+    "fr": "Réduire le graphique",
+    "en": "Shrink the chart"
+  },
+  "7542269091117930191": {
+    "fr": "Graphique en plein écran",
+    "en": "Full-screen chart"
+  },
+  "181574438587688914": {
+    "fr": "Plein écran",
+    "en": "Full screen"
+  },
+  "8656703433622817846": {
+    "fr": "Consigne en ",
+    "en": "Setpoint in "
+  },
+  "3786071229798310825": {
+    "fr": "Masquer le mot de passe",
+    "en": "Hide the password"
+  },
+  "5319461958097225029": {
+    "fr": "Afficher le mot de passe",
+    "en": "Show the password"
+  },
+  "4658368944997091295": {
+    "fr": "Niveau inférieur",
+    "en": "Restore down"
+  },
+  "1135520577462015200": {
+    "fr": "Agrandir",
+    "en": "Maximize"
+  },
+  "6639462175621490586": {
+    "fr": " choisi(s)",
+    "en": " chosen"
+  },
+  "7954895544329067211": {
+    "fr": "Ouvrir {name}",
+    "en": "Open {name}"
+  },
+  "5206716310958042801": {
+    "fr": " et piloter",
+    "en": " and control"
+  },
+  "1529746829657129908": {
+    "fr": "Nouvel utilisateur",
+    "en": "New user"
+  },
+  "4063880583133892813": {
+    "fr": "Modifier l'utilisateur",
+    "en": "Edit the user"
+  },
+  "8856678317951609994": {
+    "fr": "Nouveau mot de passe (optionnel)",
+    "en": "New password (optional)"
+  },
+  "9044835423559696886": {
+    "fr": " (en plus de ses groupes)",
+    "en": " (in addition to their groups)"
+  },
+  "8577302037590856757": {
+    "fr": " (il voit déjà tout ThermoBox)",
+    "en": " (they already see all of ThermoBox)"
+  }
+}

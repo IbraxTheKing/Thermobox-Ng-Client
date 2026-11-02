@@ -1,12 +1,12 @@
 <header class="tb-page-head">
   <div class="tb-page-title">
     @if (panel()) {
-      <h1>Aperçu</h1>
+      <h1 i18n>Aperçu</h1>
       <p class="tb-overview-under">
-        {{ plural(all().length, 'salle') }}@if (lastReading(); as h) {, dernier relevé à {{ h }}}
+        {{ plural(all().length, ('salle' | tr), ('salles' | tr)) }}@if (lastReading(); as h) {<ng-container i18n>, dernier relevé à {{ h }}</ng-container>}
       </p>
     } @else {
-      <h1>Maison</h1>
+      <h1 i18n>Maison</h1>
       <!-- A holiday (SeasonService): its greeting -->
       @if (seasons.current(); as season) {
         <p class="tb-season-greeting">{{ season.greeting }}</p>
@@ -18,15 +18,15 @@
     }
   </div>
   <!-- Computers: the size of the cards -->
-  <label class="tb-size-cards" title="Taille des cartes">
+  <label class="tb-size-cards" i18n-title title="Taille des cartes">
     <i class="pi pi-th-large" aria-hidden="true"></i>
     <input type="range" min="0.75" max="1.6" step="0.05" [value]="prefs.cardSize()" (input)="prefs.cardSize.set(+$any($event.target).value)"
-           aria-label="Taille des cartes" />
+           i18n-aria-label aria-label="Taille des cartes" />
     <i class="pi pi-stop" aria-hidden="true"></i>
   </label>
   <!-- Phones: pull the page down instead (PullToRefresh) -->
   @if (!pull()) {
-    <button type="button" class="tb-btn tb-icon tb-tonal" data-action="refresh" title="Actualiser" aria-label="Actualiser"
+    <button type="button" class="tb-btn tb-icon tb-tonal" data-action="refresh" i18n-title title="Actualiser" i18n-aria-label aria-label="Actualiser"
             [class.tb-busy]="store.loading()" (click)="refresh()">
       <i class="pi pi-refresh"></i>
     </button>
@@ -37,16 +37,16 @@
   <div class="tb-banner tb-banner-info tb-update-notice">
     <span class="tb-banner-icon"><i class="pi pi-cloud-download"></i></span>
     <div class="tb-banner-text">
-      <strong>Nouvelle version de ThermoBox disponible</strong>
+      <strong i18n>Nouvelle version de ThermoBox disponible</strong>
       <span>{{ notice.summary() }}</span>
     </div>
-    <a routerLink="/app/server" [queryParams]="{ tab: 'updates' }" class="tb-btn tb-flat">Voir</a>
+    <a i18n routerLink="/app/server" [queryParams]="{ tab: 'updates' }" class="tb-btn tb-flat">Voir</a>
   </div>
 }
 
 @if (panel()) {
   <!-- The lamps of the desk: how many rooms in each state; a tap shows only those -->
-  <div class="tb-lights" role="group" aria-label="Salles par état">
+  <div class="tb-lights" role="group" i18n-aria-label aria-label="Salles par état">
     @for (v of lights(); track v.state.key) {
       <button type="button" class="tb-light tb-tone-{{ v.state.tone }}" [class.tb-light-on]="stateFilter() === v.state"
               [attr.aria-pressed]="stateFilter() === v.state" [disabled]="!v.count && stateFilter() !== v.state" (click)="toggleState(v.state)">
@@ -61,16 +61,16 @@
   <div class="tb-toolbar">
     <span class="tb-search">
       <i class="pi pi-search"></i>
-      <input class="tb-input" type="search" [placeholder]="panel() ? 'Rechercher une salle, un étage, un bâtiment' : 'Rechercher une pièce'" autocomplete="off" enterkeyhint="search"
-             aria-label="Rechercher" [value]="search()" (input)="onSearch($any($event.target).value)" />
+      <input class="tb-input" type="search" [placeholder]="panel() ? ('Rechercher une salle, un étage, un bâtiment' | tr) : ('Rechercher une pièce' | tr)" autocomplete="off" enterkeyhint="search"
+             i18n-aria-label aria-label="Rechercher" [value]="search()" (input)="onSearch($any($event.target).value)" />
     </span>
     @if (severalBuildings()) {
-      <select class="tb-select tb-filter" aria-label="Bâtiment" [value]="buildingId() ?? ''" (change)="chooseBuilding($any($event.target).value)">
-        <option value="">Tous les bâtiments</option>
+      <select class="tb-select tb-filter" i18n-aria-label aria-label="Bâtiment" [value]="buildingId() ?? ''" (change)="chooseBuilding($any($event.target).value)">
+        <option i18n value="">Tous les bâtiments</option>
         @for (b of buildings(); track b.id) {
           <option [value]="b.id" [selected]="buildingId() === b.id">{{ b.name }}</option>
         }
-        <option [value]="NO_BUILDING" [selected]="buildingId() === NO_BUILDING">Sans bâtiment</option>
+        <option i18n [value]="NO_BUILDING" [selected]="buildingId() === NO_BUILDING">Sans bâtiment</option>
       </select>
     }
   </div>
@@ -91,30 +91,30 @@
         <b class="tb-scale-mark" [class.tb-scale-mark-out]="!m.inside" [style.left.%]="m.pct" [title]="m.name + ' : ' + unit.delta(m.delta)"></b>
       }
       <input type="range" class="tb-scale-handle" [min]="-extent()" [max]="extent()" step="0.1" [value]="range.bottom() ?? -extent()"
-             aria-label="Écart minimal à la consigne" [attr.aria-valuetext]="range.bottom() == null ? 'Sans limite' : unit.delta(range.bottom())"
+             i18n-aria-label aria-label="Écart minimal à la consigne" [attr.aria-valuetext]="range.bottom() == null ? ('Sans limite' | tr) : unit.delta(range.bottom())"
              (input)="setBound('bottom', +$any($event.target).value)" />
       <input type="range" class="tb-scale-handle" [min]="-extent()" [max]="extent()" step="0.1" [value]="range.top() ?? extent()"
-             aria-label="Écart maximal à la consigne" [attr.aria-valuetext]="range.top() == null ? 'Sans limite' : unit.delta(range.top())"
+             i18n-aria-label aria-label="Écart maximal à la consigne" [attr.aria-valuetext]="range.top() == null ? ('Sans limite' | tr) : unit.delta(range.top())"
              (input)="setBound('top', +$any($event.target).value)" />
     </div>
     <div class="tb-scale-legend" aria-hidden="true">
-      <span>Trop froid <small class="tb-figures">{{ unit.delta(-extent()) }}</small></span>
-      <span>À la consigne</span>
-      <span><small class="tb-figures">{{ unit.delta(extent()) }}</small> Trop chaud</span>
+      <span i18n>Trop froid <small class="tb-figures">{{ unit.delta(-extent()) }}</small></span>
+      <span i18n>À la consigne</span>
+      <span i18n><small class="tb-figures">{{ unit.delta(extent()) }}</small> Trop chaud</span>
     </div>
     <div class="tb-scale-tools">
       @if (rangeActive()) {
-        <span class="tb-scale-filter">
-          <b>{{ rangeText() }}</b> · {{ visibleCount() }} {{ visibleCount() > 1 ? 'salles' : 'salle' }} sur {{ all().length }}
+        <span i18n class="tb-scale-filter">
+          <b>{{ rangeText() }}</b> · {{ visibleCount() }} {{ visibleCount() > 1 ? ('salles' | tr) : ('salle' | tr) }} sur {{ all().length }}
           <button type="button" class="tb-btn tb-flat tb-btn-sm" (click)="showAll()">Tout afficher</button>
         </span>
       } @else {
-        <span class="tb-scale-help">Glisse les poignées de la barre pour ne garder que certains écarts.</span>
+        <span i18n class="tb-scale-help">Glisse les poignées de la barre pour ne garder que certains écarts.</span>
       }
-      <label class="tb-tolerance">
+      <label i18n class="tb-tolerance">
         Tolérance
         <input type="range" min="0.5" max="3" step="0.5" [value]="prefs.tolerance()" (input)="setTolerance(+$any($event.target).value)"
-               aria-label="Tolérance : écart qui colore une salle à moitié" />
+               i18n-aria-label aria-label="Tolérance : écart qui colore une salle à moitié" />
         <output class="tb-figures">±{{ unit.delta(prefs.tolerance()).slice(1) }}</output>
       </label>
     </div>
@@ -125,11 +125,11 @@
   <div class="tb-banner">
     <span class="tb-banner-icon"><i class="pi pi-exclamation-triangle"></i></span>
     <div class="tb-banner-text">
-      <strong>{{ store.unattachedDevices() }} boîtier(s) non rattaché(s)</strong>
-      <span>Leurs mesures ne comptent dans aucune salle tant qu'ils ne sont pas rattachés.</span>
+      <strong i18n>{{ store.unattachedDevices() }} boîtier(s) non rattaché(s)</strong>
+      <span i18n>Leurs mesures ne comptent dans aucune salle tant qu'ils ne sont pas rattachés.</span>
     </div>
     @if (auth.admin()) {
-      <a routerLink="/app/rooms" class="tb-btn tb-flat">Les ranger</a>
+      <a i18n routerLink="/app/rooms" class="tb-btn tb-flat">Les ranger</a>
     }
   </div>
 }
@@ -145,12 +145,12 @@
 @if (empty()) {
   <div class="tb-empty">
     <span class="tb-empty-icon"><i class="pi pi-building"></i></span>
-    <strong>{{ store.all() ? 'Aucune salle pour le moment' : 'Aucune salle ne vous est accessible pour le moment' }}</strong>
+    <strong>{{ store.all() ? ('Aucune salle pour le moment' | tr) : ('Aucune salle ne vous est accessible pour le moment' | tr) }}</strong>
     @if (!store.all()) {
-      <span>Un administrateur vous donne accès aux bâtiments, étages ou salles à suivre.</span>
+      <span i18n>Un administrateur vous donne accès aux bâtiments, étages ou salles à suivre.</span>
     }
     @if (auth.admin()) {
-      <a routerLink="/app/rooms" class="tb-btn tb-tonal">Gérer les bâtiments et salles</a>
+      <a i18n routerLink="/app/rooms" class="tb-btn tb-tonal">Gérer les bâtiments et salles</a>
     }
   </div>
 }
@@ -158,8 +158,8 @@
 @if (noResult()) {
   <div class="tb-empty" data-flip="no-result">
     <span class="tb-empty-icon"><i class="pi pi-search"></i></span>
-    <strong>Rien ne correspond à ta recherche</strong>
-    <button type="button" class="tb-btn tb-tonal" (click)="clearFilters()">Effacer les filtres</button>
+    <strong i18n>Rien ne correspond à ta recherche</strong>
+    <button i18n type="button" class="tb-btn tb-tonal" (click)="clearFilters()">Effacer les filtres</button>
   </div>
 }
 
@@ -167,7 +167,7 @@
 @if (favorites().length) {
   <section class="tb-section" [class.tb-collapsed]="isFolded('favorites')" data-section="favorites">
     <h2 class="tb-section-title" data-flip="section-favorites">
-      <button type="button" class="tb-section-toggle" [attr.aria-expanded]="!isFolded('favorites')" (click)="toggleSection('favorites')">
+      <button i18n type="button" class="tb-section-toggle" [attr.aria-expanded]="!isFolded('favorites')" (click)="toggleSection('favorites')">
         <span class="tb-section-icon tb-section-icon-fav"><i class="pi pi-star-fill"></i></span>
         Favoris
         <span class="tb-section-meta">{{ favorites().length }}</span>
@@ -197,11 +197,11 @@
     @if (panel() || severalBuildings() || favorites().length) {
       <h2 class="tb-section-title" [attr.data-flip]="'section-' + g.key">
         <button type="button" class="tb-section-toggle" [attr.aria-expanded]="!isFolded(g.key)" (click)="toggleSection(g.key)">
-          {{ panel() || severalBuildings() ? g.name : 'Toutes les pièces' }}
+          {{ panel() || severalBuildings() ? g.name : ('Toutes les pièces' | tr) }}
           <span class="tb-section-meta">
             @if (panel()) {
-              {{ plural(g.rooms.length, 'salle') }}
-              @if (g.average != null) {, moyenne {{ unit.t(g.average) }} {{ unit.symbol() }}}
+              {{ plural(g.rooms.length, ('salle' | tr), ('salles' | tr)) }}
+              @if (g.average != null) {<ng-container i18n>, moyenne {{ unit.t(g.average) }} {{ unit.symbol() }}</ng-container>}
             } @else {
               {{ g.rooms.length }}
             }
@@ -210,7 +210,7 @@
         </button>
         <!-- Drag it up or down (or the arrows of the keyboard) to arrange the buildings -->
         @if (arrangeable()) {
-          <button type="button" class="tb-section-handle" [title]="'Déplacer ' + g.name" [attr.aria-label]="'Déplacer ' + g.name + ' (flèches haut et bas)'"
+          <button type="button" class="tb-section-handle" [title]="('Déplacer ' | tr) + g.name" [attr.aria-label]="('Déplacer ' | tr) + g.name + (' (flèches haut et bas)' | tr)"
                   (pointerdown)="enterSection(g.key, $event)" (keydown.arrowup)="moveSection(g.key, -1, $event)" (keydown.arrowdown)="moveSection(g.key, 1, $event)">
             <i class="pi pi-bars"></i>
           </button>

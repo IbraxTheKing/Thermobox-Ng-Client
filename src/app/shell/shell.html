@@ -6,16 +6,16 @@
 
 <!-- Top bar (phones): the brand, then the title of the page once it has scrolled away. No actions. -->
 <header class="tb-topbar">
-  <a routerLink="/app/overview" class="tb-brand"><span class="tb-logo" aria-hidden="true"></span><span class="tb-brand-name">Thermobox</span></a>
+  <a routerLink="/app/overview" class="tb-brand"><span class="tb-logo" aria-hidden="true"></span><span i18n class="tb-brand-name">Thermobox</span></a>
   <span class="tb-topbar-title" aria-hidden="true">{{ title.title() }}</span>
 </header>
 
 <!-- Navigation rail (wide screens), bar at the bottom (phones) -->
-<nav class="tb-rail" [class.tb-lens-held]="input()" [class.tb-pane-open]="paneOpen()" aria-label="Navigation principale" (transitionend)="placeLens()" [attr.data-tauri-drag-region]="desktop.mac ? '' : null">
-  <a routerLink="/app/overview" class="tb-rail-brand" title="Thermobox"><span class="tb-logo" aria-hidden="true"></span><span class="tb-rail-brand-name">Thermobox</span></a>
+<nav class="tb-rail" [class.tb-lens-held]="input()" [class.tb-pane-open]="paneOpen()" i18n-aria-label aria-label="Navigation principale" (transitionend)="placeLens()" [attr.data-tauri-drag-region]="desktop.mac ? '' : null">
+  <a routerLink="/app/overview" class="tb-rail-brand" i18n-title title="Thermobox"><span class="tb-logo" aria-hidden="true"></span><span i18n class="tb-rail-brand-name">Thermobox</span></a>
   <!-- Computers: the side bar folds into a rail of icons, and back -->
   <button type="button" class="tb-rail-fold" (click)="fold()"
-          [title]="prefs.sidebarCollapsed() ? 'Afficher le nom des pages' : 'Réduire la barre'" [attr.aria-label]="prefs.sidebarCollapsed() ? 'Afficher le nom des pages' : 'Réduire la barre'">
+          [title]="prefs.sidebarCollapsed() ? ('Afficher le nom des pages' | tr) : ('Réduire la barre' | tr)" [attr.aria-label]="prefs.sidebarCollapsed() ? ('Afficher le nom des pages' | tr) : ('Réduire la barre' | tr)">
     <i class="pi pi-angle-double-left"></i>
   </button>
 
@@ -31,7 +31,7 @@
         [class.tb-dest-hover]="hovered() === d.link"
         [attr.aria-current]="isActive(d) ? 'page' : null"
         [attr.data-link]="d.link"
-        [title]="d.badge && notice.available() ? 'Nouvelle version disponible' : d.label"
+        [title]="d.badge && notice.available() ? ('Nouvelle version disponible' | tr) : d.label"
         (click)="onDestination()"
       >
         <span class="tb-dest-icon">
@@ -72,7 +72,7 @@
     }
     <div class="tb-rail-account-zone">
       <button type="button" class="tb-rail-account" data-accounts-opener aria-haspopup="dialog" [attr.aria-expanded]="accounts()"
-              [title]="'Comptes (' + auth.user()?.username + ' · ' + auth.address() + ')'" (click)="accounts.set(!accounts())">
+              [title]="('Comptes (' | tr) + auth.user()?.username + ' · ' + auth.address() + ')'" (click)="accounts.set(!accounts())">
         <span class="tb-avatar" aria-hidden="true">{{ auth.initial() }}<tb-server-logo badge [base]="server.base()" /></span>
         <span class="tb-rail-account-text"><strong>{{ auth.user()?.username }}</strong><small>{{ auth.address() }}</small></span>
         <i class="pi pi-chevron-up tb-rail-account-arrow" aria-hidden="true"></i>
@@ -87,12 +87,12 @@
     <div class="tb-rail-actions">
       <!-- macOS app: the settings are in the menu bar (Thermobox › Réglages…) -->
       @if (!desktop.settingsInMenu) {
-        <a routerLink="/app/preferences" class="tb-icon-btn tb-prefs-btn" routerLinkActive="tb-prefs-on" title="Préférences" aria-label="Préférences">
-          <i class="pi pi-sliders-v"></i>@if (desktop.active) {<span class="tb-rail-action-label">Préférences</span>}
+        <a routerLink="/app/preferences" class="tb-icon-btn tb-prefs-btn" routerLinkActive="tb-prefs-on" i18n-title title="Préférences" i18n-aria-label aria-label="Préférences">
+          <i class="pi pi-sliders-v"></i>@if (desktop.active) {<span i18n class="tb-rail-action-label">Préférences</span>}
         </a>
       }
       @if (!desktop.active) {
-        <button type="button" class="tb-icon-btn tb-logout" (click)="logout()" title="Déconnexion" aria-label="Déconnexion">
+        <button type="button" class="tb-icon-btn tb-logout" (click)="logout()" i18n-title title="Déconnexion" i18n-aria-label aria-label="Déconnexion">
           <i class="pi pi-sign-out"></i>
         </button>
       }
@@ -106,7 +106,7 @@
 
 
 <!-- "?" : keyboard shortcuts -->
-<tb-sheet [(open)]="keyboard.help" title="Raccourcis clavier" [width]="760">
+<tb-sheet [(open)]="keyboard.help" i18n-title title="Raccourcis clavier" [width]="760">
   <div class="tb-shortcuts">
     @for (g of keyboard.groups(); track g.group) {
       <section class="tb-shortcuts-group">

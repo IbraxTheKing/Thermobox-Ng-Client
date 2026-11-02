@@ -169,7 +169,7 @@ export const nativeMessages = plugin
   ? {
       snackbar: (text: string, long: boolean) => void plugin.snackbar({ text, long }).catch(() => undefined),
       confirm: async (title: string, message: string, confirm: string, danger: boolean) =>
-        (await plugin.confirm({ title, message, confirm, cancel: 'Annuler', danger })).value,
+        (await plugin.confirm({ title, message, confirm, cancel: $localize`Annuler`, danger })).value,
     }
   : null;
 

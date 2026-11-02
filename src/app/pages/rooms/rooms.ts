@@ -15,6 +15,7 @@ import { RoomService } from '../../services/room.service';
 import { TbSheet } from '../../ui/sheet';
 import { ShownCount, TbMore } from '../../ui/more';
 import { ElementDialog } from './element-dialog';
+import { TrPipe } from '../../ui/tr.pipe';
 
 /** Elements beyond which the structure is « large » (see [RoomsPage.large]). */
 const LARGE = 200;
@@ -28,7 +29,7 @@ const BRANCH = 60;
  */
 @Component({
   selector: 'tb-rooms',
-  imports: [RouterLink, NgTemplateOutlet, TbSheet, ElementDialog, TbMore],
+  imports: [TrPipe, RouterLink, NgTemplateOutlet, TbSheet, ElementDialog, TbMore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './rooms.html',
 })
@@ -214,7 +215,7 @@ export class RoomsPage implements OnInit, OnDestroy {
     this.selection.set(null);
     try {
       await firstValueFrom(this.api.move(n.id, null));
-      this.toasts.info(`« ${n.name} » n'est plus rattaché(e)`);
+      this.toasts.info($localize`« ${n.name} » n'est plus rattaché(e)`);
     } catch (e) {
       this.toasts.error('Détachement impossible', errorMessage(e));
     }
@@ -223,13 +224,13 @@ export class RoomsPage implements OnInit, OnDestroy {
 
   protected async remove(n: Node): Promise<void> {
     this.selection.set(null);
-    const ok = await this.confirm.ask(`Supprimer « ${n.name} »`, "Son historique est supprimé ; ce qu'il contient est gardé mais n'est plus rattaché.", {
-      confirm: 'Supprimer',
+    const ok = await this.confirm.ask($localize`Supprimer « ${n.name} »`, $localize`Son historique est supprimé ; ce qu'il contient est gardé mais n'est plus rattaché.`, {
+      confirm: $localize`Supprimer`,
     });
     if (!ok) return;
     try {
       await firstValueFrom(this.rooms.remove(n.id));
-      this.toasts.info(`« ${n.name} » supprimé(e)`);
+      this.toasts.info($localize`« ${n.name} » supprimé(e)`);
       if (this.folderId() === n.id) this.folderId.set(n.parentId);
     } catch (e) {
       this.toasts.error('Suppression impossible', errorMessage(e));
@@ -291,7 +292,7 @@ export class RoomsPage implements OnInit, OnDestroy {
     if (!element || element.parentId === (target?.id ?? null)) return;
     try {
       await firstValueFrom(this.api.move(element.id, target?.id ?? null));
-      this.toasts.info(target ? `« ${element.name} » déplacé(e) dans « ${target.name} »` : `« ${element.name} » n'est plus rattaché(e)`);
+      this.toasts.info(target ? $localize`« ${element.name} » déplacé(e) dans « ${target.name} »` : $localize`« ${element.name} » n'est plus rattaché(e)`);
       if (target) this.folded.update((s) => new Set([...s].filter((x) => x !== target.id)));
     } catch (err) {
       this.toasts.error('Déplacement impossible', errorMessage(err));
