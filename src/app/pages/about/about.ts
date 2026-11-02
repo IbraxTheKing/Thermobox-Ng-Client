@@ -45,6 +45,8 @@ export class AboutPage {
 
   /** From the login page (route data): no account, so no server to ask; a way back. */
   readonly standalone = input(false, { transform: booleanAttribute });
+  /** In the dialog of the Linux app (AdwAboutDialog): no title of the page, the version under the name. */
+  readonly dialog = input(false, { transform: booleanAttribute });
 
   protected back(): void {
     if (history.length > 1) this.location.back();

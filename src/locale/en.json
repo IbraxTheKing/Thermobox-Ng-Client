@@ -55,6 +55,10 @@
     "fr": "Préférences",
     "en": "Preferences"
   },
+  "4614707419003618549": {
+    "fr": "Raccourcis clavier",
+    "en": "Keyboard shortcuts"
+  },
   "4606916689314514635": {
     "fr": "Océan",
     "en": "Ocean"
@@ -2039,13 +2043,17 @@
     "fr": " Affichage et saisie des températures et des consignes. Elles restent enregistrées en Celsius : les autres utilisateurs gardent leur unité. ",
     "en": " Display and entry of temperatures and setpoints. They stay saved in Celsius: the other users keep their unit. "
   },
-  "4614707419003618549": {
-    "fr": "Raccourcis clavier",
-    "en": "Keyboard shortcuts"
-  },
   "4155375298641848652": {
     "fr": "Sur ordinateur : naviguer, chercher, revenir à l'aperçu… sans la souris. {$START_TAG_KBD}?{$CLOSE_TAG_KBD} affiche cette liste depuis n'importe quelle page.",
     "en": "On a computer: navigate, search, go back to the overview… without the mouse. {$START_TAG_KBD}?{$CLOSE_TAG_KBD} shows this list from any page."
+  },
+  "8864047773458003397": {
+    "fr": "Tous les raccourcis",
+    "en": "All shortcuts"
+  },
+  "1859693947045353647": {
+    "fr": "La liste des touches, par page ; aussi avec {$START_TAG_KBD}?{$CLOSE_TAG_KBD}",
+    "en": "The list of keys, page by page; also with {$START_TAG_KBD}?{$CLOSE_TAG_KBD}"
   },
   "5851560788527570644": {
     "fr": "Notifications",
@@ -3095,6 +3103,22 @@
     "fr": "Oublier",
     "en": "Forget"
   },
+  "4756320131036675252": {
+    "fr": "Rechercher les préférences",
+    "en": "Search preferences"
+  },
+  "9059155436017318544": {
+    "fr": "Fermer",
+    "en": "Close"
+  },
+  "8332478813279888013": {
+    "fr": "Aucun résultat",
+    "en": "No results"
+  },
+  "4884836977009242867": {
+    "fr": "Aucune préférence ne correspond à la recherche.",
+    "en": "No preference matches the search."
+  },
   "16694699619925492": {
     "fr": "Graphique des températures",
     "en": "Temperature chart"
@@ -3127,9 +3151,17 @@
     "fr": "Réduire",
     "en": "Minimize"
   },
-  "9059155436017318544": {
-    "fr": "Fermer",
-    "en": "Close"
+  "3951776232613752274": {
+    "fr": "Afficher la barre latérale",
+    "en": "Show the sidebar"
+  },
+  "1632553618863251895": {
+    "fr": "Menu principal",
+    "en": "Main menu"
+  },
+  "6497544826155835104": {
+    "fr": "Se déconnecter",
+    "en": "Log out"
   },
   "7470861785775411392": {
     "fr": "Il fait {$INTERPOLATION}°",

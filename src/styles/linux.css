@@ -1,0 +1,763 @@
+/*
+ * Linux app (Tauri) only: html[data-desktop="linux"]. The look of a GNOME app (GTK 4 and
+ * libadwaita), over both looks of ThermoBox, « Maison » and « Panneau de configuration »:
+ *
+ * - Adwaita Sans (Cantarell before GNOME 48), bold buttons, bold titles
+ * - the greys of Adwaita for the window, its views, its sidebar and its cards; boxed lists with
+ *   the shade of Adwaita; corners of 6 px (controls), 12 px (cards, the window), 15 px (dialogs)
+ * - buttons filled with a veil of the text colour, pill buttons for the main actions, filled
+ *   entries without border, the switch of GTK, toggle groups, toasts as pills at the bottom
+ * - the sidebar of an AdwOverlaySplitView (shown or hidden whole, never a strip of icons), the
+ *   header bar split over it and over the page, the main menu (open-menu) native of GTK
+ * - the window with rounded corners, square when maximized (the window is transparent:
+ *   tauri.linux.conf.json)
+ *
+ * What makes ThermoBox stays: its green accent (or the palette chosen in Préférences), its logo,
+ * the colours of the states (stable, en chauffe, trop chaud), the tint of a room in « Maison ».
+ * GTK 4 itself is not available to Tauri (GTK 3 / WebKitGTK 4.1), this is its look.
+ */
+
+/* ============================== Tokens */
+
+:root[data-desktop="linux"] {
+    --tb-font: "Adwaita Sans", "Cantarell", "Inter", "Noto Sans", system-ui, sans-serif;
+    --tb-font-figures: "Adwaita Sans", "Cantarell", "Inter", system-ui, sans-serif;
+    --tb-figure-weight: 300;
+    --tb-title-weight: 800;
+
+    --tb-shape-xs: 6px;
+    --tb-shape-sm: 6px;
+    --tb-shape-md: 6px;
+    --tb-shape-lg: 12px;
+    --tb-shape-xl: 12px;
+    --tb-shape-xxl: 15px;
+
+    /* The window (12 px corners; 0 when maximized: html[data-maximized]) */
+    --lx-radius: 12px;
+
+    /* libadwaita, light */
+    --lx-window: #fafafb;
+    --lx-view: #ffffff;
+    --lx-header: #ffffff;
+    --lx-sidebar: #ebebed;
+    --lx-card: #ffffff;
+    --lx-dialog: #fafafb;
+    --lx-popover: #ffffff;
+    --lx-fg: rgb(0 0 6 / .8);
+    --lx-dim: rgb(0 0 6 / .55);
+    --lx-border: rgb(0 0 6 / .15);
+    --lx-shade: rgb(0 0 6 / .07);
+    --lx-card-shadow: 0 0 0 1px rgb(0 0 6 / .03), 0 1px 3px 1px rgb(0 0 6 / .07), 0 2px 6px 2px rgb(0 0 6 / .03);
+    --lx-veil: color-mix(in srgb, currentColor 10%, transparent);
+    --lx-veil-hover: color-mix(in srgb, currentColor 15%, transparent);
+    --lx-veil-active: color-mix(in srgb, currentColor 30%, transparent);
+    --lx-flat-hover: color-mix(in srgb, currentColor 7%, transparent);
+    --lx-flat-active: color-mix(in srgb, currentColor 16%, transparent);
+    --lx-focus: color-mix(in srgb, var(--md-primary) 50%, transparent);
+
+    --tb-background: var(--lx-window);
+    --md-surface-container-lowest: var(--lx-view);
+    --md-surface-container-low: #f6f6f7;
+    --md-surface-container: #f2f2f4;
+    --md-surface-container-high: #ebebed;
+    --md-surface-container-highest: #e1e1e4;
+    --md-on-surface: var(--lx-fg);
+    --md-on-surface-variant: var(--lx-dim);
+    --md-outline: rgb(0 0 6 / .4);
+    --md-outline-variant: var(--lx-shade);
+    --md-secondary-container: var(--lx-veil);
+    --md-on-secondary-container: var(--lx-fg);
+    --tb-glass: var(--lx-card);
+    --tb-glass-solid: var(--lx-card);
+    --tb-glass-hover: #f6f6f7;
+    --tb-glass-line: transparent;
+    --tb-glass-shadow: var(--lx-card-shadow);
+    --tb-glass-shadow-hover: var(--lx-card-shadow);
+    --tb-field: var(--lx-veil);
+    --tb-field-hover: var(--lx-veil-hover);
+    --tb-field-line: transparent;
+    --tb-tile: var(--lx-card);
+    --tb-tint-base: var(--lx-card);
+
+    /* The states in the colours of GNOME (success, warning, error of libadwaita) */
+    --tb-stable: #1b8553;
+    --tb-stable-container: color-mix(in srgb, #2ec27e 22%, #ffffff);
+    --tb-on-stable-container: #14663f;
+    --tb-heating: #9c6e03;
+    --tb-heating-container: color-mix(in srgb, #e5a50a 24%, #ffffff);
+    --tb-on-heating-container: #6f4f00;
+    --md-error: #c01c28;
+    --md-error-container: color-mix(in srgb, #e01b24 17%, #ffffff);
+    --md-on-error-container: #a51d2d;
+
+    --tb-raised-1: var(--lx-card-shadow);
+    --tb-raised-2: 0 1px 5px 1px rgb(0 0 6 / .09), 0 2px 14px 3px rgb(0 0 6 / .05);
+    --tb-raised-3: 0 0 0 1px rgb(0 0 6 / .03), 0 4px 14px 2px rgb(0 0 6 / .12), 0 10px 32px 4px rgb(0 0 6 / .08);
+}
+:root[data-desktop="linux"][data-theme="dark"] {
+    /* libadwaita, dark */
+    --tb-stable: #78e9ab;
+    --tb-stable-container: color-mix(in srgb, #26a269 32%, #2f2f33);
+    --tb-on-stable-container: #a8f2c8;
+    --tb-heating: #ffc252;
+    --tb-heating-container: color-mix(in srgb, #e5a50a 28%, #2f2f33);
+    --tb-on-heating-container: #ffd88f;
+    --md-error: #ff938c;
+    --md-error-container: color-mix(in srgb, #e01b24 32%, #2f2f33);
+    --md-on-error-container: #ffc0bb;
+    --lx-window: #222226;
+    --lx-view: #1d1d20;
+    --lx-header: #2e2e32;
+    --lx-sidebar: #2e2e32;
+    --lx-card: #2f2f33;
+    --lx-dialog: #36363a;
+    --lx-popover: #36363a;
+    --lx-fg: #ffffff;
+    --lx-dim: rgb(255 255 255 / .6);
+    --lx-border: rgb(255 255 255 / .15);
+    --lx-shade: rgb(0 0 6 / .36);
+    --lx-card-shadow: 0 0 0 1px rgb(0 0 6 / .09), 0 1px 3px 1px rgb(0 0 6 / .3), 0 2px 6px 2px rgb(0 0 6 / .15);
+
+    --md-surface-container-low: #28282c;
+    --md-surface-container: #2e2e32;
+    --md-surface-container-high: #36363a;
+    --md-surface-container-highest: #3e3e43;
+    --md-outline: rgb(255 255 255 / .4);
+    --md-outline-variant: rgb(255 255 255 / .07);
+    --tb-glass-hover: #36363a;
+
+    --tb-raised-2: 0 1px 5px 1px rgb(0 0 6 / .3), 0 2px 14px 3px rgb(0 0 6 / .2);
+    --tb-raised-3: 0 0 0 1px rgb(0 0 6 / .3), 0 4px 14px 2px rgb(0 0 6 / .4), 0 10px 32px 4px rgb(0 0 6 / .3);
+}
+:root[data-desktop="linux"][data-maximized] { --lx-radius: 0px; }
+
+/* ============================== The window: rounded, transparent around its corners */
+
+/* The window is see-through (tauri.linux.conf.json): the page paints a rounded rectangle */
+:root[data-desktop="linux"] { background: transparent !important; }
+:root[data-desktop="linux"] body { background: transparent; }
+:root[data-desktop="linux"] body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -3;
+    border-radius: var(--lx-radius);
+    background: var(--lx-window);
+    pointer-events: none;
+}
+/* Its outline, over everything (as the border of a GTK window) */
+:root[data-desktop="linux"] body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 3200;
+    border-radius: var(--lx-radius);
+    box-shadow: inset 0 0 0 1px rgb(0 0 6 / .12);
+    pointer-events: none;
+}
+:root[data-desktop="linux"][data-theme="dark"] body::after { box-shadow: inset 0 0 0 1px rgb(255 255 255 / .08); }
+/* What covers the whole window keeps its corners */
+:root[data-desktop="linux"] :is(.tb-background-page, .tb-scrim, .tb-guide-dim, .tb-guide-scrim, .tb-help-keyboard) { border-radius: var(--lx-radius); }
+:root[data-desktop="linux"] .tb-headerbar { border-radius: var(--lx-radius) var(--lx-radius) 0 0; }
+
+/* ============================== Type */
+
+:root[data-desktop="linux"] body { font-family: var(--tb-font); font-size: 15px; -webkit-font-smoothing: antialiased; }
+:root[data-desktop="linux"] :is(.tb-page-title h1, .tb-auth-name) { font-family: var(--tb-font); font-weight: 800; letter-spacing: -.01em; }
+:root[data-desktop="linux"] .tb-page-title h1 { font-size: 28px; line-height: 34px; }
+:root[data-desktop="linux"] :is(.tb-panel-title, .tb-card-head h2, .tb-section-title) { font-weight: 700; letter-spacing: 0; }
+:root[data-desktop="linux"] .tb-dialog-head h2 { font-weight: 700; font-size: 15px; letter-spacing: 0; }
+/* The headings of the groups of Adwaita (AdwPreferencesGroup): bold, in the colour of the text */
+:root[data-desktop="linux"] :is(.tb-eyebrow, .tb-pref-heading) { letter-spacing: 0; text-transform: none; font-weight: 700; font-size: 15px; color: var(--lx-fg); }
+:root[data-desktop="linux"] .tb-label { font-weight: 400; font-size: 14px; color: var(--lx-dim); }
+
+/* ============================== Focus: the ring of Adwaita */
+
+:root[data-desktop="linux"] :is(button, a, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid var(--lx-focus);
+    outline-offset: 1px;
+    box-shadow: none;
+}
+
+/* ============================== Buttons */
+
+/* A button of GTK: a veil of the text colour, bold */
+:root[data-desktop="linux"] .tb-btn {
+    min-height: 34px;
+    padding: 5px 14px;
+    gap: 8px;
+    border: 0;
+    border-radius: 6px;
+    box-shadow: none;
+    font-size: 15px;
+    font-weight: 700;
+    transform: none;
+    transition: background-color .2s ease, color .2s ease;
+}
+/* The main action (suggested-action): the accent of ThermoBox */
+:root[data-desktop="linux"] .tb-btn:not(.tb-tonal, .tb-flat) { background: var(--md-primary); color: var(--md-on-primary); }
+:root[data-desktop="linux"] .tb-btn:not(.tb-tonal, .tb-flat):hover { background: color-mix(in srgb, var(--md-primary) 90%, white); box-shadow: none; }
+:root[data-desktop="linux"] .tb-btn:not(.tb-tonal, .tb-flat):active { background: color-mix(in srgb, var(--md-primary) 80%, black); transform: none; }
+/* A standard button */
+:root[data-desktop="linux"] .tb-btn.tb-tonal { background: var(--lx-veil); color: var(--lx-fg); }
+:root[data-desktop="linux"] .tb-btn.tb-tonal:hover { background: var(--lx-veil-hover); }
+:root[data-desktop="linux"] .tb-btn.tb-tonal:active { background: var(--lx-veil-active); }
+/* Flat buttons (in toolbars, lists) */
+:root[data-desktop="linux"] :is(.tb-btn.tb-flat, .tb-icon-btn, .tb-text-btn) { background: transparent; border-radius: 6px; }
+:root[data-desktop="linux"] .tb-btn.tb-flat { color: var(--lx-fg); }
+:root[data-desktop="linux"] :is(.tb-btn.tb-flat, .tb-icon-btn):hover { background: var(--lx-flat-hover); }
+:root[data-desktop="linux"] :is(.tb-btn.tb-flat, .tb-icon-btn):active { background: var(--lx-flat-active); }
+:root[data-desktop="linux"] .tb-btn.tb-icon { width: 34px; min-width: 34px; height: 34px; padding: 0; }
+/* Pill buttons: the main action of a page (.pill of Adwaita) */
+:root[data-desktop="linux"] .tb-btn.tb-btn-lg { min-height: 40px; padding: 10px 26px; border-radius: 999px; font-size: 15px; }
+/* Destructive (destructive-action) */
+:root[data-desktop="linux"] .tb-btn.tb-btn-danger:not(.tb-flat) { background: #e01b24; color: #fff; }
+:root[data-desktop="linux"] .tb-btn.tb-btn-danger:not(.tb-flat):hover { background: #c01c28; }
+:root[data-desktop="linux"] .tb-btn.tb-btn-danger.tb-flat { color: #c01c28; }
+:root[data-desktop="linux"][data-theme="dark"] .tb-btn.tb-btn-danger.tb-flat { color: #ff7b63; }
+:root[data-desktop="linux"] .tb-btn:disabled { opacity: .5; }
+:root[data-desktop="linux"] .tb-text-btn { color: var(--md-primary); font-weight: 700; }
+
+/* ============================== Entries, drop-downs */
+
+/* An entry of GTK: filled, no border, the ring of the accent when focused */
+:root[data-desktop="linux"] :is(.tb-input, .tb-select) {
+    min-height: 34px;
+    padding: 6px 10px;
+    border: 0;
+    border-radius: 6px;
+    background-color: var(--lx-veil);
+    box-shadow: none;
+    color: var(--lx-fg);
+    font-size: 15px;
+}
+:root[data-desktop="linux"] :is(.tb-input, .tb-select):hover { background-color: var(--lx-veil-hover); border-color: transparent; }
+:root[data-desktop="linux"] :is(.tb-input, .tb-select):focus { outline: 2px solid var(--lx-focus); outline-offset: -2px; background-color: var(--lx-veil); box-shadow: none; }
+:root[data-desktop="linux"] :is(.tb-input, .tb-select).tb-invalid { outline: 2px solid color-mix(in srgb, #e01b24 50%, transparent); outline-offset: -2px; box-shadow: none; }
+/* A drop-down (GtkDropDown): a button with its arrow */
+:root[data-desktop="linux"] .tb-select { font-weight: 700; }
+:root[data-desktop="linux"] body .tb-search > .tb-input { height: 34px; min-height: 34px; padding-left: 34px; border-radius: 6px; }
+:root[data-desktop="linux"] body .tb-search > i.pi { left: 11px; font-size: 14px; }
+:root[data-desktop="linux"] .tb-select.tb-filter { border-radius: 6px; height: 34px; }
+:root[data-desktop="linux"] :is(.tb-entry, .tb-stepper) { border: 0; border-radius: 6px; background: var(--lx-veil); }
+:root[data-desktop="linux"] :is(input[type="checkbox"], input[type="radio"]) { accent-color: var(--md-primary); }
+:root[data-desktop="linux"] .tb-password > button { border-radius: 6px; }
+
+/* ============================== Switch (GtkSwitch) */
+
+:root[data-desktop="linux"] .tb-switch {
+    width: 48px;
+    height: 26px;
+    border: 0;
+    border-radius: 14px;
+    background: color-mix(in srgb, currentColor 15%, transparent);
+    box-shadow: none;
+    transition: background-color .2s ease;
+}
+:root[data-desktop="linux"] .tb-switch::before {
+    top: 3px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+    background: #fff;
+    box-shadow: 0 2px 4px rgb(0 0 6 / .2);
+    transition: transform .2s ease;
+}
+:root[data-desktop="linux"] .tb-switch[aria-checked="true"] { background: var(--md-primary); }
+:root[data-desktop="linux"] .tb-switch[aria-checked="true"]::before { background: #fff; transform: translateX(22px); }
+
+/* ============================== Toggle groups (AdwToggleGroup) */
+
+:root[data-desktop="linux"] .tb-segmented { padding: 3px; gap: 3px; border: 0; border-radius: 9px; background: var(--lx-veil); box-shadow: none; }
+:root[data-desktop="linux"] .tb-segmented > button { min-height: 28px; padding: 3px 12px; border-radius: 6px; font-weight: 700; font-size: 14px; color: var(--lx-fg); background: transparent; box-shadow: none; }
+:root[data-desktop="linux"] .tb-segmented > button:hover { background: var(--lx-flat-hover); }
+:root[data-desktop="linux"] .tb-segmented > button.tb-seg-on { background: var(--lx-view); color: var(--lx-fg); box-shadow: 0 1px 3px rgb(0 0 6 / .12), 0 1px 2px rgb(0 0 6 / .06); }
+:root[data-desktop="linux"][data-theme="dark"] .tb-segmented > button.tb-seg-on { background: rgb(255 255 255 / .18); box-shadow: none; }
+
+/* ============================== Boxed lists, cards, tables, tags */
+
+/* A boxed list / a card of Adwaita: no border, its soft shade, 12 px corners */
+:root[data-desktop="linux"] :is(.tb-panel, .tb-card, .tb-list-group, .tb-table, .tb-stat, .tb-banner, .tb-empty, .tb-user, .tb-tree-rooms, .tb-rooms-side, .tb-lights, .tb-filters) {
+    border: 0;
+    border-radius: 12px;
+    box-shadow: var(--lx-card-shadow);
+}
+:root[data-desktop="linux"] :is(.tb-panel, .tb-card, .tb-list-group, .tb-table, .tb-stat, .tb-user, .tb-tree-rooms) { background: var(--lx-card); }
+/* The rows of the lists: separated by a hairline */
+:root[data-desktop="linux"] .tb-table :is(th, td) { border-color: var(--md-outline-variant); }
+:root[data-desktop="linux"] .tb-table th { font-weight: 700; font-size: 13px; color: var(--lx-dim); text-transform: none; letter-spacing: 0; }
+:root[data-desktop="linux"] :is(.tb-node-row, .tb-list-row, .tb-table tbody tr):hover { background: var(--lx-flat-hover); }
+:root[data-desktop="linux"] .tb-pref { border-top-color: var(--md-outline-variant); }
+/* Toggles of filters: small pill buttons */
+:root[data-desktop="linux"] .tb-summary-chip { min-height: 30px; border: 0; border-radius: 999px; background: var(--lx-veil); box-shadow: none; font-weight: 700; font-size: 14px; }
+:root[data-desktop="linux"] .tb-summary-chip:hover { background: var(--lx-veil-hover); }
+:root[data-desktop="linux"] .tb-summary-chip.tb-chip-on { background: var(--md-primary); color: var(--md-on-primary); }
+:root[data-desktop="linux"] :is(.tb-tag, .tb-chip-group, .tb-role-tag) { border-radius: 999px; font-weight: 700; }
+:root[data-desktop="linux"] .tb-message { border: 0; border-radius: 12px; }
+
+/* ============================== Dialogs (AdwDialog), toasts (AdwToast), menus */
+
+/* Every dialog of the app (tb-sheet) as an AdwDialog: over the whole window, header bar
+   included; no outline of its own; its header bar flat, the title in the middle, the small round
+   close button at the end (as adw-dialog.ts) */
+:root[data-desktop="linux"] .tb-scrim { z-index: 3100; background: rgb(0 0 6 / .25); animation: adw-dim-in .2s ease-out both; }
+:root[data-desktop="linux"][data-theme="dark"] .tb-scrim { background: rgb(0 0 6 / .45); }
+:root[data-desktop="linux"] .tb-scrim.tb-scrim-closed { animation: adw-dim-out .2s ease-in both; }
+:root[data-desktop="linux"] .tb-dialog {
+    border: 0;
+    border-radius: 15px;
+    background: var(--lx-dialog);
+    color: var(--lx-fg);
+    box-shadow: 0 0 0 1px rgb(0 0 6 / .05), 0 4px 14px 2px rgb(0 0 6 / .15), 0 10px 32px 4px rgb(0 0 6 / .1);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    animation: adw-dialog-in .3s cubic-bezier(.05, .7, .1, 1) both;
+}
+:root[data-desktop="linux"][data-theme="dark"] .tb-dialog { background: #2e2e32; box-shadow: 0 0 0 1px rgb(0 0 6 / .5), 0 4px 14px 2px rgb(0 0 6 / .4), 0 10px 32px 4px rgb(0 0 6 / .3); }
+:root[data-desktop="linux"] .tb-dialog.tb-closing { animation: adw-dialog-out .2s ease-in both; }
+:root[data-desktop="linux"] .tb-dialog:focus, :root[data-desktop="linux"] .tb-dialog:focus-visible { outline: none; }
+:root[data-desktop="linux"] .tb-dialog-head {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr) 34px;
+    align-items: center;
+    gap: 6px;
+    min-height: 47px;
+    padding: 6px 7px;
+}
+:root[data-desktop="linux"] .tb-dialog-head h2 { grid-column: 2; margin: 0; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--lx-fg); }
+:root[data-desktop="linux"] .tb-dialog-close { grid-column: 3; justify-self: end; margin-right: 5px; border-radius: 50%; background: var(--lx-veil); width: 24px; min-width: 24px; height: 24px; padding: 0; }
+:root[data-desktop="linux"] .tb-dialog-close:hover { background: var(--lx-veil-hover); }
+:root[data-desktop="linux"] .tb-dialog-close .pi { font-size: 11px; }
+:root[data-desktop="linux"] .tb-dialog-body { padding: 6px 24px 24px; color: var(--lx-fg); }
+/* Toasts: a dark pill at the bottom, in the middle (AdwToastOverlay) */
+:root[data-desktop="linux"] .tb-toasts { z-index: 3300; top: auto; bottom: 24px; left: 50%; right: auto; transform: translateX(-50%); align-items: center; width: min(520px, calc(100vw - 32px)); }
+:root[data-desktop="linux"] .tb-toast {
+    align-items: center;
+    padding: 6px 40px 6px 16px;
+    min-height: 40px;
+    border: 0;
+    border-radius: 999px;
+    background: #353539;
+    color: #fff;
+    box-shadow: 0 2px 8px 2px rgb(0 0 6 / .2);
+}
+:root[data-desktop="linux"] .tb-toast * { color: inherit; }
+:root[data-desktop="linux"] .tb-accounts-menu { border: 0; border-radius: 12px; background: var(--lx-popover); box-shadow: var(--tb-raised-2); }
+:root[data-desktop="linux"] .tb-accounts-menu .tb-sheet-item { min-height: 34px; border-radius: 6px; font-size: 15px; }
+:root[data-desktop="linux"] .tb-account { border-radius: 9px; }
+
+/* ============================== The sidebar (AdwOverlaySplitView) and the header bar */
+
+/*
+ * As the sidebar of a GNOME app (AdwOverlaySplitView + .navigation-sidebar): shown whole, or
+ * hidden whole (no strip of icons: that is Windows), by the « sidebar-show » button of the header
+ * bar. From 1200 px wide it sits beside the page (docked); narrower it is hidden and the button
+ * opens it over the page. Its rows: an icon, a label, the page shown in a veil of the text.
+ * --tb-rail: the room it takes beside the page (260 px docked, 0 hidden or over the page).
+ */
+:root[data-desktop="linux"] { --tb-rail: 0px; --lx-sidebar-width: 260px; }
+@media (min-width: 1200px) {
+    :root[data-desktop="linux"]:not([data-sidebar="collapsed"]) { --tb-rail: var(--lx-sidebar-width); }
+}
+
+@media (min-width: 841px) {
+    :root[data-desktop="linux"] .tb-rail {
+        inset: var(--tb-chrome-top) auto 0 0;
+        width: var(--lx-sidebar-width);
+        margin: 0 !important;
+        padding: 6px 0;
+        gap: 0;
+        align-items: stretch;
+        border: 0;
+        border-right: 1px solid var(--md-outline-variant);
+        border-radius: 0 0 0 var(--lx-radius);
+        background: var(--lx-sidebar);
+        box-shadow: none;
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+        /* Hidden: slid out to the left */
+        transform: translateX(-100%);
+        visibility: hidden;
+        transition: transform .25s cubic-bezier(.25, .46, .45, .94), visibility .25s;
+    }
+    /* Narrow window, the button pressed: over the page, with its shadow */
+    :root[data-desktop="linux"] .tb-rail.tb-pane-open {
+        z-index: 2950;
+        transform: none;
+        visibility: visible;
+        box-shadow: var(--tb-raised-3);
+    }
+    :root[data-desktop="linux"] .tb-rail-brand,
+    :root[data-desktop="linux"] .tb-rail-fold,
+    :root[data-desktop="linux"] .tb-lens { display: none !important; }
+
+    /* .navigation-sidebar: rows of 40 px, 6 px from the edges, the icon then the label */
+    :root[data-desktop="linux"] .tb-dests { align-items: stretch; gap: 2px; padding: 0 6px; }
+    :root[data-desktop="linux"] .tb-dest,
+    :root[data-desktop="linux"][data-style="panel"] .tb-dest {
+        position: relative;
+        flex-direction: row;
+        align-items: center;
+        gap: 12px;
+        width: auto;
+        min-height: 40px;
+        height: 40px;
+        margin: 0;
+        padding: 0 12px;
+        border-radius: 6px;
+        background: transparent;
+        box-shadow: none;
+        color: var(--lx-fg);
+        font-size: 15px;
+        font-weight: 400;
+        letter-spacing: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        transition: background-color .15s ease;
+    }
+    :root[data-desktop="linux"] .tb-dest-icon {
+        flex: none;
+        width: 16px;
+        height: 16px;
+        border-radius: 0;
+        background: none !important;
+        color: inherit !important;
+        box-shadow: none !important;
+        animation: none !important;
+    }
+    :root[data-desktop="linux"] .tb-dest-icon .pi { font-size: 16px; }
+    :root[data-desktop="linux"] .tb-dest-badge { top: -3px; right: -4px; width: 7px; height: 7px; box-shadow: none; }
+    :root[data-desktop="linux"] .tb-dest-label { display: inline; overflow: hidden; text-overflow: ellipsis; padding: 0; }
+    :root[data-desktop="linux"] .tb-dest:hover:not(.tb-dest-on) { background: var(--lx-flat-hover); }
+    :root[data-desktop="linux"] .tb-dest:active { background: var(--lx-flat-active); }
+    :root[data-desktop="linux"] .tb-dest.tb-dest-on,
+    :root[data-desktop="linux"][data-style="panel"] .tb-dest.tb-dest-on { background: var(--lx-veil); color: var(--lx-fg); font-weight: 400; box-shadow: none; }
+    :root[data-desktop="linux"] .tb-dest.tb-dest-on::before { display: none; }
+
+    /* The foot: the account, as a row with its avatar (Préférences is in the main menu) */
+    :root[data-desktop="linux"] .tb-rail-end { gap: 2px; padding: 6px 6px 0; border-top: 1px solid var(--md-outline-variant); align-items: stretch; }
+    :root[data-desktop="linux"] .tb-rail-end .tb-rail-actions { display: none; }
+    :root[data-desktop="linux"] .tb-rail-account {
+        width: 100%;
+        min-height: 52px;
+        margin: 0;
+        padding: 0 6px;
+        gap: 10px;
+        border-radius: 6px;
+        background: transparent;
+        overflow: hidden;
+        white-space: nowrap;
+        text-align: left;
+    }
+    :root[data-desktop="linux"] .tb-rail-account:hover, :root[data-desktop="linux"] .tb-rail-account[aria-expanded="true"] { background: var(--lx-flat-hover); }
+    :root[data-desktop="linux"] .tb-rail-account > .tb-avatar { flex: none; width: 32px; height: 32px; margin: 0; font-size: 13px; }
+    :root[data-desktop="linux"] .tb-rail-account-text { display: flex; flex-direction: column; flex: 1 1 auto; min-width: 0; padding: 0; line-height: 18px; }
+    :root[data-desktop="linux"] .tb-rail-account strong { font-weight: 400; font-size: 15px; overflow: hidden; text-overflow: ellipsis; }
+    :root[data-desktop="linux"] .tb-rail-account small { font-size: 13px; color: var(--lx-dim); overflow: hidden; text-overflow: ellipsis; }
+    :root[data-desktop="linux"] .tb-rail-account-arrow { display: inline-block; flex: none; margin: 0 6px 0 auto; font-size: 10px; color: var(--lx-dim); }
+    :root[data-desktop="linux"] .tb-accounts-menu { left: 6px; bottom: calc(100% + 6px); width: calc(100% - 12px); padding: 6px; }
+}
+/* Docked beside the page */
+@media (min-width: 1200px) {
+    :root[data-desktop="linux"]:not([data-sidebar="collapsed"]) .tb-rail { transform: none; visibility: visible; }
+}
+
+/* The header bar: split as the one of AdwOverlaySplitView — its part over the docked sidebar in
+   the grey of the sidebar (the name of the app, the main menu), its part over the page */
+:root[data-desktop="linux"] .tb-headerbar { display: flex; gap: 0; padding: 0; isolation: isolate; }
+:root[data-desktop="linux"] body.tb-app .tb-headerbar { background: var(--tb-tint-page, var(--lx-header)); }
+.tb-hb-pane, .tb-hb-content { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 6px; height: 100%; padding: 0 6px; box-sizing: border-box; }
+.tb-hb-pane {
+    display: none;
+    flex: none;
+    width: var(--tb-rail);
+    border-right: 1px solid var(--md-outline-variant);
+    border-top-left-radius: var(--lx-radius);
+    background: var(--lx-sidebar);
+}
+.tb-hb-content { flex: 1 1 auto; min-width: 0; }
+.tb-hb-brand { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; white-space: nowrap; pointer-events: none; }
+.tb-hb-brand .tb-logo { width: 20px; height: 20px; }
+.tb-hb-content-start-buttons, .tb-hb-content-menu { display: contents; }
+.tb-hb-btn svg, .tb-hb-window svg { width: 16px; height: 16px; }
+.tb-hb-window svg { width: 16px; height: 16px; }
+@media (min-width: 1200px) {
+    :root[data-desktop="linux"]:not([data-sidebar="collapsed"]) .tb-hb-in-app .tb-hb-pane { display: grid; }
+    /* Its buttons are then over the sidebar */
+    :root[data-desktop="linux"]:not([data-sidebar="collapsed"]) .tb-hb-in-app :is(.tb-hb-content-start-buttons, .tb-hb-content-menu) { display: none; }
+    :root[data-desktop="linux"]:not([data-sidebar="collapsed"]) .tb-hb-sidebar-toggle { background: var(--lx-veil); }
+}
+/* The sidebar over the page: its button pressed */
+:root[data-desktop="linux"]:has(.tb-rail.tb-pane-open) .tb-hb-sidebar-toggle { background: var(--lx-veil); }
+/* The page: right of the docked sidebar */
+:root[data-desktop="linux"] .tb-app .tb-background-page { inset: 0 0 0 var(--tb-rail); border-radius: 0 var(--lx-radius) var(--lx-radius) 0; }
+:root[data-desktop="linux"] .tb-headerbar.tb-titlebar-scrolled .tb-hb-content { box-shadow: inset 0 -1px var(--md-outline-variant); }
+:root[data-desktop="linux"] .tb-headerbar.tb-titlebar-scrolled { box-shadow: none; }
+@property --tb-rail { syntax: "<length>"; inherits: true; initial-value: 92px; }
+:root[data-desktop="linux"] { transition: --tb-rail .25s cubic-bezier(.25, .46, .45, .94); }
+
+/* Narrow window: the bar at the bottom of the app, flat */
+@media (max-width: 840px) {
+    :root[data-desktop="linux"] .tb-rail { margin: 0 !important; inset: auto 0 0 0; border-radius: 0 0 var(--lx-radius) var(--lx-radius); background: var(--lx-header); border-top: 1px solid var(--md-outline-variant); box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+    :root[data-desktop="linux"] .tb-dest.tb-dest-on .tb-dest-icon { background: var(--lx-veil); color: var(--md-primary); box-shadow: none; animation: none; }
+}
+
+/* ============================== Scroll bars (overlay, thin) */
+
+/* The scroll bar of the window: hidden (it went over the header bar and the rounded corner),
+   drawn as the overlay scroll bar of GTK 4 under the header bar instead (gtk-scrollbar.ts) */
+:root[data-desktop="linux"] { scrollbar-width: none; }
+:root[data-desktop="linux"]::-webkit-scrollbar { display: none; width: 0; height: 0; }
+:root[data-desktop="linux"] * { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, currentColor 30%, transparent) transparent; }
+.tb-gtk-scrollbar {
+    position: fixed;
+    top: calc(var(--tb-chrome-top) + 3px);
+    right: 0;
+    bottom: calc(var(--lx-radius) / 2 + 3px);
+    z-index: 2900;
+    width: 14px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .3s ease;
+}
+.tb-gtk-scrollbar.tb-gtk-visible { opacity: 1; pointer-events: auto; }
+.tb-gtk-scrollbar.tb-gtk-none { display: none; }
+/* The slider: a thin line, wider under the pointer or dragged */
+.tb-gtk-thumb {
+    position: absolute;
+    top: 0;
+    right: 3px;
+    width: 3px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--lx-fg) 45%, transparent);
+    outline: 1px solid color-mix(in srgb, var(--lx-window) 60%, transparent);
+    transition: width .15s ease, background-color .15s ease;
+}
+.tb-gtk-scrollbar:hover .tb-gtk-thumb, .tb-gtk-scrollbar.tb-gtk-dragging .tb-gtk-thumb { width: 8px; }
+.tb-gtk-scrollbar:hover .tb-gtk-thumb:hover, .tb-gtk-scrollbar.tb-gtk-dragging .tb-gtk-thumb { background: color-mix(in srgb, var(--lx-fg) 70%, transparent); }
+@media (prefers-reduced-motion: reduce) {
+    .tb-gtk-scrollbar, .tb-gtk-thumb { transition: none; }
+}
+
+/* « Retour » in the head of a page (a room…): the back button of the header bar is there */
+:root[data-desktop="linux"] .tb-page-head .tb-back { display: none; }
+
+/* ============================== Motion of Adwaita: short, eased, nothing that bounces */
+
+
+/* ============================== Between pages: AdwNavigationView (transitions.ts) */
+
+/* The page left (a copy), the shade over the page below, the sheet under the page that comes */
+:root[data-desktop="linux"] :is(.tb-lx-shot, .tb-lx-dim, .tb-lx-sheet) {
+    position: fixed;
+    pointer-events: none;
+    will-change: transform, opacity;
+}
+:root[data-desktop="linux"] .tb-lx-shot { overflow: hidden; background: var(--lx-window); }
+:root[data-desktop="linux"] .tb-lx-dim { background: var(--lx-nav-shade); }
+/* The sheet: the colour of the page that comes (its tint, « Couleurs selon l'état ») */
+:root[data-desktop="linux"] .tb-lx-sheet { background: var(--tb-tint-page, var(--lx-window)); }
+:root[data-desktop="linux"]:is([data-tint="off"], [data-style="panel"]) .tb-lx-sheet { background: var(--lx-window); }
+/* The tint of a page comes and goes with it, at once (no fade of 0.8 s behind the slide) */
+:root[data-desktop="linux"] .tb-background-page { transition: none; }
+/* The page above has its shadow on its left edge */
+:root[data-desktop="linux"] :is(.tb-lx-sheet, .tb-lx-shot.tb-lx-above) {
+    box-shadow: -1px 0 0 var(--lx-nav-edge), -6px 0 16px -4px var(--lx-nav-edge);
+}
+:root[data-desktop="linux"] { --lx-nav-shade: rgb(0 0 6 / .1); --lx-nav-edge: rgb(0 0 6 / .1); }
+:root[data-desktop="linux"][data-theme="dark"] { --lx-nav-shade: rgb(0 0 6 / .3); --lx-nav-edge: rgb(0 0 6 / .35); }
+/* Nothing moves sideways out of the window while a page slides */
+:root[data-desktop="linux"].tb-lx-nav { overflow-x: clip; }
+:root[data-desktop="linux"].tb-lx-nav body { overflow-x: clip; }
+
+/* ============================== Préférences: AdwPreferencesDialog (adw-preferences-dialog.ts) */
+
+/* The window dimmed under it, header bar included; its corners kept */
+:root[data-desktop="linux"] .tb-adw-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 3100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    border-radius: var(--lx-radius);
+    background: rgb(0 0 6 / .25);
+    animation: adw-dim-in .2s ease-out both;
+}
+:root[data-desktop="linux"][data-theme="dark"] .tb-adw-scrim { background: rgb(0 0 6 / .45); }
+:root[data-desktop="linux"] .tb-adw-scrim.tb-adw-closing { animation: adw-dim-out .2s ease-in both; }
+@keyframes adw-dim-in { from { opacity: 0; } }
+@keyframes adw-dim-out { to { opacity: 0; } }
+
+:root[data-desktop="linux"] .tb-adw-dialog {
+    --adw-row: var(--lx-card);
+    display: flex;
+    flex-direction: column;
+    width: min(640px, 100%);
+    height: min(720px, 100%);
+    border-radius: 15px;
+    background: var(--lx-dialog);
+    color: var(--lx-fg);
+    box-shadow: 0 0 0 1px rgb(0 0 6 / .05), 0 4px 14px 2px rgb(0 0 6 / .15), 0 10px 32px 4px rgb(0 0 6 / .1);
+    overflow: hidden;
+    font-size: 15px;
+    animation: adw-dialog-in .3s cubic-bezier(.05, .7, .1, 1) both;
+}
+:root[data-desktop="linux"][data-theme="dark"] .tb-adw-dialog {
+    --adw-row: rgb(255 255 255 / .08);
+    background: #2e2e32;
+    box-shadow: 0 0 0 1px rgb(0 0 6 / .5), 0 4px 14px 2px rgb(0 0 6 / .4), 0 10px 32px 4px rgb(0 0 6 / .3);
+}
+:root[data-desktop="linux"] .tb-adw-dialog:focus, :root[data-desktop="linux"] .tb-adw-dialog:focus-visible { outline: none; }
+:root[data-desktop="linux"] .tb-adw-dialog.tb-adw-closing { animation: adw-dialog-out .2s ease-in both; }
+@keyframes adw-dialog-in { from { opacity: 0; transform: scale(.88); } }
+@keyframes adw-dialog-out { to { opacity: 0; transform: scale(.94); } }
+
+/* Its header bar: flat, search at the start, the title in the middle, the round close at the end */
+:root[data-desktop="linux"] .tb-adw-head {
+    flex: none;
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr) 34px;
+    align-items: center;
+    gap: 6px;
+    min-height: 47px;
+    padding: 6px 7px;
+}
+:root[data-desktop="linux"] .tb-adw-title { margin: 0; text-align: center; font-size: 15px; font-weight: 700; color: var(--lx-fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:root[data-desktop="linux"] .tb-adw-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+:root[data-desktop="linux"] .tb-adw-head-btn {
+    display: inline-grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--lx-fg);
+    cursor: default;
+}
+:root[data-desktop="linux"] .tb-adw-head-btn svg { width: 16px; height: 16px; }
+:root[data-desktop="linux"] .tb-adw-head-btn:hover { background: var(--lx-flat-hover); }
+:root[data-desktop="linux"] .tb-adw-head-btn:active, :root[data-desktop="linux"] .tb-adw-head-btn.tb-adw-on { background: var(--lx-flat-active); }
+:root[data-desktop="linux"] .tb-adw-head-btn:focus-visible { outline: 2px solid var(--lx-focus); outline-offset: -2px; }
+/* The close button of AdwDialog: a small round button with a veil */
+:root[data-desktop="linux"] .tb-adw-close { grid-column: 3; justify-self: end; }
+:root[data-desktop="linux"] .tb-adw-close { width: 24px; height: 24px; border-radius: 50%; background: var(--lx-veil); margin-right: 5px; }
+:root[data-desktop="linux"] .tb-adw-close:hover { background: var(--lx-veil-hover); }
+:root[data-desktop="linux"] .tb-adw-close:active { background: var(--lx-veil-active); }
+:root[data-desktop="linux"] .tb-adw-close svg { width: 14px; height: 14px; }
+
+/* The search entry, in the place of the title (GtkSearchEntry) */
+:root[data-desktop="linux"] .tb-adw-search {
+    justify-self: center;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: min(360px, 100%);
+    height: 34px;
+    padding: 0 9px;
+    border-radius: 6px;
+    background: var(--lx-veil);
+    color: var(--lx-dim);
+}
+:root[data-desktop="linux"] .tb-adw-search:focus-within { outline: 2px solid var(--lx-focus); outline-offset: -2px; }
+:root[data-desktop="linux"] .tb-adw-search svg { flex: none; width: 16px; height: 16px; }
+:root[data-desktop="linux"] .tb-adw-search input, :root[data-desktop="linux"] .tb-adw-search input:focus { outline: none; box-shadow: none; }
+:root[data-desktop="linux"] .tb-adw-search input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--lx-fg); font: inherit; font-size: 15px; }
+:root[data-desktop="linux"] .tb-adw-search input::-webkit-search-cancel-button { display: none; }
+
+/* The page: its groups, 600 px at most, as AdwPreferencesPage (an AdwClamp) */
+:root[data-desktop="linux"] .tb-adw-body { flex: 1; min-height: 0; overflow: auto; padding: 12px 12px 30px; scrollbar-width: thin; }
+:root[data-desktop="linux"] .tb-adw-body .tb-narrow { max-width: 600px; margin: 0 auto; }
+:root[data-desktop="linux"] .tb-adw-body .tb-pref-group {
+    margin: 0 0 24px;
+    padding: 0;
+    border: 0;
+    background: none;
+    box-shadow: none;
+    animation: none;
+}
+/* The title of a group: above its list, bold */
+:root[data-desktop="linux"] .tb-adw-body .tb-pref-heading { margin: 0 0 12px; font-size: 15px; font-weight: 700; color: var(--lx-fg); }
+/* Its boxed list: rows of 50 px at least, a hairline between them */
+:root[data-desktop="linux"] .tb-adw-body .tb-prefs {
+    gap: 0;
+    border-radius: 12px;
+    background: var(--adw-row);
+    box-shadow: var(--lx-card-shadow);
+    overflow: hidden;
+}
+:root[data-desktop="linux"][data-theme="dark"] .tb-adw-body .tb-prefs { box-shadow: none; }
+:root[data-desktop="linux"] .tb-adw-body .tb-pref {
+    gap: 12px;
+    min-height: 50px;
+    padding: 8px 12px;
+    border-top: 1px solid var(--lx-shade);
+    box-sizing: border-box;
+}
+:root[data-desktop="linux"][data-theme="dark"] .tb-adw-body .tb-pref { border-top-color: rgb(0 0 6 / .36); }
+:root[data-desktop="linux"] .tb-adw-body .tb-pref:first-child { border-top: 0; padding-top: 8px; }
+:root[data-desktop="linux"] .tb-adw-body a.tb-pref:hover { background: var(--lx-flat-hover); }
+/* The rows of Adwaita have no icon of their own here; their title in the weight of the text */
+:root[data-desktop="linux"] .tb-adw-body .tb-pref > .tb-section-icon { display: none; }
+:root[data-desktop="linux"] .tb-adw-body .tb-pref-text strong { font-size: 15px; font-weight: 400; color: var(--lx-fg); }
+:root[data-desktop="linux"] .tb-adw-body .tb-pref-text .tb-muted { font-size: 13px; color: var(--lx-dim); }
+:root[data-desktop="linux"] .tb-adw-body .tb-pref-scope { margin: 12px 0 0; font-size: 13px; color: var(--lx-dim); }
+
+/* Search: only the rows that match, and the groups that keep one */
+:root[data-desktop="linux"] .tb-adw-body .tb-adw-hidden { display: none !important; }
+:root[data-desktop="linux"] .tb-adw-body.tb-adw-searching .tb-pref-group > :not(.tb-pref-heading, .tb-prefs) { display: none; }
+:root[data-desktop="linux"] .tb-adw-body.tb-adw-searching .tb-pref:not(.tb-adw-hidden) { border-top: 0; }
+:root[data-desktop="linux"] .tb-adw-body.tb-adw-searching .tb-pref:not(.tb-adw-hidden) ~ .tb-pref:not(.tb-adw-hidden) { border-top: 1px solid var(--lx-shade); }
+/* AdwStatusPage: nothing found */
+:root[data-desktop="linux"] .tb-adw-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 64px 12px;
+    text-align: center;
+    color: var(--lx-dim);
+}
+:root[data-desktop="linux"] .tb-adw-empty svg { width: 96px; height: 96px; margin-bottom: 20px; opacity: .5; }
+:root[data-desktop="linux"] .tb-adw-empty strong { font-size: 20px; font-weight: 800; color: var(--lx-fg); }
+
+/* A small window: the dialog takes all of it */
+@media (max-width: 480px), (max-height: 420px) {
+    :root[data-desktop="linux"] .tb-adw-scrim { padding: 0; }
+    :root[data-desktop="linux"] .tb-adw-dialog { width: 100%; height: 100%; border-radius: var(--lx-radius); }
+}
+@media (prefers-reduced-motion: reduce) {
+    :root[data-desktop="linux"] :is(.tb-adw-scrim, .tb-adw-dialog) { animation-duration: 1ms !important; }
+}
+
+/* À propos: AdwAboutDialog: narrower, the logo, the name and the version in the middle */
+:root[data-desktop="linux"] .tb-adw-dialog.tb-adw-about { width: min(480px, 100%); height: min(680px, 100%); }
+:root[data-desktop="linux"] .tb-adw-about .tb-about-mark { flex-direction: column; gap: 12px; margin: 0 0 30px; text-align: center; }
+:root[data-desktop="linux"] .tb-adw-about .tb-about-mark > div { align-items: center; gap: 4px; }
+:root[data-desktop="linux"] .tb-adw-about .tb-about-mark .tb-logo-xl { width: 128px; height: 128px; }
+:root[data-desktop="linux"] .tb-adw-about .tb-about-mark strong { font-size: 26px; font-weight: 800; letter-spacing: 0; color: var(--lx-fg); }
+:root[data-desktop="linux"] .tb-adw-about .tb-about-mark .tb-muted { font-size: 15px; color: var(--lx-dim); }
+/* The version: a pill in the accent, as the version button of AdwAboutDialog */
+:root[data-desktop="linux"] .tb-about-pill {
+    margin-top: 10px;
+    padding: 3px 12px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--md-primary) 15%, transparent);
+    color: var(--md-primary);
+    font-size: 14px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+:root[data-desktop="linux"] .tb-adw-about .tb-list-title { margin: 24px 0 12px; font-size: 15px; font-weight: 700; letter-spacing: 0; text-transform: none; color: var(--lx-fg); }
+:root[data-desktop="linux"] .tb-adw-about .tb-list-group { margin-bottom: 12px; border-radius: 12px; background: var(--adw-row); }
+:root[data-desktop="linux"][data-theme="dark"] .tb-adw-about .tb-list-group { box-shadow: none; }
+:root[data-desktop="linux"] .tb-adw-about .tb-list-icon { display: none; }
+:root[data-desktop="linux"] .tb-adw-about .tb-about-license { margin: 24px 0 0; font-size: 13px; color: var(--lx-dim); }
+/* Préférences: the second list of a group (Tous les raccourcis) */
+:root[data-desktop="linux"] .tb-adw-body .tb-prefs-more { margin-top: 12px; }
+:root[data-desktop="linux"] .tb-adw-body .tb-prefs-more > .tb-pref:first-child { border-top: 0; padding-top: 8px; }
+:root[data-desktop="linux"] .tb-adw-body button.tb-pref-link:hover { background: var(--lx-flat-hover); }
+:root[data-desktop="linux"] .tb-adw-body .tb-pref-link:hover strong { color: var(--lx-fg); }

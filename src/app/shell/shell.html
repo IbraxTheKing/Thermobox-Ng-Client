@@ -108,25 +108,3 @@
 <!-- First visit of an account: the guide of its role (skippable, replayed from Préférences) -->
 <tb-onboarding-guide />
 
-<!-- "?" : keyboard shortcuts -->
-<tb-sheet [(open)]="keyboard.help" i18n-title title="Raccourcis clavier" [width]="760">
-  <div class="tb-shortcuts">
-    @for (g of keyboard.groups(); track g.group) {
-      <section class="tb-shortcuts-group">
-        <h3>{{ g.group }}</h3>
-        <dl>
-          @for (r of g.shortcuts; track r.text) {
-            <div class="tb-shortcut">
-              <dt>
-                @for (t of r.keys; track $index) {
-                  @if (t === '…') { … } @else { <kbd>{{ t }}</kbd> }
-                }
-              </dt>
-              <dd>{{ r.text }}</dd>
-            </div>
-          }
-        </dl>
-      </section>
-    }
-  </div>
-</tb-sheet>

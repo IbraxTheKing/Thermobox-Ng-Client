@@ -1,4 +1,4 @@
-@if (standalone()) {
+@if (standalone() && !dialog()) {
   <main class="tb-main tb-standalone">
     <button i18n type="button" class="tb-btn tb-flat tb-standalone-back" (click)="back()"><i class="pi pi-arrow-left"></i>Retour</button>
     <ng-container [ngTemplateOutlet]="page" />
@@ -9,18 +9,24 @@
 
 <ng-template #page>
 <div class="tb-narrow">
-  <header class="tb-page-head">
-    <div class="tb-page-title">
-      <span i18n class="tb-eyebrow">Thermobox</span>
-      <h1 i18n>À propos</h1>
-    </div>
-  </header>
+  @if (!dialog()) {
+    <header class="tb-page-head">
+      <div class="tb-page-title">
+        <span i18n class="tb-eyebrow">Thermobox</span>
+        <h1 i18n>À propos</h1>
+      </div>
+    </header>
+  }
 
   <div class="tb-about-mark">
     <span class="tb-logo tb-logo-xl" aria-hidden="true"></span>
     <div>
       <strong i18n>Thermobox</strong>
       <span i18n class="tb-muted">La température de chaque salle, en un coup d'œil.</span>
+      <!-- AdwAboutDialog (Linux): the version under the name, in a pill -->
+      @if (dialog()) {
+        <span class="tb-about-pill">{{ versionClient }}</span>
+      }
     </div>
   </div>
 

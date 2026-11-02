@@ -34,7 +34,6 @@ import { ServerService } from '../core/api.config';
 import { TreeStore } from '../services/tree.store';
 import { TbAccounts } from '../ui/accounts';
 import { TbServerLogo } from '../ui/server-logo';
-import { TbSheet } from '../ui/sheet';
 import { Destination, lastTab, destinationsOf, barSlots } from './destinations';
 import { TbOnboardingGuide } from '../ui/onboarding-guide';
 import { TrPipe } from '../ui/tr.pipe';
@@ -57,7 +56,7 @@ const SLIDE = 8;
  */
 @Component({
   selector: 'tb-shell',
-  imports: [TrPipe, NgTemplateOutlet, RouterOutlet, RouterLink, RouterLinkActive, TbSheet, TbAccounts, TbServerLogo, TbSeasonDecor, TbOnboardingGuide],
+  imports: [TrPipe, NgTemplateOutlet, RouterOutlet, RouterLink, RouterLinkActive, TbAccounts, TbServerLogo, TbSeasonDecor, TbOnboardingGuide],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './shell.html',
   host: {
@@ -238,7 +237,7 @@ export class Shell implements OnInit, OnDestroy {
 
   /** The side bar of computers: names and icons, or icons only (morphs where it can). */
   protected fold(): void {
-    if (this.desktop.windows) {
+    if (this.desktop.windows || this.desktop.linux) {
       // As NavigationView: the pane opens or closes at once (windows.css), no picture morphing
       if (innerWidth < 1200) {
         this.paneOpen.update((o) => !o);

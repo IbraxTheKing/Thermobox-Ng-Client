@@ -28,6 +28,8 @@ export type { DesktopOs } from './tauri';
 export async function prepareDesktop(): Promise<void> {
   if (!TAURI) return;
   document.documentElement.dataset['desktop'] = DESKTOP_OS!;
+  // Linux: the scroll bar of the page drawn as the one of GTK 4, under the header bar
+  if (DESKTOP_OS === 'linux') void import('./gtk-scrollbar').then((m) => m.gtkScrollbar(document));
   if (DESKTOP_OS === 'windows') {
     // The blur chosen in Préférences (on by default), before Angular reads the preferences
     let blur = true;

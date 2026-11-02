@@ -83,6 +83,15 @@ export class AccentService {
     this.doc.addEventListener('visibilitychange', () => {
       if (this.doc.visibilityState === 'visible') void this.readSystem();
     });
+    // Desktop: the window stays visible while the settings of the system are open beside it; it
+    // gets the focus back after
+    addEventListener('focus', () => void this.readSystem());
+    // Linux (GNOME): told as soon as the accent changes (main.rs, watch_appearance)
+    if (DESKTOP_OS === 'linux') {
+      void import('@tauri-apps/api/event')
+        .then(({ listen }) => listen('system-appearance', () => void this.readSystem()))
+        .catch(() => undefined);
+    }
     effect(() => this.apply(this.seed()));
   }
 
@@ -91,8 +100,9 @@ export class AccentService {
       this.systemColor.set(await androidSystemAccent());
       return;
     }
-    // Desktop app on Windows: the colour of Settings › Personalisation (WebView2 has no AccentColor)
-    if (DESKTOP_OS === 'windows') {
+    // Desktop app on Windows: the colour of Settings › Personalisation (WebView2 has no AccentColor);
+    // on Linux, the accent of GNOME 47 and later (Settings › Appearance)
+    if (DESKTOP_OS === 'windows' || DESKTOP_OS === 'linux') {
       try {
         const { invoke } = await import('@tauri-apps/api/core');
         this.systemColor.set(await invoke<string | null>('system_accent'));

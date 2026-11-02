@@ -1877,6 +1877,9 @@ kbd {
     font: 700 .78rem/1.4 ui-monospace, "SFMono-Regular", Menlo, monospace; text-align: center;
 }
 
+/* The list of shortcuts: over everything, the header bar of the desktop apps and their dialogs too */
+.tb-keyboard-sheet .tb-scrim { z-index: 3150; }
+
 .tb-shortcuts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 8px 28px; margin-top: 8px; }
 
 .tb-shortcuts-group h3 { margin: 10px 0 6px; font-size: .78rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--md-on-surface-variant); }

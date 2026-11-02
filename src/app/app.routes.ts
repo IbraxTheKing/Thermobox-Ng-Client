@@ -1,6 +1,7 @@
 import { inject } from '@angular/core';
 import { Router, Routes } from '@angular/router';
 
+import { adwDialogGuard } from './core/adw-dialogs';
 import { adminGuard, loggedInGuard, managerGuard, passwordGuard, publicGuard } from './core/http';
 
 /**
@@ -36,12 +37,14 @@ export const routes: Routes = [
     path: 'settings',
     title: $localize`Paramètres`,
     data: { standalone: true },
+    canActivate: [adwDialogGuard],
     loadComponent: () => import('./pages/preferences/preferences').then((m) => m.PreferencesPage),
   },
   {
     path: 'about',
     title: $localize`À propos`,
     data: { standalone: true },
+    canActivate: [adwDialogGuard],
     loadComponent: () => import('./pages/about/about').then((m) => m.AboutPage),
   },
   {
@@ -71,9 +74,9 @@ export const routes: Routes = [
       // The updates are a tab of the Serveur page
       { path: 'updates', redirectTo: () => inject(Router).parseUrl('/app/server?tab=updates') },
       { path: 'profile', title: $localize`Mon profil`, loadComponent: () => import('./pages/profile/profile').then((m) => m.ProfilePage) },
-      { path: 'about', title: $localize`À propos`, loadComponent: () => import('./pages/about/about').then((m) => m.AboutPage) },
+      { path: 'about', title: $localize`À propos`, canActivate: [adwDialogGuard], loadComponent: () => import('./pages/about/about').then((m) => m.AboutPage) },
       { path: 'more', title: $localize`Plus`, loadComponent: () => import('./pages/more/more').then((m) => m.MorePage) },
-      { path: 'preferences', title: $localize`Préférences`, loadComponent: () => import('./pages/preferences/preferences').then((m) => m.PreferencesPage) },
+      { path: 'preferences', title: $localize`Préférences`, canActivate: [adwDialogGuard], loadComponent: () => import('./pages/preferences/preferences').then((m) => m.PreferencesPage) },
     ],
   },
   // Addresses of the versions before 26.12 (bookmarks, shortcuts on a home screen)

@@ -243,6 +243,11 @@ button.tb-drill-crumb, button.tb-drill-main { border: 0; background: none; font:
 .tb-pref-group .tb-shortcuts { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--md-outline-variant); }
 .tb-pref-group .tb-pref-scope { margin-top: 12px; }
 /* « À propos de Thermobox »: a row of the group that opens a page */
+/* A row that opens something (Tous les raccourcis): a button drawn as the rows of links */
+button.tb-pref-link { width: 100%; margin: 0; border: 0; border-top: 1px solid var(--md-outline-variant); background: none; font: inherit; text-align: start; color: inherit; cursor: pointer; }
+button.tb-pref-link:hover strong { color: var(--md-primary); }
+.tb-prefs-more { margin-top: 4px; }
+.tb-prefs-more > .tb-pref:first-child { border-top: 1px solid var(--md-outline-variant); padding-top: 16px; }
 a.tb-pref-link { color: inherit; text-decoration: none; border-radius: var(--tb-shape-md); cursor: pointer; }
 a.tb-pref-link:hover strong { color: var(--md-primary); }
 .tb-pref-chevron { flex: none; color: var(--md-on-surface-variant); }
