@@ -180,7 +180,7 @@
           @for (b of blocksOf('favorites'); track b.key) {
             @if (isDrawn(b)) {
               @for (r of b.rooms; track r.room.id) {
-                <tb-room-card [r]="r" [fresh]="newCurves()" [attr.data-b]="b.key" (favorite)="toggleFavorite($event)" (overview)="openOverview($event)" />
+                <tb-room-card [r]="r" [tbContextMenu]="cardMenu(r)" [fresh]="newCurves()" [attr.data-b]="b.key" (favorite)="toggleFavorite($event)" (overview)="openOverview($event)" />
               }
             } @else {
               <div class="tb-vph" [attr.data-b]="b.key" [style.height.px]="heightOf(b)" aria-hidden="true"></div>
@@ -232,7 +232,7 @@
                 @for (b of blocksOf(g.key + '|' + e.key); track b.key) {
                   @if (isDrawn(b)) {
                     @for (r of b.rooms; track r.room.id) {
-                      <tb-room-card [r]="r" [fresh]="newCurves()" [attr.data-b]="b.key" (favorite)="toggleFavorite($event)" (overview)="openOverview($event)" />
+                      <tb-room-card [r]="r" [tbContextMenu]="cardMenu(r)" [fresh]="newCurves()" [attr.data-b]="b.key" (favorite)="toggleFavorite($event)" (overview)="openOverview($event)" />
                     }
                   } @else {
                     <div class="tb-vph" [attr.data-b]="b.key" [style.height.px]="heightOf(b)" aria-hidden="true"></div>
@@ -247,7 +247,7 @@
           @for (b of blocksOf(g.key); track b.key) {
             @if (isDrawn(b)) {
               @for (r of b.rooms; track r.room.id) {
-                <tb-room-card [r]="r" [fresh]="newCurves()" [attr.data-b]="b.key" (favorite)="toggleFavorite($event)" (overview)="openOverview($event)" />
+                <tb-room-card [r]="r" [tbContextMenu]="cardMenu(r)" [fresh]="newCurves()" [attr.data-b]="b.key" (favorite)="toggleFavorite($event)" (overview)="openOverview($event)" />
               }
             } @else {
               <div class="tb-vph" [attr.data-b]="b.key" [style.height.px]="heightOf(b)" aria-hidden="true"></div>

@@ -60,7 +60,7 @@
   }
   <ul class="tb-drill-list">
     @for (n of content().slice(0, shownContent.count()); track n.id) {
-      <li class="tb-drill-item">
+      <li class="tb-drill-item" [tbContextMenu]="nodeMenu(n)">
         @if (isFolder(n)) {
           <button type="button" class="tb-drill-main" (click)="open(n.id)">
             <ng-container *ngTemplateOutlet="rowDrill; context: { $implicit: n }" />
@@ -164,6 +164,7 @@
     <ul class="tb-rooms-side-list">
       @for (n of sideList().slice(0, sideShown.count()); track n.id) {
         <li
+          [tbContextMenu]="nodeMenu(n)"
           class="tb-rooms-side-item"
           [class.tb-slide]="slide() === n.id"
           draggable="true"
@@ -192,6 +193,7 @@
     @for (n of nodes; track n.id) {
       <li role="treeitem" [attr.aria-expanded]="children(n.id).length ? !isFolded(n.id) : null">
         <div
+          [tbContextMenu]="nodeMenu(n)"
           class="tb-node-row"
           [class.tb-hover]="hover() === n.id"
           [class.tb-slide]="slide() === n.id"

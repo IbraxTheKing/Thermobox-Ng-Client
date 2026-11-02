@@ -5,6 +5,8 @@
 //!   a press of Alt hides the numbers it shows for the keyboard.
 //! - The accent colour of the system, the build of Windows (the backdrop of the window), the dark
 //!   or light frame of the window.
+//! - The text of the clipboard, for « Coller » in the menus drawn by the page (WebView2 does not
+//!   let a page read it with execCommand).
 
 use windows_sys::Win32::UI::Input::KeyboardAndMouse::{
     SendInput, INPUT, INPUT_0, INPUT_KEYBOARD, KEYBDINPUT, KEYEVENTF_KEYUP, VIRTUAL_KEY, VK_LWIN, VK_MENU,
@@ -95,5 +97,32 @@ pub fn dark_mode(hwnd: *mut core::ffi::c_void, dark: bool) {
             &value as *const i32 as *const core::ffi::c_void,
             std::mem::size_of::<i32>() as u32,
         );
+    }
+}
+
+/// The text in the clipboard (CF_UNICODETEXT), None when there is none or it is taken.
+pub fn clipboard_text() -> Option<String> {
+    use windows_sys::Win32::System::DataExchange::{CloseClipboard, GetClipboardData, OpenClipboard};
+    use windows_sys::Win32::System::Memory::{GlobalLock, GlobalUnlock};
+    const CF_UNICODETEXT: u32 = 13;
+    unsafe {
+        if OpenClipboard(std::ptr::null_mut()) == 0 {
+            return None;
+        }
+        let data = GetClipboardData(CF_UNICODETEXT);
+        let mut text = None;
+        if !data.is_null() {
+            let p = GlobalLock(data) as *const u16;
+            if !p.is_null() {
+                let mut n = 0;
+                while *p.add(n) != 0 {
+                    n += 1;
+                }
+                text = Some(String::from_utf16_lossy(std::slice::from_raw_parts(p, n)));
+                GlobalUnlock(data);
+            }
+        }
+        CloseClipboard();
+        text
     }
 }

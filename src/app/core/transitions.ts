@@ -1,6 +1,6 @@
 import { DOCUMENT } from '@angular/common';
-import { Injectable, inject } from '@angular/core';
-import { ActivatedRouteSnapshot, ViewTransitionInfo } from '@angular/router';
+import { EnvironmentInjector, Injectable, afterNextRender, inject } from '@angular/core';
+import { ActivatedRouteSnapshot, NavigationEnd, NavigationStart, Router, ViewTransitionInfo } from '@angular/router';
 
 import { PlatformService } from './platform';
 import { PreferencesService } from './preferences';
@@ -36,6 +36,13 @@ type Doc = Document & { startViewTransition?: (f: () => void | Promise<void>) =>
  * its parts don't come one after the other.
  *
  * Nothing moves when the system asks for less motion.
+ *
+ * Scroll of the pages (instead of the router's, withInMemoryScrolling off): back on a page, it
+ * is where it was left, a new page starts at the top. Done in the update of the page transition,
+ * before the picture of the new page is taken: the router did it a frame later, after the
+ * picture, so the card coming back morphed to where the page had been, then the page jumped (and
+ * coming back from a room it undid returnToCard). A page still growing (its data not there yet)
+ * is scrolled again as it grows, until the user scrolls it.
  */
 @Injectable({ providedIn: 'root' })
 export class TransitionsService {
@@ -72,7 +79,32 @@ export class TransitionsService {
   private onNewPage: (() => void) | null = null;
   private pending: (() => void)[] = [];
 
+  private readonly router = inject(Router);
+  private readonly injector = inject(EnvironmentInjector);
+  /** Where each page of the history was left, by navigation id (as the router kept them). */
+  private readonly positions = new Map<number, number>();
+  private shownId = 0;
+  private restoredId = 0;
+  private popstate = false;
+  /** Where the page that comes goes: its old place (back), or the top. */
+  private scrollTarget: number | null = null;
+  private stopGrowing: (() => void) | null = null;
+
   constructor() {
+    history.scrollRestoration = 'manual';
+    this.router.events.subscribe((e) => {
+      if (e instanceof NavigationStart) {
+        this.positions.set(this.shownId, scrollY);
+        this.popstate = e.navigationTrigger === 'popstate';
+        this.restoredId = e.restoredState?.navigationId ?? 0;
+      } else if (e instanceof NavigationEnd) {
+        this.shownId = e.id;
+        this.scrollTarget = this.popstate ? (this.positions.get(this.restoredId) ?? 0) : 0;
+        // With a page transition: in its update (newPage); without (browser without them): once
+        // the new page is drawn
+        if (!this.beforeUpdate) afterNextRender(() => this.restoreScroll(), { injector: this.injector });
+      }
+    });
     // The picture of the new page is taken as soon as the update callback is done: what must be
     // in it (names of what morphs, colour, page put straight) is done at the end of that
     // callback, not after updateCallbackDone (too late: the picture is already taken)
@@ -182,8 +214,34 @@ export class TransitionsService {
     this.beforeUpdate = false;
     const f = this.onNewPage;
     this.onNewPage = null;
+    this.restoreScroll();
     f?.();
     for (const fn of this.pending.splice(0)) fn();
+  }
+
+  /** The page where it was left (back), or at the top; again as it grows, if it must. */
+  private restoreScroll(): void {
+    const top = this.scrollTarget;
+    this.scrollTarget = null;
+    this.stopGrowing?.();
+    if (top == null) return;
+    scrollTo({ top, behavior: 'instant' });
+    if (top <= 0 || Math.abs(scrollY - top) < 1) return;
+    // Not tall enough yet: again as the page grows, for 2 s at most or until the user scrolls
+    const size = new ResizeObserver(() => {
+      scrollTo({ top, behavior: 'instant' });
+      if (Math.abs(scrollY - top) < 1) stop();
+    });
+    const stop = () => {
+      size.disconnect();
+      clearTimeout(timer);
+      for (const t of USER_SCROLL) removeEventListener(t, stop, true);
+      if (this.stopGrowing === stop) this.stopGrowing = null;
+    };
+    const timer = setTimeout(stop, 2000);
+    for (const t of USER_SCROLL) addEventListener(t, stop, { capture: true, passive: true });
+    size.observe(this.doc.body);
+    this.stopGrowing = stop;
   }
 
   /** A page shown without a view transition (first load, browser without them). */
@@ -324,8 +382,11 @@ export class TransitionsService {
   private returnToCard(id: string): void {
     const card = this.doc.querySelector<HTMLElement>(`.tb-room[data-vt-id="${CSS.escape(id)}"]`);
     if (!card) return;
-    const top = this.clickedCard?.id === id ? this.clickedCard.top : (innerHeight - card.offsetHeight) / 2;
-    scrollTo(0, Math.max(0, card.getBoundingClientRect().top + scrollY - top));
+    // Its place when it was clicked (on the screen); kept inside the window if the click came
+    // during a fling, the page still moving
+    const at = this.clickedCard?.id === id ? this.clickedCard.top : (innerHeight - card.offsetHeight) / 2;
+    const top = Math.min(Math.max(at, 0), Math.max(0, innerHeight - card.offsetHeight));
+    scrollTo({ top: Math.max(0, card.getBoundingClientRect().top + scrollY - top), behavior: 'instant' });
   }
 
   private fade(): void {
@@ -354,6 +415,9 @@ export class TransitionsService {
     else delete this.root.dataset['tone'];
   }
 }
+
+/** What the user does to scroll a page: the page is no longer put back as it grows. */
+const USER_SCROLL = ['wheel', 'touchstart', 'pointerdown', 'keydown'] as const;
 
 function sheet(s: ActivatedRouteSnapshot): ActivatedRouteSnapshot {
   let r = s;

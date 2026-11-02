@@ -22,7 +22,7 @@
       <input class="tb-input" type="search" i18n-placeholder placeholder="Rechercher un utilisateur ou un groupe…" autocomplete="off" i18n-aria-label aria-label="Rechercher"
              [value]="search()" (input)="onSearch($any($event.target).value)" />
     </span>
-    <button type="button" class="tb-select tb-filter tb-group-filter" [class.tb-filter-on]="groupFilter().size" [attr.aria-expanded]="groupsOpen()" (click)="groupsOpen.set(!groupsOpen())">
+    <button type="button" class="tb-select tb-filter tb-group-filter" [class.tb-filter-on]="groupFilter().size" [attr.aria-expanded]="groupsOpen()" (click)="groupFilterClick($event)">
       <i class="pi pi-users"></i><span>{{ groupFilterText() }}</span>
     </button>
   </div>
@@ -99,7 +99,7 @@
       </thead>
       <tbody>
         @for (l of shownRows(); track l.user.id) {
-          <tr [class.tb-row-on]="selection().has(l.user.id!)" [attr.data-flip]="'u' + l.user.id">
+          <tr [tbContextMenu]="userMenu(l)" [class.tb-row-on]="selection().has(l.user.id!)" [attr.data-flip]="'u' + l.user.id">
             <td class="tb-col-check">
               <input type="checkbox" class="tb-check" [checked]="selection().has(l.user.id!)" (change)="check(l.user.id!, $any($event.target).checked)" [attr.aria-label]="('Sélectionner ' | tr) + l.user.username" />
             </td>
@@ -193,7 +193,7 @@
         </thead>
         <tbody>
           @for (g of shownGroups(); track g.id) {
-            <tr>
+            <tr [tbContextMenu]="groupMenu(g)">
               <td class="tb-col-room">
                 <div class="tb-mgmt-name">
                   <span class="tb-section-icon"><i class="pi pi-users"></i></span>

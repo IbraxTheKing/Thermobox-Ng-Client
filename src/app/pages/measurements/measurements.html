@@ -100,7 +100,7 @@
           </thead>
           <tbody>
             @for (l of shownRows(); track l.element.id) {
-              <tr class="tb-tone-{{ l.state.tone }}">
+              <tr class="tb-tone-{{ l.state.tone }}" [tbContextMenu]="lineMenu(l.element)">
                 <td class="tb-col-room">
                   <div class="tb-compare-name" (mouseenter)="highlight(l.element.id)" (mouseleave)="highlight(null)">
                     <button type="button" class="tb-series-chip" [class.tb-off]="hidden().has(l.element.id)" [style.--serie]="'var(--tb-series-' + l.color + ')'"

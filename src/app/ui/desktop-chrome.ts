@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, DOCUMENT, DestroyRef, ElementRef, effect, inject, signal, viewChild } from '@angular/core';
 
-import { Location } from '@angular/common';
+import { Location, NgTemplateOutlet } from '@angular/common';
 import { NavigationEnd, Router } from '@angular/router';
 
 import { DesktopService, applyAcrylic } from '../core/desktop';
@@ -19,11 +19,14 @@ import { TrPipe } from './tr.pipe';
  *   the theme of the page: the Acrylic of Windows 11 behind the side bar follows it.
  * - macOS: a strip to drag the window by, under the traffic lights (the page is under the title
  *   bar, tauri.macos.conf.json).
- * - Linux: nothing, the desktop draws the title bar.
+ * - Linux: the header bar of GNOME (libadwaita), drawn by the page in its colour (the colour of
+ *   the page, its tint in « Maison »): back and the button of the side bar at the start, the name
+ *   of the page in the middle, the buttons of the window where the desktop puts them
+ *   (gtk-decoration-layout: main.rs, decoration_layout).
  */
 @Component({
   selector: 'tb-desktop-chrome',
-  imports: [TrPipe],
+  imports: [TrPipe, NgTemplateOutlet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { style: 'display: contents' },
   template: `
@@ -50,6 +53,41 @@ import { TrPipe } from './tr.pipe';
         <span class="tb-scrollbar-thumb" [style.height.px]="thumbHeight()" [style.transform]="'translateY(' + thumbTop() + 'px)'"
               (pointerdown)="thumbDown($event)"></span>
       </div>
+    } @else if (desktop.linux) {
+      <header class="tb-headerbar" [class.tb-titlebar-scrolled]="scrolled()" [class.tb-headerbar-backdrop]="!focused()" data-tauri-drag-region
+              (dblclick)="headerDoubleClick($event)">
+        <div class="tb-hb-side tb-hb-start">
+          @for (b of layout().start; track b) {
+            <ng-container [ngTemplateOutlet]="windowButton" [ngTemplateOutletContext]="{ $implicit: b }" />
+          }
+          <button type="button" class="tb-hb-btn" tabindex="-1" i18n-aria-label aria-label="Retour" i18n-title title="Retour (Alt+Gauche)" [disabled]="!canGoBack()" (click)="back()"><i class="pi pi-arrow-left"></i></button>
+          @if (inApp()) {
+            <button type="button" class="tb-hb-btn tb-titlebar-pane" tabindex="-1" i18n-aria-label aria-label="Navigation" i18n-title title="Afficher ou réduire la navigation" (click)="desktop.togglePane()"><i class="pi pi-bars"></i></button>
+          }
+        </div>
+        <span class="tb-hb-title">{{ pageTitle.title() || 'Thermobox' }}</span>
+        <div class="tb-hb-side tb-hb-end">
+          @for (b of layout().end; track b) {
+            <ng-container [ngTemplateOutlet]="windowButton" [ngTemplateOutletContext]="{ $implicit: b }" />
+          }
+        </div>
+      </header>
+      <ng-template #windowButton let-b>
+        @switch (b) {
+          @case ('minimize') {
+            <button type="button" class="tb-hb-window" tabindex="-1" i18n-aria-label aria-label="Réduire" i18n-title title="Réduire" (click)="desktop.minimize()"><i class="pi pi-minus"></i></button>
+          }
+          @case ('maximize') {
+            <button type="button" class="tb-hb-window" tabindex="-1" [attr.aria-label]="desktop.maximized() ? ('Niveau inférieur' | tr) : ('Agrandir' | tr)"
+                    [title]="desktop.maximized() ? ('Niveau inférieur' | tr) : ('Agrandir' | tr)" (click)="maximize()">
+              <i class="pi" [class.pi-window-maximize]="!desktop.maximized()" [class.pi-window-minimize]="desktop.maximized()"></i>
+            </button>
+          }
+          @case ('close') {
+            <button type="button" class="tb-hb-window" tabindex="-1" i18n-aria-label aria-label="Fermer" i18n-title title="Fermer" (click)="desktop.close()"><i class="pi pi-times"></i></button>
+          }
+        }
+      </ng-template>
     } @else if (desktop.mac) {
       <div class="tb-mac-drag" data-tauri-drag-region aria-hidden="true"></div>
     }
@@ -79,21 +117,28 @@ export class TbDesktopChrome {
   private frame = 0;
 
   constructor() {
-    if (!this.desktop.windows) return;
-    // Préférences › Flou: the Acrylic and the blurred bars, or none (prepareDesktop did it at start)
-    let first = true;
+    if (!this.desktop.windows && !this.desktop.linux) return;
+    if (this.desktop.windows) {
+      // Préférences › Flou: the Acrylic and the blurred bars, or none (prepareDesktop did it at start)
+      let first = true;
+      effect(() => {
+        const blur = this.prefs.windowBlur();
+        if (first) {
+          first = false;
+          return;
+        }
+        void applyAcrylic(blur);
+      });
+    } else {
+      // Linux: the header bar is drawn, Linux need not give its own back (main.rs); where its
+      // window buttons go
+      void this.desktop.linuxChrome().then((layout) => layout && this.layout.set(parseLayout(layout)));
+    }
+    // The theme of the window: the user's, or the system's followed (the page then sees it change)
     effect(() => {
-      const blur = this.prefs.windowBlur();
-      if (first) {
-        first = false;
-        return;
-      }
-      void applyAcrylic(blur);
-    });
-    // The theme shown (« Système » resolved): Windows redraws the Acrylic in it
-    effect(() => {
+      const choice = this.prefs.themeChoice();
       const theme = this.prefs.theme();
-      void this.desktop.windowTheme(theme).catch(() => undefined);
+      void this.desktop.windowTheme(choice, theme).catch(() => undefined);
     });
     const nav = this.router.events.subscribe((e) => {
       if (e instanceof NavigationEnd) {
@@ -103,6 +148,21 @@ export class TbDesktopChrome {
     });
     // The title bar of index.html (before the client loaded) gives way to this one
     this.doc.getElementById('tb-boot-titlebar')?.remove();
+    if (this.desktop.linux) {
+      const onFocus = () => this.focused.set(true);
+      const onBlur = () => this.focused.set(false);
+      const onScroll = () => this.scrolled.set(scrollY > 2);
+      addEventListener('focus', onFocus);
+      addEventListener('blur', onBlur);
+      addEventListener('scroll', onScroll, { passive: true });
+      inject(DestroyRef).onDestroy(() => {
+        nav.unsubscribe();
+        removeEventListener('focus', onFocus);
+        removeEventListener('blur', onBlur);
+        removeEventListener('scroll', onScroll);
+      });
+      return;
+    }
     const onScroll = () => {
       this.scrolled.set(scrollY > 2);
       this.doc.documentElement.classList.toggle('tb-win-scrolled', scrollY > 2);
@@ -128,6 +188,15 @@ export class TbDesktopChrome {
       removeEventListener('blur', onBlur);
       size.disconnect();
     });
+  }
+
+  /** Linux: the buttons of the window at the start and at the end of the header bar. */
+  protected readonly layout = signal<{ start: string[]; end: string[] }>({ start: [], end: ['minimize', 'maximize', 'close'] });
+
+  /** Linux: a double click on the header bar maximizes, as GNOME does (not on its buttons). */
+  protected headerDoubleClick(e: MouseEvent): void {
+    if ((e.target as Element).closest('button')) return;
+    void this.desktop.toggleMaximize();
   }
 
   protected back(): void {
@@ -206,4 +275,11 @@ export class TbDesktopChrome {
     const thumbAt = (this.track()?.nativeElement.getBoundingClientRect().top ?? 32) + this.thumbTop();
     scrollBy({ top: e.clientY < thumbAt ? -innerHeight * 0.9 : innerHeight * 0.9, behavior: 'smooth' });
   }
+}
+
+/** « appmenu:minimize,maximize,close » → the buttons before and after the title. */
+function parseLayout(layout: string): { start: string[]; end: string[] } {
+  const known = (part: string | undefined) => (part ?? '').split(',').map((b) => b.trim()).filter((b) => ['minimize', 'maximize', 'close'].includes(b));
+  const [start, end] = layout.split(':');
+  return { start: known(start), end: known(end) };
 }

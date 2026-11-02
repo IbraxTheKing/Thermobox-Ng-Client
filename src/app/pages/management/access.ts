@@ -22,6 +22,8 @@ import { PlatformService } from '../../core/platform';
 import { FlipService } from '../../core/flip';
 import { followSelectionBar } from '../../ui/selection-bar';
 import { TrPipe } from '../../ui/tr.pipe';
+import { MenuList, SEPARATOR, TbContextMenu, showMenu } from '../../core/context-menu';
+import { TAURI } from '../../core/tauri';
 
 /**
  * « Utilisateurs et groupes » tab of the Gestion page (ADMIN only, gestion-droits.xhtml): roles
@@ -35,7 +37,7 @@ const NO_GROUP = -1;
 
 @Component({
   selector: 'tb-access',
-  imports: [TrPipe, TbSheet, TbSwitch, TbMultipleChoice, TbAccessTree, TbPager, TbUserAccessSheet, TbUserGroupsSheet, TbUserFormSheet],
+  imports: [TbContextMenu, TrPipe, TbSheet, TbSwitch, TbMultipleChoice, TbAccessTree, TbPager, TbUserAccessSheet, TbUserGroupsSheet, TbUserFormSheet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './access.html',
 })
@@ -110,6 +112,36 @@ export class AccessTab implements OnInit {
         (!gf.size || members.has(l.user.id!) || (gf.has(NO_GROUP) && !l.groups.length)),
     );
   });
+
+  /**
+   * The filter by group: in the desktop apps a native menu under the button (each group ticked or
+   * not, one at a time), as long as the groups fit in one; on the web, or with very many groups,
+   * the list with its search field.
+   */
+  protected groupFilterClick(e: MouseEvent): void {
+    const choices = this.groupChoices();
+    if (!TAURI || choices.length > 30) {
+      this.groupsOpen.set(!this.groupsOpen());
+      return;
+    }
+    const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const chosen = this.groupFilter();
+    const toggle = (id: number) => {
+      const s = new Set(this.groupFilter());
+      if (s.has(id)) s.delete(id);
+      else s.add(id);
+      this.groupFilter.set(s);
+    };
+    void showMenu(
+      [
+        { label: $localize`Tous les groupes`, checked: chosen.size === 0, action: () => this.groupFilter.set(new Set()) },
+        SEPARATOR,
+        ...choices.map((o) => ({ label: o.label, checked: chosen.has(o.id), action: () => toggle(o.id) })),
+      ],
+      r.left,
+      r.bottom + 2,
+    );
+  }
 
   protected count(r: UserRole): number {
     return this.access.users().filter((l) => l.user.type === r).length;
@@ -396,5 +428,31 @@ export class AccessTab implements OnInit {
       this.toasts.error('Suppression impossible', errorMessage(e));
     }
     await this.load();
+  }
+
+  /** Desktop apps: the right click on a user. */
+  protected userMenu(l: UserRow): () => MenuList {
+    return () => {
+      const checked = this.selection().has(l.user.id!);
+      return [
+        { label: $localize`Nom, rôle, mot de passe`, action: () => this.editUser(l) },
+        { label: $localize`Accès`, action: () => this.accessSheet().open(l) },
+        { label: $localize`Groupes`, action: () => this.groupsSheet().open(l) },
+        { label: $localize`Nouveau groupe avec lui`, action: () => this.newGroupWith(l) },
+        SEPARATOR,
+        { label: $localize`Cocher`, checked, action: () => this.check(l.user.id!, !checked) },
+        SEPARATOR,
+        { label: $localize`Supprimer`, disabled: this.auth.isMe(l.user), action: () => this.removeUser(l) },
+      ];
+    };
+  }
+
+  /** Desktop apps: the right click on a group. */
+  protected groupMenu(g: Group): () => MenuList {
+    return () => [
+      { label: $localize`Modifier le groupe`, action: () => this.editGroup(g) },
+      SEPARATOR,
+      { label: $localize`Supprimer`, action: () => this.deleteGroup(g) },
+    ];
   }
 }

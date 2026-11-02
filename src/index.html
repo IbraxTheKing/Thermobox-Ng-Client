@@ -31,10 +31,17 @@
   </head>
   <body>
     <script>
-      // Windows app: the window has no title bar of the system (tauri.windows.conf.json)
+      // Windows and Linux apps: the window has no title bar of the system (tauri.*.conf.json)
       (function () {
         var t = window.__TAURI_INTERNALS__;
-        if (!t || !/Windows/.test(navigator.userAgent)) return;
+        if (!t) return;
+        // Linux: no title bar of the desktop either; the header bar comes with Angular
+        // (TbDesktopChrome, which tells main.rs it is there)
+        if (/Linux/.test(navigator.userAgent) && !/Android/.test(navigator.userAgent)) {
+          document.documentElement.setAttribute('data-desktop', 'linux');
+          return;
+        }
+        if (!/Windows/.test(navigator.userAgent)) return;
         document.documentElement.setAttribute('data-desktop', 'windows');
         var b = document.createElement('div');
         b.id = 'tb-boot-titlebar';

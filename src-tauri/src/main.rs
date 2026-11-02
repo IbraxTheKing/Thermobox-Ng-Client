@@ -12,7 +12,9 @@
 //!   Windows 11 (22H2 and up): the window has the Acrylic backdrop of the system (the side bar and
 //!   the title bar are see-through, the page draws the rest), in the theme of the page
 //!   ([window_theme]).
-//! - Linux: the title bar of the desktop (GTK 3 / WebKitGTK 4.1, the toolkit of Tauri).
+//! - Linux: no title bar of the desktop either (tauri.linux.conf.json): the page draws a header
+//!   bar in the style of GNOME (libadwaita), its buttons where the desktop puts them
+//!   ([decoration_layout]). GTK 3 / WebKitGTK 4.1: the toolkit of Tauri (it has no GTK 4 version).
 //!
 //! API calls go through tauri-plugin-http (see src/app/core/desktop.ts).
 
@@ -110,16 +112,40 @@ fn system_accent() -> Option<String> {
     None
 }
 
-/// The page has drawn its title bar (Windows, index.html): no need for the system's, even if it
-/// came back meanwhile.
+/// The page has drawn its title bar (Windows and Linux, index.html): no need for the system's,
+/// even if it came back meanwhile.
 #[tauri::command]
 fn page_ready(window: tauri::WebviewWindow, ready: tauri::State<'_, PageReady>) {
     ready.0.store(true, std::sync::atomic::Ordering::Relaxed);
-    #[cfg(windows)]
-    if window.is_decorated().unwrap_or(false) {
+    #[cfg(any(windows, target_os = "linux"))]
+    if window.label() == "main" && window.is_decorated().unwrap_or(false) {
         let _ = window.set_decorations(false);
     }
     let _ = window;
+}
+
+/// Windows: the text of the clipboard, for « Coller » in the menus drawn by the page (WebView2
+/// keeps it from the page). Null elsewhere: macOS and Linux have native menus that paste.
+#[tauri::command]
+fn clipboard_text() -> Option<String> {
+    #[cfg(windows)]
+    return win::clipboard_text();
+    #[cfg(not(windows))]
+    None
+}
+
+/// Linux: where the desktop puts the buttons of the windows (GTK: gtk-decoration-layout, as
+/// GNOME Tweaks sets it), « appmenu:minimize,maximize,close »: the header bar drawn by the page
+/// puts its own at the same places. Null elsewhere or when GTK does not say.
+#[tauri::command]
+fn decoration_layout() -> Option<String> {
+    #[cfg(target_os = "linux")]
+    {
+        use gtk::prelude::GtkSettingsExt;
+        return gtk::Settings::default().and_then(|s| s.gtk_decoration_layout()).map(|l| l.to_string());
+    }
+    #[cfg(not(target_os = "linux"))]
+    None
 }
 
 /// Windows 11: the Acrylic of the system behind the window, or not (Préférences › Flou). Answers
@@ -141,13 +167,19 @@ fn window_acrylic(window: tauri::WebviewWindow, on: bool, backdrop: tauri::State
     shown
 }
 
-/// The theme shown by the page ("light" or "dark") for the window: the colours Windows draws
-/// around it and the tint of its Acrylic. The Acrylic of Windows does not take a new theme by
-/// itself: it is put back after the change.
+/// The theme of the page for the window: [theme] "light" or "dark" when the user picked one,
+/// null when the app follows the system (Préférences › Thème › Système): the window and the
+/// webview then follow it too, and the page sees the system change (prefers-color-scheme). A
+/// theme forced here would hide the changes of the system from the page. [dark]: the theme shown
+/// (the colours Windows draws around the window, the tint of its Acrylic, which does not take a
+/// new theme by itself: it is put back).
 #[tauri::command]
-fn window_theme(window: tauri::WebviewWindow, theme: String, backdrop: tauri::State<'_, Backdrop>) {
-    let dark = theme == "dark";
-    let _ = window.set_theme(Some(if dark { tauri::Theme::Dark } else { tauri::Theme::Light }));
+fn window_theme(window: tauri::WebviewWindow, theme: Option<String>, dark: bool, backdrop: tauri::State<'_, Backdrop>) {
+    let _ = window.set_theme(match theme.as_deref() {
+        Some("dark") => Some(tauri::Theme::Dark),
+        Some("light") => Some(tauri::Theme::Light),
+        _ => None,
+    });
     #[cfg(windows)]
     {
         if let Ok(hwnd) = window.hwnd() {
@@ -193,6 +225,11 @@ fn main() {
                 // is transparent (tauri.windows.conf.json); the page asks for it (or not, as its
                 // preferences say) before it starts: window_acrylic.
                 app.state::<Backdrop>().supported.store(win::build() >= 22523, std::sync::atomic::Ordering::Relaxed);
+            }
+            // Windows and Linux draw no title bar of their own (tauri.windows / tauri.linux
+            // .conf.json): if the page never comes, theirs comes back after a while
+            #[cfg(any(windows, target_os = "linux"))]
+            {
                 let handle = app.handle().clone();
                 std::thread::spawn(move || {
                     std::thread::sleep(std::time::Duration::from_secs(10));
@@ -205,7 +242,7 @@ fn main() {
             let _ = app;
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![settings_window, snap_layouts, system_accent, page_ready, window_acrylic, window_theme, app_language]);
+        .invoke_handler(tauri::generate_handler![settings_window, snap_layouts, system_accent, page_ready, window_acrylic, window_theme, app_language, decoration_layout, clipboard_text]);
     #[cfg(target_os = "macos")]
     let builder = builder.menu(menu::build).on_menu_event(menu::on_event);
     builder.run(tauri::generate_context!()).expect("Thermobox could not start");

@@ -1,6 +1,6 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, computed, inject, signal, viewChild, effect, untracked } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
 import { errorMessage } from '../../core/api.config';
@@ -16,6 +16,7 @@ import { TbSheet } from '../../ui/sheet';
 import { ShownCount, TbMore } from '../../ui/more';
 import { ElementDialog } from './element-dialog';
 import { TrPipe } from '../../ui/tr.pipe';
+import { MenuList, SEPARATOR, TbContextMenu } from '../../core/context-menu';
 
 /** Elements beyond which the structure is « large » (see [RoomsPage.large]). */
 const LARGE = 200;
@@ -29,12 +30,13 @@ const BRANCH = 60;
  */
 @Component({
   selector: 'tb-rooms',
-  imports: [TrPipe, RouterLink, NgTemplateOutlet, TbSheet, ElementDialog, TbMore],
+  imports: [TbContextMenu, TrPipe, RouterLink, NgTemplateOutlet, TbSheet, ElementDialog, TbMore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './rooms.html',
 })
 export class RoomsPage implements OnInit, OnDestroy {
   protected readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
   protected readonly store = inject(TreeStore);
   protected readonly unit = inject(UnitService);
   private readonly prefs = inject(PreferencesService);
@@ -298,5 +300,23 @@ export class RoomsPage implements OnInit, OnDestroy {
       this.toasts.error('Déplacement impossible', errorMessage(err));
     }
     await this.store.load().catch(() => undefined);
+  }
+
+  /** Desktop apps: the right click on a building, a floor, a room or a box. */
+  protected nodeMenu(n: Node): () => MenuList {
+    return () => {
+      const admin = this.auth.admin();
+      const kinds = this.childrenOf(n);
+      return [
+        { label: $localize`Voir le détail`, action: () => this.router.navigate(['/app/room', n.id]) },
+        this.isFolder(n) && this.children(n.id).length > 0 && { label: this.isFolded(n.id) ? $localize`Déplier` : $localize`Replier`, action: () => this.toggle(n.id) },
+        admin && SEPARATOR,
+        admin && kinds.length > 0 && { label: $localize`Ajouter dedans`, action: () => this.create(kinds[0], n) },
+        admin && { label: $localize`Modifier ou déplacer`, action: () => this.edit(n) },
+        admin && n.attached && n.kind !== 'BUILDING' && { label: $localize`Détacher`, action: () => this.detach(n) },
+        admin && SEPARATOR,
+        admin && { label: $localize`Supprimer`, action: () => this.remove(n) },
+      ];
+    };
   }
 }
