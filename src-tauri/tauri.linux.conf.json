@@ -12,7 +12,7 @@
         "center": true,
         "dragDropEnabled": false,
         "decorations": false,
-        "transparent": true,
+        "transparent": false,
         "visible": false
       }
     ]
