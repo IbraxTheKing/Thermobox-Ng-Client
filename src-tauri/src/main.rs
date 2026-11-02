@@ -95,11 +95,23 @@ fn page_ready(window: tauri::WebviewWindow, ready: tauri::State<'_, PageReady>) 
     let _ = window;
 }
 
-/// The backdrop of the window drawn by the system: "acrylic" (Windows 11), null elsewhere (the
-/// page is opaque).
+/// Windows 11: the Acrylic of the system behind the window, or not (Préférences › Flou). Answers
+/// whether the window has it now: false where Windows can't draw it (Windows 10, other systems),
+/// the page then paints itself.
 #[tauri::command]
-fn window_backdrop(backdrop: tauri::State<'_, Backdrop>) -> Option<&'static str> {
-    backdrop.0.get().copied().flatten()
+fn window_acrylic(window: tauri::WebviewWindow, on: bool, backdrop: tauri::State<'_, Backdrop>) -> bool {
+    use std::sync::atomic::Ordering::Relaxed;
+    if !backdrop.supported.load(Relaxed) {
+        return false;
+    }
+    let done = if on {
+        window.set_effects(tauri::window::EffectsBuilder::new().effect(tauri::window::Effect::Acrylic).build())
+    } else {
+        window.set_effects(None)
+    };
+    let shown = on && done.is_ok();
+    backdrop.on.store(shown, Relaxed);
+    shown
 }
 
 /// The theme shown by the page ("light" or "dark") for the window: the colours Windows draws
@@ -114,7 +126,7 @@ fn window_theme(window: tauri::WebviewWindow, theme: String, backdrop: tauri::St
         if let Ok(hwnd) = window.hwnd() {
             win::dark_mode(hwnd.0, dark);
         }
-        if backdrop.0.get().copied().flatten().is_some() {
+        if backdrop.on.load(std::sync::atomic::Ordering::Relaxed) {
             let _ = window.set_effects(None);
             let _ = window.set_effects(tauri::window::EffectsBuilder::new().effect(tauri::window::Effect::Acrylic).build());
         }
@@ -122,9 +134,12 @@ fn window_theme(window: tauri::WebviewWindow, theme: String, backdrop: tauri::St
     let _ = (dark, backdrop);
 }
 
-/// Set once at start ([window_backdrop]).
+/// The Acrylic of the window ([window_acrylic]): Windows can draw it (set at start), it is shown.
 #[derive(Default)]
-struct Backdrop(std::sync::OnceLock<Option<&'static str>>);
+struct Backdrop {
+    supported: std::sync::atomic::AtomicBool,
+    on: std::sync::atomic::AtomicBool,
+}
 
 /// Set by [page_ready]. Windows: a page that never comes (its files out of reach, a debug build
 /// started without `ng serve`) would leave a window without any title bar, impossible to move or
@@ -136,6 +151,7 @@ fn main() {
     let builder = tauri::Builder::default()
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_notification::init())
         .manage(PageReady::default())
         .manage(Backdrop::default())
         .setup(|app| {
@@ -143,12 +159,9 @@ fn main() {
             {
                 // Acrylic: the DWM backdrop of Windows 11 22H2 and up (build 22523: before, the
                 // older way of drawing it made the window lag when moved or resized). The window
-                // is transparent (tauri.windows.conf.json), the page leaves its side bar clear.
-                let acrylic = win::build() >= 22523
-                    && app.get_webview_window("main").is_some_and(|w| {
-                        w.set_effects(tauri::window::EffectsBuilder::new().effect(tauri::window::Effect::Acrylic).build()).is_ok()
-                    });
-                let _ = app.state::<Backdrop>().0.set(acrylic.then_some("acrylic"));
+                // is transparent (tauri.windows.conf.json); the page asks for it (or not, as its
+                // preferences say) before it starts: window_acrylic.
+                app.state::<Backdrop>().supported.store(win::build() >= 22523, std::sync::atomic::Ordering::Relaxed);
                 let handle = app.handle().clone();
                 std::thread::spawn(move || {
                     std::thread::sleep(std::time::Duration::from_secs(10));
@@ -161,7 +174,7 @@ fn main() {
             let _ = app;
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![settings_window, snap_layouts, system_accent, page_ready, window_backdrop, window_theme]);
+        .invoke_handler(tauri::generate_handler![settings_window, snap_layouts, system_accent, page_ready, window_acrylic, window_theme]);
     #[cfg(target_os = "macos")]
     let builder = builder.menu(menu::build).on_menu_event(menu::on_event);
     builder.run(tauri::generate_context!()).expect("Thermobox could not start");

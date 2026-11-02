@@ -5,6 +5,7 @@ import { Capacitor } from '@capacitor/core';
 import { androidSystemAccent } from './android-native';
 import { DESKTOP_OS } from './tauri';
 
+import { SeasonService } from './season';
 import { PreferencesService } from './preferences';
 
 /**
@@ -44,6 +45,7 @@ export const PALETTES: Palette[] = [
 export class AccentService {
   private readonly doc = inject(DOCUMENT);
   private readonly prefs = inject(PreferencesService);
+  private readonly seasons = inject(SeasonService);
   private style: HTMLStyleElement | null = null;
 
   /** The accent colour of the system, as #rrggbb; null: the system gives none here. */
@@ -62,6 +64,9 @@ export class AccentService {
   /** Hue and chroma shown, null for the ThermoBox colours. */
   readonly seed = computed<{ h: number; c: number } | null>(() => {
     const choice = this.prefs.accent();
+    // A holiday (« Maison » only, SeasonService): its colour, unless the user chose one
+    const season = this.seasons.current();
+    if (season && choice === 'default') return season.accent;
     if (choice === 'system') {
       const hex = this.systemColor();
       if (!hex) return null;

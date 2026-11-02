@@ -562,9 +562,23 @@
         border-radius: 4px;
         background: transparent;
     }
-    :root[data-desktop="windows"] .tb-rail-account { overflow: hidden; white-space: nowrap; }
+    :root[data-desktop="windows"] .tb-rail-account { width: calc(100% - 8px); min-height: 44px; overflow: hidden; white-space: nowrap; text-align: left; }
     :root[data-desktop="windows"] .tb-rail-account:hover, :root[data-desktop="windows"] .tb-rail-account[aria-expanded="true"] { background: var(--wf-subtle-hover); }
-    :root[data-desktop="windows"] .tb-rail-account > .tb-avatar { width: 28px; height: 28px; margin: 0 6px; font-size: 12px; }
+    /* PersonPicture: grey, the initial in the colour of the text */
+    :root[data-desktop="windows"] .tb-rail-account > .tb-avatar {
+        flex: none;
+        width: 28px;
+        height: 28px;
+        margin: 0 6px;
+        background: var(--md-surface-container-highest);
+        color: var(--md-on-surface);
+        font-size: 12px;
+        font-weight: 600;
+    }
+    :root[data-desktop="windows"][data-theme="dark"] .tb-rail-account > .tb-avatar { background: #4a4a4a; }
+    :root[data-desktop="windows"] .tb-rail-account-text { flex: 1 1 auto; min-width: 0; }
+    :root[data-desktop="windows"] .tb-rail-account strong, :root[data-desktop="windows"] .tb-rail-account small { overflow: hidden; text-overflow: ellipsis; }
+    :root[data-desktop="windows"] .tb-rail-account-arrow { flex: none; margin: 0 10px 0 auto; font-size: 10px; color: var(--wf-text-secondary); }
     :root[data-desktop="windows"] .tb-rail-account .tb-server-logo-badge { width: 13px; height: 13px; right: -3px; bottom: -3px; }
     :root[data-desktop="windows"] .tb-rail-account-text { padding: 0 8px 0 2px; line-height: 18px; }
     :root[data-desktop="windows"] .tb-rail-account strong { font-weight: 400; font-size: 14px; }
@@ -618,11 +632,13 @@
 /* LeftCompact: the icons only (folded, or a window less than 1200 px wide) */
 @media (min-width: 841px) and (max-width: 1199px) {
     :root[data-desktop="windows"] :is(.tb-dest-label, .tb-rail-account-text, .tb-rail-account-arrow, .tb-rail-action-label) { display: none; }
+    :root[data-desktop="windows"] .tb-rail-account { width: 40px; }
     :root[data-desktop="windows"] .tb-rail-actions { display: contents; }
     :root[data-desktop="windows"] .tb-rail-actions .tb-icon-btn { flex: none; margin: 0 4px; }
 }
 @media (min-width: 1200px) {
     :root[data-desktop="windows"][data-sidebar="collapsed"] :is(.tb-dest-label, .tb-rail-account-text, .tb-rail-account-arrow, .tb-rail-action-label) { display: none; }
+    :root[data-desktop="windows"][data-sidebar="collapsed"] .tb-rail-account { width: 40px; }
     :root[data-desktop="windows"][data-sidebar="collapsed"] .tb-rail-actions { display: contents; }
     :root[data-desktop="windows"][data-sidebar="collapsed"] .tb-rail-actions .tb-icon-btn { flex: none; margin: 0 4px; }
     :root[data-desktop="windows"]:not([data-sidebar="collapsed"]) .tb-accounts-menu { left: 4px; bottom: calc(100% + 4px); width: calc(100% - 8px); }
@@ -642,6 +658,7 @@
         animation: wf-pane-in .25s cubic-bezier(0, 0, 0, 1);
     }
     :root[data-desktop="windows"] .tb-pane-open :is(.tb-dest-label, .tb-rail-action-label) { display: inline; }
+    :root[data-desktop="windows"] .tb-pane-open .tb-rail-account { width: calc(100% - 8px); }
     :root[data-desktop="windows"] .tb-pane-open .tb-rail-account-text { display: flex; flex: 1 1 auto; flex-direction: column; min-width: 0; }
     :root[data-desktop="windows"] .tb-pane-open .tb-rail-account-arrow { display: inline-block; margin: 0 10px 0 auto; }
     :root[data-desktop="windows"] .tb-pane-open .tb-rail-actions { display: flex; }
@@ -795,3 +812,11 @@
 /* ============================== Scroll bars of the lists inside the page */
 
 :root[data-desktop="windows"] * { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--md-on-surface) 40%, transparent) transparent; }
+
+/* ============================== Préférences › Effets de transparence off */
+
+:root[data-desktop="windows"][data-blur="off"] *,
+:root[data-desktop="windows"][data-blur="off"] *::before,
+:root[data-desktop="windows"][data-blur="off"] *::after { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+:root[data-desktop="windows"][data-blur="off"] .tb-titlebar.tb-titlebar-scrolled::before { background: var(--tb-background); }
+:root[data-desktop="windows"][data-blur="off"] .tb-rail.tb-pane-open { background: var(--tb-background); }

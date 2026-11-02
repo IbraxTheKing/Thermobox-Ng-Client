@@ -8,6 +8,7 @@
  * shell.css      navigation, ThermoBox look (web)
  * shell-ios.css      Liquid Glass on iOS
  * shell-android.css  Material 3 on Android
+ * seasons.css    the holidays of the « Maison » style (snow, bats…)
  * desktop.css    the desktop app (Tauri): title bar of Windows, macOS under the traffic lights
  * windows.css    the Windows app: Fluent 2 / WinUI 3 look
  */
@@ -31,5 +32,6 @@
 @import './styles/theme.css';
 @import './styles/theme-pages.css';
 @import './styles/theme-ios.css';
+@import './styles/seasons.css';
 @import './styles/desktop.css';
 @import './styles/windows.css';

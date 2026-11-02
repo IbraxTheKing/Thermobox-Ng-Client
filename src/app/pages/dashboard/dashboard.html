@@ -7,6 +7,10 @@
       </p>
     } @else {
       <h1>Maison</h1>
+      <!-- A holiday (SeasonService): its greeting -->
+      @if (seasons.current(); as season) {
+        <p class="tb-season-greeting">{{ season.greeting }}</p>
+      }
       <!-- The house in one sentence -->
       @if (sentence().length) {
         <p class="tb-overview-sentence">@for (m of sentence(); track $index) {@if (m.name) {<b>{{ m.text }}</b>} @else {<span>{{ m.text }}</span>}}</p>

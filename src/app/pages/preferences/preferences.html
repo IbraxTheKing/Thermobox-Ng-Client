@@ -100,6 +100,23 @@
             <button type="button" role="radio" [attr.aria-checked]="prefs.homeColors() === 'temperature'" [class.tb-seg-on]="prefs.homeColors() === 'temperature'" (click)="prefs.homeColors.set('temperature')">Température</button>
           </div>
         </div>
+        <!-- Holidays (« Maison » only): SeasonService -->
+        <div class="tb-pref">
+          <span class="tb-section-icon"><i class="pi pi-star"></i></span>
+          <div class="tb-pref-text">
+            <strong>Thèmes de saison</strong>
+            <span class="tb-muted">
+              Noël, Halloween, Pâques, le Nouvel An… : l'application prend leurs couleurs et quelques décorations pendant ces jours-là, puis reprend son apparence habituelle.
+              Les couleurs d'accent choisies ci-dessus restent prioritaires.
+            </span>
+            @if (seasons.ofToday(); as now) {
+              <span class="tb-pref-note"><i class="pi pi-calendar"></i> En ce moment : {{ now.label }}</span>
+            } @else if (seasons.next(); as n) {
+              <span class="tb-pref-note"><i class="pi pi-calendar"></i> Prochain : {{ n.season.label }}, le {{ dayLabel(n.start) }}</span>
+            }
+          </div>
+          <tb-switch [checked]="prefs.seasons()" (checkedChange)="prefs.seasons.set($event)" label="Thèmes de saison" />
+        </div>
       }
       <div class="tb-pref">
         <span class="tb-section-icon"><i class="pi pi-sun"></i></span>
@@ -115,6 +132,16 @@
           <button type="button" role="radio" [attr.aria-checked]="prefs.fahrenheit()" [class.tb-seg-on]="prefs.fahrenheit()" (click)="prefs.unit.set('F')">°F</button>
         </div>
       </div>
+      @if (desktop.windows) {
+        <div class="tb-pref">
+          <span class="tb-section-icon"><i class="pi pi-clone"></i></span>
+          <div class="tb-pref-text">
+            <strong>Effets de transparence</strong>
+            <span class="tb-muted">Le flou de Windows (Acrylic) derrière la barre de navigation et la barre de titre, et le flou de ce qui passe sous les barres. Désactivés, tout est opaque : un peu moins de travail pour la carte graphique.</span>
+          </div>
+          <tb-switch [checked]="prefs.windowBlur()" (checkedChange)="prefs.windowBlur.set($event)" label="Effets de transparence" />
+        </div>
+      }
       @if (hasSidebar) {
         <div class="tb-pref tb-pref-bar">
           <span class="tb-section-icon"><i class="pi pi-bars"></i></span>
@@ -127,6 +154,42 @@
             <button type="button" role="radio" [attr.aria-checked]="prefs.sidebarCollapsed()" [class.tb-seg-on]="prefs.sidebarCollapsed()" (click)="prefs.sidebarCollapsed.set(true)">Icônes</button>
           </div>
         </div>
+      }
+      <!-- Apps: notifications of the setpoint (NotificationService), once logged in -->
+      @if (notifications.available && auth.loggedIn()) {
+        <div class="tb-pref">
+          <span class="tb-section-icon"><i class="pi pi-bell"></i></span>
+          <div class="tb-pref-text">
+            <strong>Notifications de consigne</strong>
+            <span class="tb-muted">
+              Prévient quand une salle atteint sa consigne ou s'en éloigne (trop chaude, ou en dessous) pendant au moins 10 minutes.
+              @if (platform.native) {
+                Le téléphone endort l'application en arrière-plan : ce qui a changé entre-temps est notifié à son retour (jusqu'à 6 heures avant).
+              } @else {
+                Tant que l'application est ouverte, même en arrière-plan.
+              }
+            </span>
+            @if (notifications.supported() === false) {
+              <span class="tb-pref-note tb-pref-note-off"><i class="pi pi-info-circle"></i> Ce serveur ne propose pas encore les notifications (ThermoBox 26.12 ou plus récent).</span>
+            } @else if (notifications.denied()) {
+              <span class="tb-pref-note tb-pref-note-off"><i class="pi pi-info-circle"></i> Bloquées par le système : autorise-les pour Thermobox dans ses réglages.</span>
+            }
+          </div>
+          <tb-switch [checked]="prefs.notifications()" (checkedChange)="toggleNotifications($event)" label="Notifications de consigne" />
+        </div>
+        @if (prefs.notifications()) {
+          <div class="tb-pref">
+            <span class="tb-section-icon"><i class="pi pi-star"></i></span>
+            <div class="tb-pref-text">
+              <strong>Salles suivies</strong>
+              <span class="tb-muted">Les salles en favoris, ou toutes celles que tu peux voir.</span>
+            </div>
+            <div class="tb-segmented" role="radiogroup" aria-label="Salles suivies">
+              <button type="button" role="radio" [attr.aria-checked]="prefs.notifyRooms() === 'favorites'" [class.tb-seg-on]="prefs.notifyRooms() === 'favorites'" (click)="prefs.notifyRooms.set('favorites')">Favoris</button>
+              <button type="button" role="radio" [attr.aria-checked]="prefs.notifyRooms() === 'all'" [class.tb-seg-on]="prefs.notifyRooms() === 'all'" (click)="prefs.notifyRooms.set('all')">Toutes</button>
+            </div>
+          </div>
+        }
       }
     </div>
     <p class="tb-muted tb-pref-scope">Enregistré sur cet appareil uniquement. Interface : {{ platformName }}.</p>

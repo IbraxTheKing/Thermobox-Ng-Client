@@ -705,6 +705,61 @@ route('GET', '/api/v2/climate/averages', 'auth', ({ q, scopeOf }) => {
   }
   return ok(r);
 });
+// ThermoBox 26.12: the rooms that started or stopped respecting their setpoint (SetpointWatch of the server)
+const WATCH = { threshold: 0.5, hold: 10 * 60_000, lookback: 3600_000, back: 15 * 60_000, maxBack: 6 * 3600_000 };
+function watchState(t, sp) {
+  const d = t - sp;
+  return d <= -WATCH.threshold ? 'HEATING' : d >= WATCH.threshold ? 'TOO_HOT' : 'STABLE';
+}
+function watchChanges(curve, sp, since, now) {
+  const out = [];
+  let confirmed = null;
+  let cand = null;
+  let start = 0;
+  let last = 0;
+  const confirm = () => {
+    if (confirmed && confirmed !== cand && start >= since) out.push({ previous: confirmed, state: cand, at: start, temperature: last });
+    confirmed = cand;
+  };
+  for (const t of curve) {
+    const s = watchState(t.value, sp);
+    if (s !== cand) (cand = s), (start = t.date);
+    last = t.value;
+    if (cand !== confirmed && t.date - start >= WATCH.hold) confirm();
+  }
+  if (cand && cand !== confirmed && now - start >= WATCH.hold) confirm();
+  return out;
+}
+route('GET', '/api/v2/notifications/setpoints', 'auth', ({ q, scopeOf }) => {
+  const now = Date.now();
+  const raw = q.get('since');
+  let since = raw ? new Date(raw).getTime() : now - WATCH.back;
+  if (Number.isNaN(since)) return error(400, 'since must be a date-time (ISO-8601)');
+  since = Math.min(now, Math.max(now - WATCH.maxBack, since));
+  const ids = q.get('ids') ? [...new Set(q.get('ids').split(',').map(Number).filter(Boolean))] : null;
+  const picked = ids ? ids.map(elementById).filter(Boolean).flatMap((e) => (e.kind === 'ROOM' ? [e] : descendants(e).filter((d) => d.kind === 'ROOM'))) : elements.filter((e) => e.kind === 'ROOM');
+  const events = [];
+  for (const room of new Set(picked)) {
+    if (!canSee(scopeOf, room)) continue;
+    const sp = effectiveSetpoint(room)?.setpoint.value;
+    if (sp == null) continue;
+    const curve = runningAverage(history(room, since - WATCH.lookback, now));
+    for (const c of watchChanges(curve, sp, since, now)) {
+      events.push({
+        roomId: room.id,
+        name: room.name,
+        place: pathOf(room).map((a) => a.name).join(' › '),
+        state: c.state,
+        previous: c.previous,
+        temperature: Math.round(c.temperature * 100) / 100,
+        setpoint: sp,
+        at: iso(c.at),
+      });
+    }
+  }
+  events.sort((a, b) => (a.at < b.at ? -1 : 1));
+  return ok({ since: iso(since), now: iso(now), events });
+});
 route('PUT', '/api/v2/climate/{id}/setpoint', 'MANAGER', ({ p, body, scopeOf }) => {
   const e = elementById(+p.id);
   if (!e || !canSee(scopeOf, e)) return empty(404);
