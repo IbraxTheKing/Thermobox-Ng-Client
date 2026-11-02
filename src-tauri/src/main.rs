@@ -196,6 +196,54 @@ fn window_acrylic(window: tauri::WebviewWindow, on: bool, backdrop: tauri::State
     shown
 }
 
+/// Linux: the app follows the theme of the system (Préférences › Thème › Système), [window_theme].
+#[cfg(target_os = "linux")]
+static FOLLOW_SYSTEM: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
+
+/// GNOME: the light or dark style of the system (Settings › Appearance, the quick settings) is the
+/// color-scheme of org.gnome.desktop.interface. GTK 3 (Tauri, WebKitGTK) does not read it: the
+/// page kept the theme the app started with. Given to GTK as its prefer-dark-theme, which
+/// WebKitGTK follows (prefers-color-scheme in the page), when the app follows the system.
+#[cfg(target_os = "linux")]
+fn apply_color_scheme(settings: &gtk::gio::Settings) {
+    use gtk::gio::prelude::SettingsExt;
+    use gtk::prelude::GtkSettingsExt;
+    if !FOLLOW_SYSTEM.load(std::sync::atomic::Ordering::Relaxed) {
+        return;
+    }
+    if let Some(gtk_settings) = gtk::Settings::default() {
+        gtk_settings.set_gtk_application_prefer_dark_theme(settings.string("color-scheme") == "prefer-dark");
+    }
+}
+
+/// GNOME: the settings of org.gnome.desktop.interface that have a color-scheme, if any.
+#[cfg(target_os = "linux")]
+fn gnome_interface() -> Option<gtk::gio::Settings> {
+    const SCHEMA: &str = "org.gnome.desktop.interface";
+    let schema = gtk::gio::SettingsSchemaSource::default()?.lookup(SCHEMA, true)?;
+    schema.has_key("color-scheme").then(|| gtk::gio::Settings::new(SCHEMA))
+}
+
+/// GNOME: the style and the accent of the system, followed while the app runs. A change of the
+/// style goes to GTK (apply_color_scheme); a change of the style or of the accent is told to the
+/// page (« system-appearance »: it reads system_accent again).
+#[cfg(target_os = "linux")]
+fn watch_appearance(handle: AppHandle) {
+    use gtk::gio::prelude::SettingsExt;
+    let Some(settings) = gnome_interface() else { return };
+    apply_color_scheme(&settings);
+    settings.connect_changed(None, move |settings, key| {
+        if key == "color-scheme" {
+            apply_color_scheme(settings);
+        }
+        if matches!(key, "color-scheme" | "accent-color" | "gtk-theme") {
+            let _ = handle.emit("system-appearance", ());
+        }
+    });
+    // Watched as long as the app runs
+    std::mem::forget(settings);
+}
+
 /// The theme of the page for the window: [theme] "light" or "dark" when the user picked one,
 /// null when the app follows the system (Préférences › Thème › Système): the window and the
 /// webview then follow it too, and the page sees the system change (prefers-color-scheme). A
@@ -204,11 +252,32 @@ fn window_acrylic(window: tauri::WebviewWindow, on: bool, backdrop: tauri::State
 /// new theme by itself: it is put back).
 #[tauri::command]
 fn window_theme(window: tauri::WebviewWindow, theme: Option<String>, dark: bool, backdrop: tauri::State<'_, Backdrop>) {
-    let _ = window.set_theme(match theme.as_deref() {
+    let forced = match theme.as_deref() {
         Some("dark") => Some(tauri::Theme::Dark),
         Some("light") => Some(tauri::Theme::Light),
         _ => None,
-    });
+    };
+    // Linux: set_theme(None) puts GTK back to light, whatever the style of GNOME (and the page,
+    // which follows it, came back to light at once): the style of GNOME is given instead
+    #[cfg(target_os = "linux")]
+    if forced.is_some() {
+        let _ = window.set_theme(forced);
+    }
+    #[cfg(not(target_os = "linux"))]
+    let _ = window.set_theme(forced);
+    // Linux: back to the system's theme, the style of GNOME again; a theme picked in the app: the
+    // changes of the system are left aside
+    #[cfg(target_os = "linux")]
+    {
+        FOLLOW_SYSTEM.store(theme.is_none(), std::sync::atomic::Ordering::Relaxed);
+        if theme.is_none() {
+            let _ = window.run_on_main_thread(|| {
+                if let Some(settings) = gnome_interface() {
+                    apply_color_scheme(&settings);
+                }
+            });
+        }
+    }
     #[cfg(windows)]
     {
         if let Ok(hwnd) = window.hwnd() {
@@ -268,6 +337,8 @@ fn main() {
                     }
                 });
             }
+            #[cfg(target_os = "linux")]
+            watch_appearance(app.handle().clone());
             let _ = app;
             Ok(())
         })

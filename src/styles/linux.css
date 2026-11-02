@@ -297,18 +297,40 @@
 
 /* ============================== Dialogs (AdwDialog), toasts (AdwToast), menus */
 
-:root[data-desktop="linux"] .tb-scrim { background: rgb(0 0 6 / .25); }
+/* Every dialog of the app (tb-sheet) as an AdwDialog: over the whole window, header bar
+   included; no outline of its own; its header bar flat, the title in the middle, the small round
+   close button at the end (as adw-dialog.ts) */
+:root[data-desktop="linux"] .tb-scrim { z-index: 3100; background: rgb(0 0 6 / .25); animation: adw-dim-in .2s ease-out both; }
+:root[data-desktop="linux"][data-theme="dark"] .tb-scrim { background: rgb(0 0 6 / .45); }
+:root[data-desktop="linux"] .tb-scrim.tb-scrim-closed { animation: adw-dim-out .2s ease-in both; }
 :root[data-desktop="linux"] .tb-dialog {
     border: 0;
     border-radius: 15px;
     background: var(--lx-dialog);
-    box-shadow: var(--tb-raised-3);
-    animation-duration: .25s;
+    color: var(--lx-fg);
+    box-shadow: 0 0 0 1px rgb(0 0 6 / .05), 0 4px 14px 2px rgb(0 0 6 / .15), 0 10px 32px 4px rgb(0 0 6 / .1);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    animation: adw-dialog-in .3s cubic-bezier(.05, .7, .1, 1) both;
 }
-:root[data-desktop="linux"] .tb-dialog-head { justify-content: center; text-align: center; }
-:root[data-desktop="linux"] .tb-dialog-close { border-radius: 50%; background: var(--lx-veil); width: 24px; min-width: 24px; height: 24px; }
+:root[data-desktop="linux"][data-theme="dark"] .tb-dialog { background: #2e2e32; box-shadow: 0 0 0 1px rgb(0 0 6 / .5), 0 4px 14px 2px rgb(0 0 6 / .4), 0 10px 32px 4px rgb(0 0 6 / .3); }
+:root[data-desktop="linux"] .tb-dialog.tb-closing { animation: adw-dialog-out .2s ease-in both; }
+:root[data-desktop="linux"] .tb-dialog:focus, :root[data-desktop="linux"] .tb-dialog:focus-visible { outline: none; }
+:root[data-desktop="linux"] .tb-dialog-head {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr) 34px;
+    align-items: center;
+    gap: 6px;
+    min-height: 47px;
+    padding: 6px 7px;
+}
+:root[data-desktop="linux"] .tb-dialog-head h2 { grid-column: 2; margin: 0; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--lx-fg); }
+:root[data-desktop="linux"] .tb-dialog-close { grid-column: 3; justify-self: end; margin-right: 5px; border-radius: 50%; background: var(--lx-veil); width: 24px; min-width: 24px; height: 24px; padding: 0; }
+:root[data-desktop="linux"] .tb-dialog-close:hover { background: var(--lx-veil-hover); }
+:root[data-desktop="linux"] .tb-dialog-close .pi { font-size: 11px; }
+:root[data-desktop="linux"] .tb-dialog-body { padding: 6px 24px 24px; color: var(--lx-fg); }
 /* Toasts: a dark pill at the bottom, in the middle (AdwToastOverlay) */
-:root[data-desktop="linux"] .tb-toasts { top: auto; bottom: 24px; left: 50%; right: auto; transform: translateX(-50%); align-items: center; width: min(520px, calc(100vw - 32px)); }
+:root[data-desktop="linux"] .tb-toasts { z-index: 3300; top: auto; bottom: 24px; left: 50%; right: auto; transform: translateX(-50%); align-items: center; width: min(520px, calc(100vw - 32px)); }
 :root[data-desktop="linux"] .tb-toast {
     align-items: center;
     padding: 6px 40px 6px 16px;
@@ -522,7 +544,6 @@
 
 /* ============================== Motion of Adwaita: short, eased, nothing that bounces */
 
-:root[data-desktop="linux"] .tb-dialog { animation-timing-function: cubic-bezier(.25, .46, .45, .94); }
 
 /* ============================== Between pages: AdwNavigationView (transitions.ts) */
 
@@ -622,7 +643,7 @@
 :root[data-desktop="linux"] .tb-adw-head-btn:active, :root[data-desktop="linux"] .tb-adw-head-btn.tb-adw-on { background: var(--lx-flat-active); }
 :root[data-desktop="linux"] .tb-adw-head-btn:focus-visible { outline: 2px solid var(--lx-focus); outline-offset: -2px; }
 /* The close button of AdwDialog: a small round button with a veil */
-:root[data-desktop="linux"] .tb-adw-close { justify-self: end; }
+:root[data-desktop="linux"] .tb-adw-close { grid-column: 3; justify-self: end; }
 :root[data-desktop="linux"] .tb-adw-close { width: 24px; height: 24px; border-radius: 50%; background: var(--lx-veil); margin-right: 5px; }
 :root[data-desktop="linux"] .tb-adw-close:hover { background: var(--lx-veil-hover); }
 :root[data-desktop="linux"] .tb-adw-close:active { background: var(--lx-veil-active); }

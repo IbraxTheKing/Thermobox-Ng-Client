@@ -83,6 +83,15 @@ export class AccentService {
     this.doc.addEventListener('visibilitychange', () => {
       if (this.doc.visibilityState === 'visible') void this.readSystem();
     });
+    // Desktop: the window stays visible while the settings of the system are open beside it; it
+    // gets the focus back after
+    addEventListener('focus', () => void this.readSystem());
+    // Linux (GNOME): told as soon as the accent changes (main.rs, watch_appearance)
+    if (DESKTOP_OS === 'linux') {
+      void import('@tauri-apps/api/event')
+        .then(({ listen }) => listen('system-appearance', () => void this.readSystem()))
+        .catch(() => undefined);
+    }
     effect(() => this.apply(this.seed()));
   }
 
