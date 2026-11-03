@@ -29,6 +29,14 @@ import { RoomSummary } from './summary';
 import { TrPipe } from '../../ui/tr.pipe';
 import { MenuList, SEPARATOR, TbContextMenu } from '../../core/context-menu';
 
+/** Curves that could not be read: asked again after this long (ms). */
+const RETRY = 5000;
+
+/** The same keys in both sets. */
+function sameKeys(a: Set<string>, b: Set<string>): boolean {
+  return a.size === b.size && [...a].every((k) => b.has(k));
+}
+
 /** The rooms of a building (or those without building when [batiment] is null). */
 interface BuildingGroup {
   building: Node | null;
@@ -132,14 +140,20 @@ export class DashboardPage implements OnInit, OnDestroy {
       this.pinned.set(back);
       setTimeout(() => this.pinned.set(null), 2000);
     }
-    // The curves of the cards drawn, as they come (not those of hundreds of rooms never seen)
+    // The curves of the cards drawn, as they come (not those of hundreds of rooms never seen). At
+    // most every 150 ms, not 150 ms after the last change: a page whose cards drawn kept changing
+    // (a scroll that does not stop, blocks drawn and taken away in turn) never asked for them,
+    // its cards waited for their curves until the page was opened again
     let pending: ReturnType<typeof setTimeout> | undefined;
-    effect((onCleanup) => {
-      const ids = this.shownIds();
-      if (!this.started) return;
-      pending = setTimeout(() => void untracked(() => this.loadTrends(true, [...ids], false)), 150);
-      onCleanup(() => clearTimeout(pending));
+    effect(() => {
+      this.shownIds();
+      if (!this.started || pending) return;
+      pending = setTimeout(() => {
+        pending = undefined;
+        void untracked(() => this.loadTrends(true, [...this.shownIds()], false));
+      }, 150);
     });
+    inject(DestroyRef).onDestroy(() => clearTimeout(pending));
   }
   /** The first curves were asked for (ngOnInit): later ones follow the cards drawn. */
   private started = false;
@@ -402,10 +416,21 @@ export class DashboardPage implements OnInit, OnDestroy {
       if (block) this.rowHeight = (heights.get(block.key)! - (block.rows - 1) * this.rowGap) / block.rows;
     }
     const old = this.drawnKeys();
+    // Going back to the blocks drawn just before (a block drawn moved the page, which took it
+    // away, which moved the page back…): both stay drawn, the page settles
+    const now = performance.now();
+    if (old && this.before && now - this.beforeAt < 600 && sameKeys(keys, this.before)) for (const k of old) keys.add(k);
     const redraw = !old || old.size !== keys.size || [...keys].some((k) => !old.has(k));
     if (changed || redraw) this.holdPlace();
-    if (redraw) this.drawnKeys.set(keys);
+    if (redraw) {
+      this.before = old;
+      this.beforeAt = now;
+      this.drawnKeys.set(keys);
+    }
   }
+  /** The blocks drawn before the last change, and when it came. */
+  private before: Set<string> | null = null;
+  private beforeAt = 0;
 
   /**
    * The cards on the screen stay where they are while blocks above them are drawn or measured
@@ -782,6 +807,8 @@ export class DashboardPage implements OnInit, OnDestroy {
       this.cache.write(TRENDS_KEY, m);
     } catch {
       if (!this.trends()) this.trends.set(new Map(wanted.map((id) => [id, null])));
+      // Asked again a little later, not only when the cards drawn change or at the next poll
+      else setTimeout(() => this.host.isConnected && void this.loadTrends(true, [...this.shownIds()], false), RETRY);
     } finally {
       for (const id of wanted) this.trendsAsked.delete(id);
     }
