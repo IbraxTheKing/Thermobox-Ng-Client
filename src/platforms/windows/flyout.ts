@@ -1,4 +1,4 @@
-import type { MenuEntry } from './context-menu';
+import type { MenuEntry } from '../../app/core/context-menu';
 
 /**
  * Windows: the menus of the app as the MenuFlyout of WinUI 3 (the menus of the apps of Windows 11:

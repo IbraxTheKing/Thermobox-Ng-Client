@@ -16,7 +16,7 @@ import {
   viewChild,
 } from '@angular/core';
 
-import { nativeMenu } from '../core/android-native';
+import { NativeUi } from '../core/native-ui';
 
 let next = 0;
 
@@ -87,6 +87,7 @@ const CLOSING_DURATION = 320;
 export class TbSheet {
   private readonly doc = inject(DOCUMENT);
   private readonly injector = inject(Injector);
+  private readonly nativeUi = inject(NativeUi);
 
   readonly open = model(false);
   readonly title = input('');
@@ -127,7 +128,7 @@ export class TbSheet {
     clearTimeout(this.timer);
     this.focusBefore = this.doc.activeElement as HTMLElement | null;
     this.closing.set(false);
-    const native = this.nativeMenu() && !!nativeMenu;
+    const native = this.nativeMenu() && !!this.nativeUi.menu;
     this.isNative.set(native);
     this.visible.set(true);
     if (native) {
@@ -198,6 +199,7 @@ export class TbSheet {
 
   private async openNativeMenu(): Promise<void> {
     const box = this.box()?.nativeElement;
+    const nativeMenu = this.nativeUi.menu;
     if (!box || !nativeMenu) return;
     const items = [...box.querySelectorAll<HTMLElement>('.tb-sheet-item')];
     if (!items.length) {

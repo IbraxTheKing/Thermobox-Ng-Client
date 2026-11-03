@@ -1,6 +1,6 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 
-import { nativeMessages } from './android-native';
+import { NativeUi } from './native-ui';
 
 export type Severity = 'info' | 'warn' | 'error';
 
@@ -14,6 +14,7 @@ export interface Toast {
 /** Notifications (p:growl of the JSF interface): a title, an optional detail, gone after a while. */
 @Injectable({ providedIn: 'root' })
 export class ToastService {
+  private readonly native = inject(NativeUi).messages;
   readonly toasts = signal<Toast[]>([]);
   private next = 1;
 
@@ -35,8 +36,8 @@ export class ToastService {
 
   private add(severity: Severity, title: string, detail?: string | null, duration = 4500): void {
     // Android app: a Material snackbar, above the navigation bar
-    if (nativeMessages) {
-      nativeMessages.snackbar(detail ? `${title} — ${detail}` : title, severity === 'error' || !!detail);
+    if (this.native) {
+      this.native.snackbar(detail ? `${title} — ${detail}` : title, severity === 'error' || !!detail);
       return;
     }
     const id = this.next++;
@@ -58,11 +59,12 @@ export interface Confirmation {
 /** "Are you sure?" before deleting (p:confirm). */
 @Injectable({ providedIn: 'root' })
 export class ConfirmService {
+  private readonly native = inject(NativeUi).messages;
   readonly current = signal<Confirmation | null>(null);
 
   ask(title: string, message: string, options: { confirm?: string; danger?: boolean } = {}): Promise<boolean> {
     // Android app: a Material dialog
-    if (nativeMessages) return nativeMessages.confirm(title, message, options.confirm ?? $localize`Confirmer`, options.danger ?? true);
+    if (this.native) return this.native.confirm(title, message, options.confirm ?? $localize`Confirmer`, options.danger ?? true);
     this.current()?.resolve(false);
     return new Promise((resolve) => {
       this.current.set({ title, message, confirm: options.confirm ?? $localize`Confirmer`, danger: options.danger ?? true, resolve });

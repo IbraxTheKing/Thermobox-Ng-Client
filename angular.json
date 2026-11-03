@@ -26,7 +26,7 @@
               }
             ],
             "styles": [
-              "src/styles.css"
+              "src/platforms/web/styles.css"
             ],
             "define": {
               "THERMOBOX_VERSION": "\"dev\"",
@@ -57,6 +57,63 @@
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
+            },
+            "android": {
+              "styles": [
+                "src/platforms/android/styles.css"
+              ],
+              "fileReplacements": [
+                {
+                  "replace": "src/platforms/current.ts",
+                  "with": "src/platforms/current.android.ts"
+                }
+              ]
+            },
+            "ios": {
+              "styles": [
+                "src/platforms/ios/styles.css"
+              ],
+              "fileReplacements": [
+                {
+                  "replace": "src/platforms/current.ts",
+                  "with": "src/platforms/current.ios.ts"
+                }
+              ]
+            },
+            "windows": {
+              "styles": [
+                "src/platforms/windows/styles.css"
+              ],
+              "fileReplacements": [
+                {
+                  "replace": "src/platforms/current.ts",
+                  "with": "src/platforms/current.windows.ts"
+                }
+              ],
+              "index": "src/platforms/windows/index.html"
+            },
+            "macos": {
+              "styles": [
+                "src/platforms/macos/styles.css"
+              ],
+              "fileReplacements": [
+                {
+                  "replace": "src/platforms/current.ts",
+                  "with": "src/platforms/current.macos.ts"
+                }
+              ]
+            },
+            "linux": {
+              "styles": [
+                "src/platforms/linux/styles.css"
+              ],
+              "fileReplacements": [
+                {
+                  "replace": "src/platforms/current.ts",
+                  "with": "src/platforms/current.linux.ts"
+                }
+              ],
+              "index": "src/platforms/linux/index.html"
             }
           },
           "defaultConfiguration": "production"
@@ -69,6 +126,21 @@
             },
             "development": {
               "buildTarget": "Thermobox-Ng-Client:build:development"
+            },
+            "android": {
+              "buildTarget": "Thermobox-Ng-Client:build:development,android"
+            },
+            "ios": {
+              "buildTarget": "Thermobox-Ng-Client:build:development,ios"
+            },
+            "windows": {
+              "buildTarget": "Thermobox-Ng-Client:build:development,windows"
+            },
+            "macos": {
+              "buildTarget": "Thermobox-Ng-Client:build:development,macos"
+            },
+            "linux": {
+              "buildTarget": "Thermobox-Ng-Client:build:development,linux"
             }
           },
           "defaultConfiguration": "development",

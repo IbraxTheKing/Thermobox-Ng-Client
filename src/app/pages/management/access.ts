@@ -22,8 +22,7 @@ import { PlatformService } from '../../core/platform';
 import { FlipService } from '../../core/flip';
 import { followSelectionBar } from '../../ui/selection-bar';
 import { TrPipe } from '../../ui/tr.pipe';
-import { MenuList, SEPARATOR, TbContextMenu, showMenu } from '../../core/context-menu';
-import { TAURI } from '../../core/tauri';
+import { MenuList, SEPARATOR, TbContextMenu, hasMenus, showMenu } from '../../core/context-menu';
 import { ServerService } from '../../core/api.config';
 import { ApiVersionService } from '../../core/api-version';
 import { UserImportService } from '../../services/user-import.service';
@@ -128,7 +127,7 @@ export class AccessTab implements OnInit {
    */
   protected groupFilterClick(e: MouseEvent): void {
     const choices = this.groupChoices();
-    if (!TAURI || choices.length > 30) {
+    if (!hasMenus() || choices.length > 30) {
       this.groupsOpen.set(!this.groupsOpen());
       return;
     }

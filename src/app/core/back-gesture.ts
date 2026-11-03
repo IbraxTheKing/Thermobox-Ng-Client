@@ -3,7 +3,7 @@ import { DestroyRef, Injectable, inject } from '@angular/core';
 import { NavigationEnd, NavigationCancel, NavigationError, Router } from '@angular/router';
 import { filter, take } from 'rxjs';
 
-import { ANDROID_NATIVE } from './android-native';
+import { NativeUi } from './native-ui';
 import { PlatformService } from './platform';
 import { PreferencesService } from './preferences';
 import { TransitionsService } from './transitions';
@@ -22,7 +22,7 @@ const SPEED = 0.5;
  *
  * Needed in the installed app (home screen, iOS app), which has no back swipe of its own; in
  * Safari the swipe from the very edge still belongs to the browser. Not in the Android app: its
- * back gesture is the system's, from the edge, followed by the page (AndroidNativeService).
+ * back gesture is the system's, from the edge, followed by the page (platforms/android/).
  *
  *   inject(BackGestureService).activate(() => this.back());   // in the constructor of a page
  */
@@ -33,11 +33,12 @@ export class BackGestureService {
   private readonly platform = inject(PlatformService);
   private readonly prefs = inject(PreferencesService);
   private readonly transitions = inject(TransitionsService);
+  private readonly nativeUi = inject(NativeUi);
 
   /** For the page being built (call from its constructor): its swipe goes back with [back]. */
   activate(back: () => void): void {
-    // Android app: the back gesture of the system, from the edge (AndroidNativeService)
-    if (!('ontouchstart' in window) || ANDROID_NATIVE) return;
+    // Android app: the back gesture of the system, from the edge (platforms/android/)
+    if (!('ontouchstart' in window) || this.nativeUi.active) return;
     const root = this.doc.documentElement;
     let g: { x0: number; y0: number; t: number; dx: number; vx: number; mode: '?' | 'h' | 'non'; main: HTMLElement; passed: boolean } | null = null;
 

@@ -3,7 +3,7 @@ import { Injectable, InjectionToken, computed, inject, signal } from '@angular/c
 import { Capacitor } from '@capacitor/core';
 
 import { environment } from '../../environments/environment';
-import { TAURI } from './tauri';
+import { TARGET } from '../../platforms/current';
 
 /**
  * Default address of the ThermoBox REST API, before the user has chosen one on the login page.
@@ -13,7 +13,7 @@ import { TAURI } from './tauri';
 export const API_BASE_URL = new InjectionToken<string>('API_BASE_URL', {
   providedIn: 'root',
   // The apps (iOS, Android, desktop) have no server next to them: the address is asked
-  factory: () => (Capacitor.isNativePlatform() || TAURI ? environment.apiNative : environment.apiWeb),
+  factory: () => (Capacitor.isNativePlatform() || TARGET.desktopOs ? environment.apiNative : environment.apiWeb),
 });
 
 const KEY = 'tb-server';

@@ -155,7 +155,9 @@ pub fn set_options(app: &AppHandle, window: String, rendering: String) -> Result
     app.restart();
 }
 
-fn layout() -> Option<String> {
+/// Where the desktop puts the buttons of the windows (gtk-decoration-layout, as GNOME Tweaks
+/// sets it), « appmenu:minimize,maximize,close ».
+pub fn layout() -> Option<String> {
     gtk::Settings::default().and_then(|s| s.gtk_decoration_layout()).map(|l| l.to_string())
 }
 
@@ -170,9 +172,10 @@ fn natural_scroll() -> bool {
     touchpad().map_or(true, |s| s.boolean("natural-scroll"))
 }
 
-/// In setup: the native header bar if asked, the window shown (hidden until then:
-/// tauri.linux.conf.json), the changes of the desktop followed.
+/// In setup: the style of GNOME followed, the native header bar if asked, the window shown
+/// (hidden until then: tauri.linux.conf.json), the changes of the desktop followed.
 pub fn setup(app: &AppHandle) {
+    watch_appearance(app.clone());
     if let Some(w) = app.get_webview_window("main") {
         if native_window() {
             if let Ok(gw) = w.gtk_window() {
@@ -320,4 +323,93 @@ pub fn native_chrome(app: &AppHandle, chrome: NativeChrome) {
             c.menu.set_menu_model(Some(&model));
         });
     });
+}
+
+// ---------------------------------------------------------------- the style of GNOME
+
+/// GNOME: the accent chosen in Settings › Appearance, null on other desktops (or before 47).
+pub fn gnome_accent() -> Option<String> {
+    use gtk::gio::prelude::SettingsExt;
+    const SCHEMA: &str = "org.gnome.desktop.interface";
+    let source = gtk::gio::SettingsSchemaSource::default()?;
+    let schema = source.lookup(SCHEMA, true)?;
+    if !schema.has_key("accent-color") {
+        return None;
+    }
+    let name = gtk::gio::Settings::new(SCHEMA).string("accent-color");
+    let hex = match name.as_str() {
+        "blue" => "#3584e4",
+        "teal" => "#2190a4",
+        "green" => "#3a944a",
+        "yellow" => "#c88800",
+        "orange" => "#ed5b00",
+        "red" => "#e62d42",
+        "pink" => "#d56199",
+        "purple" => "#9141ac",
+        "slate" => "#6f8396",
+        _ => return None,
+    };
+    Some(hex.to_string())
+}
+
+/// Linux: the app follows the theme of the system (Préférences › Thème › Système), [window_theme].
+static FOLLOW_SYSTEM: AtomicBool = AtomicBool::new(true);
+
+/// GNOME: the light or dark style of the system (Settings › Appearance, the quick settings) is the
+/// color-scheme of org.gnome.desktop.interface. GTK 3 (Tauri, WebKitGTK) does not read it: the
+/// page kept the theme the app started with. Given to GTK as its prefer-dark-theme, which
+/// WebKitGTK follows (prefers-color-scheme in the page), when the app follows the system.
+fn apply_color_scheme(settings: &gtk::gio::Settings) {
+    use gtk::gio::prelude::SettingsExt;
+    use gtk::prelude::GtkSettingsExt;
+    if !FOLLOW_SYSTEM.load(Relaxed) {
+        return;
+    }
+    if let Some(gtk_settings) = gtk::Settings::default() {
+        gtk_settings.set_gtk_application_prefer_dark_theme(settings.string("color-scheme") == "prefer-dark");
+    }
+}
+
+/// GNOME: the settings of org.gnome.desktop.interface that have a color-scheme, if any.
+fn gnome_interface() -> Option<gtk::gio::Settings> {
+    const SCHEMA: &str = "org.gnome.desktop.interface";
+    let schema = gtk::gio::SettingsSchemaSource::default()?.lookup(SCHEMA, true)?;
+    schema.has_key("color-scheme").then(|| gtk::gio::Settings::new(SCHEMA))
+}
+
+/// GNOME: the style and the accent of the system, followed while the app runs. A change of the
+/// style goes to GTK (apply_color_scheme); a change of the style or of the accent is told to the
+/// page (« system-appearance »: it reads system_accent again).
+fn watch_appearance(handle: AppHandle) {
+    use gtk::gio::prelude::SettingsExt;
+    let Some(settings) = gnome_interface() else { return };
+    apply_color_scheme(&settings);
+    settings.connect_changed(None, move |settings, key| {
+        if key == "color-scheme" {
+            apply_color_scheme(settings);
+        }
+        if matches!(key, "color-scheme" | "accent-color" | "gtk-theme") {
+            let _ = handle.emit("system-appearance", ());
+        }
+    });
+    // Watched as long as the app runs
+    std::mem::forget(settings);
+}
+
+/// The theme of the window ([theme]: the one picked, null: the system's). set_theme(None) put GTK
+/// back to light, whatever the style of GNOME (and the page, which follows it, came back to light
+/// at once): the style of GNOME is given instead; a theme picked in the app: the changes of the
+/// system are left aside.
+pub fn window_theme(window: &tauri::WebviewWindow, theme: Option<&str>, forced: Option<tauri::Theme>) {
+    if forced.is_some() {
+        let _ = window.set_theme(forced);
+    }
+    FOLLOW_SYSTEM.store(theme.is_none(), Relaxed);
+    if theme.is_none() {
+        let _ = window.run_on_main_thread(|| {
+            if let Some(settings) = gnome_interface() {
+                apply_color_scheme(&settings);
+            }
+        });
+    }
 }

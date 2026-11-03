@@ -1,0 +1,24 @@
+/*
+ * macOS: the page is under the title bar (titleBarStyle Overlay); the traffic lights sit in the
+ * top left corner of the side bar, a strip lets the window be dragged (platforms/macos/).
+ */
+
+/* The settings window of macOS: the window is the page, its title under the traffic lights */
+:root body .tb-main.tb-standalone-window { padding-top: 38px; }
+
+.tb-mac-drag {
+    position: fixed;
+    inset: 0 0 auto 0;
+    z-index: 40;
+    height: 28px;
+}
+/* The traffic lights (about 70 × 28 px from the top left corner) inside the side bar */
+:root[data-desktop="macos"] .tb-rail { padding-top: 44px; }
+:root[data-desktop="macos"] .tb-rail-fold { top: 44px; }
+@media (min-width: 1200px) and (not ((orientation: landscape) and (max-height: 520px))) {
+    :root[data-desktop="macos"]:not([data-sidebar="collapsed"]) .tb-rail { padding-top: 48px; }
+    :root[data-desktop="macos"]:not([data-sidebar="collapsed"]) .tb-rail-fold { top: 46px; }
+}
+:root[data-desktop="macos"] .tb-topbar { padding-left: 84px; }
+/* The fonts of the system on a Mac app, the figures stay ThermoBox's */
+:root[data-desktop="macos"] body { -webkit-font-smoothing: antialiased; }

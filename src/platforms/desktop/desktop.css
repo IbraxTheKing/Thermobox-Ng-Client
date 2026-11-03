@@ -1,0 +1,58 @@
+/*
+ * The desktop apps (Tauri), every system: html[data-desktop="windows|macos|linux"]
+ * (platforms/desktop/). What is common to their windows; each system adds its own frame:
+ * platforms/windows (the title bar of WinUI 3), platforms/macos (under the traffic lights),
+ * platforms/linux (the header bar of GNOME).
+ */
+
+/* ============================== The login page: its corner of settings, the version */
+
+.tb-auth-corner {
+    position: fixed;
+    right: calc(16px + env(safe-area-inset-right));
+    bottom: calc(12px + env(safe-area-inset-bottom));
+    z-index: 20;
+    display: flex;
+    gap: 4px;
+}
+/* The version of the app, in the middle of the bottom of the login page */
+.tb-auth-version {
+    position: fixed;
+    left: 50%;
+    bottom: calc(18px + env(safe-area-inset-bottom));
+    z-index: 19;
+    margin: 0;
+    transform: translateX(-50%);
+    color: var(--md-on-surface-variant);
+    font-size: .8rem;
+    white-space: nowrap;
+    pointer-events: none;
+}
+.tb-auth-corner-btn { min-height: 36px; padding: 0 12px; color: var(--md-on-surface-variant); }
+.tb-auth-corner-btn:hover { color: var(--md-on-surface); }
+@media (max-width: 520px) {
+    .tb-auth-corner-btn span { display: none; }
+    .tb-auth-corner-btn { width: 40px; padding: 0; justify-content: center; }
+}
+
+/* The side bar of the desktop app: Préférences, then the account at the very bottom (its menu has
+   « Se déconnecter »); the name of Préférences only on Windows (windows.css) */
+.tb-rail-action-label { display: none; }
+.tb-rail-end-desktop .tb-rail-actions { order: 0; }
+
+/* ============================== The frame of the window, drawn by the page (Windows, Linux)
+
+   --tb-chrome-top: its height, set by the system's stylesheet */
+
+/* The page starts under the bar, and scrolls under it */
+:root[data-desktop] body { padding-top: var(--tb-chrome-top); }
+/* No side bar to fold: phones' bar at the bottom */
+@media (max-width: 840px) { .tb-titlebar-pane { display: none; } }
+
+/* What is fixed to the top of the window goes under the bar (Windows and Linux) */
+:root[data-desktop] .tb-rail { margin-top: var(--tb-chrome-top); }
+:root[data-desktop] .tb-topbar { top: var(--tb-chrome-top); }
+:root[data-desktop] .tb-toasts { top: calc(20px + var(--tb-chrome-top)); }
+:root[data-desktop] .tb-public .tb-main { min-height: calc(100dvh - var(--tb-chrome-top)); }
+/* A sheet or window of the page never covers the bar */
+:root[data-desktop] :is(.tb-sheet, .tb-dialog) { max-height: calc(100dvh - var(--tb-chrome-top) - 24px); }

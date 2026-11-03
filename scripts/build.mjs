@@ -7,6 +7,10 @@
  *   3. else "dev".
  * The commit (THERMOBOX_COMMIT, GITHUB_SHA or git) is written too. The arguments are passed to
  * ng build: npm run build -- --configuration development
+ *
+ * --target <platform>: the build of one platform (docs/platforms.md): web (the default), android,
+ * ios, windows, macos, linux. Its configuration of angular.json is added to the others
+ * (production by default): npm run build -- --target linux → --configuration production,linux.
  */
 import { spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
@@ -37,9 +41,27 @@ if (!ng) {
   console.error('With NODE_ENV=production, npm does not install the devDependencies: "npm install --include=dev".\n');
   process.exit(1);
 }
+const TARGETS = ['web', 'android', 'ios', 'windows', 'macos', 'linux'];
+const args = process.argv.slice(2);
+const t = args.findIndex((a) => a === '--target' || a.startsWith('--target='));
+if (t >= 0) {
+  const target = args[t].includes('=') ? args[t].split('=')[1] : args[t + 1];
+  args.splice(t, args[t].includes('=') ? 1 : 2);
+  if (!TARGETS.includes(target)) {
+    console.error(`Unknown target "${target}": ${TARGETS.join(', ')}`);
+    process.exit(1);
+  }
+  if (target !== 'web') {
+    const c = args.findIndex((a) => a === '--configuration' || a === '-c' || a.startsWith('--configuration='));
+    if (c < 0) args.push('--configuration', `production,${target}`);
+    else if (args[c].includes('=')) args[c] += `,${target}`;
+    else args[c + 1] += `,${target}`;
+  }
+  console.log(`Platform: ${target}`);
+}
 const r = spawnSync(
   process.execPath,
-  [ng, 'build', '--define', `THERMOBOX_VERSION=${JSON.stringify(v)}`, '--define', `THERMOBOX_COMMIT=${JSON.stringify(commit)}`, ...process.argv.slice(2)],
+  [ng, 'build', '--define', `THERMOBOX_VERSION=${JSON.stringify(v)}`, '--define', `THERMOBOX_COMMIT=${JSON.stringify(commit)}`, ...args],
   { stdio: 'inherit' },
 );
 if (r.error) console.error(r.error);

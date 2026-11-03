@@ -1,0 +1,31 @@
+/*
+ * The web client: the browsers. On a phone the navigation takes the look of its system (the user
+ * agent: PlatformService), so the looks of iOS and Android are here too.
+ *
+ * The shared styles of the client (src/styles/), in their order, with what is this platform's
+ * own (src/platforms/) right where it goes in the cascade. docs/platforms.md.
+ */
+
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+@import 'primeicons/primeicons.css';
+
+@import '../../styles/tokens.css';
+@import '../../styles/controls.css';
+@import '../../styles/base.css';
+@import '../../styles/pages.css';
+@import '../ios/pages.css';
+@import '../android/pages.css';
+@import '../../styles/shell.css';
+@import '../ios/shell-ios.css';
+@import '../android/shell-android.css';
+@import '../../styles/mobile.css';
+@import '../../styles/motion.css';
+@import '../ios/motion.css';
+@import '../../styles/theme.css';
+@import '../android/theme.css';
+@import '../../styles/theme-pages.css';
+@import '../ios/theme-ios.css';
+@import '../../styles/seasons.css';
+@import '../../styles/standalone.css';

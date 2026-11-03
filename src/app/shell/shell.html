@@ -11,7 +11,7 @@
 </header>
 
 <!-- Navigation rail (wide screens), bar at the bottom (phones) -->
-<nav class="tb-rail" [class.tb-lens-held]="input()" [class.tb-pane-open]="paneOpen()" i18n-aria-label aria-label="Navigation principale" (transitionend)="placeLens()" [attr.data-tauri-drag-region]="desktop.mac ? '' : null">
+<nav class="tb-rail" [class.tb-lens-held]="input()" [class.tb-pane-open]="paneOpen()" i18n-aria-label aria-label="Navigation principale" (transitionend)="placeLens()" [attr.data-tauri-drag-region]="desktop.dragRail ? '' : null">
   <a routerLink="/app/overview" class="tb-rail-brand" i18n-title title="Thermobox"><span class="tb-logo" aria-hidden="true"></span><span i18n class="tb-rail-brand-name">Thermobox</span></a>
   <!-- Computers: the side bar folds into a rail of icons, and back -->
   <button type="button" class="tb-rail-fold" (click)="fold()"

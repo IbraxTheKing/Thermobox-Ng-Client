@@ -12,23 +12,26 @@ import { NotificationService } from './core/notifications';
 import { AccentService } from './core/accent';
 import { ServerFeaturesService } from './services/server-features.service';
 import { TbConfirm, TbToasts } from './ui/hosts';
-import { TbDesktopChrome } from './ui/desktop-chrome';
 import { DesktopService } from './core/desktop';
-import { DESKTOP_OS } from './core/tauri';
-import { TbAdwDialog } from './ui/adw-dialog';
 import { TbSheet } from './ui/sheet';
+import { NgComponentOutlet } from '@angular/common';
+import { TARGET } from '../platforms/current';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, TbToasts, TbConfirm, TbDesktopChrome, TbAdwDialog, TbSheet],
+  imports: [RouterOutlet, TbToasts, TbConfirm, TbSheet, NgComponentOutlet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <tb-desktop-chrome />
+    <!-- The frame of the window of this platform (TARGET: the title bar of Windows…) -->
+    @for (c of target.rootComponents; track c) {
+      <ng-container *ngComponentOutlet="c" />
+    }
     <router-outlet />
     <tb-toasts />
     <tb-confirm />
-    @if (linux) {
-      <tb-adw-dialog />
+    <!-- Its dialogs (TARGET: Préférences and À propos of the Linux app) -->
+    @for (c of target.rootOverlays; track c) {
+      <ng-container *ngComponentOutlet="c" />
     }
     <!-- "?" : keyboard shortcuts (here, not in the shell: also from the settings of the login page) -->
     <tb-sheet class="tb-keyboard-sheet" [(open)]="keyboard.help" i18n-title title="Raccourcis clavier" [width]="760">
@@ -56,8 +59,8 @@ import { TbSheet } from './ui/sheet';
 })
 export class App {
   protected readonly keyboard = inject(KeyboardService);
-  /** The Linux app: Préférences and À propos as dialogs of libadwaita. */
-  protected readonly linux = DESKTOP_OS === 'linux';
+  /** The platform this build is for (platforms/). */
+  protected readonly target = TARGET;
 
   constructor() {
     // Theme, platform and shortcuts apply from the first page on
@@ -72,7 +75,7 @@ export class App {
     inject(SeasonService).start();
     inject(AccentService).start();
     inject(WindowColorService).start();
-    // Desktop app (Tauri): menu bar of macOS, links in the browser, the title bar of Windows
+    // Desktop app (Tauri): menu bar of macOS, links in the browser (platforms/desktop/)
     inject(DesktopService).start();
     // Apps: notifications of the setpoint (Préférences turns them on)
     inject(NotificationService).start();

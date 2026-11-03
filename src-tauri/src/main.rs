@@ -114,35 +114,9 @@ fn system_accent() -> Option<String> {
     #[cfg(windows)]
     return win::accent();
     #[cfg(target_os = "linux")]
-    return gnome_accent();
+    return linux::gnome_accent();
     #[cfg(not(any(windows, target_os = "linux")))]
     None
-}
-
-/// GNOME: the accent chosen in Settings › Appearance, null on other desktops (or before 47).
-#[cfg(target_os = "linux")]
-fn gnome_accent() -> Option<String> {
-    use gtk::gio::prelude::SettingsExt;
-    const SCHEMA: &str = "org.gnome.desktop.interface";
-    let source = gtk::gio::SettingsSchemaSource::default()?;
-    let schema = source.lookup(SCHEMA, true)?;
-    if !schema.has_key("accent-color") {
-        return None;
-    }
-    let name = gtk::gio::Settings::new(SCHEMA).string("accent-color");
-    let hex = match name.as_str() {
-        "blue" => "#3584e4",
-        "teal" => "#2190a4",
-        "green" => "#3a944a",
-        "yellow" => "#c88800",
-        "orange" => "#ed5b00",
-        "red" => "#e62d42",
-        "pink" => "#d56199",
-        "purple" => "#9141ac",
-        "slate" => "#6f8396",
-        _ => return None,
-    };
-    Some(hex.to_string())
 }
 
 /// The page has drawn its title bar (Windows and Linux, index.html): no need for the system's,
@@ -178,10 +152,7 @@ fn clipboard_text() -> Option<String> {
 #[tauri::command]
 fn decoration_layout() -> Option<String> {
     #[cfg(target_os = "linux")]
-    {
-        use gtk::prelude::GtkSettingsExt;
-        return gtk::Settings::default().and_then(|s| s.gtk_decoration_layout()).map(|l| l.to_string());
-    }
+    return linux::layout();
     #[cfg(not(target_os = "linux"))]
     None
 }
@@ -228,62 +199,15 @@ fn window_acrylic(window: tauri::WebviewWindow, on: bool, backdrop: tauri::State
     if !backdrop.supported.load(Relaxed) {
         return false;
     }
-    let done = if on {
-        window.set_effects(tauri::window::EffectsBuilder::new().effect(tauri::window::Effect::Acrylic).build())
-    } else {
-        window.set_effects(None)
+    #[cfg(windows)]
+    let shown = win::acrylic(&window, on);
+    #[cfg(not(windows))]
+    let shown = {
+        let _ = (&window, on);
+        false
     };
-    let shown = on && done.is_ok();
     backdrop.on.store(shown, Relaxed);
     shown
-}
-
-/// Linux: the app follows the theme of the system (Préférences › Thème › Système), [window_theme].
-#[cfg(target_os = "linux")]
-static FOLLOW_SYSTEM: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
-
-/// GNOME: the light or dark style of the system (Settings › Appearance, the quick settings) is the
-/// color-scheme of org.gnome.desktop.interface. GTK 3 (Tauri, WebKitGTK) does not read it: the
-/// page kept the theme the app started with. Given to GTK as its prefer-dark-theme, which
-/// WebKitGTK follows (prefers-color-scheme in the page), when the app follows the system.
-#[cfg(target_os = "linux")]
-fn apply_color_scheme(settings: &gtk::gio::Settings) {
-    use gtk::gio::prelude::SettingsExt;
-    use gtk::prelude::GtkSettingsExt;
-    if !FOLLOW_SYSTEM.load(std::sync::atomic::Ordering::Relaxed) {
-        return;
-    }
-    if let Some(gtk_settings) = gtk::Settings::default() {
-        gtk_settings.set_gtk_application_prefer_dark_theme(settings.string("color-scheme") == "prefer-dark");
-    }
-}
-
-/// GNOME: the settings of org.gnome.desktop.interface that have a color-scheme, if any.
-#[cfg(target_os = "linux")]
-fn gnome_interface() -> Option<gtk::gio::Settings> {
-    const SCHEMA: &str = "org.gnome.desktop.interface";
-    let schema = gtk::gio::SettingsSchemaSource::default()?.lookup(SCHEMA, true)?;
-    schema.has_key("color-scheme").then(|| gtk::gio::Settings::new(SCHEMA))
-}
-
-/// GNOME: the style and the accent of the system, followed while the app runs. A change of the
-/// style goes to GTK (apply_color_scheme); a change of the style or of the accent is told to the
-/// page (« system-appearance »: it reads system_accent again).
-#[cfg(target_os = "linux")]
-fn watch_appearance(handle: AppHandle) {
-    use gtk::gio::prelude::SettingsExt;
-    let Some(settings) = gnome_interface() else { return };
-    apply_color_scheme(&settings);
-    settings.connect_changed(None, move |settings, key| {
-        if key == "color-scheme" {
-            apply_color_scheme(settings);
-        }
-        if matches!(key, "color-scheme" | "accent-color" | "gtk-theme") {
-            let _ = handle.emit("system-appearance", ());
-        }
-    });
-    // Watched as long as the app runs
-    std::mem::forget(settings);
 }
 
 /// The theme of the page for the window: [theme] "light" or "dark" when the user picked one,
@@ -299,37 +223,14 @@ fn window_theme(window: tauri::WebviewWindow, theme: Option<String>, dark: bool,
         Some("light") => Some(tauri::Theme::Light),
         _ => None,
     };
-    // Linux: set_theme(None) puts GTK back to light, whatever the style of GNOME (and the page,
-    // which follows it, came back to light at once): the style of GNOME is given instead
+    // Linux: set_theme(None) puts GTK back to light, whatever the style of GNOME: the style of
+    // GNOME is given instead (linux.rs)
     #[cfg(target_os = "linux")]
-    if forced.is_some() {
-        let _ = window.set_theme(forced);
-    }
+    linux::window_theme(&window, theme.as_deref(), forced);
     #[cfg(not(target_os = "linux"))]
     let _ = window.set_theme(forced);
-    // Linux: back to the system's theme, the style of GNOME again; a theme picked in the app: the
-    // changes of the system are left aside
-    #[cfg(target_os = "linux")]
-    {
-        FOLLOW_SYSTEM.store(theme.is_none(), std::sync::atomic::Ordering::Relaxed);
-        if theme.is_none() {
-            let _ = window.run_on_main_thread(|| {
-                if let Some(settings) = gnome_interface() {
-                    apply_color_scheme(&settings);
-                }
-            });
-        }
-    }
     #[cfg(windows)]
-    {
-        if let Ok(hwnd) = window.hwnd() {
-            win::dark_mode(hwnd.0, dark);
-        }
-        if backdrop.on.load(std::sync::atomic::Ordering::Relaxed) {
-            let _ = window.set_effects(None);
-            let _ = window.set_effects(tauri::window::EffectsBuilder::new().effect(tauri::window::Effect::Acrylic).build());
-        }
-    }
+    win::window_theme(&window, dark, backdrop.on.load(std::sync::atomic::Ordering::Relaxed));
     let _ = (dark, backdrop);
 }
 
@@ -382,12 +283,10 @@ fn main() {
                     }
                 });
             }
+            // Linux: the style of GNOME followed, the header bar of GTK 3 if chosen, then the
+            // window (hidden until then)
             #[cfg(target_os = "linux")]
-            {
-                watch_appearance(app.handle().clone());
-                // The header bar of GTK 3 if chosen, then the window (hidden until then)
-                linux::setup(app.handle());
-            }
+            linux::setup(app.handle());
             let _ = app;
             Ok(())
         })

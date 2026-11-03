@@ -1,0 +1,20 @@
+/*
+ * android: what theme.css of the shared styles is for this platform only (imported right after it,
+ * src/platforms/android/styles.css). Generated from the shared file when the platforms were split.
+ */
+/* * The bar (and the rail) are a shade of the page behind them, not a tint of the brand: in
+ * « Maison », a room coloured by its temperature colours the bar too (BackgroundService, AndroidNativeService). */
+:root[data-platform="android"][data-theme] {
+    --tb-m3-surface: color-mix(in srgb, var(--md-on-surface) 3%, var(--tb-background));
+    --tb-m3-container: color-mix(in srgb, var(--md-on-surface) 6%, var(--tb-background));
+    --tb-m3-container-high: color-mix(in srgb, var(--md-on-surface) 9%, var(--tb-background));
+    --tb-m3-indicator: color-mix(in srgb, var(--md-on-surface) 14%, var(--tb-background));
+    --tb-m3-on-indicator: var(--md-on-surface);
+}
+
+/* ============================== Android: the native bar in the colours of the page ============================== */
+:root[data-platform="android"][data-theme][data-tint="on"][data-background]:not([data-style="panel"]) {
+    --tb-m3-surface: color-mix(in srgb, var(--md-on-surface) 3%, var(--tb-tint-page));
+    --tb-m3-container: color-mix(in srgb, var(--md-on-surface) 6%, var(--tb-tint-page));
+    --tb-m3-indicator: color-mix(in srgb, var(--md-on-surface) 14%, var(--tb-tint-page));
+}

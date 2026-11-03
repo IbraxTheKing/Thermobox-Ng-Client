@@ -8,7 +8,7 @@ import { firstValueFrom } from 'rxjs';
 import { ServerService } from './api.config';
 import { AuthService } from './auth';
 import { PreferencesService } from './preferences';
-import { TAURI } from './tauri';
+import { DesktopService } from './desktop';
 import { UnitService } from './unit';
 import { ToastService } from './messages';
 
@@ -65,9 +65,10 @@ export class NotificationService {
   private readonly router = inject(Router);
   private readonly toasts = inject(ToastService);
   private readonly doc = inject(DOCUMENT);
+  private readonly desktop = inject(DesktopService);
 
   /** The apps only: a browser tab is not kept open to notify. */
-  readonly available = Capacitor.isNativePlatform() || TAURI;
+  readonly available = Capacitor.isNativePlatform() || this.desktop.active;
   /** The server answers (ThermoBox 26.12 and later); null: not asked yet. */
   readonly supported = signal<boolean | null>(null);
   /** The system refused (Préférences says how to allow them). */
@@ -212,10 +213,8 @@ export class NotificationService {
       });
       return;
     }
-    if (TAURI) {
-      const { sendNotification } = await import('@tauri-apps/plugin-notification');
-      for (const n of texts) sendNotification({ title: n.title, body: n.body });
-    }
+    // The desktop apps: the notifications of their system
+    if (this.desktop.active) await this.desktop.notify(texts);
   }
 
   /** iOS / Android: a notification touched opens its room. */
@@ -237,11 +236,7 @@ export class NotificationService {
         if (p.display !== 'granted' && ask) p = await LocalNotifications.requestPermissions();
         return p.display === 'granted';
       }
-      if (TAURI) {
-        const n = await import('@tauri-apps/plugin-notification');
-        if (await n.isPermissionGranted()) return true;
-        return ask && (await n.requestPermission()) === 'granted';
-      }
+      if (this.desktop.active) return await this.desktop.notificationPermission(ask);
     } catch {
       return false;
     }

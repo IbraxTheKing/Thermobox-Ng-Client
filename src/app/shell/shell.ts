@@ -19,7 +19,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { filter, map } from 'rxjs';
 
-import { AndroidNativeService, NativeTab, nativeIcon } from '../core/android-native';
+import { NativeBar, NativeTab, NativeUi } from '../core/native-ui';
 import { AuthService } from '../core/auth';
 import { UpdateNoticeService } from '../core/update-notice';
 import { KeyboardService } from '../core/keyboard';
@@ -27,6 +27,7 @@ import { ActivityService } from '../core/http';
 import { PlatformService } from '../core/platform';
 import { PreferencesService } from '../core/preferences';
 import { DesktopService } from '../core/desktop';
+import { TARGET } from '../../platforms/current';
 import { TitleService } from '../core/title';
 import { TransitionsService } from '../core/transitions';
 import { SettingsService } from '../services/settings.service';
@@ -133,8 +134,9 @@ export class Shell implements OnInit, OnDestroy {
   /** The click that ends a slide of the lens must not open the tab it started on. */
   private ignoreClick = false;
 
-  /** Android app: the bar at the bottom is the native Material 3 one (core/android-natif.ts). */
-  private readonly native = inject(AndroidNativeService);
+  /** Android app: the bar at the bottom is the native Material 3 one (platforms/android/). */
+  private readonly native = inject(NativeBar);
+  private readonly nativeUi = inject(NativeUi);
 
   constructor() {
     if (this.native.active) {
@@ -148,7 +150,7 @@ export class Shell implements OnInit, OnDestroy {
         const tabs: NativeTab[] = dests.slice(0, slots).map((d) => ({
           id: d.link,
           label: d.label,
-          icon: nativeIcon(d.icon),
+          icon: this.nativeUi.icon(d.icon),
           badge: !!d.badge && this.notice.available(),
         }));
         tabs.push({
@@ -237,8 +239,9 @@ export class Shell implements OnInit, OnDestroy {
 
   /** The side bar of computers: names and icons, or icons only (morphs where it can). */
   protected fold(): void {
-    if (this.desktop.windows || this.desktop.linux) {
-      // As NavigationView: the pane opens or closes at once (windows.css), no picture morphing
+    if (TARGET.traits.overlayPane) {
+      // As NavigationView (Windows), AdwOverlaySplitView (GNOME): the pane opens or closes at
+      // once, over the page below 1200 px, no picture morphing
       if (innerWidth < 1200) {
         this.paneOpen.update((o) => !o);
         if (this.paneOpen()) setTimeout(() => this.doc.addEventListener('pointerdown', this.closePane, { capture: true }));
