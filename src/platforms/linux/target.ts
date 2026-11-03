@@ -34,6 +34,8 @@ export const TARGET: PlatformTarget = {
     // The window chosen (Préférences › Fenêtre), where the desktop puts the buttons of the windows
     const options = await readLinuxOptions();
     if (options?.window === 'gtk3') root.dataset['window'] = 'gtk3';
+    // The corners of the window rounded by linux.rs: the page rounds its own as well
+    if (options?.cornersRounded) root.dataset['rounded'] = '';
     root.dataset['buttons'] = closeAtStart(parseLayout(options?.layout)) ? 'start' : 'end';
     // The window drawn by the page: the scroll bar of the page drawn as the one of GTK 4, under
     // the header bar (the window of the system keeps the scroll bar of GTK 3, under its own)

@@ -3667,13 +3667,21 @@
     "fr": "Carte graphique",
     "en": "Graphics card"
   },
+  "4969599449551837865": {
+    "fr": "Coins arrondis",
+    "en": "Rounded corners"
+  },
+  "2339305326934187879": {
+    "fr": "Les coins de la fenêtre arrondis, comme ceux des applications GNOME. Sous Wayland, la fenêtre passe alors par XWayland.",
+    "en": "The corners of the window rounded, as those of GNOME apps. On Wayland, the window then goes through XWayland."
+  },
   "721178500544039717": {
     "fr": "Redémarrage nécessaire",
     "en": "Restart needed"
   },
-  "467531533664836429": {
-    "fr": "La fenêtre et le rendu changent au démarrage de l'application.",
-    "en": "The window and the rendering change when the app starts."
+  "1943662574703376400": {
+    "fr": "La fenêtre, ses coins et le rendu changent au démarrage de l'application.",
+    "en": "The window, its corners and the rendering change when the app starts."
   },
   "6272145995861403650": {
     "fr": "Redémarrer",

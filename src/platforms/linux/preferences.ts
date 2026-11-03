@@ -7,7 +7,7 @@ import { LinuxSettings } from './settings';
 
 /**
  * Préférences › Fenêtre, the Linux app: the window (drawn by the page, or the system's), its
- * rendering (the graphics card or the processor), the swipe back of the touchpad. A group of the
+ * corners, its rendering (the graphics card or the processor), the swipe back of the touchpad. A group of the
  * page itself (its element is the section.tb-pref-group: the rules of the page apply).
  */
 @Component({
@@ -47,12 +47,22 @@ import { LinuxSettings } from './settings';
             <button i18n type="button" role="radio" [attr.aria-checked]="linuxRendering() === 'cpu'" [class.tb-seg-on]="linuxRendering() === 'cpu'" (click)="linuxRendering.set('cpu')">Processeur</button>
           </div>
         </div>
+        @if (linuxWindow() === 'gnome') {
+          <div class="tb-pref">
+            <span class="tb-section-icon"><i class="pi pi-stop"></i></span>
+            <div class="tb-pref-text">
+              <strong i18n>Coins arrondis</strong>
+              <span i18n class="tb-muted">Les coins de la fenêtre arrondis, comme ceux des applications GNOME. Sous Wayland, la fenêtre passe alors par XWayland.</span>
+            </div>
+            <tb-switch [checked]="linuxRounded()" (checkedChange)="linuxRounded.set($event)" i18n-label label="Coins arrondis" />
+          </div>
+        }
         @if (linuxChanged()) {
           <div class="tb-pref tb-pref-restart" role="status">
             <span class="tb-section-icon"><i class="pi pi-refresh"></i></span>
             <div class="tb-pref-text">
               <strong i18n>Redémarrage nécessaire</strong>
-              <span i18n class="tb-muted">La fenêtre et le rendu changent au démarrage de l'application.</span>
+              <span i18n class="tb-muted">La fenêtre, ses coins et le rendu changent au démarrage de l'application.</span>
             </div>
             <button i18n type="button" class="tb-btn" (click)="restartLinux()">Redémarrer</button>
           </div>
@@ -75,12 +85,13 @@ export class TbLinuxPreferences {
   /** The window and the rendering picked here, applied when the app starts again. */
   protected readonly linuxWindow = signal(this.desktop.linuxOptions?.window ?? 'gnome');
   protected readonly linuxRendering = signal(this.desktop.linuxOptions?.rendering ?? 'auto');
+  protected readonly linuxRounded = signal(this.desktop.linuxOptions?.rounded ?? true);
   protected readonly linuxChanged = computed(() => {
     const o = this.desktop.linuxOptions;
-    return !!o && (this.linuxWindow() !== o.window || this.linuxRendering() !== o.rendering);
+    return !!o && (this.linuxWindow() !== o.window || this.linuxRendering() !== o.rendering || this.linuxRounded() !== o.rounded);
   });
 
   protected restartLinux(): void {
-    void this.desktop.setLinuxOptions(this.linuxWindow(), this.linuxRendering());
+    void this.desktop.setLinuxOptions(this.linuxWindow(), this.linuxRendering(), this.linuxRounded());
   }
 }

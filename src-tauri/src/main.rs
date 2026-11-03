@@ -169,12 +169,12 @@ fn linux_options() -> Option<serde_json::Value> {
 
 /// Linux: Préférences › Fenêtre, Rendu: stored, the app starts again with them.
 #[tauri::command]
-fn set_linux_options(app: AppHandle, window: String, rendering: String) -> Result<(), String> {
+fn set_linux_options(app: AppHandle, window: String, rendering: String, rounded: bool) -> Result<(), String> {
     #[cfg(target_os = "linux")]
-    return linux::set_options(&app, window, rendering);
+    return linux::set_options(&app, window, rendering, rounded);
     #[cfg(not(target_os = "linux"))]
     {
-        let _ = (app, window, rendering);
+        let _ = (app, window, rendering, rounded);
         Err("Linux only".into())
     }
 }
