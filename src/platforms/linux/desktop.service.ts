@@ -7,6 +7,10 @@ export interface LinuxOptions {
   /** « gnome »: drawn by the page (GTK 4 look); « gtk3 »: the window of the system. */
   window: 'gnome' | 'gtk3';
   rendering: 'auto' | 'gpu' | 'cpu';
+  /** The corners of the window drawn by the page rounded, as chosen. */
+  rounded: boolean;
+  /** Rounded now: chosen, and the desktop can show them (a compositor: linux.rs). */
+  cornersRounded: boolean;
   /** WebKitGTK draws with the processor now. */
   software: boolean;
   /** « auto » picks the processor on this computer (no graphics card: virtual machine, WSL). */
@@ -89,10 +93,10 @@ export class LinuxDesktopService extends TauriDesktopService {
     await invoke('native_chrome', { chrome }).catch(() => undefined);
   }
 
-  /** Préférences › Fenêtre, Rendu: stored by linux.rs, then the app starts again with them. */
-  async setLinuxOptions(window: LinuxOptions['window'], rendering: LinuxOptions['rendering']): Promise<void> {
+  /** Préférences › Fenêtre, Rendu, Coins arrondis: stored by linux.rs, then the app starts again with them. */
+  async setLinuxOptions(window: LinuxOptions['window'], rendering: LinuxOptions['rendering'], rounded: boolean): Promise<void> {
     const { invoke } = await import('@tauri-apps/api/core');
-    await invoke('set_linux_options', { window, rendering });
+    await invoke('set_linux_options', { window, rendering, rounded });
   }
 
   protected override async listen(): Promise<void> {

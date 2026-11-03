@@ -82,7 +82,7 @@ import java.util.Map;
 @CapacitorPlugin(name = "ThermoboxNative")
 public class ThermoboxNativePlugin extends Plugin {
 
-    /** Drawables of the plugin, by the name the page gives (core/android-native.ts). */
+    /** Drawables of the plugin, by the name the page gives (src/platforms/android/native.ts). */
     private static final Map<String, Integer> ICONS = new HashMap<>();
 
     static {

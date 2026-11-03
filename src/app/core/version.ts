@@ -1,4 +1,4 @@
-/** Inscrits par scripts/construire.mjs (npm run build), « dev » / vide autrement (angular.json). */
+/** Written by scripts/build.mjs (npm run build), « dev » / empty otherwise (angular.json). */
 declare const THERMOBOX_VERSION: string;
 declare const THERMOBOX_COMMIT: string;
 

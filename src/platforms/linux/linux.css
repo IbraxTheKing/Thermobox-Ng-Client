@@ -9,9 +9,9 @@
  *   entries without border, the switch of GTK, toggle groups, toasts as pills at the bottom
  * - the sidebar of an AdwOverlaySplitView (shown or hidden whole, never a strip of icons), the
  *   header bar split over it and over the page, the main menu (open-menu) native of GTK
- * - the window square, its outline drawn (the window is not transparent: tauri.linux.conf.json;
- *   a transparent window kept WebKitGTK from painting the page, drawing with the processor,
- *   but where something changed)
+ * - the corners of the window rounded (12 px, data-rounded: linux.rs cuts the window, the page
+ *   follows with its outline and its header bar) or square (Préférences › Fenêtre, Wayland,
+ *   maximized), its outline drawn
  *
  * What makes ThermoBox stays: its green accent (or the palette chosen in Préférences), its logo,
  * the colours of the states (stable, en chauffe, trop chaud), the tint of a room in « Maison ».
@@ -33,7 +33,7 @@
     --tb-shape-xl: 12px;
     --tb-shape-xxl: 15px;
 
-    /* The corners of the window: square (an opaque window, tauri.linux.conf.json) */
+    /* The corners of the window: square, unless linux.rs rounds them (below) */
     --lx-radius: 0px;
 
     /* libadwaita, light */
@@ -130,7 +130,8 @@
     --tb-raised-2: 0 1px 5px 1px rgb(0 0 6 / .3), 0 2px 14px 3px rgb(0 0 6 / .2);
     --tb-raised-3: 0 0 0 1px rgb(0 0 6 / .3), 0 4px 14px 2px rgb(0 0 6 / .4), 0 10px 32px 4px rgb(0 0 6 / .3);
 }
-:root[data-desktop="linux"][data-maximized] { --lx-radius: 0px; }
+:root[data-desktop="linux"][data-rounded] { --lx-radius: 12px; }
+:root[data-desktop="linux"][data-rounded][data-maximized] { --lx-radius: 0px; }
 
 /* ============================== The window and its outline */
 

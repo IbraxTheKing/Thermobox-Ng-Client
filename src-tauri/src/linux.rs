@@ -1,8 +1,7 @@
 //! Linux: what the app takes from the desktop, and the two ways it can draw its window.
 //!
 //! - The window: « gnome » (the default), the page draws a header bar in the style of GNOME 4
-//!   (libadwaita), the window square (not transparent: a transparent window kept WebKitGTK,
-//!   drawing with the processor, from painting the page but where something changed); « gtk3 », the window of the
+//!   (libadwaita), its corners rounded ([round_corners]) or square; « gtk3 », the window of the
 //!   system, decorated by GTK 3 with a real header bar (GtkHeaderBar): back, the sidebar, the
 //!   title of the page and the main menu are native buttons and a native popover, the buttons of
 //!   the window those of the desktop. The page tells what they show ([native_chrome]).
@@ -23,6 +22,7 @@ use std::sync::atomic::{AtomicBool, Ordering::Relaxed};
 use std::sync::OnceLock;
 
 use gtk::gio;
+use gtk::glib;
 use gtk::gio::prelude::*;
 use gtk::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -36,11 +36,13 @@ pub struct Options {
     pub window: String,
     /// "auto", "gpu" or "cpu".
     pub rendering: String,
+    /// The corners of the window drawn by the page rounded, as GNOME's (« gnome » only).
+    pub rounded: bool,
 }
 
 impl Default for Options {
     fn default() -> Self {
-        Options { window: "gnome".into(), rendering: "auto".into() }
+        Options { window: "gnome".into(), rendering: "auto".into(), rounded: true }
     }
 }
 
@@ -51,6 +53,8 @@ static SOFTWARE: AtomicBool = AtomicBool::new(false);
 /// WEBKIT_DISABLE_COMPOSITING_MODE was set here, not by the user: taken away before the app
 /// starts again, or the new process would inherit it whatever the new choice.
 static SET_HERE: AtomicBool = AtomicBool::new(false);
+/// The corners of the window are rounded in this run.
+static ROUNDED: AtomicBool = AtomicBool::new(false);
 
 fn options() -> Options {
     OPTIONS.get().cloned().unwrap_or_default()
@@ -119,6 +123,10 @@ pub fn native_window() -> bool {
 pub struct Info {
     window: String,
     rendering: String,
+    /// The corners rounded, as chosen.
+    rounded: bool,
+    /// The corners rounded now: chosen, and a compositor to show them ([round_corners]).
+    corners_rounded: bool,
     /// Drawn by the processor now.
     software: bool,
     /// What « auto » picks on this computer: the processor.
@@ -134,6 +142,8 @@ pub fn info() -> Info {
     Info {
         window: o.window,
         rendering: o.rendering,
+        rounded: o.rounded,
+        corners_rounded: ROUNDED.load(Relaxed),
         software: SOFTWARE.load(Relaxed),
         auto_software: software_only(),
         layout: layout(),
@@ -142,8 +152,8 @@ pub fn info() -> Info {
 }
 
 /// Préférences: stored, then the app starts again with them.
-pub fn set_options(app: &AppHandle, window: String, rendering: String) -> Result<(), String> {
-    let opts = Options { window, rendering };
+pub fn set_options(app: &AppHandle, window: String, rendering: String, rounded: bool) -> Result<(), String> {
+    let opts = Options { window, rendering, rounded };
     let path = file().ok_or("no folder for the settings")?;
     if let Some(dir) = path.parent() {
         std::fs::create_dir_all(dir).map_err(|e| e.to_string())?;
@@ -177,9 +187,11 @@ fn natural_scroll() -> bool {
 pub fn setup(app: &AppHandle) {
     watch_appearance(app.clone());
     if let Some(w) = app.get_webview_window("main") {
-        if native_window() {
-            if let Ok(gw) = w.gtk_window() {
+        if let Ok(gw) = w.gtk_window() {
+            if native_window() {
                 build_chrome(app, &gw);
+            } else if options().rounded {
+                round_corners(&gw);
             }
         }
         let _ = w.show();
@@ -199,6 +211,70 @@ pub fn setup(app: &AppHandle) {
         // Watched as long as the app runs
         std::mem::forget(t);
     }
+}
+
+// ---------------------------------------------------------------- the rounded corners (« gnome »)
+
+/// The radius of the corners of a window of GNOME (libadwaita: 12 px), as --lx-radius.
+const RADIUS: i32 = 12;
+
+/// The corners of the window rounded, the page staying opaque: the window is cut.
+///
+/// Not Tauri's « transparent » window: it makes the page itself transparent, and WebKitGTK,
+/// drawing with the processor, then painted only what changed (the rest of the window stayed
+/// empty: the bug of a virtual machine). Nor a clip of what GTK draws: WebKit draws in a window
+/// of its own, which it does not reach. The shape of the window (the X Shape extension) is the
+/// rectangle without its four corners: the X server shows nothing
+/// outside, whatever draws inside; no compositor or alpha channel needed. The edge of the
+/// corners is not smoothed, the outline drawn by the page over it is.
+///
+/// Square when maximized, full screen or tiled (as GNOME). A Wayland session keeps them square,
+/// and the page with them ([Info::corners_rounded]): Wayland cuts no window, and running the app
+/// through XWayland for it left WebKitGTK of a virtual machine without painting the page.
+fn round_corners(window: &gtk::ApplicationWindow) {
+    let x11 = GtkWindowExt::screen(window).is_some_and(|s| s.display().type_().name().contains("X11"));
+    if !x11 {
+        return;
+    }
+    // The shape follows the size and the state of the window
+    window.connect_realize(shape);
+    window.connect_size_allocate(|window, _| shape(window));
+    window.connect_window_state_event(|window, _| {
+        shape(window);
+        glib::Propagation::Proceed
+    });
+    ROUNDED.store(true, Relaxed);
+}
+
+/// Maximized, full screen or tiled: square corners.
+fn square(window: &gtk::ApplicationWindow) -> bool {
+    window.window().is_some_and(|w| {
+        w.state().intersects(gtk::gdk::WindowState::MAXIMIZED | gtk::gdk::WindowState::FULLSCREEN | gtk::gdk::WindowState::TILED)
+    })
+}
+
+/// X11: the shape of the window, its rectangle without the four corners (row by row along the
+/// arcs), or none when square.
+fn shape(window: &gtk::ApplicationWindow) {
+    let Some(gw) = window.window() else { return };
+    if square(window) {
+        gw.shape_combine_region(None, 0, 0);
+        return;
+    }
+    let (w, h, r) = (window.allocated_width(), window.allocated_height(), RADIUS);
+    if w < 2 * r || h < 2 * r {
+        return;
+    }
+    let region = gtk::cairo::Region::create_rectangle(&gtk::cairo::RectangleInt::new(0, r, w, h - 2 * r));
+    for y in 0..r {
+        // How far the arc is from the side, on this row
+        let dy = r as f64 - y as f64 - 0.5;
+        let inset = (r as f64 - (r as f64 * r as f64 - dy * dy).max(0.0).sqrt()).round() as i32;
+        let row = |top: i32| gtk::cairo::RectangleInt::new(inset, top, w - 2 * inset, 1);
+        let _ = region.union_rectangle(&row(y));
+        let _ = region.union_rectangle(&row(h - 1 - y));
+    }
+    gw.shape_combine_region(Some(&region), 0, 0);
 }
 
 // ---------------------------------------------------------------- the native header bar (GTK 3)

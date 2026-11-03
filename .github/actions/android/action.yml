@@ -1,7 +1,7 @@
 name: Android app
 description: >
-  Builds the Android app (Capacitor) from the client already built (npm run build), with the
-  version of the tag (versionName / versionCode), and puts it in deliverables/: signed APK and AAB
+  Builds the Android app (Capacitor): the client built for Android (npm run build:android, its
+  own platform: docs/platforms.md), with the version of the tag (versionName / versionCode), and puts it in deliverables/: signed APK and AAB
   when the key is given (ANDROID_* secrets), else an installable debug APK. Nothing without an
   android/ folder.
 
@@ -43,6 +43,17 @@ runs:
         distribution: temurin
         java-version: '21'
         cache: gradle
+
+    # The build of the Android app (src/platforms/android: its native components), not the web
+    # one of the job (the archive of the client): same folder, made after it
+    - name: Build the client for Android
+      if: steps.project.outputs.present == 'true'
+      shell: bash
+      env:
+        TAG: ${{ inputs.tag }}
+      run: |
+        if [ "$TAG" != dev ]; then export THERMOBOX_VERSION="$TAG"; fi
+        npm run build:android
 
     - name: Copy the client and prepare the project
       if: steps.project.outputs.present == 'true'

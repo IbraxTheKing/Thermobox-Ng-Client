@@ -221,7 +221,7 @@ tb-dial { display: flex; flex-direction: column; align-items: center; }
 .tb-dial-center em { font-style: normal; font-size: .95rem; }
 .tb-dial-center em.tb-dial-new { color: var(--m); font-weight: 600; animation: tb-goal .28s cubic-bezier(.3, 1.5, .5, 1); }
 @keyframes tb-goal { from { transform: translateY(3px) scale(.92); opacity: .4; } }
-.tb-dial-step { display: flex; gap: 72px; margin-top: -14px; }
+.tb-dial-step { display: grid; grid-template-columns: 52px 72px 52px; margin-top: -14px; }
 .tb-dial-step button {
     display: grid; place-items: center; width: 52px; height: 52px; border: 0; border-radius: 50%;
     background: var(--tb-field); color: var(--md-on-surface); font-size: 1.05rem; cursor: pointer;
@@ -237,6 +237,34 @@ tb-dial { display: flex; flex-direction: column; align-items: center; }
     .tb-dial-arc, .tb-dial-handle { transition: none; }
     .tb-dial-step button.tb-held, .tb-dial-center em.tb-dial-new { animation: none; }
 }
+
+/* Without a photo: the reading (the dial, the panel) alone, in the middle of the page */
+:is(.tb-hero.tb-thermostat, .tb-hero.tb-desk).tb-hero-solo { grid-template-columns: minmax(0, 1fr); justify-items: center; }
+.tb-hero.tb-thermostat.tb-hero-solo > .tb-thermostat-zone { width: min(100%, 560px); }
+.tb-hero.tb-thermostat.tb-hero-solo .tb-thermostat-sentence { text-align: center; }
+.tb-hero.tb-desk.tb-hero-solo > .tb-desk-left { width: min(100%, 760px); }
+.tb-desk-left > .tb-add-photo { align-self: center; }
+.tb-thermostat-zone > .tb-add-photo { margin: -12px 0 8px; }
+/* Under the dial: -, the photo to add (administrators), + */
+.tb-dial-step > button:first-child { grid-column: 1; }
+.tb-dial-step > button:last-child { grid-column: 3; }
+.tb-dial-photo {
+    grid-column: 2;
+    place-self: center;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--tb-field);
+    color: var(--md-on-surface-variant);
+    font-size: 1rem;
+    cursor: pointer;
+    transition: transform .15s ease, background-color .2s ease;
+}
+.tb-dial-photo:hover { background: var(--tb-field-hover); color: var(--md-on-surface); }
+.tb-dial-photo:active { transform: scale(.94); }
+.tb-dial-photo:focus-within { outline: 2px solid var(--md-primary); outline-offset: 2px; }
 
 @media (max-width: 840px) {
     .tb-hero.tb-desk, .tb-hero.tb-thermostat { grid-template-columns: 1fr; }

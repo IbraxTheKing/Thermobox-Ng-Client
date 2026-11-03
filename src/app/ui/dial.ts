@@ -82,6 +82,8 @@ const PACE = [150, 110, 80, 60];
       <div class="tb-dial-step">
         <button type="button" [class.tb-held]="held() === -1" i18n-aria-label aria-label="Baisser la consigne"
                 (pointerdown)="press(-1, $event)" (click)="click(-1, $event)"><i class="pi pi-minus"></i></button>
+        <!-- Between - and +: what the page puts there (the photo of a room without one) -->
+        <ng-content />
         <button type="button" [class.tb-held]="held() === 1" i18n-aria-label aria-label="Monter la consigne"
                 (pointerdown)="press(1, $event)" (click)="click(1, $event)"><i class="pi pi-plus"></i></button>
       </div>

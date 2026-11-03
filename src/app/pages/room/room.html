@@ -76,7 +76,7 @@
 
   @if (panel()) {
     <!-- Panel: the reading of the desk, the panel taking the colour of the state as a lamp; under it, the setting of the setpoint; the photo beside them -->
-    <div class="tb-hero tb-desk">
+    <div class="tb-hero tb-desk" [class.tb-hero-solo]="e.image == null">
       <div class="tb-desk-left">
         <div class="tb-reading tb-tone-{{ state().tone }}" data-vt="room-card" [attr.data-vt-id]="e.id" style="view-transition-class: tb-card">
           <div class="tb-reading-state">
@@ -126,40 +126,45 @@
             <ng-container *ngTemplateOutlet="optionsSetpoint" />
           </div>
         }
+        @if (auth.admin() && e.image == null) {
+          <ng-container *ngTemplateOutlet="addPhoto; context: { $implicit: 'tb-btn tb-tonal tb-upload tb-add-photo' }" />
+        }
       </div>
     <!-- Photo: changed by the administrators -->
-      <div class="tb-photo" [class.tb-photo-empty]="e.image == null" data-vt="room-photo" [attr.data-vt-id]="e.id">
-        @if (e.image != null) {
-          <tb-photo-img [roomId]="e.id" [version]="e.image" [alt]="('Photo de ' | tr) + e.name" />
-        } @else {
-          <span class="tb-photo-shape"><i class="pi pi-image"></i></span>
-          <span i18n class="tb-photo-hint">Pas encore de photo</span>
-        }
-        @if (auth.admin()) {
-          <div class="tb-photo-actions">
-            <label class="tb-btn tb-upload" [class.tb-busy]="photoUploading()" [class.tb-tonal]="e.image == null">
-              <i class="pi" [class.pi-camera]="!photoUploading()" [class.pi-spinner]="photoUploading()"></i>{{ e.image == null ? ('Ajouter une photo' | tr) : ('Changer' | tr) }}
-              <input type="file" accept="image/jpeg,image/png,image/gif,image/bmp" (change)="upload($event)" [disabled]="photoUploading()" />
-            </label>
-            @if (e.image != null) {
+      @if (e.image != null) {
+        <div class="tb-photo" data-vt="room-photo" [attr.data-vt-id]="e.id">
+          <tb-photo-img [roomId]="e.id" [version]="e.image" [alt]="('Photo de ' | tr) + e.name" [fadeIn]="true" />
+          @if (auth.admin()) {
+            <div class="tb-photo-actions">
+              <label i18n class="tb-btn tb-upload" [class.tb-busy]="photoUploading()">
+                <i class="pi" [class.pi-camera]="!photoUploading()" [class.pi-spinner]="photoUploading()"></i>Changer
+                <input type="file" accept="image/jpeg,image/png,image/gif,image/bmp" (change)="upload($event)" [disabled]="photoUploading()" />
+              </label>
               <button type="button" class="tb-btn tb-icon tb-photo-remove" i18n-title title="Retirer la photo" i18n-aria-label aria-label="Retirer la photo" (click)="removePhoto()"><i class="pi pi-trash"></i></button>
-            }
-          </div>
-        }
-      </div>
+            </div>
+          }
+        </div>
+      }
     </div>
   } @else {
     <!-- Home: a thermostat; the dial turns the setpoint, the page takes the colour of the temperature -->
-    <div class="tb-hero tb-thermostat">
+    <div class="tb-hero tb-thermostat" [class.tb-hero-solo]="e.image == null">
       <div class="tb-thermostat-zone" data-vt="room-card" [attr.data-vt-id]="e.id" style="view-transition-class: tb-card">
         @if (homeSentence()) {
           <p class="tb-thermostat-sentence">{{ homeSentence() }}</p>
         }
         @if (device()) {
           <span class="tb-temp-hero tb-thermostat-only" data-vt="room-temp" [attr.data-vt-id]="e.id" [tbWatch]="e.temperature">{{ unit.t(e.temperature) }}<span class="tb-deg">°</span></span>
+          @if (auth.admin() && e.image == null) {
+            <ng-container *ngTemplateOutlet="addPhoto; context: { $implicit: 'tb-btn tb-tonal tb-upload tb-add-photo' }" />
+          }
         } @else {
           <tb-dial [temperature]="e.temperature" [setpoint]="e.setpoint?.value" [(value)]="newSetpoint"
-                      [editable]="auth.canSetSetpoint()" [color]="homeColor()" [vtId]="e.id" />
+                      [editable]="auth.canSetSetpoint()" [color]="homeColor()" [vtId]="e.id">
+            @if (auth.admin() && e.image == null) {
+              <ng-container *ngTemplateOutlet="addPhoto; context: { $implicit: 'tb-dial-photo tb-upload', round: true }" />
+            }
+          </tb-dial>
           @if (auth.canSetSetpoint()) {
             <div class="tb-thermostat-action">
               @if (setpointChanged()) {
@@ -179,25 +184,20 @@
         </span>
       </div>
     <!-- Photo: changed by the administrators -->
-      <div class="tb-photo" [class.tb-photo-empty]="e.image == null" data-vt="room-photo" [attr.data-vt-id]="e.id">
-        @if (e.image != null) {
-          <tb-photo-img [roomId]="e.id" [version]="e.image" [alt]="('Photo de ' | tr) + e.name" />
-        } @else {
-          <span class="tb-photo-shape"><i class="pi pi-image"></i></span>
-          <span i18n class="tb-photo-hint">Pas encore de photo</span>
-        }
-        @if (auth.admin()) {
-          <div class="tb-photo-actions">
-            <label class="tb-btn tb-upload" [class.tb-busy]="photoUploading()" [class.tb-tonal]="e.image == null">
-              <i class="pi" [class.pi-camera]="!photoUploading()" [class.pi-spinner]="photoUploading()"></i>{{ e.image == null ? ('Ajouter une photo' | tr) : ('Changer' | tr) }}
-              <input type="file" accept="image/jpeg,image/png,image/gif,image/bmp" (change)="upload($event)" [disabled]="photoUploading()" />
-            </label>
-            @if (e.image != null) {
+      @if (e.image != null) {
+        <div class="tb-photo" data-vt="room-photo" [attr.data-vt-id]="e.id">
+          <tb-photo-img [roomId]="e.id" [version]="e.image" [alt]="('Photo de ' | tr) + e.name" [fadeIn]="true" />
+          @if (auth.admin()) {
+            <div class="tb-photo-actions">
+              <label i18n class="tb-btn tb-upload" [class.tb-busy]="photoUploading()">
+                <i class="pi" [class.pi-camera]="!photoUploading()" [class.pi-spinner]="photoUploading()"></i>Changer
+                <input type="file" accept="image/jpeg,image/png,image/gif,image/bmp" (change)="upload($event)" [disabled]="photoUploading()" />
+              </label>
               <button type="button" class="tb-btn tb-icon tb-photo-remove" i18n-title title="Retirer la photo" i18n-aria-label aria-label="Retirer la photo" (click)="removePhoto()"><i class="pi pi-trash"></i></button>
-            }
-          </div>
-        }
-      </div>
+            </div>
+          }
+        </div>
+      }
     </div>
   }
 
@@ -217,20 +217,23 @@
     </div>
   }
 
-  <!-- Temperature of each box, next to the average (not for VIEWERs) -->
+  <!-- Temperature of each box, next to the average (not for VIEWERs): the section is always there,
+       its tiles waiting until the boxes are known, then they come in (or « none ») -->
   @if (auth.seesDevices() && !device() && !container()) {
     <section class="tb-section">
       <h2 i18n class="tb-section-title">
         <span class="tb-section-icon"><i class="pi pi-wifi"></i></span>
         Boîtiers
-        <span class="tb-section-meta">{{ d.measurements.length }}</span>
+        <span class="tb-section-meta">{{ boxesKnown() ? d.measurements.length : e.devices || '' }}</span>
       </h2>
-      @if (!d.measurements.length) {
-        <div i18n class="tb-empty tb-empty-sm">Aucun boîtier rattaché. Rattache-les depuis « Bâtiments et salles ».</div>
+      @if (!boxesKnown()) {
+        <ng-container *ngTemplateOutlet="waitingBoxes; context: { $implicit: e.devices || 2 }" />
+      } @else if (!d.measurements.length) {
+        <div i18n class="tb-empty tb-empty-sm" animate.enter="tb-box-in">Aucun boîtier rattaché. Rattache-les depuis « Bâtiments et salles ».</div>
       }
       <div class="tb-boxes">
-        @for (m of d.measurements; track m.id) {
-          <a [routerLink]="['/app/room', m.id]" class="tb-box">
+        @for (m of boxesKnown() ? d.measurements : []; track m.id) {
+          <a [routerLink]="['/app/room', m.id]" class="tb-box" animate.enter="tb-box-in">
             <span class="tb-box-name"><i class="pi pi-wifi"></i>{{ m.name }}</span>
             <span class="tb-temp-l" [tbWatch]="m.value">{{ unit.t(m.value) }}<span class="tb-deg">°</span></span>
             <span class="tb-box-meta">
@@ -348,4 +351,32 @@
     <div class="tb-hero-reading tb-tone-unknown"><div class="tb-spark-loading" style="height: 100%"></div></div>
     <div class="tb-photo tb-photo-empty"></div>
   </div>
+  @if (auth.seesDevices()) {
+    <section class="tb-section">
+      <h2 class="tb-section-title"><span class="tb-section-icon"><i class="pi pi-wifi"></i></span><ng-container i18n>Boîtiers</ng-container></h2>
+      <ng-container *ngTemplateOutlet="waitingBoxes; context: { $implicit: 2 }" />
+    </section>
+  }
 }
+
+<!-- Adding the first photo (ADMIN): a round button between - and + of the dial, else a button -->
+<ng-template #addPhoto let-cls let-round="round">
+  <label [class]="cls" [class.tb-busy]="photoUploading()" i18n-title title="Ajouter une photo">
+    <i class="pi" [class.pi-camera]="!photoUploading()" [class.pi-spinner]="photoUploading()"></i>
+    @if (!round) {<ng-container i18n>Ajouter une photo</ng-container>}
+    <input type="file" accept="image/jpeg,image/png,image/gif,image/bmp" (change)="upload($event)" [disabled]="photoUploading()" />
+  </label>
+</ng-template>
+
+<!-- Boxes being read: tiles of their size, waiting -->
+<ng-template #waitingBoxes let-count>
+  <div class="tb-boxes" aria-busy="true">
+    @for (i of range(count); track i) {
+      <div class="tb-box tb-box-waiting" aria-hidden="true">
+        <span class="tb-box-name"><span class="tb-waiting-row"></span></span>
+        <span class="tb-temp-l">&nbsp;</span>
+        <span class="tb-box-meta">&nbsp;</span>
+      </div>
+    }
+  </div>
+</ng-template>

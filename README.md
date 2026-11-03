@@ -1,25 +1,34 @@
 # Thermobox — Angular client
 
 Mobile-first client of **[ThermoBox](https://github.com/IbraxTheKing/ThermoBox)** (temperature
-monitoring per building, floor and room): the former JSF client of the server, redone in Angular on
-top of its REST API. One app for the web, the PWA, the iOS / Android apps and the Windows / macOS /
-Linux apps.
+monitoring per building, floor and room, at work or at home): the former JSF client of the server,
+redone in Angular on top of its REST API. One client for the web and the PWA, the iOS and Android
+apps, and the Windows, macOS and Linux apps.
 
 - Angular 22: standalone components, no zone.js, signals, `OnPush`, lazy-loaded routes
-- PWA (service worker, manifest, icons) **and** native apps with Capacitor 8
-- Desktop apps for Windows, macOS and Linux with Tauri 2 (`src-tauri/`, [docs/desktop.md](docs/desktop.md)):
-  WinUI 3 style title bar on Windows, settings in the menu bar and their own window on macOS
-- A ThermoBox interface whose "shell" (tab bar, top bar, sheets, notifications) takes the style of
-  the platform, detected automatically:
-  - **iOS**: Liquid Glass (glass capsule tab bar, a lens that can be held and slid, a bar that
-    shrinks while scrolling)
-  - **Android**: Material 3 (navigation bar with pill indicator, top app bar, snackbars, ripples)
-  - **Web / computer**: the rail and the bar of the former JSF client
+- PWA (service worker, manifest, icons), iOS and Android apps with Capacitor 8, desktop apps with
+  Tauri 2
+- **One client, one build per platform** ([docs/platforms.md](docs/platforms.md)): the web client
+  is shared, and each platform adds only its own code and styles (`src/platforms/<name>`). The
+  Windows app holds nothing of the Linux one, the web nothing of the desktop apps.
+- Each platform looks like its system, while staying ThermoBox (its accent, its logo, the colours
+  of the states and of the rooms):
 
-  To try another platform: `?platform=ios|android|web` in the address (`?platform=auto` to go back
-  to detection).
+  | Platform | Look |
+  | --- | --- |
+  | Web, on a computer | the rail and the bar of the former JSF client |
+  | Web on a phone, iOS app | Liquid Glass: glass capsule tab bar, a lens that can be held and slid, a bar that shrinks while scrolling |
+  | Web on a phone, Android app | Material 3: navigation bar with pill indicator, top app bar, snackbars, ripples; native Material components in the app ([plugin](plugins/thermobox-native/README.md)) |
+  | Windows | WinUI 3: its title bar, Acrylic, flyouts, motion |
+  | macOS | the title bar of macOS over the page, settings in the menu bar and their own window |
+  | Linux | GNOME (GTK 4 / libadwaita): header bar, rounded window, dialogs, swipe back; or the window of GTK 3 |
 
-The interface itself is in French; the code, comments and tooling are in English.
+  On the web, the look of a phone follows its system; `?platform=ios|android|web` in the address
+  forces one (`?platform=auto` to go back to detection).
+- Two styles of interface, chosen for a server by its administrator: « Maison » for homes (calm,
+  the page in the colour of the room) and « Panneau de configuration » for professional sites.
+- In English and in French, the language of the system by default ([docs/i18n.md](docs/i18n.md)).
+  The texts are written in French in the code; the code, comments and docs are in English.
 
 ## Features
 
@@ -35,9 +44,14 @@ The interface itself is in French; the code, comments and tooling are in English
   work…), listed per server with its logo (26.12 servers); switch from "Changer de compte" (More tab
   on phones, rail on computers) or from the login page. Registering happens on the server of one's
   choice
-- **Users**, server **Updates** (administrators), **Profile**, **Preferences** (light / dark /
-  system theme, unit, colours following the state, keyboard shortcuts; for an administrator of a
-  26.12 server: its logo and the temperatures it accepts)
+- **Users**, server **Updates** (administrators), **Profile**, **Preferences** (language, light /
+  dark / system theme, accent colour, unit, colours following the state, keyboard shortcuts,
+  setpoint notifications; on the desktop apps, the options of their window; for an administrator
+  of a 26.12 server: its logo and the temperatures it accepts)
+- **Seasonal looks** of the « Maison » style and **notifications** when a room leaves its setpoint
+  ([docs/seasons-and-notifications.md](docs/seasons-and-notifications.md))
+- **Accounts import**, provisional passwords and a guide for the first visit
+  ([docs/accounts.md](docs/accounts.md))
 - **About**: versions of the client and the server; client versions published on GitHub; source code
   and credits
 - **Motion**: transitions between pages, cards that slide when a filter or a favorite moves them,
@@ -84,10 +98,25 @@ npm run demo        # in-memory demo API on :8080 + ng serve (proxy /api)
 Demo accounts: `admin / admin1234`, `gestion / gestion1234`, `lecteur / lecteur1234` (sees building
 A only), `camille / camille1234`.
 
-The demo server plays a 26.12 server by default; `node mock/demo-server.mjs --api v1` plays a 26.11
-one, `--api old` an older one (French API only), to try the client against each.
-`--seed huge` fills it like the server's large data set (10 buildings, 320 rooms, 960 devices,
-4 million measurements, 500 accounts `user001`… / `user1234`).
+The demo server plays a 26.12 server by default; `--api v1` plays a 26.11 one, `--api old` an older
+one (French API only), to try the client against each. `--seed huge` fills it like the server's
+large data set (320 rooms, 960 devices, 500 accounts). Its options: [mock/README.md](mock/README.md).
+
+Against a real server: start ThermoBox on `:8080`, then `npm start` (`proxy.conf.json` forwards
+`/api`).
+
+### Commands
+
+| Command | What it does |
+| --- | --- |
+| `npm start` | `ng serve` of the web build on :4200 (`-- --configuration linux` for another platform) |
+| `npm run demo` / `npm run mock` | the demo API with `ng serve` / alone |
+| `npm run build` | the web build, with its version (`dist/Thermobox-Ng-Client/browser`) |
+| `npm run build -- --target <platform>` | the build of one platform: `web`, `android`, `ios`, `windows`, `macos`, `linux` |
+| `npm run build:android`, `npm run build:ios` | the builds of the mobile apps |
+| `npm run cap:android`, `npm run cap:ios`, `npm run cap:sync` | build and copy into the Capacitor projects |
+| `npm run desktop`, `npm run desktop:build` | the desktop app of this system: dev window / installers ([src-tauri](src-tauri/README.md)) |
+| `npm run i18n` | gathers the texts of every platform into `src/locale/en.json` ([docs/i18n.md](docs/i18n.md)) |
 
 ## Large installations
 
@@ -101,10 +130,9 @@ curves of the measurements page and the accesses of the users are read for the r
 
 The curves ask the server for a few hundred points each (`?points=`, 26.12), picked among the
 real measures; the raw history is read a page at a time (`?limit=&offset=`). The polls stop
-while the page is hidden, and an unchanged tree does not redraw anything.
-
-Against a real server: start ThermoBox on `:8080`, then `npm start` (`proxy.conf.json` forwards
-`/api`).
+while the page is hidden, and an unchanged tree does not redraw anything. The curves of the
+overview are read for the cards drawn, at most every 150 ms while the page scrolls, and read again
+after a failure.
 
 ## Versions
 
@@ -149,7 +177,7 @@ Same workflows as the server (`.github/workflows`):
 ## Production
 
 ```bash
-npm run build       # dist/Thermobox-Ng-Client/browser (with service worker)
+npm run build       # the web build: dist/Thermobox-Ng-Client/browser (with service worker)
 ```
 
 Serve that folder behind the same host as the API (`/api`), or change
@@ -207,6 +235,11 @@ services:
 projects. What is regenerated (copied client, `build/`, `local.properties`…) is ignored by their
 `.gitignore`.
 
+Each app is made from **its own build** of the client (`npm run build:android`,
+`npm run build:ios`), not the web one: the web build has neither the native components of Android
+nor what the iOS app does differently. `npm run cap:android` / `cap:ios` builds and copies in one
+step. The build of the last platform is the one in `dist/`: build the web again before serving it.
+
 ### Android
 
 In the Android app, the bottom navigation bar (a rail on tablets and phones held sideways), the main
@@ -229,14 +262,14 @@ First time (Android Studio and a JDK 21):
 
 ```bash
 npm install                      # also installs the local plugin ("file:" dependency)
-npm run build
+npm run build:android            # the client of the Android app
 npx cap add android              # creates android/
 node scripts/android.mjs prepare # version and signing read from Gradle properties
 npx cap sync android             # copies the client, registers the plugins (thermobox-native among them)
 git add android && git commit -m "Android project"
 ```
 
-Then, at each change: `npm run cap:sync`, then `npx cap open android` (or `./gradlew` in
+Then, at each change: `npm run cap:android`, then `npx cap open android` (or `./gradlew` in
 `android/`). `scripts/android.mjs prepare` changes nothing twice: the workflows run it again.
 
 App version: `versionName` = the version of the client (`26.11.0-beta.1`), `versionCode` computed
@@ -248,7 +281,7 @@ cd android && ./gradlew assembleDebug -PthermoboxVersionName=26.11.0-beta.1 -Pth
 ```
 
 The **Release assets**, **Beta / RC** and **Nightly** workflows attach the app to the release
-(`.github/actions/android`):
+(`.github/actions/android`, which makes the Android build after the web one is archived):
 
 - with a signing key in the secrets of the repository: signed `thermobox-<version>.apk` and `.aab`
   (Play Store). Secrets: `ANDROID_KEYSTORE_BASE64` (the `.jks` in base64: `base64 -w0 thermobox.jks`),
@@ -261,29 +294,57 @@ and the debug APK at each push on `main` and `dev` (APK kept a week in the artif
 ### iOS
 
 ```bash
-npx cap add ios && npx cap open ios      # Xcode, on a Mac
+npm run build:ios && npx cap add ios     # once, on a Mac
+npm run cap:ios && npx cap open ios      # then at each change: Xcode
 ```
 
 In the native app, the address of the server is asked on the login screen. The version of the
 installed app is shown separately in **About**.
 
+## Desktop apps (Tauri)
+
+```bash
+npm run desktop          # the app of this system, reloaded on each change
+npm run desktop:build    # its installers
+```
+
+What they do differently from the web, their builds and signing: [docs/desktop.md](docs/desktop.md);
+their Rust side and the Linux options: [src-tauri/README.md](src-tauri/README.md).
+
 ## Structure
 
 ```
-scripts/          build.mjs (build with the version), version.mjs, android.mjs (Android project)
+src/app/          the shared client: core, services, ui, shell, pages (src/app/README.md)
+src/styles/       the shared stylesheets: tokens, controls, pages, shell, motion, themes, seasons
+src/platforms/    what each platform adds: web, android, ios, native, desktop, windows, macos,
+                  linux (src/platforms/README.md)
+src/locale/       en.json: the English of every text
+src-tauri/        desktop apps (Tauri 2, Rust): main.rs, win.rs, menu.rs (macOS), linux.rs
+android/          the Android project (Capacitor)
 plugins/          thermobox-native: native Material 3 components of the Android app
-src-tauri/        desktop app (Tauri 2): window, menu bar of macOS, title bar of Windows
-src/app/core      session, HTTP, API v1 / v2, preferences, platform, transitions and animations, versions, units…
-src/app/services  access to the REST API
-src/app/ui        sheets, notifications, switches, chart, access tree, server logo…
-src/app/shell     shell: navigation suited to the platform, "More" tab
-src/app/pages     login, overview, rooms, room, measurements, management, users, updates,
-                  profile, preferences, more, about
-src/styles        tokens and base styles, iOS / Android / desktop layers, phone, motion
+scripts/          build.mjs (build of a platform, with the version), version.mjs, android.mjs,
+                  i18n.mjs
 mock/             demo REST server (v1 and v2)
 nginx/, Dockerfile, compose.yaml   production image
 .github/          workflows (check, release, beta / rc, nightly, desktop, Docker), android action
+docs/             the documents below
 ```
+
+## Documentation
+
+| Document | About |
+| --- | --- |
+| [docs/platforms.md](docs/platforms.md) | the platforms, their builds, how to add something for one of them |
+| [docs/desktop.md](docs/desktop.md) | the Windows, macOS and Linux apps |
+| [docs/i18n.md](docs/i18n.md) | the languages, how to write and translate a text |
+| [docs/accounts.md](docs/accounts.md) | import of users, provisional passwords, guide of a first visit |
+| [docs/seasons-and-notifications.md](docs/seasons-and-notifications.md) | seasonal looks, notifications of the setpoints |
+| [docs/release-notes.md](docs/release-notes.md) | what the client reads in the notes of a GitHub release |
+| [src/app/README.md](src/app/README.md) | the map of the shared client |
+| [src/platforms/README.md](src/platforms/README.md) | the folders of the platforms |
+| [src-tauri/README.md](src-tauri/README.md) | the Rust side of the desktop apps |
+| [plugins/thermobox-native/README.md](plugins/thermobox-native/README.md) | the native plugin of the Android app |
+| [mock/README.md](mock/README.md) | the demo server |
 
 ## Credits
 
