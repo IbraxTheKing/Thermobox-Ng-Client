@@ -1,27 +1,18 @@
+import { DOCUMENT } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { DOCUMENT, Injectable, computed, effect, inject, signal, untracked } from '@angular/core';
+import { Injectable, computed, effect, inject, signal, untracked } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 
 import { ApiVersionService, ServerInfo } from '../core/api-version';
 import { ServerService } from '../core/api.config';
 import { AuthService } from '../core/auth';
 import { TemperatureLimits, TemperatureRange } from '../models/models';
+import { AlertChannelDto, AlertRuleDto, AlertChannelRequest, AlertRuleRequest } from '../models/models';
 
-/** Setpoints offered to a server before 26.12, which has no limits of its own to tell. */
 const V1_SETPOINT: TemperatureRange = { min: 5, max: 35 };
-/** Values typed by hand (a measurement added by an ADMIN) for a server before 26.12. */
 const V1_MEASUREMENT: TemperatureRange = { min: -50, max: 80 };
-
-/** Bounds an ADMIN may give to the limits (TemperatureLimits.ABSOLUTE of the server). */
 export const ABSOLUTE_LIMITS: TemperatureRange = { min: -100, max: 200 };
 
-/**
- * What the current server offers beyond the v1 API (26.12, API v2): its logo, and the
- * temperatures it accepts (setpoints and measurements), which an ADMIN chooses. A server before
- * 26.12 gets none of it: the dial and the steppers keep their former bounds (5 to 35 °C).
- *
- * Client of /api/v2/server (GET, logo, limits).
- */
 @Injectable({ providedIn: 'root' })
 export class ServerFeaturesService {
   private readonly http = inject(HttpClient);
@@ -29,48 +20,44 @@ export class ServerFeaturesService {
   private readonly server = inject(ServerService);
   private readonly auth = inject(AuthService);
 
-  private readonly api = computed(() => {
-    const base = this.server.base();
-    return base ? (this.versions.known()[base] ?? null) : null;
-  });
-  /** API base of the current server. */
+  private readonly api = computed(() => this.server.base() ? (this.versions.known()[this.server.base()] ?? null) : null);
   readonly base = computed(() => this.server.base());
-  /** The server answers the v2 API (26.12 or later). */
   readonly v2 = computed(() => !!this.api()?.v2);
-  /** Name, version, logo of the server (26.11 or later). */
   readonly info = computed<ServerInfo | null>(() => this.api()?.info ?? null);
-  /** What the server says it can do beyond its API ("user-import", "provisional-passwords"…). */
   readonly features = computed(() => new Set(this.info()?.features ?? []));
-  /** Accounts with a first name, a last name and an address (ThermoBox 26.12, V8). */
-  readonly people = computed(() => this.features().has('provisional-passwords'));
-  /** Its logo, null before 26.12. */
-  readonly logo = computed(() => (this.v2() ? this.versions.logo(this.server.base(), 192) : null));
 
-  /** What the server said (v2 only), null before it answered. */
+  /** Server capabilities */
+  readonly people = computed(() => this.features().has('PEOPLE'));
+
+  /** Server logo */
+  readonly logo = computed(() =>
+    this.v2()
+      ? this.versions.logo(this.server.base(), 256) ?? null
+      : null
+  );
+
   readonly limits = signal<TemperatureLimits | null>(null);
   readonly setpointRange = computed(() => (this.v2() && this.limits()?.setpoint) || V1_SETPOINT);
   readonly measurementRange = computed(() => (this.v2() && this.limits()?.measurement) || V1_MEASUREMENT);
 
+  readonly channels = signal<AlertChannelDto[]>([]);
+  readonly rules = signal<AlertRuleDto[]>([]);
+
   constructor() {
-    // Which API, as soon as the server is known; then its limits, once logged in
-    effect(() => {
-      const base = this.server.base();
-      if (base) void this.versions.api(base);
-    });
-    // The browser tab shows the logo of the server (26.12), else ThermoBox's
+    effect(() => { if (this.server.base()) void this.versions.api(this.server.base()); });
+    
     const doc = inject(DOCUMENT);
     const icon = doc.querySelector<HTMLLinkElement>('link[rel="icon"]');
     const original = icon?.getAttribute('href') ?? null;
     effect(() => {
-      const logo = this.v2() ? this.versions.logo(this.server.base(), 64) : null;
       if (!icon || !original) return;
       icon.removeAttribute('type');
-      icon.href = logo ?? original;
+      icon.href = this.v2() ? (this.versions.logo(this.server.base(), 64) ?? original) : original;
     });
+
     effect(() => {
       const v2 = this.v2();
       const user = this.auth.user();
-      this.server.base();
       untracked(() => {
         this.limits.set(null);
         if (v2 && user) void this.loadLimits();
@@ -78,39 +65,68 @@ export class ServerFeaturesService {
     });
   }
 
-  async loadLimits(): Promise<void> {
-    try {
-      this.limits.set(await firstValueFrom(this.http.get<TemperatureLimits>(this.server.url('/server/limits'))));
-    } catch {
-      /* the bounds of v1 meanwhile */
-    }
+  async loadLimits() {
+    try { this.limits.set(await firstValueFrom(this.http.get<TemperatureLimits>(this.server.url('/server/limits')))); } catch {}
   }
 
-  /** ADMIN — a missing part is kept. */
-  async saveLimits(limits: Partial<TemperatureLimits>): Promise<TemperatureLimits> {
+  async loadAlerts() {
+    try {
+      const [ch, ru] = await Promise.all([
+        firstValueFrom(this.http.get<AlertChannelDto[]>(this.server.url('/alerts/channels'))),
+        firstValueFrom(this.http.get<AlertRuleDto[]>(this.server.url('/alerts/rules')))
+      ]);
+      this.channels.set(ch);
+      this.rules.set(ru);
+    } catch {}
+  }
+
+  async saveLimits(limits: Partial<TemperatureLimits>) {
     const r = await firstValueFrom(this.http.put<TemperatureLimits>(this.server.url('/server/limits'), limits));
     this.limits.set(r);
     return r;
   }
 
-  /** ADMIN — back to -10 to 50 °C. */
-  async resetLimits(): Promise<TemperatureLimits> {
+  async resetLimits() {
     const r = await firstValueFrom(this.http.delete<TemperatureLimits>(this.server.url('/server/limits')));
     this.limits.set(r);
     return r;
   }
 
-  /** ADMIN — PNG, JPEG, GIF or SVG, 5 MB at most. */
-  async setLogo(file: Blob): Promise<void> {
-    const info = await firstValueFrom(
-      this.http.put<ServerInfo>(this.server.url('/server/logo'), file, { headers: { 'Content-Type': file.type || 'application/octet-stream' } }),
-    );
+  async setLogo(file: Blob) {
+    const info = await firstValueFrom(this.http.put<ServerInfo>(this.server.url('/server/logo'), file, { headers: { 'Content-Type': file.type || 'application/octet-stream' } }));
     this.versions.update(this.server.base(), info);
   }
 
-  /** ADMIN — back to the logo of the website the server belongs to, else ThermoBox's. */
-  async resetLogo(): Promise<void> {
+  async resetLogo() {
     const info = await firstValueFrom(this.http.delete<ServerInfo>(this.server.url('/server/logo')));
     this.versions.update(this.server.base(), info);
+  }
+
+  /** ADMIN — channels for temperature alerts. */
+  async saveChannels(request: AlertChannelRequest): Promise<AlertChannelDto[]> {
+    if (!request?.name) throw new Error("Nom du canal requis");
+    const r = await firstValueFrom(this.http.put<AlertChannelDto[]>(this.server.url('/alerts/channels'), request));
+    this.channels.set(r);
+    return r;
+  }
+
+  /** ADMIN — rules for temperature alerts. */
+  async saveRules(request: AlertRuleRequest): Promise<AlertRuleDto[]> {
+    if (!request?.name) throw new Error("Nom de la règle requis");
+    const r = await firstValueFrom(this.http.put<AlertRuleDto[]>(this.server.url('/alerts/rules'), request));
+    this.rules.set(r);
+    return r;
+  }
+
+  async deleteChannel(id: number): Promise<void> {
+    if (await this.http.delete(`/${this.server.url('/alerts/channels')}/${id}`)) {
+      this.channels.update(ch => ch.filter(c => c.id !== id));
+    }
+  }
+
+  async deleteRule(id: number): Promise<void> {
+    if (await this.http.delete(`/${this.server.url('/alerts/rules')}/${id}`)) {
+      this.rules.update(r => r.filter(x => x.id !== id));
+    }
   }
 }

@@ -417,3 +417,52 @@ export interface ServerMetrics {
   gcTimeMs: number;
   uptimeSeconds: number;
 }
+
+export interface AlertChannelDto {
+  id: number | null;
+  name: string;
+  kind: 'EMAIL' | 'WEBHOOK';
+  enabled: boolean;
+  email?: { host: string; port: number; security: 'NONE'|'STARTTLS'|'SSL'; username?: string; password?: string; from?: string; fromName?: string; recipients: string[]; template?: string };
+  webhook?: { format: 'DISCORD'|'SLACK'|'GENERIC'; url?: string; authorization?: string; signingSecret?: string; template?: string };
+  secretUnreadable: boolean;
+  createdAt: string | null;
+  updatedAt: string | null;
+}
+
+export interface AlertChannelRequest {
+  name: string;
+  kind: 'EMAIL' | 'WEBHOOK';
+  enabled: boolean;
+  email?: { host: string; port: number; security: 'NONE'|'STARTTLS'|'SSL'; username?: string; password?: string; from?: string; fromName?: string; recipients: string[]; template?: string };
+  webhook?: { format: 'DISCORD'|'SLACK'|'GENERIC'; url: string; authorization?: string; signingSecret?: string; template?: string };
+}
+
+export interface AlertRuleDto {
+  id: number | null;
+  name: string;
+  enabled: boolean;
+  tolerance: number;
+  minDurationSeconds: number;
+  clearAfterSeconds: number;
+  reminderSeconds: number;
+  notifyResolution: boolean;
+  global: boolean;
+  scope: { id: number; name: string | null; kind: 'BUILDING'|'FLOOR'|'ROOM'|'DEVICE' }[];
+  channels: { id: number; name: string | null; kind: string }[];
+  createdAt: string | null;
+  updatedAt: string | null;
+}
+
+export interface AlertRuleRequest {
+  name: string;
+  enabled: boolean;
+  tolerance: number;
+  minDurationSeconds: number;
+  clearAfterSeconds: number;
+  reminderSeconds: number;
+  notifyResolution: boolean;
+  global: boolean;
+  scopeStr?: string;
+  channelsStr?: string;
+}
