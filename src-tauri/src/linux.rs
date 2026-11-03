@@ -1,7 +1,8 @@
 //! Linux: what the app takes from the desktop, and the two ways it can draw its window.
 //!
 //! - The window: « gnome » (the default), the page draws a header bar in the style of GNOME 4
-//!   (libadwaita) in a transparent window with rounded corners; « gtk3 », the window of the
+//!   (libadwaita), the window square (not transparent: a transparent window kept WebKitGTK,
+//!   drawing with the processor, from painting the page but where something changed); « gtk3 », the window of the
 //!   system, decorated by GTK 3 with a real header bar (GtkHeaderBar): back, the sidebar, the
 //!   title of the page and the main menu are native buttons and a native popover, the buttons of
 //!   the window those of the desktop. The page tells what they show ([native_chrome]).
@@ -47,6 +48,9 @@ impl Default for Options {
 static OPTIONS: OnceLock<Options> = OnceLock::new();
 /// WebKitGTK draws with the processor in this run.
 static SOFTWARE: AtomicBool = AtomicBool::new(false);
+/// WEBKIT_DISABLE_COMPOSITING_MODE was set here, not by the user: taken away before the app
+/// starts again, or the new process would inherit it whatever the new choice.
+static SET_HERE: AtomicBool = AtomicBool::new(false);
 
 fn options() -> Options {
     OPTIONS.get().cloned().unwrap_or_default()
@@ -98,6 +102,7 @@ pub fn prepare() {
     if !set_by_user && software {
         // Before any thread of WebKit or GTK exists
         std::env::set_var("WEBKIT_DISABLE_COMPOSITING_MODE", "1");
+        SET_HERE.store(true, Relaxed);
     }
     SOFTWARE.store(if set_by_user { std::env::var_os("WEBKIT_DISABLE_COMPOSITING_MODE").is_some_and(|v| v != "0") } else { software }, Relaxed);
     let _ = OPTIONS.set(opts);
@@ -144,6 +149,9 @@ pub fn set_options(app: &AppHandle, window: String, rendering: String) -> Result
         std::fs::create_dir_all(dir).map_err(|e| e.to_string())?;
     }
     std::fs::write(&path, serde_json::to_string_pretty(&opts).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
+    if SET_HERE.load(Relaxed) {
+        std::env::remove_var("WEBKIT_DISABLE_COMPOSITING_MODE");
+    }
     app.restart();
 }
 
