@@ -1,0 +1,9 @@
+/*
+ * android: what pages.css of the shared styles is for this platform only (imported right after it,
+ * src/platforms/android/styles.css). Generated from the shared file when the platforms were split.
+ */
+:root[data-platform="android"] .tb-rail { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+
+/* Android: the dialog of Material 3 (surface container high, 28 px corners, buttons of text) */
+:root[data-platform="android"] .tb-guide { border-radius: 28px; box-shadow: var(--tb-raised-2); }
+:root[data-platform="android"] .tb-guide-dim { background: rgb(0 0 0 / .32); }

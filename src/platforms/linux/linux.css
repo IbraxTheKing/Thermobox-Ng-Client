@@ -511,6 +511,10 @@
 
 /* ============================== Scroll bars (overlay, thin) */
 
+/* The guard of pull to refresh on the root (motion.css): with it, WebKitGTK no longer scrolled the
+   page with the wheel or the touchpad at all */
+html.tb-pull-page { overscroll-behavior-y: auto; }
+
 /* The scroll bar of the window: hidden (it went over the header bar and the rounded corner),
    drawn as the overlay scroll bar of GTK 4 under the header bar instead (gtk-scrollbar.ts) */
 :root[data-desktop="linux"]:not([data-window="gtk3"]) { scrollbar-width: none; }

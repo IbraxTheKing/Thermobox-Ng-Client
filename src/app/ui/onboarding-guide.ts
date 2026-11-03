@@ -3,7 +3,7 @@ import { ChangeDetectionStrategy, Component, DOCUMENT, ElementRef, computed, eff
 import { AuthService } from '../core/auth';
 import { OnboardingService } from '../core/onboarding';
 import { PlatformService } from '../core/platform';
-import { DESKTOP_OS } from '../core/tauri';
+import { TARGET } from '../../platforms/current';
 import { TrPipe } from './tr.pipe';
 
 interface Step {
@@ -42,7 +42,7 @@ interface Step {
                [class.tb-guide-docked]="docked()" [class.tb-guide-tip]="!!tip()" [class.tb-guide-tip-below]="tip()?.below"
                [style.left.px]="tip()?.left" [style.top.px]="tip()?.top" [style.--tb-tail.px]="tip()?.tail">
         @let s = step();
-        @if (winui) {
+        @if (asTip) {
           <button type="button" class="tb-guide-close" i18n-aria-label aria-label="Fermer le guide" i18n-title title="Fermer le guide" (click)="skip()">&#xE8BB;</button>
         }
         <div class="tb-guide-art" aria-hidden="true">
@@ -76,10 +76,10 @@ export class TbOnboardingGuide {
   private readonly auth = inject(AuthService);
   private readonly doc = inject(DOCUMENT);
   private readonly platform = inject(PlatformService);
-  /** Windows: a TeachingTip of WinUI 3. */
-  protected readonly winui = DESKTOP_OS === 'windows';
+  /** Beside what it shows, as a TeachingTip of WinUI 3 (TARGET.traits: the Windows app). */
+  protected readonly asTip = TARGET.traits.guideTip;
   /** Phones: at the bottom of the screen, above the bar of the app. */
-  protected readonly docked = computed(() => !this.winui && this.platform.bottomBar());
+  protected readonly docked = computed(() => !this.asTip && this.platform.bottomBar());
   /** Windows: where the tip goes, beside the item it points at (null: in the middle). */
   protected readonly tip = signal<{ left: number; top: number; tail: number; below: boolean } | null>(null);
   private readonly card = viewChild<ElementRef<HTMLElement>>('card');
@@ -209,7 +209,7 @@ export class TbOnboardingGuide {
     }
     const r = el.getBoundingClientRect();
     this.ring.set({ left: r.left - 4, top: r.top - 4, width: r.width + 8, height: r.height + 8 });
-    if (!this.winui) return;
+    if (!this.asTip) return;
     // TeachingTip: to the right of the item of the pane, its tail on the middle of the item
     const card = this.card()?.nativeElement;
     const h = card?.offsetHeight ?? 260;

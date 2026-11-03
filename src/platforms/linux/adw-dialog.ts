@@ -13,9 +13,9 @@ import {
   viewChild,
 } from '@angular/core';
 
-import { AdwDialogKind, AdwDialogsService } from '../core/adw-dialogs';
-import { AboutPage } from '../pages/about/about';
-import { PreferencesPage } from '../pages/preferences/preferences';
+import { AdwDialogKind, AdwDialogsService } from './adw-dialogs';
+import { AboutPage } from '../../app/pages/about/about';
+import { PreferencesPage } from '../../app/pages/preferences/preferences';
 
 /** How long AdwDialog takes to go (linux.css, adw-dialog-out). */
 const CLOSING = 200;

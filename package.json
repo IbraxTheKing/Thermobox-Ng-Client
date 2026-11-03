@@ -9,7 +9,11 @@
     "test": "ng test",
     "demo": "node mock/demo.mjs",
     "mock": "node mock/demo-server.mjs",
-    "cap:sync": "npm run build && npx cap sync",
+    "build:android": "node scripts/build.mjs --target android",
+    "build:ios": "node scripts/build.mjs --target ios",
+    "cap:android": "npm run build:android && npx cap sync android",
+    "cap:ios": "npm run build:ios && npx cap sync ios",
+    "cap:sync": "npm run cap:android && npm run cap:ios",
     "desktop": "tauri dev",
     "desktop:build": "tauri build",
     "i18n": "node scripts/i18n.mjs"

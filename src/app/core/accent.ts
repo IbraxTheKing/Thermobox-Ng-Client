@@ -1,9 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { Injectable, computed, effect, inject, signal } from '@angular/core';
-import { Capacitor } from '@capacitor/core';
-
-import { androidSystemAccent } from './android-native';
-import { DESKTOP_OS } from './tauri';
+import { Injectable, InjectionToken, computed, effect, inject, signal } from '@angular/core';
 
 import { SeasonService } from './season';
 import { PreferencesService } from './preferences';
@@ -41,11 +37,45 @@ export const PALETTES: Palette[] = [
   { id: 'slate', label: $localize`Ardoise`, h: 255, c: 0.025 },
 ];
 
+/**
+ * Where the accent colour of the system comes from. The browser's AccentColor here (Firefox,
+ * Safari, the WebKit of macOS); the platforms that have it elsewhere put theirs in its place
+ * (TARGET.providers: Android 12+, Windows, GNOME 47+).
+ */
+export interface SystemAccentSource {
+  /** The colour, #rrggbb; null: the system gives none here. */
+  read(doc: Document): Promise<string | null>;
+  /** Calls back as soon as it changes, when the system says so (besides focus and visibility). */
+  watch?(changed: () => void): void;
+  /** Why there is none, for the Préférences page. */
+  readonly why: string;
+}
+
+/** The browser's AccentColor, as #rrggbb. */
+export async function browserAccent(doc: Document): Promise<string | null> {
+  if (!CSS.supports('color', 'AccentColor')) return null;
+  const probe = doc.createElement('span');
+  probe.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden;color:AccentColor';
+  doc.body.appendChild(probe);
+  const rgb = getComputedStyle(probe).color.match(/[\d.]+/g)?.map(Number);
+  probe.remove();
+  return rgb && rgb.length >= 3 ? '#' + rgb.slice(0, 3).map((n) => Math.round(n).toString(16).padStart(2, '0')).join('') : null;
+}
+
+export const SYSTEM_ACCENT = new InjectionToken<SystemAccentSource>('system accent', {
+  providedIn: 'root',
+  factory: () => ({
+    read: browserAccent,
+    why: $localize`Ce navigateur ne donne pas la couleur d'accent du système (Firefox et Safari la donnent).`,
+  }),
+});
+
 @Injectable({ providedIn: 'root' })
 export class AccentService {
   private readonly doc = inject(DOCUMENT);
   private readonly prefs = inject(PreferencesService);
   private readonly seasons = inject(SeasonService);
+  private readonly source = inject(SYSTEM_ACCENT);
   private style: HTMLStyleElement | null = null;
 
   /** The accent colour of the system, as #rrggbb; null: the system gives none here. */
@@ -53,13 +83,7 @@ export class AccentService {
   /** The system gives its accent colour (browser AccentColor, Android 12+ app). */
   readonly systemAvailable = computed(() => this.systemColor() != null);
   /** Why not, for the Préférences page. */
-  readonly systemWhy = Capacitor.getPlatform() === 'ios'
-    ? $localize`iOS ne donne pas sa couleur d'accent aux applications.`
-    : Capacitor.getPlatform() === 'android'
-      ? $localize`Couleurs du fond d'écran à partir d'Android 12.`
-      : DESKTOP_OS
-        ? $localize`Ce système ne donne pas sa couleur d'accent à l'application.`
-        : $localize`Ce navigateur ne donne pas la couleur d'accent du système (Firefox et Safari la donnent).`;
+  readonly systemWhy = this.source.why;
 
   /** Hue and chroma shown, null for the ThermoBox colours. */
   readonly seed = computed<{ h: number; c: number } | null>(() => {
@@ -86,38 +110,17 @@ export class AccentService {
     // Desktop: the window stays visible while the settings of the system are open beside it; it
     // gets the focus back after
     addEventListener('focus', () => void this.readSystem());
-    // Linux (GNOME): told as soon as the accent changes (main.rs, watch_appearance)
-    if (DESKTOP_OS === 'linux') {
-      void import('@tauri-apps/api/event')
-        .then(({ listen }) => listen('system-appearance', () => void this.readSystem()))
-        .catch(() => undefined);
-    }
+    // As soon as it changes, where the system says so (GNOME: main.rs, watch_appearance)
+    this.source.watch?.(() => void this.readSystem());
     effect(() => this.apply(this.seed()));
   }
 
   private async readSystem(): Promise<void> {
-    if (Capacitor.isNativePlatform()) {
-      this.systemColor.set(await androidSystemAccent());
-      return;
+    try {
+      this.systemColor.set(await this.source.read(this.doc));
+    } catch {
+      this.systemColor.set(null);
     }
-    // Desktop app on Windows: the colour of Settings › Personalisation (WebView2 has no AccentColor);
-    // on Linux, the accent of GNOME 47 and later (Settings › Appearance)
-    if (DESKTOP_OS === 'windows' || DESKTOP_OS === 'linux') {
-      try {
-        const { invoke } = await import('@tauri-apps/api/core');
-        this.systemColor.set(await invoke<string | null>('system_accent'));
-      } catch {
-        this.systemColor.set(null);
-      }
-      return;
-    }
-    if (!CSS.supports('color', 'AccentColor')) return;
-    const probe = this.doc.createElement('span');
-    probe.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden;color:AccentColor';
-    this.doc.body.appendChild(probe);
-    const rgb = getComputedStyle(probe).color.match(/[\d.]+/g)?.map(Number);
-    probe.remove();
-    this.systemColor.set(rgb && rgb.length >= 3 ? '#' + rgb.slice(0, 3).map((n) => Math.round(n).toString(16).padStart(2, '0')).join('') : null);
   }
 
   private apply(seed: { h: number; c: number } | null): void {

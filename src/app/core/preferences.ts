@@ -1,8 +1,8 @@
 import { DOCUMENT } from '@angular/common';
-import { Injectable, computed, effect, inject, signal } from '@angular/core';
+import { Injectable, computed, effect, inject, signal, untracked } from '@angular/core';
 
 import { StyleSite } from '../models/models';
-import { DESKTOP_OS, TAURI } from './tauri';
+import { TARGET } from '../../platforms/current';
 import { LanguageChoice } from './i18n';
 import { HomeColors } from './colors';
 
@@ -24,12 +24,8 @@ interface Stored {
   tolerance?: number;
   cardSize?: number;
   buildingOrder?: string[];
-  /** Windows app: the Acrylic of the window and the blur of the bars. */
-  windowBlur?: boolean;
   /** « Maison »: the look of the holidays of the year (SeasonService). */
   seasons?: boolean;
-  /** Linux app: two fingers to the right on the touchpad go back. */
-  swipeBack?: boolean;
   /** Apps (mobile, desktop): notify when a room leaves or reaches its setpoint. */
   notifications?: boolean;
   /** Which rooms: the favorites or all those the user sees. */
@@ -84,10 +80,6 @@ export class PreferencesService {
   readonly style = signal<StyleSite>('glass');
   /** Accent colour: the ThermoBox green, the system's, or a palette (AccentService applies it). */
   readonly accent = signal<string>(this.stored.accent ?? 'default');
-  /** Windows app: Acrylic behind the side bar, blurred bars (on by default). */
-  readonly windowBlur = signal(this.stored.windowBlur ?? true);
-  /** Linux app: two fingers on the touchpad go back, the page following them (on by default). */
-  readonly swipeBack = signal(this.stored.swipeBack ?? true);
   /** « Maison »: Christmas, Halloween… change the look of the app on their days (on by default). */
   readonly seasons = signal(this.stored.seasons ?? true);
   /** Apps: notifications of the setpoint (off until the user turns them on). */
@@ -127,9 +119,7 @@ export class PreferencesService {
         tolerance: this.tolerance(),
         cardSize: this.cardSize(),
         buildingOrder: this.buildingOrder(),
-        windowBlur: this.windowBlur(),
         seasons: this.seasons(),
-        swipeBack: this.swipeBack(),
         notifications: this.notifications(),
         notifyRooms: this.notifyRooms(),
         language: this.language(),
@@ -138,15 +128,17 @@ export class PreferencesService {
       if (json === this.written) return;
       this.written = json;
       write(json);
-      if (TAURI) void import('@tauri-apps/api/event').then((e) => e.emit('tb-preferences'));
+      // (the desktop app tells its other windows: platforms/desktop/desktop.service.ts)
+      untracked(() => this.saves.update((n) => n + 1));
     });
     // Another window of the app (the settings window of macOS), or another tab: applied here
     addEventListener('storage', (e) => e.key === KEY && this.reload());
-    if (TAURI) void import('@tauri-apps/api/event').then((e) => e.listen('tb-preferences', () => this.reload()));
   }
 
   /** What was written last (or read at start): the stored text of these preferences. */
   private written = JSON.stringify(this.stored);
+  /** How many times this window wrote the preferences (not those read from another window). */
+  readonly saves = signal(0);
 
   /** The preferences as stored now, after another window changed them. */
   reload(): void {
@@ -169,9 +161,7 @@ export class PreferencesService {
     if (p.tolerance != null) this.tolerance.set(p.tolerance);
     if (p.cardSize != null) this.cardSize.set(p.cardSize);
     if (p.buildingOrder) this.buildingOrder.set(p.buildingOrder);
-    if (p.windowBlur != null) this.windowBlur.set(p.windowBlur);
     if (p.seasons != null) this.seasons.set(p.seasons);
-    if (p.swipeBack != null) this.swipeBack.set(p.swipeBack);
     if (p.notifications != null) this.notifications.set(p.notifications);
     if (p.notifyRooms) this.notifyRooms.set(p.notifyRooms);
     // Another window changed the language: this one starts again in it
@@ -195,8 +185,8 @@ export class PreferencesService {
     const before = this.theme();
     const after: Theme = choice === 'auto' ? (this.systemDark() ? 'dark' : 'light') : choice;
     const doc = this.doc as Document & { startViewTransition?: (f: () => void) => { finished: Promise<void> } };
-    // Windows app: the theme changes at once, as Windows does
-    if (before === after || !from || !doc.startViewTransition || this.reducedMotion() || DESKTOP_OS === 'windows') {
+    // Some apps change it at once, as their system does (the Windows app: TARGET.traits)
+    if (before === after || !from || !doc.startViewTransition || this.reducedMotion() || TARGET.traits.instantTheme) {
       this.themeChoice.set(choice);
       return;
     }

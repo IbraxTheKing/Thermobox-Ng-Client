@@ -28,7 +28,7 @@ import {
 
 import { PlatformService } from '../core/platform';
 import { PreferencesService } from '../core/preferences';
-import { DESKTOP_OS } from '../core/tauri';
+import { TARGET } from '../../platforms/current';
 import { UnitService } from '../core/unit';
 import { locale } from '../core/i18n';
 import { TrPipe } from './tr.pipe';
@@ -350,13 +350,13 @@ export class TbChart implements OnDestroy {
   private options(mobile: boolean, n: number): ChartOptions<'line'> {
     const text = this.color('--md-on-surface-variant');
     const grid = this.color('--md-outline-variant');
-    // Windows app: the type of Windows, and the curves are there at once, as in a native app.
-    // Linux app too: drawing them again on every frame for a second, while the page slides in,
-    // made the slide stutter
-    const windows = DESKTOP_OS === 'windows';
-    const font = { family: windows ? '"Segoe UI Variable Text", "Segoe UI", sans-serif' : 'Manrope, "Segoe UI", system-ui, sans-serif', size: mobile ? 11 : 12 + (windows ? 0 : 1) };
+    // The apps of a system may have its type, and their curves there at once, as in a native app
+    // (the Windows app; the Linux app: drawing them again on every frame for a second, while the
+    // page slides in, made the slide stutter): TARGET.traits
+    const own = TARGET.traits.chartFont;
+    const font = { family: own ? own.family : 'Manrope, "Segoe UI", system-ui, sans-serif', size: mobile ? 11 : own ? own.size : 13 };
     const symbol = this.valueUnit() ?? this.unit.symbol();
-    const animate = this.prefs.animate() && !windows && DESKTOP_OS !== 'linux';
+    const animate = this.prefs.animate() && TARGET.traits.chartsAnimate;
     return {
       responsive: true,
       maintainAspectRatio: false,

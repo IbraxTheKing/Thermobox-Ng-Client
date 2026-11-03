@@ -15,17 +15,24 @@
  * Celsius in, CSS colours out; the unit shown (°C / °F) does not change them.
  */
 
-import { DESKTOP_OS } from './tauri';
-
 type Rgb = [number, number, number];
 
+/** A scale: from each temperature (or gap) on, its colour. */
+export type Stops = [number, string][];
+
 /**
- * The Linux app: the colours of the GNOME palette (blue, teal, green, yellow, orange, red of the
- * HIG), clear and saturated as GTK apps show their states, on the neutral window of libadwaita.
- * The soft colours of ThermoBox, made for its green-grey page, came out grey there: a comfortable
- * room was not quite green, a cold one not quite blue, a hot one not quite red.
+ * The colours of « Maison » (a temperature, a gap to the setpoint) and how they soften into the
+ * page. ThermoBox's here; a platform may put its own (the Linux app: the palette of GNOME,
+ * platforms/linux/gnome-colors.ts), before Angular starts.
  */
-const GNOME = DESKTOP_OS === 'linux';
+export interface RoomPalette {
+  temperature: Stops;
+  /** A temperature not known. */
+  unknown: string;
+  deltaHome: Stops;
+  tintSoft(color: string, dark: boolean): string;
+  tintStrong(color: string, dark: boolean): string;
+}
 
 const DELTA_LIGHT: [number, Rgb][] = [
   [-2.5, [47, 95, 174]],
@@ -81,17 +88,7 @@ export function deltaColor(rawDelta: number | null, dark: boolean, tolerance = 1
   };
 }
 
-const TEMPERATURE_GNOME: [number, string][] = [
-  [16, '#1c71d8'],
-  [18.5, '#2190a4'],
-  [20, '#26a269'],
-  [21.8, '#2ec27e'],
-  [23, '#e5a50a'],
-  [24.5, '#e66100'],
-  [26, '#e01b24'],
-];
-
-const TEMPERATURE: [number, string][] = [
+const TEMPERATURE: Stops = [
   [16, '#3d6cb4'],
   [18.5, '#2e8ca0'],
   [20, '#3a8f78'],
@@ -103,21 +100,11 @@ const TEMPERATURE: [number, string][] = [
 
 /** Colour of a temperature itself (Celsius), mixed in OKLCH between its stops; null: grey. */
 export function temperatureColor(t: number | null): string {
-  if (t == null || isNaN(t)) return GNOME ? '#9a9996' : '#8a9690';
-  return mix(GNOME ? TEMPERATURE_GNOME : TEMPERATURE, t);
+  if (t == null || isNaN(t)) return palette.unknown;
+  return mix(palette.temperature, t);
 }
 
-const DELTA_HOME_GNOME: [number, string][] = [
-  [-2.5, '#1c71d8'],
-  [-1.2, '#2190a4'],
-  [-0.5, '#26a269'],
-  [0.5, '#2ec27e'],
-  [0.95, '#e5a50a'],
-  [1.7, '#e66100'],
-  [2.5, '#e01b24'],
-];
-
-const DELTA_HOME: [number, string][] = [
+const DELTA_HOME: Stops = [
   [-2.5, '#3d6cb4'],
   [-1.2, '#2e8ca0'],
   [-0.5, '#3a8f78'],
@@ -129,7 +116,7 @@ const DELTA_HOME: [number, string][] = [
 
 /** Home: colour of a gap to the setpoint (Celsius, stretched by the tolerance). */
 export function homeDeltaColor(delta: number, tolerance = 1): string {
-  return mix(GNOME ? DELTA_HOME_GNOME : DELTA_HOME, delta / tolerance);
+  return mix(palette.deltaHome, delta / tolerance);
 }
 
 export type HomeColors = 'delta' | 'temperature';
@@ -149,7 +136,7 @@ export function roomColor(
   return temperatureColor(temperature ?? null);
 }
 
-function mix(stops: [number, string][], x: number): string {
+function mix(stops: Stops, x: number): string {
   const v = Math.max(stops[0][0], Math.min(stops[stops.length - 1][0], x));
   for (let i = 1; i < stops.length; i++) {
     const [a, ca] = stops[i - 1];
@@ -172,18 +159,27 @@ function mix(stops: [number, string][], x: number): string {
  * ThermoBox, not the page of the accent: a blue page would turn a comfortable green into blue.
  */
 export function tintSoft(color: string, dark: boolean): string {
-  // Linux: into the card of libadwaita, enough of it for the colour to read as itself
-  if (GNOME) return `color-mix(in oklab, ${color} ${dark ? 38 : 30}%, var(--lx-card))`;
-  return `color-mix(in oklab, ${color} ${dark ? 30 : 24}%, var(--tb-tint-base, var(--tb-background)))`;
+  return palette.tintSoft(color, dark);
 }
 
 /** The same colour, for text and lines on its soft tint. */
 export function tintStrong(color: string, dark: boolean): string {
-  if (GNOME)
-    return dark
-      ? `color-mix(in oklab, ${color} 62%, #ffffff)`
-      : `color-mix(in oklab, ${color} 72%, #000006)`;
-  return dark
-    ? `color-mix(in oklab, ${color} 72%, #ffffff)`
-    : `color-mix(in oklab, ${color} 78%, #1d2421)`;
+  return palette.tintStrong(color, dark);
+}
+
+/** ThermoBox's colours, made for its green-grey page. */
+const THERMOBOX: RoomPalette = {
+  temperature: TEMPERATURE,
+  unknown: '#8a9690',
+  deltaHome: DELTA_HOME,
+  tintSoft: (color, dark) => `color-mix(in oklab, ${color} ${dark ? 30 : 24}%, var(--tb-tint-base, var(--tb-background)))`,
+  tintStrong: (color, dark) =>
+    dark ? `color-mix(in oklab, ${color} 72%, #ffffff)` : `color-mix(in oklab, ${color} 78%, #1d2421)`,
+};
+
+let palette: RoomPalette = THERMOBOX;
+
+/** The colours of a platform, in the place of ThermoBox's (before Angular starts). */
+export function usePalette(p: RoomPalette): void {
+  palette = p;
 }

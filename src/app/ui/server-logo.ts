@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal } from '@angular/core';
 
 import { ApiVersionService } from '../core/api-version';
-import { TAURI, imageSource } from '../core/tauri';
+import { DesktopService } from '../core/desktop';
 
 /**
  * The logo of a ThermoBox server (GET /api/v2/server/logo, since 26.12): next to its address in
@@ -27,6 +27,7 @@ import { TAURI, imageSource } from '../core/tauri';
 })
 export class TbServerLogo {
   private readonly versions = inject(ApiVersionService);
+  private readonly desktop = inject(DesktopService);
 
   /** API base of the server ("/api", "https://thermobox.example.com/api"). */
   readonly base = input.required<string>();
@@ -48,11 +49,11 @@ export class TbServerLogo {
     effect(() => void this.versions.api(this.base()));
     effect(() => {
       const s = this.src();
-      if (!TAURI || !s) {
+      if (!this.desktop.active || !s) {
         this.shown.set(s);
         return;
       }
-      imageSource(s).then(
+      this.desktop.imageSource(s).then(
         (u) => this.src() === s && this.shown.set(u),
         () => this.failed.set(s),
       );

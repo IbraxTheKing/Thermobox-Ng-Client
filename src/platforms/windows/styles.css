@@ -1,0 +1,27 @@
+/*
+ * The Windows app (Tauri): Fluent 2 / WinUI 3.
+ *
+ * The shared styles of the client (src/styles/), in their order, with what is this platform's
+ * own (src/platforms/) right where it goes in the cascade. docs/platforms.md.
+ */
+
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+@import 'primeicons/primeicons.css';
+
+@import '../../styles/tokens.css';
+@import '../../styles/controls.css';
+@import '../../styles/base.css';
+@import '../../styles/pages.css';
+@import '../windows/pages.css';
+@import '../../styles/shell.css';
+@import '../../styles/mobile.css';
+@import '../../styles/motion.css';
+@import '../../styles/theme.css';
+@import '../../styles/theme-pages.css';
+@import '../../styles/seasons.css';
+@import '../../styles/standalone.css';
+@import '../desktop/desktop.css';
+@import '../windows/titlebar.css';
+@import '../windows/windows.css';

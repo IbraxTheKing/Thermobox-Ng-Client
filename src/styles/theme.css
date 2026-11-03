@@ -324,25 +324,6 @@ a:hover > .tb-logo { transform: none; }
 :root .tb-mgmt-icon { background: transparent; color: var(--md-on-surface-variant); border-radius: 0; width: 28px; }
 :root .tb-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 6l4 4 4-4' fill='none' stroke='%235a6660' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
 :root[data-theme="dark"] .tb-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 6l4 4 4-4' fill='none' stroke='%23a7b0ab' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
-
-/* ============================== Android: the native bar in the colours of the page ============================== */
-
-/*
- * The bar (and the rail) are a shade of the page behind them, not a tint of the brand: in
- * « Maison », a room coloured by its temperature colours the bar too (BackgroundService, AndroidNativeService).
- */
-:root[data-platform="android"][data-theme] {
-    --tb-m3-surface: color-mix(in srgb, var(--md-on-surface) 3%, var(--tb-background));
-    --tb-m3-container: color-mix(in srgb, var(--md-on-surface) 6%, var(--tb-background));
-    --tb-m3-container-high: color-mix(in srgb, var(--md-on-surface) 9%, var(--tb-background));
-    --tb-m3-indicator: color-mix(in srgb, var(--md-on-surface) 14%, var(--tb-background));
-    --tb-m3-on-indicator: var(--md-on-surface);
-}
-:root[data-platform="android"][data-theme][data-tint="on"][data-background]:not([data-style="panel"]) {
-    --tb-m3-surface: color-mix(in srgb, var(--md-on-surface) 3%, var(--tb-tint-page));
-    --tb-m3-container: color-mix(in srgb, var(--md-on-surface) 6%, var(--tb-tint-page));
-    --tb-m3-indicator: color-mix(in srgb, var(--md-on-surface) 14%, var(--tb-tint-page));
-}
 /* The setting of the side bar only means something where the side bar is */
 @media (max-width: 1199px) { .tb-pref-bar { display: none; } }
 

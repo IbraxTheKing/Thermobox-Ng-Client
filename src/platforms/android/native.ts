@@ -5,19 +5,10 @@ import { App } from '@capacitor/app';
 import { Capacitor, PluginListenerHandle, registerPlugin } from '@capacitor/core';
 import { filter, take } from 'rxjs';
 
-import { PreferencesService } from './preferences';
-import { TransitionsService } from './transitions';
-
-/** Tab of the native bar: id = address of the page, icon = name of a drawable of the plugin. */
-export interface NativeTab {
-  id: string;
-  label: string;
-  icon: string;
-  badge?: boolean;
-}
-
-/** The bar at the bottom (phone held upright) or the rail on the left (tablet, phone sideways). */
-export type BarMode = 'bottom' | 'rail';
+import { SystemAccentSource } from '../../app/core/accent';
+import { BarMode, NativeBar, NativeMenuOption, NativeTab, NativeUi } from '../../app/core/native-ui';
+import { PreferencesService } from '../../app/core/preferences';
+import { TransitionsService } from '../../app/core/transitions';
 
 /** #RRGGBB ou #AARRGGBB */
 interface BarColors {
@@ -75,15 +66,18 @@ if (Capacitor.getPlatform() === 'android' && Capacitor.isNativePlatform() && !AN
 
 const plugin = ANDROID_NATIVE ? registerPlugin<ThermoboxNativePlugin>('ThermoboxNative') : null;
 
-/** The Material You accent of the wallpaper (Android 12+, native app), #rrggbb; null elsewhere. */
-export async function androidSystemAccent(): Promise<string | null> {
-  if (!plugin) return null;
-  try {
-    return (await plugin.systemAccent()).color ?? null;
-  } catch {
-    return null;
-  }
-}
+/** The Material You accent of the wallpaper (Android 12+), #rrggbb (AccentService). */
+export const androidAccent: SystemAccentSource = {
+  async read() {
+    if (!plugin) return null;
+    try {
+      return (await plugin.systemAccent()).color ?? null;
+    } catch {
+      return null;
+    }
+  },
+  why: $localize`Couleurs du fond d'écran à partir d'Android 12.`,
+};
 
 /** PrimeIcons of the page → drawables of the plugin. */
 const ICONS: Record<string, string> = {
@@ -111,7 +105,7 @@ const ICONS: Record<string, string> = {
   'pi-star-fill': 'star',
 };
 
-export function nativeIcon(classes: string, fallback = 'add'): string {
+function nativeIcon(classes: string, fallback = 'add'): string {
   const pi = classes.split(/\s+/).find((c) => c in ICONS);
   return pi ? ICONS[pi] : fallback;
 }
@@ -142,8 +136,8 @@ function hex(...vars: string[]): string {
  * Sheets that are menus (TbSheet nativeMenu): a native Material bottom sheet, in the colours of
  * the page; the id of the row picked, null when it is dismissed.
  */
-export const nativeMenu = plugin
-  ? async (title: string, subtitle: string, options: { id: string; label: string; icon: string; danger: boolean; checked?: boolean }[]) =>
+const nativeMenu = plugin
+  ? async (title: string, subtitle: string, options: NativeMenuOption[]) =>
       (
         await plugin.menu({
           title,
@@ -165,7 +159,7 @@ export const nativeMenu = plugin
  * Native notifications and confirmations (snackbar, Material dialog): used by ToastService and
  * ConfirmService in the Android app; elsewhere the page keeps its own.
  */
-export const nativeMessages = plugin
+const nativeMessages = plugin
   ? {
       snackbar: (text: string, long: boolean) => void plugin.snackbar({ text, long }).catch(() => undefined),
       confirm: async (title: string, message: string, confirm: string, danger: boolean) =>
@@ -182,14 +176,14 @@ export const nativeMessages = plugin
  *
  * Elsewhere (web, iOS, PWA), nothing changes: the page draws everything.
  */
-@Injectable({ providedIn: 'root' })
-export class AndroidNativeService {
+@Injectable()
+export class AndroidNativeService extends NativeBar {
   private readonly doc = inject(DOCUMENT);
   private readonly root = this.doc.documentElement;
   private readonly router = inject(Router);
   private readonly prefs = inject(PreferencesService);
   private readonly transitions = inject(TransitionsService);
-  readonly active = ANDROID_NATIVE;
+  override readonly active = ANDROID_NATIVE;
 
   /** Height of the native bar in CSS px (0: hidden). */
   readonly barHeight = signal(0);
@@ -210,6 +204,7 @@ export class AndroidNativeService {
   private gesture: { mode: 'page' | 'autre'; main: HTMLElement | null; y0: number } | null = null;
 
   constructor() {
+    super();
     if (!plugin) return;
     this.root.classList.add('tb-android-native');
     void plugin.addListener('tab', ({ id, repeated }) => this.onTab?.(id, repeated));
@@ -243,7 +238,7 @@ export class AndroidNativeService {
   }
 
   /** Called by the shell whenever its tabs, the current page or the theme change. */
-  configureBar(tabs: NativeTab[], activeId: string | null, visible: boolean, onTab: (id: string, repeated: boolean) => void, mode: BarMode = 'bottom'): void {
+  override configureBar(tabs: NativeTab[], activeId: string | null, visible: boolean, onTab: (id: string, repeated: boolean) => void, mode: BarMode = 'bottom'): void {
     if (!plugin) return;
     this.last = [tabs, activeId, visible, onTab, mode];
     this.onTab = onTab;
@@ -262,7 +257,7 @@ export class AndroidNativeService {
   }
 
   /** The shell is gone (logout): nothing native stays on screen. */
-  leave(): void {
+  override leave(): void {
     if (!plugin) return;
     this.barWanted = false;
     this.onTab = null;
@@ -556,4 +551,18 @@ export class AndroidNativeService {
 function easeOut(p: number): number {
   const x = Math.max(0, Math.min(1, p));
   return 1 - Math.pow(1 - x, 2);
+}
+
+/**
+ * The native components the page uses in the Android app (NativeUi): its menus as bottom sheets,
+ * its snackbars and dialogs, the drawables of its icons.
+ */
+@Injectable()
+export class AndroidNativeUi extends NativeUi {
+  override readonly active = ANDROID_NATIVE;
+  override readonly menu = nativeMenu;
+  override readonly messages = nativeMessages;
+  override icon(classes: string, fallback = 'add'): string {
+    return nativeIcon(classes, fallback);
+  }
 }

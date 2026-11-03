@@ -11,7 +11,7 @@ import { apiVersionInterceptor } from './core/api-version';
 import { authInterceptor } from './core/http';
 import { PageTitleStrategy } from './core/title';
 import { TransitionsService } from './core/transitions';
-import { TAURI } from './core/tauri';
+import { TARGET } from '../platforms/current';
 import { locale } from './core/i18n';
 
 registerLocaleData(localeFr);
@@ -36,12 +36,14 @@ export const appConfig: ApplicationConfig = {
     ),
     provideHttpClient(withFetch(), withInterceptors([authInterceptor, apiVersionInterceptor])),
     { provide: TitleStrategy, useClass: PageTitleStrategy },
+    // What the platform of this build puts in the place of the shared services, or beside them
+    ...TARGET.providers,
     // French or English (core/i18n.ts, chosen before the app starts)
     { provide: LOCALE_ID, useFactory: locale },
     // Installed web app (PWA): the shell works offline, the data always comes from the server.
     // Not in the desktop app: its files are in it already.
     provideServiceWorker('ngsw-worker.js', {
-      enabled: !isDevMode() && !TAURI,
+      enabled: !isDevMode() && !TARGET.desktopOs,
       registrationStrategy: 'registerWhenStable:30000',
     }),
   ],

@@ -1,0 +1,6 @@
+/*
+ * native: what pages.css of the shared styles is for this platform only (imported right after it,
+ * src/platforms/native/styles.css). Generated from the shared file when the platforms were split.
+ */
+/* Installed app (PWA / native): no text selection on the chrome, as in native apps */
+.tb-native .tb-rail, .tb-native .tb-topbar { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }

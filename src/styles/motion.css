@@ -87,125 +87,16 @@
     .tb-entering :is(.tb-table tbody, .tb-list-mgmt) > * { animation: tb-rise .5s var(--tb-ease) both; animation-delay: calc(.12s + var(--i, 0) * 35ms); }
 }
 
-/* ============================== iOS: Liquid Glass in motion ============================== */
-
-:root[data-platform="ios"] {
-    --tb-rail-radius: 28px;
-    /* A spring that barely overshoots, as the glass of iOS 26 */
-    --tb-spring-glass: linear(0, .006, .025 2.8%, .101 6.1%, .539 18.9%, .721 25.3%, .849 31.5%, .937 38.1%, .968 41.8%, .991 45.7%, 1.006 50.1%, 1.015 55%, 1.017 63.9%, 1.001 85.9%, 1);
-}
-@media (max-width: 840px) {
-    :root[data-platform="ios"] { --tb-rail-radius: 999px; }
-}
-@media (orientation: landscape) and (max-height: 520px) {
-    :root[data-platform="ios"] { --tb-rail-radius: 28px; }
-}
-
-/* The tab bar keeps its glass during a page change: its picture has no blur, its group gets it */
-:root[data-platform="ios"]::view-transition-group(tb-rail) {
-    border-radius: var(--tb-rail-radius);
-    -webkit-backdrop-filter: var(--tb-lg-blur);
-    backdrop-filter: var(--tb-lg-blur);
-}
-/* The top bar is part of the page: it has nothing that changes */
-:root[data-platform="ios"] .tb-topbar { view-transition-name: none; }
-
-/* Dashboard ↔ room: the card is a drop of glass that flows into its new shape */
-:root[data-platform="ios"]::view-transition-group(*.tb-card) {
-    animation-duration: .6s;
-    animation-timing-function: var(--tb-spring-glass);
-}
-:root[data-platform="ios"]::view-transition-old(*.tb-card),
-:root[data-platform="ios"]::view-transition-new(*.tb-card) { animation-duration: .6s; }
-:root[data-platform="ios"]::view-transition-image-pair(*.tb-card) { border-radius: 28px; }
-:root[data-platform="ios"]::view-transition-group(*) { animation-timing-function: var(--tb-spring-glass); animation-duration: .55s; }
-
-/* The lens follows the selected tab with the same spring */
-:root[data-platform="ios"] .tb-lens {
-    /* One transform (a separate `scale` would also scale the translation) */
-    transform: translate(var(--tb-l-x, 0px), var(--tb-l-y, 0px))
-               scale(calc(var(--tb-l-sx, 1) + var(--tb-l-stretch, 0)), calc(var(--tb-l-sy, 1) - var(--tb-l-stretch, 0) / 2));
-    transition: transform .55s var(--tb-spring-glass), width .55s var(--tb-spring-glass), height .55s var(--tb-spring-glass), opacity .2s ease,
-                background-color .3s ease, box-shadow .3s ease;
-}
-
 /*
  * Held (or slid): the lens lifts off the bar, grows past it and turns to clear glass that
  * magnifies a little what it passes over, follows the finger and stretches with its speed;
  * letting go opens the tab under it and it settles back.
  */
-/* Bar of phones: placed in tabs (--tb-l-i of --tb-l-n), so it always sits on its tab */
-:root[data-platform="ios"] .tb-dests.tb-lens-rel .tb-lens {
-    top: 0;
-    bottom: 0;
-    left: 0;
-    height: auto;
-    width: calc(100% / var(--tb-l-n, 5));
-    transform: translateX(calc(var(--tb-l-i, 0) * 100%))
-               scale(calc(var(--tb-l-sx, 1) + var(--tb-l-stretch, 0)), calc(var(--tb-l-sy, 1) - var(--tb-l-stretch, 0) / 2));
-}
-
-@media (max-width: 840px) {
-    :root[data-platform="ios"] .tb-dests { touch-action: none; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
-    :root[data-platform="ios"] .tb-lens-held { transform: scale(1.025); }
-    :root[data-platform="ios"] .tb-lens-held .tb-lens {
-        z-index: 2;
-        --tb-l-sx: 1.16;
-        --tb-l-sy: 1.3;
-        background: rgba(255, 255, 255, .14);
-        box-shadow:
-            inset 0 0 0 .5px rgba(255, 255, 255, .95),
-            inset 0 2px 5px rgba(255, 255, 255, .75),
-            inset 0 -4px 10px rgba(25, 40, 65, .1),
-            0 10px 28px rgba(25, 40, 65, .22);
-        -webkit-backdrop-filter: saturate(180%) brightness(1.08) contrast(1.04);
-        backdrop-filter: saturate(180%) brightness(1.08) contrast(1.04);
-        transition: transform .12s cubic-bezier(.2, .8, .3, 1), width .3s var(--tb-spring-glass), height .3s var(--tb-spring-glass), background-color .25s ease,
-                    box-shadow .25s ease;
-    }
-    :root[data-platform="ios"][data-theme="dark"] .tb-lens-held .tb-lens {
-        background: rgba(255, 255, 255, .08);
-        box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .45), inset 0 2px 5px rgba(255, 255, 255, .25), 0 10px 28px rgba(0, 0, 0, .4);
-    }
-    /* The tab under the lens grows a little, as seen through it */
-    :root[data-platform="ios"] .tb-dest .tb-dest-icon, :root[data-platform="ios"] .tb-dest .tb-dest-label { transition: transform .3s var(--tb-spring-glass), color .2s ease; }
-    :root[data-platform="ios"] .tb-lens-held .tb-dest-hover { color: var(--md-primary); }
-    :root[data-platform="ios"] .tb-lens-held .tb-dest-hover .tb-dest-icon { transform: scale(1.18); }
-    :root[data-platform="ios"] .tb-lens-held .tb-dest-hover .tb-dest-label { transform: scale(1.08); }
-    /* While it is held, the selected tab looks like the others: only the lens says where it is */
-    :root[data-platform="ios"] .tb-lens-held .tb-dest-on:not(.tb-dest-hover) { color: color-mix(in srgb, var(--md-on-surface) 78%, transparent); }
-}
 
 /*
  * Buttons of glass (iOS 26): pressed, they swell instead of sinking, and light up under the
  * finger (PlatformService sets --tb-px / --tb-py and .tb-press).
  */
-@media (prefers-reduced-motion: no-preference) {
-    :root[data-platform="ios"] :is(.tb-btn, .tb-segmented > button, .tb-summary-chip, .tb-chip, .tb-list-row, .tb-mgmt-row) {
-        transition: transform .4s var(--tb-spring-glass), background-color .2s ease, box-shadow .25s ease, color .2s ease;
-    }
-    :root[data-platform="ios"] :is(.tb-btn, .tb-segmented > button, .tb-summary-chip, .tb-chip).tb-press { transform: scale(1.06); }
-    :root[data-platform="ios"] .tb-btn:active { transform: scale(1.06); opacity: 1; }
-    :root[data-platform="ios"] :is(.tb-list-row, .tb-mgmt-row).tb-press { transform: scale(.985); }
-    :root[data-platform="ios"] .tb-press::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-        border-radius: inherit;
-        background: radial-gradient(circle at var(--tb-px, 50%) var(--tb-py, 50%), rgba(255, 255, 255, .55), transparent 70%);
-        mix-blend-mode: soft-light;
-        pointer-events: none;
-        animation: tb-fade-in .2s ease both;
-    }
-    /* Switch: the thumb turns to glass and stretches while held */
-    :root[data-platform="ios"] .tb-switch::before { transition: transform .4s var(--tb-spring-glass), width .3s var(--tb-spring-glass), background-color .2s, box-shadow .2s; }
-    :root[data-platform="ios"] .tb-switch:active::before {
-        background: rgba(255, 255, 255, .35);
-        box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .9), inset 0 2px 4px rgba(255, 255, 255, .6), 0 4px 12px rgba(0, 0, 0, .18);
-        -webkit-backdrop-filter: blur(2px) saturate(180%);
-        backdrop-filter: blur(2px) saturate(180%);
-    }
-}
 
 /* Swipe back (BackGestureService): the page follows the finger, shrinking; the bars stay */
 .tb-gesture-back .tb-main { will-change: transform; }
@@ -261,10 +152,8 @@
 .tb-pull-load .pi { animation: tb-pull-turn .8s linear infinite; }
 .tb-pull-load .pi::before { content: "\e9f6"; }
 @keyframes tb-pull-turn { to { transform: rotate(360deg); } }
-/* The browser's own pull (Chrome reloads the whole app) stays out of it. Not in the Linux app:
-   on the root, WebKitGTK no longer scrolled the page with the wheel or the touchpad at all */
-html.tb-pull-page:not([data-desktop="linux"]) { overscroll-behavior-y: contain; }
-:root[data-platform="ios"] .tb-pull-round { background: color-mix(in srgb, var(--md-surface) 80%, transparent); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+/* The browser's own pull (Chrome reloads the whole app) stays out of it */
+html.tb-pull-page { overscroll-behavior-y: contain; }
 
 /* ============================== Phones: lighter motion ============================== */
 

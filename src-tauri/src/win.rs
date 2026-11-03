@@ -100,6 +100,28 @@ pub fn dark_mode(hwnd: *mut core::ffi::c_void, dark: bool) {
     }
 }
 
+/// The Acrylic of the system behind the window ([on]), or none: whether it is shown now.
+pub fn acrylic(window: &tauri::WebviewWindow, on: bool) -> bool {
+    let done = if on {
+        window.set_effects(tauri::window::EffectsBuilder::new().effect(tauri::window::Effect::Acrylic).build())
+    } else {
+        window.set_effects(None)
+    };
+    on && done.is_ok()
+}
+
+/// The theme shown ([dark]): the colours Windows draws around the window, the tint of its Acrylic
+/// ([acrylic]: shown), which does not take a new theme by itself: it is put back.
+pub fn window_theme(window: &tauri::WebviewWindow, dark: bool, acrylic: bool) {
+    if let Ok(hwnd) = window.hwnd() {
+        dark_mode(hwnd.0, dark);
+    }
+    if acrylic {
+        let _ = window.set_effects(None);
+        let _ = window.set_effects(tauri::window::EffectsBuilder::new().effect(tauri::window::Effect::Acrylic).build());
+    }
+}
+
 /// The text in the clipboard (CF_UNICODETEXT), None when there is none or it is taken.
 pub fn clipboard_text() -> Option<String> {
     use windows_sys::Win32::System::DataExchange::{CloseClipboard, GetClipboardData, OpenClipboard};
