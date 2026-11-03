@@ -53,9 +53,6 @@ static SOFTWARE: AtomicBool = AtomicBool::new(false);
 /// WEBKIT_DISABLE_COMPOSITING_MODE was set here, not by the user: taken away before the app
 /// starts again, or the new process would inherit it whatever the new choice.
 static SET_HERE: AtomicBool = AtomicBool::new(false);
-/// GDK_BACKEND=x11 was set here (the rounded corners on Wayland, through XWayland): taken away
-/// before the app starts again, as SET_HERE.
-static X11_HERE: AtomicBool = AtomicBool::new(false);
 /// The corners of the window are rounded in this run.
 static ROUNDED: AtomicBool = AtomicBool::new(false);
 
@@ -94,8 +91,7 @@ pub fn software_only() -> bool {
 }
 
 /// First thing of main(), before WebKit starts: the options of linux.json, and the rendering
-/// they ask for (WEBKIT_DISABLE_COMPOSITING_MODE, unless the user set it already); for the
-/// rounded corners in a Wayland session, XWayland (GDK_BACKEND=x11, same condition).
+/// they ask for (WEBKIT_DISABLE_COMPOSITING_MODE, unless the user set it already).
 pub fn prepare() {
     let opts: Options = file()
         .and_then(|f| std::fs::read_to_string(f).ok())
@@ -113,15 +109,6 @@ pub fn prepare() {
         SET_HERE.store(true, Relaxed);
     }
     SOFTWARE.store(if set_by_user { std::env::var_os("WEBKIT_DISABLE_COMPOSITING_MODE").is_some_and(|v| v != "0") } else { software }, Relaxed);
-    // The rounded corners cut the window with X11 ([round_corners]): in a Wayland session, the
-    // window drawn by the page goes through XWayland (where there is one, and unless the user
-    // chose the backend of GDK)
-    let wayland = std::env::var_os("WAYLAND_DISPLAY").is_some();
-    let xwayland = std::env::var_os("DISPLAY").is_some();
-    if opts.window != "gtk3" && opts.rounded && wayland && xwayland && std::env::var_os("GDK_BACKEND").is_none() {
-        std::env::set_var("GDK_BACKEND", "x11");
-        X11_HERE.store(true, Relaxed);
-    }
     let _ = OPTIONS.set(opts);
 }
 
@@ -174,9 +161,6 @@ pub fn set_options(app: &AppHandle, window: String, rendering: String, rounded: 
     std::fs::write(&path, serde_json::to_string_pretty(&opts).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
     if SET_HERE.load(Relaxed) {
         std::env::remove_var("WEBKIT_DISABLE_COMPOSITING_MODE");
-    }
-    if X11_HERE.load(Relaxed) {
-        std::env::remove_var("GDK_BACKEND");
     }
     app.restart();
 }
@@ -240,12 +224,13 @@ const RADIUS: i32 = 12;
 /// drawing with the processor, then painted only what changed (the rest of the window stayed
 /// empty: the bug of a virtual machine). Nor a clip of what GTK draws: WebKit draws in a window
 /// of its own, which it does not reach. The shape of the window (the X Shape extension) is the
-/// rectangle without its four corners: the X server (or XWayland, [prepare]) shows nothing
+/// rectangle without its four corners: the X server shows nothing
 /// outside, whatever draws inside; no compositor or alpha channel needed. The edge of the
 /// corners is not smoothed, the outline drawn by the page over it is.
 ///
-/// Square when maximized, full screen or tiled (as GNOME). Without X11 (Wayland only, no
-/// XWayland) the corners stay square, and the page with them ([Info::corners_rounded]).
+/// Square when maximized, full screen or tiled (as GNOME). A Wayland session keeps them square,
+/// and the page with them ([Info::corners_rounded]): Wayland cuts no window, and running the app
+/// through XWayland for it left WebKitGTK of a virtual machine without painting the page.
 fn round_corners(window: &gtk::ApplicationWindow) {
     let x11 = GtkWindowExt::screen(window).is_some_and(|s| s.display().type_().name().contains("X11"));
     if !x11 {

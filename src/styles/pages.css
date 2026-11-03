@@ -1,5 +1,5 @@
 /* Styles of what only exists in this client, or is built differently from the JSF interface
-   (see styles.css). Same tokens, same look. */
+   (see src/platforms/web/styles.css). Same tokens, same look. */
 
 /* ============================== Login ============================== */
 
@@ -181,7 +181,18 @@ button.tb-drill-crumb, button.tb-drill-main { border: 0; background: none; font:
 /* The photo picker: a button over a hidden file field */
 .tb-upload { position: relative; overflow: hidden; }
 .tb-upload input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; font-size: 0; }
-.tb-photo > img { animation: tb-fade-in .6s ease; }
+/* A photo that arrives after its frame is shown fades in (ui/photo.ts), not one already there */
+.tb-photo-wait { opacity: 0; }
+.tb-photo-in { animation: tb-fade-in .6s ease; }
+
+/* The boxes of a room: tiles waiting while they are read, then they come in one after the other
+   (or the message that there is none), the same on every platform */
+.tb-box.tb-box-waiting { pointer-events: none; animation: tb-waiting-pulse 1.4s ease-in-out infinite; }
+.tb-box-waiting .tb-waiting-row { width: 55%; margin: 4px 0; }
+@media (prefers-reduced-motion: no-preference) {
+    .tb-section .tb-box-in { animation: tb-box-in .36s var(--tb-ease) both; animation-delay: calc(var(--i, 0) * 40ms); }
+}
+@keyframes tb-box-in { from { opacity: 0; transform: translateY(8px) scale(.98); } }
 .tb-photo .tb-btn.tb-photo-remove {
     border: 1px solid var(--tb-glass-line);
     background: var(--tb-glass-solid);

@@ -1274,7 +1274,7 @@ a.tb-crumb:hover { background: var(--md-secondary-container); color: var(--md-on
 
 .tb-entering .tb-return,
 .tb-entering .tb-return *,
-.tb-vt-in :is(.tb-page-head, .tb-hero-reading, .tb-photo, .tb-photo > img) { animation: none !important; }
+.tb-vt-in :is(.tb-page-head, .tb-hero-reading, .tb-photo) { animation: none !important; }
 
 /* Live point of the sparkline: a slow ripple */
 
@@ -1307,7 +1307,6 @@ a.tb-crumb:hover { background: var(--md-secondary-container); color: var(--md-on
 
 @keyframes tb-sheet-in { from { transform: translateY(100%); } }
 
-.tb-photo > img { animation: tb-fade-in .6s ease; }
 
 /* Theme toggle: the new theme spreads in a circle from the button (see tbTheme.toggle) */
 

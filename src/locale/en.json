@@ -2215,9 +2215,9 @@
     "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Envoyer ",
     "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Send "
   },
-  "830055619817045992": {
-    "fr": "Pas encore de photo",
-    "en": "No photo yet"
+  "7952252353640215003": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Changer {$TAG_INPUT}",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Change {$TAG_INPUT}"
   },
   "925386844978292850": {
     "fr": "Retirer la photo",
@@ -2282,6 +2282,14 @@
   "2077457120564698304": {
     "fr": "Aucune consigne sur la période",
     "en": "No setpoint over the period"
+  },
+  "5281137299642331151": {
+    "fr": "Boîtiers",
+    "en": "Boxes"
+  },
+  "4142863621251590306": {
+    "fr": "Ajouter une photo",
+    "en": "Add a photo"
   },
   "299595458637860428": {
     "fr": "Chauffe pour atteindre {$PH} {$PH_1}.",
@@ -2530,10 +2538,6 @@
   "2209323787314769945": {
     "fr": "{$INTERPOLATION} Affiché à côté du serveur dans la liste des comptes de chacun.",
     "en": "{$INTERPOLATION} Shown next to the server in everyone's list of accounts."
-  },
-  "7952252353640215003": {
-    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Changer {$TAG_INPUT}",
-    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Change {$TAG_INPUT}"
   },
   "2725946787939964395": {
     "fr": "Automatique",
@@ -3671,9 +3675,9 @@
     "fr": "Coins arrondis",
     "en": "Rounded corners"
   },
-  "2339305326934187879": {
-    "fr": "Les coins de la fenêtre arrondis, comme ceux des applications GNOME. Sous Wayland, la fenêtre passe alors par XWayland.",
-    "en": "The corners of the window rounded, as those of GNOME apps. On Wayland, the window then goes through XWayland."
+  "3127649553169231348": {
+    "fr": "Les coins de la fenêtre arrondis, comme ceux des applications GNOME. Sous Wayland, ils restent carrés.",
+    "en": "The corners of the window rounded, as those of GNOME apps. On Wayland, they stay square."
   },
   "721178500544039717": {
     "fr": "Redémarrage nécessaire",
@@ -4014,14 +4018,6 @@
   "7264101943361472659": {
     "fr": "Photo de ",
     "en": "Photo of "
-  },
-  "4142863621251590306": {
-    "fr": "Ajouter une photo",
-    "en": "Add a photo"
-  },
-  "9004334984468055592": {
-    "fr": "Changer",
-    "en": "Change"
   },
   "7641599530594591506": {
     "fr": "Pas encore de mesure",

@@ -777,7 +777,7 @@
 :root[data-desktop="windows"] .tb-segmented > button.tb-seg-on::after { animation: wf-line .25s cubic-bezier(0, 0, 0, 1); }
 @keyframes wf-line { from { transform: scaleX(0); } }
 /* Pictures of the rooms */
-:root[data-desktop="windows"] :is(.tb-photo > img, .tb-photo tb-photo-img > img) { animation: wf-fade-in .167s linear; }
+:root[data-desktop="windows"] .tb-photo-in { animation: wf-fade-in .167s linear; }
 
 /* ContentDialog, with its smoke behind */
 :root[data-desktop="windows"] .tb-scrim { animation: wf-fade-in .167s linear; }
@@ -824,7 +824,7 @@
 /* Préférences: the headers of the groups, as in the Settings of Windows */
 :root[data-desktop="windows"] .tb-pref-heading { margin-bottom: 8px; color: var(--md-on-surface); font-size: 14px; font-weight: 600; }
 
-/* ============================== MenuFlyout and ComboBox of WinUI 3 (core/winui-flyout.ts)
+/* ============================== MenuFlyout and ComboBox of WinUI 3 (flyout.ts)
 
    The context menus and the drop-down lists: Acrylic of the flyouts (opaque without the blur,
    Préférences › Flou), corners of 8 px, stroke and shadow of a flyout, rows of 32 px with

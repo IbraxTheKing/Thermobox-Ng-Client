@@ -10,8 +10,8 @@
  * - the sidebar of an AdwOverlaySplitView (shown or hidden whole, never a strip of icons), the
  *   header bar split over it and over the page, the main menu (open-menu) native of GTK
  * - the corners of the window rounded (12 px, data-rounded: linux.rs cuts the window, the page
- *   follows with its outline and its header bar) or square (Préférences › Fenêtre, Wayland
- *   without XWayland, maximized), its outline drawn
+ *   follows with its outline and its header bar) or square (Préférences › Fenêtre, Wayland,
+ *   maximized), its outline drawn
  *
  * What makes ThermoBox stays: its green accent (or the palette chosen in Préférences), its logo,
  * the colours of the states (stable, en chauffe, trop chaud), the tint of a room in « Maison ».

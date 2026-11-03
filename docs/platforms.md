@@ -36,6 +36,8 @@ src/platforms/
 src-tauri/src/      main.rs (shared), win.rs, menu.rs (macOS), linux.rs
 ```
 
+Each of `src/app`, `src/platforms` and `src-tauri` has a README with the details of its files.
+
 ## How a build gets its platform
 
 `angular.json` has one configuration per platform, added to `production` or `development`

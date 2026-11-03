@@ -52,7 +52,7 @@ import { LinuxSettings } from './settings';
             <span class="tb-section-icon"><i class="pi pi-stop"></i></span>
             <div class="tb-pref-text">
               <strong i18n>Coins arrondis</strong>
-              <span i18n class="tb-muted">Les coins de la fenêtre arrondis, comme ceux des applications GNOME. Sous Wayland, la fenêtre passe alors par XWayland.</span>
+              <span i18n class="tb-muted">Les coins de la fenêtre arrondis, comme ceux des applications GNOME. Sous Wayland, ils restent carrés.</span>
             </div>
             <tb-switch [checked]="linuxRounded()" (checkedChange)="linuxRounded.set($event)" i18n-label label="Coins arrondis" />
           </div>

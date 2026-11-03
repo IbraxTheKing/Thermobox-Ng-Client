@@ -48,7 +48,7 @@ interface BackStep {
   /** 0 → 1 while the finger slides from the edge. */
   progress?: number;
   edge?: 'left' | 'right';
-  /** Hauteur du doigt, px CSS. */
+  /** Height of the finger, CSS px. */
   y?: number;
 }
 

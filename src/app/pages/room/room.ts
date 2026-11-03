@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, OnDestroy, computed, effect, inject, input, signal, untracked } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, Injector, OnDestroy, afterNextRender, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { Location, NgTemplateOutlet } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -64,6 +64,8 @@ export class RoomPage implements OnDestroy {
   private readonly store = inject(TreeStore);
   private readonly transitions = inject(TransitionsService);
   private readonly flip = inject(FlipService);
+  private readonly host: HTMLElement = inject(ElementRef).nativeElement;
+  private readonly injector = inject(Injector);
   protected readonly phone = inject(PlatformService).phone;
   /** Phones: the « Du / Au » fields are shown. */
   protected readonly customRange = signal(false);
@@ -81,6 +83,12 @@ export class RoomPage implements OnDestroy {
   /** Many rooms in a floor or a building: their tiles a part at a time. */
   protected readonly shownRooms = new ShownCount(ROOM_TILES);
   protected readonly missing = signal(false);
+  /**
+   * The boxes of the room are known: read from the server, or from the tree of the dashboard
+   * when it holds the boxes (administrators, managers). Until then the « Boîtiers » section keeps
+   * its place with waiting tiles, so it never appears all at once.
+   */
+  protected readonly boxesKnown = signal(false);
   protected readonly labels = LABELS;
 
   // Consigne
@@ -229,7 +237,10 @@ export class RoomPage implements OnDestroy {
   private async open(id: number): Promise<void> {
     clearInterval(this.timer);
     // Already shown from the dashboard's data (constructor): kept until the server answers
-    if (this.detail()?.element.id !== id) this.prime(id);
+    if (this.detail()?.element.id !== id) {
+      this.boxesKnown.set(false);
+      this.prime(id);
+    }
     this.missing.set(false);
     // The last 24 h of this room, if already read: there at once
     this.history.set(isNaN(id) ? null : (this.cache.read<History>(`room|${id}|24`)?.value ?? null));
@@ -257,14 +268,20 @@ export class RoomPage implements OnDestroy {
       this.detail.set(null);
       return;
     }
+    // What it contains and its boxes, from the tree: the page has its final layout at once (the
+    // photo does not move down when the server answers)
+    const children = this.store.children().get(id) ?? [];
+    const withBoxes = !!this.store.tree()?.devicesVisible;
+    const boxes = withBoxes && known.kind !== 'DEVICE' ? this.store.descendants(id).filter((n) => n.kind === 'DEVICE') : [];
     this.detail.set({
       element: known,
       ancestors: this.store.path(id).map((a) => ({ id: a.id, name: a.name, kind: a.kind, accessible: a.accessible })),
-      children: [],
-      measurements: [],
+      children: children.map((c) => ({ id: c.id, name: c.name, kind: c.kind, accessible: c.accessible })),
+      measurements: boxes.map((b) => ({ id: b.id, name: b.name, value: b.temperature, date: b.lastMeasurement })),
       ownSetpoints: [],
       rooms: [],
     });
+    this.boxesKnown.set(withBoxes && boxes.length === known.devices);
     this.title.set(known.name ?? $localize`Salle`);
   }
 
@@ -272,6 +289,7 @@ export class RoomPage implements OnDestroy {
     try {
       const d = await firstValueFrom(this.rooms$(id, quiet));
       this.detail.set(d);
+      this.boxesKnown.set(true);
       this.title.set(d.element.name ?? $localize`Salle`);
       // The stepper starts from the current setpoint, in the unit of the Preferences page
       if (this.newSetpoint() == null) this.newSetpoint.set(this.unit.forInput(d.element.setpoint?.value ?? DEFAULT_SETPOINT));
@@ -457,7 +475,10 @@ export class RoomPage implements OnDestroy {
     try {
       const version = await firstValueFrom(this.rooms.putImage(e.id, file));
       this.images.forget(e.id);
-      this.updateElement({ ...e, image: version });
+      const first = e.image == null;
+      const set = () => this.updateElement({ ...this.element()!, image: version });
+      if (first) this.movePhoto(set);
+      else set();
       this.toasts.info('Photo enregistrée');
     } catch (err) {
       this.toasts.error("Impossible d'enregistrer la photo", errorMessage(err));
@@ -473,12 +494,51 @@ export class RoomPage implements OnDestroy {
     if (!ok) return;
     try {
       await firstValueFrom(this.rooms.deleteImage(e.id));
-      this.images.forget(e.id);
-      this.updateElement({ ...e, image: null });
+      this.movePhoto(() => this.updateElement({ ...this.element()!, image: null }));
+      // After its copy has faded (it shows the same picture)
+      setTimeout(() => this.images.forget(e.id), 600);
       this.toasts.info('Photo retirée');
     } catch (err) {
       this.toasts.error('Impossible de retirer la photo', errorMessage(err));
     }
+  }
+
+  /**
+   * The first photo of a room, or its last one taken away: the reading (the dial, the panel) slides
+   * from the middle of the page to its side, the photo comes in from the right, the same on every
+   * platform; or the photo fades out where it was and the reading slides back to the middle.
+   */
+  private movePhoto(change: () => void): void {
+    const root = document.documentElement;
+    const still = matchMedia('(prefers-reduced-motion: reduce)').matches || root.dataset['motion'] === 'off';
+    const reading = () => this.host.querySelector<HTMLElement>('.tb-hero > :first-child');
+    const photo = () => this.host.querySelector<HTMLElement>('.tb-hero > .tb-photo');
+    const before = reading()?.getBoundingClientRect();
+    const old = photo();
+    if (!still && old) {
+      // The photo going: a copy of it fades out where it was
+      const r = old.getBoundingClientRect();
+      const ghost = old.cloneNode(true) as HTMLElement;
+      ghost.querySelector('.tb-photo-actions')?.remove();
+      Object.assign(ghost.style, { position: 'fixed', left: `${r.left}px`, top: `${r.top}px`, width: `${r.width}px`, height: `${r.height}px`, margin: '0', zIndex: '5', pointerEvents: 'none' });
+      document.body.appendChild(ghost);
+      ghost.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateX(24px) scale(.97)' }], { duration: 260, easing: 'ease-in', fill: 'forwards' }).finished.finally(() => ghost.remove());
+    }
+    change();
+    if (still || !before) return;
+    afterNextRender(
+      () => {
+        const now = reading()?.getBoundingClientRect();
+        if (now) {
+          const dx = before.left + before.width / 2 - (now.left + now.width / 2);
+          const dy = before.top - now.top;
+          if (Math.abs(dx) > 1 || Math.abs(dy) > 1)
+            reading()!.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'none' }], { duration: 480, easing: 'cubic-bezier(.2, .8, .2, 1)' });
+        }
+        photo()?.animate([{ opacity: 0, transform: 'translateX(40px) scale(.96)' }, { opacity: 1, transform: 'none' }], { duration: 480, delay: 90, easing: 'cubic-bezier(.2, .8, .2, 1)', fill: 'backwards' });
+      },
+      { injector: this.injector },
+    );
   }
 
   // ---------------------------------------------------------------- formats
@@ -486,6 +546,11 @@ export class RoomPage implements OnDestroy {
   protected deviceDelta(v: number | null): string {
     const avg = this.element()?.temperature;
     return v == null || avg == null ? '' : this.unit.delta(v - avg);
+  }
+
+  /** 0 … n-1 (at most 12): the waiting tiles. */
+  protected range(n: number): number[] {
+    return Array.from({ length: Math.min(Math.max(n, 1), 12) }, (_, i) => i);
   }
 
   protected ddmmAtHHmm = ddmmAtHHmm;
