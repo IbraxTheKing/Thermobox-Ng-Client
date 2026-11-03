@@ -28,6 +28,8 @@ interface Stored {
   windowBlur?: boolean;
   /** « Maison »: the look of the holidays of the year (SeasonService). */
   seasons?: boolean;
+  /** Linux app: two fingers to the right on the touchpad go back. */
+  swipeBack?: boolean;
   /** Apps (mobile, desktop): notify when a room leaves or reaches its setpoint. */
   notifications?: boolean;
   /** Which rooms: the favorites or all those the user sees. */
@@ -84,6 +86,8 @@ export class PreferencesService {
   readonly accent = signal<string>(this.stored.accent ?? 'default');
   /** Windows app: Acrylic behind the side bar, blurred bars (on by default). */
   readonly windowBlur = signal(this.stored.windowBlur ?? true);
+  /** Linux app: two fingers on the touchpad go back, the page following them (on by default). */
+  readonly swipeBack = signal(this.stored.swipeBack ?? true);
   /** « Maison »: Christmas, Halloween… change the look of the app on their days (on by default). */
   readonly seasons = signal(this.stored.seasons ?? true);
   /** Apps: notifications of the setpoint (off until the user turns them on). */
@@ -125,6 +129,7 @@ export class PreferencesService {
         buildingOrder: this.buildingOrder(),
         windowBlur: this.windowBlur(),
         seasons: this.seasons(),
+        swipeBack: this.swipeBack(),
         notifications: this.notifications(),
         notifyRooms: this.notifyRooms(),
         language: this.language(),
@@ -166,6 +171,7 @@ export class PreferencesService {
     if (p.buildingOrder) this.buildingOrder.set(p.buildingOrder);
     if (p.windowBlur != null) this.windowBlur.set(p.windowBlur);
     if (p.seasons != null) this.seasons.set(p.seasons);
+    if (p.swipeBack != null) this.swipeBack.set(p.swipeBack);
     if (p.notifications != null) this.notifications.set(p.notifications);
     if (p.notifyRooms) this.notifyRooms.set(p.notifyRooms);
     // Another window changed the language: this one starts again in it

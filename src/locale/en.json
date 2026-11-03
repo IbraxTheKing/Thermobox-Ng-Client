@@ -2019,6 +2019,74 @@
     "fr": "Le flou de Windows (Acrylic) derrière la barre de navigation et la barre de titre, et le flou de ce qui passe sous les barres. Désactivés, tout est opaque : un peu moins de travail pour la carte graphique.",
     "en": "The Windows blur (Acrylic) behind the navigation bar and the title bar, and the blur of what goes under the bars. Turned off, everything is opaque: a little less work for the graphics card."
   },
+  "3630949311146465142": {
+    "fr": "Fenêtre",
+    "en": "Window"
+  },
+  "3231026612119350004": {
+    "fr": "Style de la fenêtre",
+    "en": "Window style"
+  },
+  "4644201376387066451": {
+    "fr": "« GNOME » : dessinée par l'application, comme une application GNOME récente. « GTK 3 » : la fenêtre du système, avec sa barre de titre, ses boutons et son menu natifs.",
+    "en": "“GNOME”: drawn by the app, like a recent GNOME app. “GTK 3”: the system window, with its native title bar, buttons and menu."
+  },
+  "5729631700077106585": {
+    "fr": "GNOME",
+    "en": "GNOME"
+  },
+  "85929746672243514": {
+    "fr": "GTK 3",
+    "en": "GTK 3"
+  },
+  "8535914497284040501": {
+    "fr": "Rendu",
+    "en": "Rendering"
+  },
+  "2697683451040762378": {
+    "fr": "Sans carte graphique (machine virtuelle, WSL), le processeur dessine bien plus vite que la carte graphique qu'il imite. « Automatique » le choisit dans ce cas.",
+    "en": "Without a graphics card (virtual machine, WSL), the processor draws much faster than the graphics card it imitates. “Automatic” picks it in that case."
+  },
+  "7100322059445754426": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} En ce moment : dessinée par le processeur.",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Right now: drawn by the processor."
+  },
+  "2487560105012161777": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} En ce moment : dessinée par la carte graphique.",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Right now: drawn by the graphics card."
+  },
+  "2725946787939964395": {
+    "fr": "Automatique",
+    "en": "Automatic"
+  },
+  "4295064920260423282": {
+    "fr": "Carte graphique",
+    "en": "Graphics card"
+  },
+  "489345924039794949": {
+    "fr": "Processeur",
+    "en": "Processor"
+  },
+  "721178500544039717": {
+    "fr": "Redémarrage nécessaire",
+    "en": "Restart needed"
+  },
+  "467531533664836429": {
+    "fr": "La fenêtre et le rendu changent au démarrage de l'application.",
+    "en": "The window and the rendering change when the app starts."
+  },
+  "6272145995861403650": {
+    "fr": "Redémarrer",
+    "en": "Restart"
+  },
+  "1929791259285158917": {
+    "fr": "Balayer pour revenir",
+    "en": "Swipe to go back"
+  },
+  "4130363522774997977": {
+    "fr": "Deux doigts vers la droite sur le pavé tactile reviennent à la page précédente, qui suit les doigts.",
+    "en": "Two fingers to the right on the touchpad go back to the previous page, which follows the fingers."
+  },
   "2353943056199595059": {
     "fr": "Utilitaire",
     "en": "Utilities"
@@ -2583,10 +2651,6 @@
     "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Changer {$TAG_INPUT}",
     "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Change {$TAG_INPUT}"
   },
-  "2725946787939964395": {
-    "fr": "Automatique",
-    "en": "Automatic"
-  },
   "132527322677131885": {
     "fr": "Températures acceptées",
     "en": "Accepted temperatures"
@@ -2694,10 +2758,6 @@
   "1956378003822481888": {
     "fr": "Relevés en cours… (toutes les 3 secondes)",
     "en": "Reading… (every 3 seconds)"
-  },
-  "489345924039794949": {
-    "fr": "Processeur",
-    "en": "Processor"
   },
   "912008587769976031": {
     "fr": "Processeur du serveur",

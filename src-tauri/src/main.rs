@@ -15,9 +15,13 @@
 //! - Linux: no title bar of the desktop either (tauri.linux.conf.json): the page draws a header
 //!   bar in the style of GNOME (libadwaita), its buttons where the desktop puts them
 //!   ([decoration_layout]). GTK 3 / WebKitGTK 4.1: the toolkit of Tauri (it has no GTK 4 version).
+//!   Or, as Préférences choose, the window of the system with a native header bar of GTK 3; the
+//!   rendering on the processor where there is no graphics card (linux.rs).
 //!
 //! API calls go through tauri-plugin-http (see src/app/core/desktop.ts).
 
+#[cfg(target_os = "linux")]
+mod linux;
 #[cfg(target_os = "macos")]
 mod menu;
 #[cfg(windows)]
@@ -146,6 +150,11 @@ fn gnome_accent() -> Option<String> {
 #[tauri::command]
 fn page_ready(window: tauri::WebviewWindow, ready: tauri::State<'_, PageReady>) {
     ready.0.store(true, std::sync::atomic::Ordering::Relaxed);
+    // (Linux, the window of the system chosen: it keeps its decorations, with the header bar)
+    #[cfg(target_os = "linux")]
+    if linux::native_window() {
+        return;
+    }
     #[cfg(any(windows, target_os = "linux"))]
     if window.label() == "main" && window.is_decorated().unwrap_or(false) {
         let _ = window.set_decorations(false);
@@ -175,6 +184,39 @@ fn decoration_layout() -> Option<String> {
     }
     #[cfg(not(target_os = "linux"))]
     None
+}
+
+/// Linux: the window and the rendering chosen in Préférences, and what the desktop says (linux.rs);
+/// null elsewhere.
+#[tauri::command]
+fn linux_options() -> Option<serde_json::Value> {
+    #[cfg(target_os = "linux")]
+    return serde_json::to_value(linux::info()).ok();
+    #[cfg(not(target_os = "linux"))]
+    None
+}
+
+/// Linux: Préférences › Fenêtre, Rendu: stored, the app starts again with them.
+#[tauri::command]
+fn set_linux_options(app: AppHandle, window: String, rendering: String) -> Result<(), String> {
+    #[cfg(target_os = "linux")]
+    return linux::set_options(&app, window, rendering);
+    #[cfg(not(target_os = "linux"))]
+    {
+        let _ = (app, window, rendering);
+        Err("Linux only".into())
+    }
+}
+
+/// Linux, the window of the system: what its native header bar shows (linux.rs).
+#[tauri::command]
+fn native_chrome(app: AppHandle, chrome: serde_json::Value) {
+    #[cfg(target_os = "linux")]
+    if let Ok(c) = serde_json::from_value(chrome) {
+        linux::native_chrome(&app, c);
+    }
+    #[cfg(not(target_os = "linux"))]
+    let _ = (app, chrome);
 }
 
 /// Windows 11: the Acrylic of the system behind the window, or not (Préférences › Flou). Answers
@@ -305,6 +347,9 @@ struct Backdrop {
 struct PageReady(std::sync::atomic::AtomicBool);
 
 fn main() {
+    // Linux: the rendering of WebKitGTK is chosen before it starts
+    #[cfg(target_os = "linux")]
+    linux::prepare();
     FRENCH.store(
         sys_locale::get_locale().is_some_and(|l| l.to_lowercase().starts_with("fr")),
         std::sync::atomic::Ordering::Relaxed,
@@ -338,11 +383,15 @@ fn main() {
                 });
             }
             #[cfg(target_os = "linux")]
-            watch_appearance(app.handle().clone());
+            {
+                watch_appearance(app.handle().clone());
+                // The header bar of GTK 3 if chosen, then the window (hidden until then)
+                linux::setup(app.handle());
+            }
             let _ = app;
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![settings_window, snap_layouts, system_accent, page_ready, window_acrylic, window_theme, app_language, decoration_layout, clipboard_text]);
+        .invoke_handler(tauri::generate_handler![settings_window, snap_layouts, system_accent, page_ready, window_acrylic, window_theme, app_language, decoration_layout, clipboard_text, linux_options, set_linux_options, native_chrome]);
     #[cfg(target_os = "macos")]
     let builder = builder.menu(menu::build).on_menu_event(menu::on_event);
     builder.run(tauri::generate_context!()).expect("Thermobox could not start");

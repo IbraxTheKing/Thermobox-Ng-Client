@@ -9,8 +9,9 @@
  *   entries without border, the switch of GTK, toggle groups, toasts as pills at the bottom
  * - the sidebar of an AdwOverlaySplitView (shown or hidden whole, never a strip of icons), the
  *   header bar split over it and over the page, the main menu (open-menu) native of GTK
- * - the window with rounded corners, square when maximized (the window is transparent:
- *   tauri.linux.conf.json)
+ * - the window square, its outline drawn (the window is not transparent: tauri.linux.conf.json;
+ *   a transparent window kept WebKitGTK from painting the page, drawing with the processor,
+ *   but where something changed)
  *
  * What makes ThermoBox stays: its green accent (or the palette chosen in Préférences), its logo,
  * the colours of the states (stable, en chauffe, trop chaud), the tint of a room in « Maison ».
@@ -32,8 +33,8 @@
     --tb-shape-xl: 12px;
     --tb-shape-xxl: 15px;
 
-    /* The window (12 px corners; 0 when maximized: html[data-maximized]) */
-    --lx-radius: 12px;
+    /* The corners of the window: square (an opaque window, tauri.linux.conf.json) */
+    --lx-radius: 0px;
 
     /* libadwaita, light */
     --lx-window: #fafafb;
@@ -131,10 +132,10 @@
 }
 :root[data-desktop="linux"][data-maximized] { --lx-radius: 0px; }
 
-/* ============================== The window: rounded, transparent around its corners */
+/* ============================== The window and its outline */
 
-/* The window is see-through (tauri.linux.conf.json): the page paints a rounded rectangle */
-:root[data-desktop="linux"] { background: transparent !important; }
+/* The colour of the window under the page */
+:root[data-desktop="linux"] { background: var(--lx-window) !important; }
 :root[data-desktop="linux"] body { background: transparent; }
 :root[data-desktop="linux"] body::before {
     content: "";
@@ -325,8 +326,10 @@
     padding: 6px 7px;
 }
 :root[data-desktop="linux"] .tb-dialog-head h2 { grid-column: 2; margin: 0; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--lx-fg); }
-:root[data-desktop="linux"] .tb-dialog-close { grid-column: 3; justify-self: end; margin-right: 5px; border-radius: 50%; background: var(--lx-veil); width: 24px; min-width: 24px; height: 24px; padding: 0; }
-:root[data-desktop="linux"] .tb-dialog-close:hover { background: var(--lx-veil-hover); }
+/* (.tb-btn: over the flat buttons of the page, which it also is) */
+:root[data-desktop="linux"] .tb-btn.tb-dialog-close { grid-column: 3; justify-self: end; margin-right: 5px; border: 0; border-radius: 50%; background: var(--lx-veil); width: 24px; min-width: 24px; height: 24px; min-height: 24px; padding: 0; box-shadow: none; }
+:root[data-desktop="linux"] .tb-btn.tb-dialog-close:hover { background: var(--lx-veil-hover); }
+:root[data-desktop="linux"] .tb-btn.tb-dialog-close:active { background: var(--lx-veil-active); }
 :root[data-desktop="linux"] .tb-dialog-close .pi { font-size: 11px; }
 :root[data-desktop="linux"] .tb-dialog-body { padding: 6px 24px 24px; color: var(--lx-fg); }
 /* Toasts: a dark pill at the bottom, in the middle (AdwToastOverlay) */
@@ -466,7 +469,11 @@
    the grey of the sidebar (the name of the app, the main menu), its part over the page */
 :root[data-desktop="linux"] .tb-headerbar { display: flex; gap: 0; padding: 0; isolation: isolate; }
 :root[data-desktop="linux"] body.tb-app .tb-headerbar { background: var(--tb-tint-page, var(--lx-header)); }
-.tb-hb-pane, .tb-hb-content { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 6px; height: 100%; padding: 0 6px; box-sizing: border-box; }
+/* The title in the middle, as long as the buttons at its sides leave room for it; else beside
+   them, shortened (the three buttons of the window at the start of the narrow sidebar) */
+.tb-hb-pane, .tb-hb-content { display: grid; grid-template-columns: minmax(max-content, 1fr) minmax(0, auto) minmax(max-content, 1fr); align-items: center; gap: 6px; height: 100%; padding: 0 6px; box-sizing: border-box; }
+.tb-hb-brand { min-width: 0; }
+.tb-hb-brand-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .tb-hb-pane {
     display: none;
     flex: none;
@@ -477,7 +484,7 @@
 }
 .tb-hb-content { flex: 1 1 auto; min-width: 0; }
 .tb-hb-brand { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; white-space: nowrap; pointer-events: none; }
-.tb-hb-brand .tb-logo { width: 20px; height: 20px; }
+.tb-hb-brand .tb-logo { flex: none; width: 20px; height: 20px; }
 .tb-hb-content-start-buttons, .tb-hb-content-menu { display: contents; }
 .tb-hb-btn svg, .tb-hb-window svg { width: 16px; height: 16px; }
 .tb-hb-window svg { width: 16px; height: 16px; }
@@ -506,8 +513,8 @@
 
 /* The scroll bar of the window: hidden (it went over the header bar and the rounded corner),
    drawn as the overlay scroll bar of GTK 4 under the header bar instead (gtk-scrollbar.ts) */
-:root[data-desktop="linux"] { scrollbar-width: none; }
-:root[data-desktop="linux"]::-webkit-scrollbar { display: none; width: 0; height: 0; }
+:root[data-desktop="linux"]:not([data-window="gtk3"]) { scrollbar-width: none; }
+:root[data-desktop="linux"]:not([data-window="gtk3"])::-webkit-scrollbar { display: none; width: 0; height: 0; }
 :root[data-desktop="linux"] * { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, currentColor 30%, transparent) transparent; }
 .tb-gtk-scrollbar {
     position: fixed;
@@ -648,6 +655,13 @@
 :root[data-desktop="linux"] .tb-adw-close:hover { background: var(--lx-veil-hover); }
 :root[data-desktop="linux"] .tb-adw-close:active { background: var(--lx-veil-active); }
 :root[data-desktop="linux"] .tb-adw-close svg { width: 14px; height: 14px; }
+/* The buttons of the windows at the start (gtk-decoration-layout, html[data-buttons]): close at
+   the start of the dialogs too, before the search, as AdwHeaderBar packs them */
+:root[data-desktop="linux"][data-buttons="start"] :is(.tb-adw-head, .tb-dialog-head) { grid-template-columns: 74px minmax(0, 1fr) 74px; }
+:root[data-desktop="linux"][data-buttons="start"] :is(.tb-adw-close, .tb-btn.tb-dialog-close) { grid-column: 1; grid-row: 1; justify-self: start; margin: 0 0 0 5px; }
+:root[data-desktop="linux"][data-buttons="start"] .tb-adw-head > :first-child { grid-column: 1; grid-row: 1; justify-self: end; }
+:root[data-desktop="linux"][data-buttons="start"] .tb-adw-head > :is(.tb-adw-title, .tb-adw-search),
+:root[data-desktop="linux"][data-buttons="start"] .tb-dialog-head h2 { grid-column: 2; grid-row: 1; }
 
 /* The search entry, in the place of the title (GtkSearchEntry) */
 :root[data-desktop="linux"] .tb-adw-search {
@@ -761,3 +775,68 @@
 :root[data-desktop="linux"] .tb-adw-body .tb-prefs-more > .tb-pref:first-child { border-top: 0; padding-top: 8px; }
 :root[data-desktop="linux"] .tb-adw-body button.tb-pref-link:hover { background: var(--lx-flat-hover); }
 :root[data-desktop="linux"] .tb-adw-body .tb-pref-link:hover strong { color: var(--lx-fg); }
+
+/* ============================== The window of the system (Préférences › Fenêtre › GTK 3)
+
+   html[data-window="gtk3"]: GTK 3 decorates the window (main.rs, linux.rs): its header bar is
+   native (back, the sidebar, the title, the main menu), its corners and its shadow are drawn by
+   GTK. The page fills the window, square and opaque, without a header bar of its own; the scroll
+   bar is the overlay one of GTK 3 again. The buttons of the page take the look of Adwaita for
+   GTK 3 (a border, a light gradient, a regular weight), so that they match the header bar. */
+
+:root[data-desktop="linux"][data-window="gtk3"] {
+    --tb-chrome-top: 0px;
+    --lx-radius: 0px;
+    --lx-window: #f6f5f4;
+    --tb-background: var(--lx-window);
+    background: var(--lx-window) !important;
+}
+:root[data-desktop="linux"][data-window="gtk3"][data-theme="dark"] { --lx-window: #353535; }
+:root[data-desktop="linux"][data-window="gtk3"] body::after { display: none; }
+:root[data-desktop="linux"][data-window="gtk3"] .tb-app .tb-background-page { border-radius: 0; }
+
+:root[data-desktop="linux"][data-window="gtk3"] .tb-btn:not(.tb-dialog-close) {
+    min-height: 34px;
+    border: 1px solid #cdc7c2;
+    border-bottom-color: #bfb8b1;
+    border-radius: 5px;
+    font-weight: 400;
+    box-shadow: inset 0 1px rgb(255 255 255 / .8), 0 1px 2px rgb(0 0 0 / .07);
+}
+:root[data-desktop="linux"][data-window="gtk3"] .tb-btn:is(.tb-tonal, .tb-flat):not(.tb-dialog-close) {
+    background: linear-gradient(to top, #edebe9 2px, #f6f5f4);
+    color: #2e3436;
+}
+:root[data-desktop="linux"][data-window="gtk3"] .tb-btn:is(.tb-tonal, .tb-flat):not(.tb-dialog-close):hover { background: linear-gradient(to top, #f6f5f4, #f8f8f7 1px); }
+:root[data-desktop="linux"][data-window="gtk3"] .tb-btn:is(.tb-tonal, .tb-flat):not(.tb-dialog-close):active { background: #dad6d2; box-shadow: inset 0 1px rgb(255 255 255 / 0); }
+/* The main action (suggested-action): the accent, its gradient and its darker border */
+:root[data-desktop="linux"][data-window="gtk3"] .tb-btn:not(.tb-tonal, .tb-flat) {
+    border-color: color-mix(in srgb, var(--md-primary) 80%, black);
+    border-bottom-color: color-mix(in srgb, var(--md-primary) 65%, black);
+    background: linear-gradient(to top, color-mix(in srgb, var(--md-primary) 90%, black) 2px, var(--md-primary));
+    box-shadow: inset 0 1px rgb(255 255 255 / .1), 0 1px 2px rgb(0 0 0 / .07);
+}
+:root[data-desktop="linux"][data-window="gtk3"] .tb-btn:not(.tb-tonal, .tb-flat):active { background: color-mix(in srgb, var(--md-primary) 80%, black); }
+:root[data-desktop="linux"][data-window="gtk3"][data-theme="dark"] .tb-btn:not(.tb-dialog-close) { border-color: #1b1b1b; border-bottom-color: #070707; box-shadow: inset 0 1px rgb(255 255 255 / .02), 0 1px 2px rgb(0 0 0 / .07); }
+:root[data-desktop="linux"][data-window="gtk3"][data-theme="dark"] .tb-btn:is(.tb-tonal, .tb-flat):not(.tb-dialog-close) { background: linear-gradient(to top, #373737 2px, #3a3a3a); color: #eeeeec; }
+:root[data-desktop="linux"][data-window="gtk3"][data-theme="dark"] .tb-btn:is(.tb-tonal, .tb-flat):not(.tb-dialog-close):hover { background: linear-gradient(to top, #3a3a3a, #3e3e3e 1px); }
+:root[data-desktop="linux"][data-window="gtk3"][data-theme="dark"] .tb-btn:is(.tb-tonal, .tb-flat):not(.tb-dialog-close):active { background: #1e1e1e; }
+/* The toggle groups (GtkStackSwitcher of GTK 3): linked buttons */
+:root[data-desktop="linux"][data-window="gtk3"] .tb-segmented { gap: 0; padding: 0; border-radius: 5px; background: none; box-shadow: none; }
+:root[data-desktop="linux"][data-window="gtk3"] .tb-segmented > button {
+    border: 1px solid #cdc7c2;
+    border-bottom-color: #bfb8b1;
+    border-radius: 0;
+    background: linear-gradient(to top, #edebe9 2px, #f6f5f4);
+    box-shadow: inset 0 1px rgb(255 255 255 / .8);
+    font-weight: 400;
+}
+:root[data-desktop="linux"][data-window="gtk3"] .tb-segmented > button + button { border-left: 0; }
+:root[data-desktop="linux"][data-window="gtk3"] .tb-segmented > button:first-child { border-radius: 5px 0 0 5px; }
+:root[data-desktop="linux"][data-window="gtk3"] .tb-segmented > button:last-child { border-radius: 0 5px 5px 0; }
+:root[data-desktop="linux"][data-window="gtk3"] .tb-segmented > button.tb-seg-on { background: #dad6d2; box-shadow: inset 0 1px 2px rgb(0 0 0 / .1); color: #2e3436; }
+:root[data-desktop="linux"][data-window="gtk3"][data-theme="dark"] .tb-segmented > button { border-color: #1b1b1b; background: linear-gradient(to top, #373737 2px, #3a3a3a); box-shadow: none; color: #eeeeec; }
+:root[data-desktop="linux"][data-window="gtk3"][data-theme="dark"] .tb-segmented > button.tb-seg-on { background: #1e1e1e; color: #eeeeec; }
+
+/* Préférences › Fenêtre: the app starts again for the choice to apply */
+:root[data-desktop="linux"] .tb-pref-restart .tb-btn { flex: none; }

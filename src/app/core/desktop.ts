@@ -28,8 +28,21 @@ export type { DesktopOs } from './tauri';
 export async function prepareDesktop(): Promise<void> {
   if (!TAURI) return;
   document.documentElement.dataset['desktop'] = DESKTOP_OS!;
-  // Linux: the scroll bar of the page drawn as the one of GTK 4, under the header bar
-  if (DESKTOP_OS === 'linux') void import('./gtk-scrollbar').then((m) => m.gtkScrollbar(document));
+  if (DESKTOP_OS === 'linux') {
+    // No view transitions: WebKitGTK drawing with the processor (Préférences › Rendu) crashed on
+    // one, even skipped at once; the motion of the Linux app is its own (transitions.ts), and the
+    // router, the theme and the sidebar change without them where they are missing
+    delete (Document.prototype as { startViewTransition?: unknown }).startViewTransition;
+    // The window chosen (Préférences › Fenêtre), where the desktop puts the buttons of the windows
+    const { invoke } = await import('@tauri-apps/api/core');
+    linuxOptions = await invoke<LinuxOptions | null>('linux_options').catch(() => null);
+    const root = document.documentElement;
+    if (linuxOptions?.window === 'gtk3') root.dataset['window'] = 'gtk3';
+    root.dataset['buttons'] = closeAtStart(parseLayout(linuxOptions?.layout)) ? 'start' : 'end';
+    // The window drawn by the page: the scroll bar of the page drawn as the one of GTK 4, under
+    // the header bar (the window of the system keeps the scroll bar of GTK 3, under its own)
+    if (linuxOptions?.window !== 'gtk3') void import('./gtk-scrollbar').then((m) => m.gtkScrollbar(document));
+  }
   if (DESKTOP_OS === 'windows') {
     // The blur chosen in Préférences (on by default), before Angular reads the preferences
     let blur = true;
@@ -99,6 +112,57 @@ export async function applyAcrylic(on: boolean): Promise<void> {
   }
 }
 
+/** Linux: the window and the rendering chosen, what the desktop says (main.rs, linux.rs). */
+export interface LinuxOptions {
+  /** « gnome »: drawn by the page (GTK 4 look); « gtk3 »: the window of the system. */
+  window: 'gnome' | 'gtk3';
+  rendering: 'auto' | 'gpu' | 'cpu';
+  /** WebKitGTK draws with the processor now. */
+  software: boolean;
+  /** « auto » picks the processor on this computer (no graphics card: virtual machine, WSL). */
+  autoSoftware: boolean;
+  /** gtk-decoration-layout, « appmenu:minimize,maximize,close ». */
+  layout: string | null;
+  /** The touchpad scrolls the content with the fingers. */
+  naturalScroll: boolean;
+}
+
+/** Linux, the window of the system: the title, back, the sidebar button, the main menu. */
+export interface NativeChrome {
+  title: string;
+  back: { label: string; shown: boolean };
+  sidebar: { label: string; shown: boolean };
+  menuLabel: string;
+  /** An empty label: a separator. */
+  menu: { id: string; label: string }[];
+}
+
+/** Linux: read before Angular starts (prepareDesktop). */
+let linuxOptions: LinuxOptions | null = null;
+
+/** The buttons of the windows before and after the title. */
+export interface WindowButtons {
+  start: string[];
+  end: string[];
+}
+
+/** « appmenu:minimize,maximize,close » → the buttons before and after the title. */
+export function parseLayout(layout: string | null | undefined): WindowButtons {
+  if (!layout) return { start: [], end: ['minimize', 'maximize', 'close'] };
+  const known = (part: string | undefined) =>
+    (part ?? '')
+      .split(',')
+      .map((b) => b.trim())
+      .filter((b) => ['minimize', 'maximize', 'close'].includes(b));
+  const [start, end] = layout.split(':');
+  return { start: known(start), end: known(end) };
+}
+
+/** The close button at the start: the dialogs put theirs there too (as libadwaita). */
+function closeAtStart(b: WindowButtons): boolean {
+  return b.start.includes('close');
+}
+
 /** Windows: servers the webview could not call itself (CORS), called through Rust. */
 const throughRustOnly = new Set<string>();
 
@@ -133,6 +197,33 @@ export class DesktopService {
     this.paneToggles.update((n) => n + 1);
   }
 
+  /** Linux: the window, the rendering, the desktop (main.rs), as they were at start. */
+  readonly linuxOptions = linuxOptions;
+  /** Linux: the window of the system (GTK 3) and its native header bar, not the page's. */
+  readonly nativeChrome = this.linux && linuxOptions?.window === 'gtk3';
+  /** Linux: where the buttons of the windows are, followed while the app runs. */
+  readonly windowButtons = signal<WindowButtons>(parseLayout(linuxOptions?.layout));
+  /** Linux: the touchpad scrolls « naturally » (two fingers to the right go back). */
+  readonly naturalScroll = signal(linuxOptions?.naturalScroll ?? true);
+  /** Linux, the window of the system: what its buttons and its menu ask (« back », an id…). */
+  private nativeHandlers: ((what: string) => void)[] = [];
+
+  onNative(fn: (what: string) => void): void {
+    this.nativeHandlers.push(fn);
+  }
+
+  /** Linux, the window of the system: what its native header bar shows (linux.rs). */
+  async setNativeChrome(chrome: NativeChrome): Promise<void> {
+    const { invoke } = await import('@tauri-apps/api/core');
+    await invoke('native_chrome', { chrome }).catch(() => undefined);
+  }
+
+  /** Préférences › Fenêtre, Rendu: stored by main.rs, then the app starts again with them. */
+  async setLinuxOptions(window: LinuxOptions['window'], rendering: LinuxOptions['rendering']): Promise<void> {
+    const { invoke } = await import('@tauri-apps/api/core');
+    await invoke('set_linux_options', { window, rendering });
+  }
+
   /** Windows: the window fills the screen (the maximize button becomes « restore »). */
   readonly maximized = signal(false);
   readonly name = computed(() => ({ macos: 'macOS', windows: $localize`Windows`, linux: $localize`Linux` })[this.os ?? 'linux']);
@@ -155,7 +246,12 @@ export class DesktopService {
     await listen<string>('tb-open', (e) => {
       if (e.payload === 'about') void this.router.navigateByUrl(this.auth.user() ? '/app/about' : '/about');
     });
-    if (this.windows || this.linux) {
+    if (this.linux) {
+      await listen<string | null>('linux-layout', (e) => this.applyLayout(e.payload));
+      await listen<boolean>('linux-input', (e) => this.naturalScroll.set(e.payload));
+      await listen<string>('tb-native', (e) => this.nativeHandlers.forEach((fn) => fn(e.payload)));
+    }
+    if (this.windows || (this.linux && !this.nativeChrome)) {
       // (index.html has already told main.rs that the page draws its title bar)
       const { getCurrentWindow } = await import('@tauri-apps/api/window');
       const w = getCurrentWindow();
@@ -175,14 +271,22 @@ export class DesktopService {
   }
 
   /**
-   * Linux: the page draws the header bar (Linux need not give its own back: main.rs), and where
-   * the desktop puts the buttons of the windows (« appmenu:minimize,maximize,close »).
+   * Linux: the page is there (main.rs then takes away the title bar of the desktop, unless the
+   * window of the system was chosen); where the desktop puts the buttons of the windows, read
+   * again (« appmenu:minimize,maximize,close »).
    */
-  async linuxChrome(): Promise<string | null> {
-    if (!this.linux) return null;
+  async linuxReady(): Promise<void> {
+    if (!this.linux) return;
     const { invoke } = await import('@tauri-apps/api/core');
     await invoke('page_ready').catch(() => undefined);
-    return invoke<string | null>('decoration_layout').catch(() => null);
+    const layout = await invoke<string | null>('decoration_layout').catch(() => null);
+    if (layout) this.applyLayout(layout);
+  }
+
+  private applyLayout(layout: string | null): void {
+    const b = parseLayout(layout);
+    this.windowButtons.set(b);
+    this.doc.documentElement.dataset['buttons'] = closeAtStart(b) ? 'start' : 'end';
   }
 
   /** The settings: their window on macOS, the page elsewhere. */

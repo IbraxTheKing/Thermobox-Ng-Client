@@ -261,8 +261,9 @@
 .tb-pull-load .pi { animation: tb-pull-turn .8s linear infinite; }
 .tb-pull-load .pi::before { content: "\e9f6"; }
 @keyframes tb-pull-turn { to { transform: rotate(360deg); } }
-/* The browser's own pull (Chrome reloads the whole app) stays out of it */
-html.tb-pull-page { overscroll-behavior-y: contain; }
+/* The browser's own pull (Chrome reloads the whole app) stays out of it. Not in the Linux app:
+   on the root, WebKitGTK no longer scrolled the page with the wheel or the touchpad at all */
+html.tb-pull-page:not([data-desktop="linux"]) { overscroll-behavior-y: contain; }
 :root[data-platform="ios"] .tb-pull-round { background: color-mix(in srgb, var(--md-surface) 80%, transparent); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
 
 /* ============================== Phones: lighter motion ============================== */
