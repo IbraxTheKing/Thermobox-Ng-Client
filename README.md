@@ -20,7 +20,7 @@ apps, and the Windows, macOS and Linux apps.
   | Web on a phone, iOS app | Liquid Glass: glass capsule tab bar, a lens that can be held and slid, a bar that shrinks while scrolling |
   | Web on a phone, Android app | Material 3: navigation bar with pill indicator, top app bar, snackbars, ripples; native Material components in the app ([plugin](plugins/thermobox-native/README.md)) |
   | Windows | WinUI 3: its title bar, Acrylic, flyouts, motion |
-  | macOS | the title bar of macOS over the page, settings in the menu bar and their own window |
+  | macOS | native look: Liquid Glass on macOS 26, vibrancy on 11–15, unified toolbar, settings in the menu bar and their own window |
   | Linux | GNOME (GTK 4 / libadwaita): header bar, rounded window, dialogs, swipe back; or the window of GTK 3 |
 
   On the web, the look of a phone follows its system; `?platform=ios|android|web` in the address
@@ -319,7 +319,7 @@ src/styles/       the shared stylesheets: tokens, controls, pages, shell, motion
 src/platforms/    what each platform adds: web, android, ios, native, desktop, windows, macos,
                   linux (src/platforms/README.md)
 src/locale/       en.json: the English of every text
-src-tauri/        desktop apps (Tauri 2, Rust): main.rs, win.rs, menu.rs (macOS), linux.rs
+src-tauri/        desktop apps (Tauri 2, Rust): main.rs, win.rs, mac.rs and menu.rs (macOS), linux.rs
 android/          the Android project (Capacitor)
 plugins/          thermobox-native: native Material 3 components of the Android app
 scripts/          build.mjs (build of a platform, with the version), version.mjs, android.mjs,

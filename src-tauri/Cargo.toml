@@ -13,7 +13,8 @@ publish = false
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-tauri = { version = "2.12", features = [] }
+# macos-private-api: the window of macOS see-through, its material behind (mac.rs)
+tauri = { version = "2.12", features = ["macos-private-api"] }
 # API calls to the ThermoBox servers: through Rust, not the webview (no mixed content with a
 # server in plain http on the local network, from the tauri:// page of macOS and Linux)
 tauri-plugin-http = "2.8"
@@ -27,6 +28,10 @@ sys-locale = "0.3"
 [target.'cfg(target_os = "linux")'.dependencies]
 # The place of the window buttons in the header bar drawn by the page (gtk-decoration-layout)
 gtk = "0.18"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+# Liquid Glass behind the window on macOS 26 and up (NSGlassEffectView); mac.rs
+tauri-plugin-liquid-glass = "0.1"
 
 [target.'cfg(windows)'.dependencies]
 # Snap layouts of Windows 11 from the maximize button of the title bar drawn by the page; the
