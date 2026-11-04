@@ -1296,6 +1296,120 @@ route('PUT', '/api/v2/server/limits', 'ADMIN', ({ body }) => {
 });
 route('DELETE', '/api/v2/server/limits', 'ADMIN', () => ((limits = structuredClone(DEFAULT_LIMITS)), ok(limits)));
 
+// ---- temperature alerts (26.12, ADMIN): channels, rules, alerts in progress. Nothing is sent:
+// a test of a channel is SENT, unless its address says "fail".
+const alertChannels = [];
+const alertRules = [];
+const alertDeliveries = [];
+const channelView = (c) => ({
+  id: c.id, name: c.name, kind: c.kind, enabled: c.enabled,
+  email: c.kind === 'EMAIL' ? { host: c.host, port: c.port, security: c.security, username: c.username ?? null, passwordSet: !!c.password, from: c.from, fromName: c.fromName ?? null, recipients: c.recipients, template: c.template ?? null } : null,
+  webhook: c.kind === 'WEBHOOK' ? { format: c.format, urlPreview: c.url ? `${new URL(c.url).origin}/…` : null, urlSet: !!c.url, authorizationSet: !!c.authorization, signingSecretSet: !!c.signingSecret, template: c.template ?? null } : null,
+  secretUnreadable: false, createdAt: iso(c.createdAt), updatedAt: iso(c.updatedAt),
+});
+const ruleView = (r) => ({
+  ...r,
+  scope: r.scope.map((i) => ({ id: i, name: byId.get(i)?.name ?? null, kind: byId.get(i)?.kind ?? null })),
+  channels: r.channels.map((i) => { const c = alertChannels.find((x) => x.id === i); return { id: i, name: c?.name ?? null, kind: c?.kind ?? null }; }),
+  createdAt: iso(r.createdAt), updatedAt: iso(r.updatedAt),
+});
+/** AlertService.build: the same checks, the same messages. */
+function alertChannel(b, current) {
+  const name = String(b.name ?? '').trim();
+  if (!name || name.length > 100) throw new Error('name: 1 to 100 characters');
+  const kind = current?.kind ?? String(b.kind ?? '').toUpperCase();
+  if (!['EMAIL', 'WEBHOOK'].includes(kind)) throw new Error('kind: EMAIL or WEBHOOK');
+  if (current && b.kind && b.kind !== current.kind) throw new Error('kind cannot change: create another channel');
+  const keep = (v, old) => (v == null ? old : v === '' ? null : v);
+  const c = { ...(current ?? { id: id(), createdAt: Date.now() }), name, kind, enabled: b.enabled ?? true, updatedAt: Date.now() };
+  if (kind === 'EMAIL') {
+    const e = b.email ?? {};
+    if (!e.host?.trim()) throw new Error('host: the name or address of the SMTP server');
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s.]+$/.test(e.from ?? '')) throw new Error('from: a valid email address');
+    const to = [...new Set((e.recipients ?? []).map((x) => x.trim()).filter(Boolean))];
+    if (!to.length) throw new Error('recipients: at least one address');
+    Object.assign(c, { host: e.host.trim(), port: e.port ?? 587, security: e.security ?? 'STARTTLS', username: e.username?.trim() || null, password: keep(e.password, current?.password), from: e.from.trim(), fromName: e.fromName?.trim() || null, recipients: to, template: e.template?.trim() ? e.template : null });
+  } else {
+    const w = b.webhook ?? {};
+    const url = keep(w.url?.trim(), current?.url);
+    if (!url) throw new Error('url: the address of the webhook');
+    if (w.url != null && !/^https:\/\//i.test(url)) throw new Error('The URL must start with https://');
+    Object.assign(c, { format: w.format ?? 'GENERIC', url, authorization: keep(w.authorization, current?.authorization), signingSecret: keep(w.signingSecret, current?.signingSecret), template: w.template?.trim() ? w.template : null });
+  }
+  return c;
+}
+function alertRule(b, current) {
+  const name = String(b.name ?? '').trim();
+  if (!name || name.length > 100) throw new Error('name: 1 to 100 characters');
+  if (!(b.tolerance >= 0 && b.tolerance <= 20)) throw new Error('tolerance: 0 to 20 °C above the setpoint');
+  for (const k of ['minDurationSeconds', 'clearAfterSeconds']) if (!(b[k] >= 0 && b[k] <= 21600)) throw new Error(`${k}: 0 to 21600 (6 h)`);
+  if (b.reminderSeconds && !(b.reminderSeconds >= 300 && b.reminderSeconds <= 604800)) throw new Error('reminderSeconds: 0 (no reminder), or 300 (5 min) to 604800 (7 days)');
+  const scope = b.global ? [] : [...new Set(b.scope ?? [])];
+  if (!b.global && !scope.length) throw new Error('scope: at least one building, floor or room (or global: true)');
+  for (const s of scope) if (!byId.has(s)) throw new Error(`scope: unknown element ${s}`);
+  const channels = [...new Set(b.channels ?? [])];
+  for (const c of channels) if (!alertChannels.some((x) => x.id === c)) throw new Error(`channels: unknown channel ${c}`);
+  return { ...(current ?? { id: id(), createdAt: Date.now() }), name, enabled: b.enabled ?? true, tolerance: b.tolerance, minDurationSeconds: b.minDurationSeconds, clearAfterSeconds: b.clearAfterSeconds, reminderSeconds: b.reminderSeconds ?? 0, notifyResolution: b.notifyResolution ?? true, global: !!b.global, scope, channels, updatedAt: Date.now() };
+}
+const alertCall = (f) => { try { return f(); } catch (e) { return error(400, e.message); } };
+const alertStatus = () => ({ enabled: true, running: true, lastRun: iso(Date.now() - 12_000), watchedRooms: alertRules.some((r) => r.enabled) ? elements.filter((e) => e.kind === 'ROOM').length : 0, lastError: null, runByAnotherServer: false });
+const alertsRoute = (method, path, f) => API === 'v2' && route(method, `/api/v2/alerts${path}`, 'ADMIN', f);
+alertsRoute('GET', '', () => ok({ status: alertStatus(), channels: alertChannels.map(channelView), rules: alertRules.map(ruleView), active: [], failedDeliveries: alertDeliveries.filter((d) => d.status === 'FAILED').slice(-10).reverse() }));
+alertsRoute('GET', '/status', () => ok(alertStatus()));
+alertsRoute('GET', '/channels', () => ok(alertChannels.map(channelView)));
+alertsRoute('POST', '/channels', ({ body }) => alertCall(() => { const c = alertChannel(json(body) ?? {}, null); alertChannels.push(c); return { status: 201, body: channelView(c) }; }));
+alertsRoute('PUT', '/channels/{id}', ({ body, p }) => alertCall(() => {
+  const i = alertChannels.findIndex((c) => c.id === +p.id);
+  if (i < 0) return error(404, 'Not found');
+  alertChannels[i] = alertChannel(json(body) ?? {}, alertChannels[i]);
+  return ok(channelView(alertChannels[i]));
+}));
+alertsRoute('PUT', '/channels/{id}/enabled', ({ body, p }) => {
+  const c = alertChannels.find((x) => x.id === +p.id);
+  const enabled = json(body)?.enabled;
+  if (!c) return error(404, 'Not found');
+  if (typeof enabled !== 'boolean') return error(400, 'enabled: true or false');
+  return ((c.enabled = enabled), ok(channelView(c)));
+});
+alertsRoute('DELETE', '/channels/{id}', ({ p }) => {
+  const i = alertChannels.findIndex((c) => c.id === +p.id);
+  if (i < 0) return error(404, 'Not found');
+  alertChannels.splice(i, 1);
+  for (const r of alertRules) r.channels = r.channels.filter((c) => c !== +p.id);
+  return empty(204);
+});
+alertsRoute('POST', '/channels/{id}/test', ({ p }) => {
+  const c = alertChannels.find((x) => x.id === +p.id);
+  if (!c) return error(404, 'Not found');
+  const failed = /fail/i.test(c.url ?? c.host ?? '');
+  const d = { id: id(), eventId: null, channelId: c.id, channelName: c.name, kind: 'TEST', status: failed ? 'FAILED' : 'SENT', attempts: 1, nextAttemptAt: null, lastError: failed ? 'Connection refused' : null, createdAt: iso(Date.now()), sentAt: failed ? null : iso(Date.now()) };
+  alertDeliveries.push(d);
+  return ok(d);
+});
+alertsRoute('GET', '/rules', () => ok(alertRules.map(ruleView)));
+alertsRoute('POST', '/rules', ({ body }) => alertCall(() => { const r = alertRule(json(body) ?? {}, null); alertRules.push(r); return { status: 201, body: ruleView(r) }; }));
+alertsRoute('PUT', '/rules/{id}', ({ body, p }) => alertCall(() => {
+  const i = alertRules.findIndex((r) => r.id === +p.id);
+  if (i < 0) return error(404, 'Not found');
+  alertRules[i] = alertRule(json(body) ?? {}, alertRules[i]);
+  return ok(ruleView(alertRules[i]));
+}));
+alertsRoute('PUT', '/rules/{id}/enabled', ({ body, p }) => {
+  const r = alertRules.find((x) => x.id === +p.id);
+  const enabled = json(body)?.enabled;
+  if (!r) return error(404, 'Not found');
+  if (typeof enabled !== 'boolean') return error(400, 'enabled: true or false');
+  return ((r.enabled = enabled), ok(ruleView(r)));
+});
+alertsRoute('DELETE', '/rules/{id}', ({ p }) => {
+  const i = alertRules.findIndex((r) => r.id === +p.id);
+  if (i < 0) return error(404, 'Not found');
+  alertRules.splice(i, 1);
+  return empty(204);
+});
+alertsRoute('GET', '/events', () => ok([]));
+alertsRoute('GET', '/deliveries', () => ok([...alertDeliveries].reverse()));
+
 // ================================================================ old API (v1, French names)
 
 /** As the real server (RestServer LegacyApi.kt): /api/… is /api/v2/… with French names. */

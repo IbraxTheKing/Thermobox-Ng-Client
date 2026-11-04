@@ -28,6 +28,7 @@
     <tb-style-setting />
     @if (features.v2()) {
       <tb-server-settings />
+      <tb-alert-settings />
     } @else {
       <ng-container [ngTemplateOutlet]="older" />
     }

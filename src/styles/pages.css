@@ -354,6 +354,27 @@ a.tb-pref-link:hover strong { color: var(--md-primary); }
 .tb-limits-row label { display: inline-flex; align-items: center; gap: 6px; }
 .tb-limits-row .tb-input { width: 92px; }
 .tb-limits-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+/* Temperature alerts of the server (ADMIN, 26.12): rows of the Préférences, sheets to edit */
+.tb-alert-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.tb-alert-head > .tb-pref-heading { margin: 0; }
+.tb-alerts .tb-pref-text > .tb-muted { overflow-wrap: anywhere; }
+.tb-alerts .tb-pref-text > .tb-field-error .pi { font-size: .8rem; }
+.tb-alerts .tb-pref-actions { align-items: center; }
+.tb-alert-monitor > .tb-tag { flex: none; margin-left: auto; }
+.tb-alert-hot { color: var(--md-error); }
+.tb-alert-off > .tb-section-icon, .tb-alert-off > .tb-pref-text { opacity: .55; }
+.tb-alert-empty .tb-pref-text strong { font-size: 1rem; }
+.tb-alert-unit { display: flex; align-items: center; gap: 8px; }
+.tb-alert-unit > .tb-input { width: 120px; }
+.tb-alert-fields { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-top: 6px; }
+.tb-alert-fields code { padding: 1px 6px; border-radius: var(--tb-shape-xs, 4px); background: var(--md-surface-container-high); color: var(--md-on-surface); font-size: .78rem; }
+.tb-alert-sheet-note { display: flex; gap: 8px; margin: 0 0 14px; }
+.tb-link-btn { margin: 0 0 0 4px; padding: 0; border: 0; background: none; color: var(--md-primary); font: inherit; text-decoration: underline; cursor: pointer; }
+/* A text over several lines: the platforms give the fields their height of one line */
+:root body textarea.tb-input.tb-textarea { min-height: 88px; line-height: 1.45; resize: vertical; }
+@media (max-width: 640px) {
+    .tb-alert-item > .tb-pref-actions { width: 100%; justify-content: flex-end; }
+}
 .tb-list-icon .tb-server-logo { width: 26px; height: 26px; }
 
 /* ============================== Long lists, drawn a part at a time ============================== */
