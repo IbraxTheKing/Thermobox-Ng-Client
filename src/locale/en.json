@@ -2527,6 +2527,598 @@
     "fr": "Modifier ou déplacer",
     "en": "Edit or move"
   },
+  "6352329971269819502": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Les secrets enregistrés ne peuvent plus être lus (la clé du serveur a changé) : saisis-les à nouveau. ",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} The saved secrets can no longer be read (the server's key changed): enter them again. "
+  },
+  "3912921368244186512": {
+    "fr": "Astreinte, Discord technique…",
+    "en": "On call, Tech Discord…"
+  },
+  "7313180347853807907": {
+    "fr": "Type de canal",
+    "en": "Channel type"
+  },
+  "4382288298682995639": {
+    "fr": "Le type ne change pas : crée un autre canal pour en changer.",
+    "en": "The type cannot change: create another channel to change it."
+  },
+  "925171455146742677": {
+    "fr": "Serveur SMTP",
+    "en": "SMTP server"
+  },
+  "6117946241126833991": {
+    "fr": "Port",
+    "en": "Port"
+  },
+  "3800782223605088288": {
+    "fr": "Chiffrement",
+    "en": "Encryption"
+  },
+  "6152009725138557505": {
+    "fr": "Identifiant (facultatif)",
+    "en": "Username (optional)"
+  },
+  "5164192538994346712": {
+    "fr": "Enregistré : laisse vide pour le garder.",
+    "en": "Saved: leave empty to keep it."
+  },
+  "412951671624621228": {
+    "fr": "Le retirer",
+    "en": "Remove it"
+  },
+  "7295535926806278556": {
+    "fr": "Retiré à l'enregistrement.",
+    "en": "Removed when saved."
+  },
+  "7532782913189006828": {
+    "fr": "Adresse de l'expéditeur",
+    "en": "Sender address"
+  },
+  "8145004750232953540": {
+    "fr": "Nom de l'expéditeur (facultatif)",
+    "en": "Sender name (optional)"
+  },
+  "1355965908026270380": {
+    "fr": "Destinataires",
+    "en": "Recipients"
+  },
+  "7438248813974286848": {
+    "fr": "Une adresse par ligne (ou séparées par des virgules), 50 au plus.",
+    "en": "One address per line (or separated by commas), 50 at most."
+  },
+  "7513076467032912668": {
+    "fr": "Format",
+    "en": "Format"
+  },
+  "5617194633532222887": {
+    "fr": "Adresse du webhook",
+    "en": "Webhook address"
+  },
+  "1728889647615875199": {
+    "fr": "Enregistrée ({$INTERPOLATION}) : laisse vide pour la garder.",
+    "en": "Saved ({$INTERPOLATION}): leave empty to keep it."
+  },
+  "7909570733064582675": {
+    "fr": "En HTTPS, vers une adresse publique. Elle contient souvent un jeton : elle n'est jamais réaffichée.",
+    "en": "HTTPS, to a public address. It often contains a token: it is never shown again."
+  },
+  "3042288266102503862": {
+    "fr": "En-tête Authorization (facultatif)",
+    "en": "Authorization header (optional)"
+  },
+  "1989760128843083115": {
+    "fr": "Enregistré.",
+    "en": "Saved."
+  },
+  "8533551196051722927": {
+    "fr": "Clé de signature (facultatif)",
+    "en": "Signing key (optional)"
+  },
+  "7017643968025684086": {
+    "fr": "Enregistrée.",
+    "en": "Saved."
+  },
+  "6114542154360640264": {
+    "fr": "La retirer",
+    "en": "Remove it"
+  },
+  "1320588279527142583": {
+    "fr": "En-tête X-ThermoBox-Signature : sha256=HMAC du corps.",
+    "en": "X-ThermoBox-Signature header: sha256=HMAC of the body."
+  },
+  "2842440180315161550": {
+    "fr": "Message personnalisé",
+    "en": "Custom message"
+  },
+  "2929373573832136368": {
+    "fr": "Remplace le message par défaut. Valeurs :",
+    "en": "Replaces the default message. Values:"
+  },
+  "1890300073702152532": {
+    "fr": "E-mail",
+    "en": "Email"
+  },
+  "4206419737792796794": {
+    "fr": "Webhook",
+    "en": "Webhook"
+  },
+  "4694361994178248249": {
+    "fr": "STARTTLS (port 587)",
+    "en": "STARTTLS (port 587)"
+  },
+  "6255173896350699220": {
+    "fr": "SSL / TLS (port 465)",
+    "en": "SSL / TLS (port 465)"
+  },
+  "7771951148541964769": {
+    "fr": "Aucun (réseau de confiance seulement)",
+    "en": "None (trusted network only)"
+  },
+  "4653774545451616934": {
+    "fr": "Slack, Mattermost, Rocket.Chat, Teams",
+    "en": "Slack, Mattermost, Rocket.Chat, Teams"
+  },
+  "3679341766025227035": {
+    "fr": "Générique (JSON)",
+    "en": "Generic (JSON)"
+  },
+  "7535210418668332922": {
+    "fr": "{type} : {room} ({place}) à {temperature}, consigne {setpoint}",
+    "en": "{type}: {room} ({place}) at {temperature}, setpoint {setpoint}"
+  },
+  "5780525566750850781": {
+    "fr": "Un message avec un encadré coloré. Discord › Paramètres du salon › Intégrations › Webhooks.",
+    "en": "A message with a coloured embed. Discord › Channel settings › Integrations › Webhooks."
+  },
+  "2397054263355207737": {
+    "fr": "Un message texte ({\"text\": …}), compris aussi par Mattermost, Rocket.Chat et Teams.",
+    "en": "A text message ({\"text\": …}), also understood by Mattermost, Rocket.Chat and Teams."
+  },
+  "382042007893306812": {
+    "fr": "Toute l'alerte en JSON, pour n'importe quel service (n8n, Home Assistant…).",
+    "en": "The whole alert as JSON, for any service (n8n, Home Assistant…)."
+  },
+  "6169683140683169677": {
+    "fr": "100 caractères au plus",
+    "en": "100 characters at most"
+  },
+  "8536277377558298114": {
+    "fr": "Serveur SMTP obligatoire",
+    "en": "SMTP server required"
+  },
+  "4412386750362171572": {
+    "fr": "Un nom ou une adresse, sans « / »",
+    "en": "A name or an address, without « / »"
+  },
+  "832283972312916733": {
+    "fr": "De 1 à 65535",
+    "en": "From 1 to 65535"
+  },
+  "7438724561731661966": {
+    "fr": "Au moins une adresse",
+    "en": "At least one address"
+  },
+  "22460151036408563": {
+    "fr": "50 adresses au plus",
+    "en": "50 addresses at most"
+  },
+  "6867093483606738295": {
+    "fr": "Adresse invalide : {$PH}",
+    "en": "Invalid address: {$PH}"
+  },
+  "3221481828384752764": {
+    "fr": "Adresse obligatoire",
+    "en": "Address required"
+  },
+  "163953445609719126": {
+    "fr": "Une adresse https://…",
+    "en": "An https://… address"
+  },
+  "285901242109813295": {
+    "fr": "Adresse invalide",
+    "en": "Invalid address"
+  },
+  "6508290384331800062": {
+    "fr": "Canal « {$PH} » modifié",
+    "en": "Channel « {$PH} » changed"
+  },
+  "7034036929612291108": {
+    "fr": "Canal « {$PH} » créé",
+    "en": "Channel « {$PH} » created"
+  },
+  "4376064766968866346": {
+    "fr": "Touche « Tester » pour vérifier qu'il arrive.",
+    "en": "Tap « Test » to check that it arrives."
+  },
+  "6416118415198661363": {
+    "fr": "Canal non enregistré",
+    "en": "Channel not saved"
+  },
+  "4710735785963556950": {
+    "fr": "Supprimer le canal « {$PH} » ? Il est retiré des règles qui le prévenaient.",
+    "en": "Delete the channel « {$PH} »? It is removed from the rules that warned it."
+  },
+  "2649689573231365499": {
+    "fr": "Canal « {$PH} » supprimé",
+    "en": "Channel « {$PH} » deleted"
+  },
+  "7201106854434022178": {
+    "fr": "Suppression impossible",
+    "en": "Could not delete"
+  },
+  "1623528658386908961": {
+    "fr": "Salles serveurs, Tout le site…",
+    "en": "Server rooms, Whole site…"
+  },
+  "5380133986218602876": {
+    "fr": "Tolérance au-dessus de la consigne",
+    "en": "Tolerance above the setpoint"
+  },
+  "1466101839122697561": {
+    "fr": "Une salle est en dépassement quand un de ses boîtiers mesure plus que sa consigne + cet écart.",
+    "en": "A room is in excess when one of its boxes measures more than its setpoint + this margin."
+  },
+  "5516497371606496223": {
+    "fr": "Alerter après",
+    "en": "Alert after"
+  },
+  "3901733599428143571": {
+    "fr": "min",
+    "en": "min"
+  },
+  "4141846555955870434": {
+    "fr": "au-dessus sans interruption",
+    "en": "above without interruption"
+  },
+  "3342468247279397170": {
+    "fr": "Fin de l'alerte après",
+    "en": "End the alert after"
+  },
+  "6165199925122729060": {
+    "fr": "tous les boîtiers revenus sous le seuil",
+    "en": "every box back under the threshold"
+  },
+  "47365614412366469": {
+    "fr": "Rappel tant que ça dure",
+    "en": "Reminder while it lasts"
+  },
+  "3599282046260937749": {
+    "fr": "Prévenir du retour à la normale",
+    "en": "Warn when back to normal"
+  },
+  "6674415574774584361": {
+    "fr": "Où",
+    "en": "Where"
+  },
+  "6879353299153044342": {
+    "fr": "{$TAG_INPUT}Toute l'installation",
+    "en": "{$TAG_INPUT}The whole installation"
+  },
+  "1268359232496233731": {
+    "fr": "{$TAG_INPUT}Seulement les éléments cochés (et ce qu'ils contiennent)",
+    "en": "{$TAG_INPUT}Only the ticked elements (and what they contain)"
+  },
+  "6311135543923673024": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Chargement…",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Loading…"
+  },
+  "2047160218600352202": {
+    "fr": "Une règle sur une salle passe avant celle de son étage, de son bâtiment, puis les règles globales.",
+    "en": "A rule on a room comes before the one of its floor, of its building, then the global rules."
+  },
+  "6641367305647072312": {
+    "fr": "Canaux à prévenir",
+    "en": "Channels to warn"
+  },
+  "1906714695154445274": {
+    "fr": "Rechercher un canal…",
+    "en": "Search for a channel…"
+  },
+  "883824192068440625": {
+    "fr": "Aucun canal",
+    "en": "No channel"
+  },
+  "6614333256015645577": {
+    "fr": "Aucun canal pour le moment : ajoute un e-mail ou un webhook dans « Canaux ».",
+    "en": "No channel yet: add an email or a webhook in « Channels »."
+  },
+  "1520012029015277733": {
+    "fr": "Sans canal, les alertes sont seulement gardées dans l'historique.",
+    "en": "Without a channel, the alerts are only kept in the history."
+  },
+  "8472220277988462813": {
+    "fr": "e-mail",
+    "en": "email"
+  },
+  "2821977645166712094": {
+    "fr": "webhook",
+    "en": "webhook"
+  },
+  "8637476652303098080": {
+    "fr": " · coupé",
+    "en": " · off"
+  },
+  "2005287839492022484": {
+    "fr": "De 0 à {$PH} {$PH_1}",
+    "en": "From 0 to {$PH} {$PH_1}"
+  },
+  "6353749445633309581": {
+    "fr": "De 0 à {$PH} min (6 h)",
+    "en": "From 0 to {$PH} min (6 h)"
+  },
+  "8894405256156235839": {
+    "fr": "Coche au moins un bâtiment, un étage ou une salle",
+    "en": "Tick at least one building, floor or room"
+  },
+  "607386105312551710": {
+    "fr": "Règle « {$PH} » modifiée",
+    "en": "Rule « {$PH} » changed"
+  },
+  "3748216795412159783": {
+    "fr": "Règle « {$PH} » créée",
+    "en": "Rule « {$PH} » created"
+  },
+  "6235900170539993533": {
+    "fr": "Règle non enregistrée",
+    "en": "Rule not saved"
+  },
+  "6372177808324956787": {
+    "fr": "Supprimer la règle « {$PH} » ? Ses alertes en cours sont annulées.",
+    "en": "Delete the rule « {$PH} »? Its alerts in progress are cancelled."
+  },
+  "8843193097530451415": {
+    "fr": "Règle « {$PH} » supprimée",
+    "en": "Rule « {$PH} » deleted"
+  },
+  "5668347953124346231": {
+    "fr": "Alertes de température",
+    "en": "Temperature alerts"
+  },
+  "3619590646029505927": {
+    "fr": "Surveillance des salles",
+    "en": "Watching the rooms"
+  },
+  "4241621066920116208": {
+    "fr": "Désactivée sur ce serveur (THERMOBOX_ALERTS=false) : aucune salle n'est surveillée par lui.",
+    "en": "Turned off on this server (THERMOBOX_ALERTS=false): it watches no room."
+  },
+  "9201360663856168016": {
+    "fr": "Désactivée",
+    "en": "Off"
+  },
+  "943504881011405174": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Erreur",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Error"
+  },
+  "3560843116624893858": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}{$INTERPOLATION} en cours",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}{$INTERPOLATION} in progress"
+  },
+  "6557476442718204897": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Tout va bien",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}All good"
+  },
+  "5212069622384641148": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Un message n'a pas pu partir.",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} A message could not be sent."
+  },
+  "2433452905913578527": {
+    "fr": "Message non envoyé · {$INTERPOLATION}",
+    "en": "Message not sent · {$INTERPOLATION}"
+  },
+  "4207448953749886488": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Le serveur surveille les salles lui-même, qu'un client soit ouvert ou non. Les notifications des applications restent telles quelles. ",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} The server watches the rooms itself, whether a client is open or not. The notifications of the apps stay as they are. "
+  },
+  "5740478618555809795": {
+    "fr": "Canaux",
+    "en": "Channels"
+  },
+  "1959296520657522910": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Secrets illisibles : modifie le canal pour les saisir à nouveau.",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Unreadable secrets: edit the channel to enter them again."
+  },
+  "580020481274276238": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Tester ",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Test "
+  },
+  "1946517034434417806": {
+    "fr": "Un e-mail (serveur SMTP) ou un webhook (Discord, Slack, Teams, n8n…) : où envoyer les alertes.",
+    "en": "An email (SMTP server) or a webhook (Discord, Slack, Teams, n8n…): where to send the alerts."
+  },
+  "30770591672061123": {
+    "fr": "Règles",
+    "en": "Rules"
+  },
+  "736737296143693955": {
+    "fr": "Aucune règle",
+    "en": "No rule"
+  },
+  "5254152547479606387": {
+    "fr": "Quand alerter (écart à la consigne, durée), où (toute l'installation ou certains bâtiments, étages, salles) et quels canaux prévenir.",
+    "en": "When to alert (margin above the setpoint, duration), where (the whole installation or some buildings, floors, rooms) and which channels to warn."
+  },
+  "1169701023928731204": {
+    "fr": "à {$PH}",
+    "en": "at {$PH}"
+  },
+  "6861139641395991215": {
+    "fr": "{$PH} salles surveillées",
+    "en": "{$PH} rooms watched"
+  },
+  "3896160996636213212": {
+    "fr": "1 salle surveillée",
+    "en": "1 room watched"
+  },
+  "4864014077311425331": {
+    "fr": "Aucune salle sous une règle",
+    "en": "No room under a rule"
+  },
+  "9019466087191368371": {
+    "fr": "dernier passage {$PH}",
+    "en": "last check {$PH}"
+  },
+  "1992238838573140012": {
+    "fr": "pas encore démarrée",
+    "en": "not started yet"
+  },
+  "824292881375799608": {
+    "fr": "par un autre serveur de la même base",
+    "en": "by another server of the same database"
+  },
+  "4160448834708682982": {
+    "fr": "consigne {$PH}",
+    "en": "setpoint {$PH}"
+  },
+  "5325157970939387633": {
+    "fr": "maximum {$PH}",
+    "en": "peak {$PH}"
+  },
+  "6086711428351926259": {
+    "fr": "depuis {$PH}",
+    "en": "since {$PH}"
+  },
+  "8707080991195809673": {
+    "fr": "{$PH} destinataires",
+    "en": "{$PH} recipients"
+  },
+  "7032911519623563429": {
+    "fr": "Webhook JSON",
+    "en": "JSON webhook"
+  },
+  "3330353157752558509": {
+    "fr": "sans adresse",
+    "en": "no address"
+  },
+  "4379438886111286518": {
+    "fr": "{$delta} au-dessus de la consigne pendant {$duration}",
+    "en": "{$delta} above the setpoint for {$duration}"
+  },
+  "6340291958140796985": {
+    "fr": "rappel toutes les {$PH}",
+    "en": "reminder every {$PH}"
+  },
+  "5530475875853340387": {
+    "fr": "fin signalée",
+    "en": "end reported"
+  },
+  "316527296059411866": {
+    "fr": "Toute l'installation",
+    "en": "The whole installation"
+  },
+  "6035785431929304383": {
+    "fr": "élément supprimé",
+    "en": "deleted element"
+  },
+  "8852031610506363536": {
+    "fr": "canal supprimé",
+    "en": "deleted channel"
+  },
+  "2853245614754076721": {
+    "fr": "aucun canal",
+    "en": "no channel"
+  },
+  "5274511332946891652": {
+    "fr": "Message de test envoyé par « {$PH} »",
+    "en": "Test message sent through « {$PH} »"
+  },
+  "6007587750320559990": {
+    "fr": "Message de test en attente",
+    "en": "Test message waiting"
+  },
+  "3824515095895639135": {
+    "fr": "Message de test non envoyé",
+    "en": "Test message not sent"
+  },
+  "6267450821030382892": {
+    "fr": "Test impossible",
+    "en": "Could not test"
+  },
+  "2261787952791271666": {
+    "fr": "Canal « {$PH} » activé",
+    "en": "Channel « {$PH} » turned on"
+  },
+  "1451611178327356610": {
+    "fr": "Canal « {$PH} » coupé",
+    "en": "Channel « {$PH} » turned off"
+  },
+  "661847439952068320": {
+    "fr": "Réglage non enregistré",
+    "en": "Setting not saved"
+  },
+  "3287362129730878276": {
+    "fr": "Règle « {$PH} » activée",
+    "en": "Rule « {$PH} » turned on"
+  },
+  "5945371829975694828": {
+    "fr": "Règle « {$PH} » coupée",
+    "en": "Rule « {$PH} » turned off"
+  },
+  "3818318022661918074": {
+    "fr": "Ses alertes en cours sont annulées.",
+    "en": "Its alerts in progress are cancelled."
+  },
+  "2295914060720266717": {
+    "fr": "{$PH} s",
+    "en": "{$PH} s"
+  },
+  "449721932925967620": {
+    "fr": "{$PH} j {$PH_1} h",
+    "en": "{$PH} d {$PH_1} h"
+  },
+  "5503160850193637782": {
+    "fr": "{$PH} j",
+    "en": "{$PH} d"
+  },
+  "3750540292177563521": {
+    "fr": "{$PH} min",
+    "en": "{$PH} min"
+  },
+  "1942214264669970933": {
+    "fr": "Cette adresse est sur un réseau privé ou local : le serveur la refuse (THERMOBOX_ALERTS_ALLOW_PRIVATE_NETWORKS).",
+    "en": "This address is on a private or local network: the server refuses it (THERMOBOX_ALERTS_ALLOW_PRIVATE_NETWORKS)."
+  },
+  "1884133372367894604": {
+    "fr": "Adresse introuvable : vérifie le nom du serveur.",
+    "en": "Address not found: check the name of the server."
+  },
+  "3453736659770610704": {
+    "fr": "Le webhook doit être en HTTPS.",
+    "en": "The webhook must use HTTPS."
+  },
+  "6862930854709136013": {
+    "fr": "Pas d'identifiant dans l'adresse : mets-le dans l'en-tête Authorization.",
+    "en": "No username in the address: put it in the Authorization header."
+  },
+  "6133589409040408788": {
+    "fr": "Adresse de destinataire invalide.",
+    "en": "Invalid recipient address."
+  },
+  "592667297155886762": {
+    "fr": "Adresse de l'expéditeur invalide.",
+    "en": "Invalid sender address."
+  },
+  "1300858790487939245": {
+    "fr": "Serveur SMTP invalide.",
+    "en": "Invalid SMTP server."
+  },
+  "6380797739840160924": {
+    "fr": "Choisis au moins un bâtiment, un étage ou une salle.",
+    "en": "Choose at least one building, floor or room."
+  },
+  "8766099837135978747": {
+    "fr": "La tolérance va de 0 à 20 °C.",
+    "en": "The tolerance goes from 0 to 20 °C."
+  },
+  "2898476482154527938": {
+    "fr": "Les durées vont de 0 à 6 h.",
+    "en": "The durations go from 0 to 6 h."
+  },
+  "4615454316675816485": {
+    "fr": "Le rappel va de 5 min à 7 jours.",
+    "en": "The reminder goes from 5 min to 7 days."
+  },
   "3105066162468003472": {
     "fr": "Logo du serveur",
     "en": "Server logo"
@@ -4050,6 +4642,42 @@
   "6187609003715904674": {
     "fr": "Ajouter dans « {name} »",
     "en": "Add into “{name}”"
+  },
+  "3453032669735222972": {
+    "fr": "Nouveau canal",
+    "en": "New channel"
+  },
+  "393430323367142735": {
+    "fr": "Modifier le canal",
+    "en": "Edit the channel"
+  },
+  "6212871816692779886": {
+    "fr": "Nouvelle règle",
+    "en": "New rule"
+  },
+  "2456440804697451154": {
+    "fr": "Modifier la règle",
+    "en": "Edit the rule"
+  },
+  "3341178991613200875": {
+    "fr": "Toutes les ",
+    "en": "Every "
+  },
+  "1172116262798727159": {
+    "fr": "Jamais",
+    "en": "Never"
+  },
+  "5323618414989823339": {
+    "fr": "Salle supprimée",
+    "en": "Deleted room"
+  },
+  "4103971772991137057": {
+    "fr": "essais",
+    "en": "attempts"
+  },
+  "4196705916062136601": {
+    "fr": "Erreur inconnue",
+    "en": "Unknown error"
   },
   "7068936762750771567": {
     "fr": " minimale",

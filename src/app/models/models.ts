@@ -417,3 +417,201 @@ export interface ServerMetrics {
   gcTimeMs: number;
   uptimeSeconds: number;
 }
+
+// ---------------------------------------------------------------- temperature alerts (26.12)
+
+/*
+ * /api/v2/alerts (ADMIN): the server watches the rooms itself and warns by email or webhook when
+ * one stays above its setpoint, then when it is back to normal. The secrets of a channel (SMTP
+ * password, webhook URL, Authorization header, signing key) are only ever sent: an answer says
+ * whether each one is set (passwordSet, urlSet…), never its value.
+ */
+
+export type AlertChannelKind = 'EMAIL' | 'WEBHOOK';
+export type SmtpSecurity = 'NONE' | 'STARTTLS' | 'SSL';
+export type WebhookFormat = 'DISCORD' | 'SLACK' | 'GENERIC';
+export type AlertState = 'ACTIVE' | 'RESOLVED' | 'CANCELLED';
+export type DeliveryKind = 'TRIGGERED' | 'REMINDER' | 'RESOLVED' | 'TEST';
+export type DeliveryStatus = 'PENDING' | 'SENT' | 'FAILED';
+
+/** MonitorStatusDto: the watch of the rooms on this server. */
+export interface AlertMonitorStatus {
+  /** THERMOBOX_ALERTS is not false on this server. */
+  enabled: boolean;
+  running: boolean;
+  lastRun: DateJson;
+  watchedRooms: number;
+  lastError: string | null;
+  /** The last run was done by another server sharing the database. */
+  runByAnotherServer: boolean;
+}
+
+export interface AlertEmailSettings {
+  host: string;
+  port: number;
+  security: SmtpSecurity;
+  username: string | null;
+  passwordSet: boolean;
+  from: string;
+  fromName: string | null;
+  recipients: string[];
+  template: string | null;
+}
+
+export interface AlertWebhookSettings {
+  format: WebhookFormat;
+  /** « https://discord.com/… »: the URL itself is a secret. */
+  urlPreview: string | null;
+  urlSet: boolean;
+  authorizationSet: boolean;
+  signingSecretSet: boolean;
+  template: string | null;
+}
+
+/** AlertChannelDto: where to send. */
+export interface AlertChannel {
+  id: number;
+  name: string;
+  kind: AlertChannelKind;
+  enabled: boolean;
+  email: AlertEmailSettings | null;
+  webhook: AlertWebhookSettings | null;
+  /** The stored secrets cannot be read any more (key changed): enter them again. */
+  secretUnreadable: boolean;
+  createdAt: DateJson;
+  updatedAt: DateJson;
+}
+
+/**
+ * POST / PUT /api/v2/alerts/channels. Each secret (password, url, authorization, signingSecret):
+ * left out keeps the stored one, "" removes it. [kind] does not change after the creation.
+ */
+export interface AlertChannelRequest {
+  name: string;
+  kind: AlertChannelKind;
+  enabled: boolean;
+  email?: {
+    host: string;
+    port: number;
+    security: SmtpSecurity;
+    username?: string;
+    password?: string;
+    from: string;
+    fromName?: string;
+    recipients: string[];
+    template?: string;
+  };
+  webhook?: {
+    format: WebhookFormat;
+    url?: string;
+    authorization?: string;
+    signingSecret?: string;
+    template?: string;
+  };
+}
+
+/** An element (building, floor, room) or a channel named in a rule. */
+export interface AlertElement {
+  id: number;
+  /** null: deleted since. */
+  name: string | null;
+  kind: string | null;
+}
+
+/** AlertRuleDto: when to warn, and whom. */
+export interface AlertRule {
+  id: number;
+  name: string;
+  enabled: boolean;
+  /** °C above the setpoint before a measurement counts as an excess. */
+  tolerance: number;
+  /** How long a box must stay above before the alert is sent. */
+  minDurationSeconds: number;
+  /** How long every box must stay back under before the alert ends. */
+  clearAfterSeconds: number;
+  /** Sent again every … while it lasts (0: never). */
+  reminderSeconds: number;
+  notifyResolution: boolean;
+  /** The whole installation; otherwise the elements of [scope] and what they contain. */
+  global: boolean;
+  scope: AlertElement[];
+  channels: AlertElement[];
+  createdAt: DateJson;
+  updatedAt: DateJson;
+}
+
+/** POST / PUT /api/v2/alerts/rules: [scope] and [channels] by their ids. */
+export interface AlertRuleRequest {
+  name: string;
+  enabled: boolean;
+  tolerance: number;
+  minDurationSeconds: number;
+  clearAfterSeconds: number;
+  reminderSeconds: number;
+  notifyResolution: boolean;
+  global: boolean;
+  scope: number[];
+  channels: number[];
+}
+
+export interface AlertDevice {
+  id: number;
+  name: string | null;
+  temperature: number | null;
+  at: DateJson;
+  exceeding: boolean;
+}
+
+/** AlertDeliveryDto: one message about an alert (or a test). */
+export interface AlertDelivery {
+  id: number;
+  eventId: number | null;
+  channelId: number | null;
+  channelName: string;
+  kind: DeliveryKind;
+  status: DeliveryStatus;
+  attempts: number;
+  nextAttemptAt: DateJson;
+  lastError: string | null;
+  createdAt: DateJson;
+  sentAt: DateJson;
+}
+
+/** AlertEventDto: a room above its setpoint under a rule. */
+export interface AlertEvent {
+  id: number;
+  ruleId: number | null;
+  ruleName: string;
+  roomId: number;
+  roomName: string | null;
+  /** « Bâtiment A › Étage 1 » */
+  place: string;
+  state: AlertState;
+  exceededSince: DateJson;
+  triggeredAt: DateJson;
+  resolvedAt: DateJson;
+  setpoint: number;
+  threshold: number;
+  currentSetpoint: number | null;
+  temperature: number;
+  peak: number;
+  lastTemperature: number | null;
+  devices: AlertDevice[];
+  lastNotifiedAt: DateJson;
+  reminders: number;
+  reason: string | null;
+  /** A message about it could not be delivered. */
+  deliveryFailed: boolean;
+  /** Only for GET /events/{id}. */
+  deliveries: AlertDelivery[] | null;
+}
+
+/** GET /api/v2/alerts: everything the page of alerts shows at once. */
+export interface AlertOverview {
+  status: AlertMonitorStatus;
+  channels: AlertChannel[];
+  rules: AlertRule[];
+  active: AlertEvent[];
+  /** The last messages that could not be delivered. */
+  failedDeliveries: AlertDelivery[];
+}

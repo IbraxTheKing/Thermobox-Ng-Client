@@ -10,6 +10,7 @@ import { ChartSeries, TbChart } from '../../ui/chart';
 import { TbServerLogo } from '../../ui/server-logo';
 import { UpdatesPage } from '../updates/updates';
 import { ServerSettings } from './server-settings';
+import { TbAlertSettings } from './alert-settings';
 import { TbStyleSetting } from './style-setting';
 import { locale } from '../../core/i18n';
 import { TrPipe } from '../../ui/tr.pipe';
@@ -19,12 +20,12 @@ type Tab = 'resources' | 'updates' | 'settings';
 /**
  * Serveur (ADMIN): the ThermoBox server itself. Its resources (processor, memory, threads, pauses
  * of the garbage collector) over the last minutes, its updates, and its settings (temperatures
- * accepted, logo). Resources and settings come with 26.12 (API v2); an older server has its
+ * accepted, logo, temperature alerts). Resources and settings come with 26.12 (API v2); an older server has its
  * updates only.
  */
 @Component({
   selector: 'tb-server-page',
-  imports: [TrPipe, NgTemplateOutlet, TbChart, TbServerLogo, UpdatesPage, ServerSettings, TbStyleSetting],
+  imports: [TrPipe, NgTemplateOutlet, TbChart, TbServerLogo, UpdatesPage, ServerSettings, TbStyleSetting, TbAlertSettings],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './server.html',
 })
