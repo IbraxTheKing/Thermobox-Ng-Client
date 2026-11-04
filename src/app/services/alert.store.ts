@@ -12,6 +12,7 @@ import {
   AlertOverview,
   AlertRule,
   AlertRuleRequest,
+  AlertRuleRoom,
 } from '../models/models';
 
 /** Seconds between two readings while the settings of the Serveur page are open. */
@@ -35,6 +36,8 @@ export class AlertStore {
   readonly available = signal<boolean | null>(null);
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
+  /** null: not known yet; false: the server can't list the rooms of a rule (26.12.0-alpha.7). */
+  readonly ruleRoomsAvailable = signal<boolean | null>(null);
 
   readonly status = computed(() => this.overview()?.status ?? null);
   readonly channels = computed(() => this.overview()?.channels ?? []);
@@ -49,6 +52,7 @@ export class AlertStore {
     onAccountChange(() => {
       this.overview.set(null);
       this.available.set(null);
+      this.ruleRoomsAvailable.set(null);
       this.error.set(null);
     });
   }
@@ -143,6 +147,25 @@ export class AlertStore {
     const saved = await firstValueFrom(this.http.put<AlertRule>(this.url(`/rules/${id}/enabled`), { enabled }));
     this.put('rules', saved);
     return saved;
+  }
+
+  /**
+   * The rooms where rule [id] applies (those where no nearer rule replaces it), with their
+   * temperature against its threshold; null when the server can't tell (before them).
+   */
+  async ruleRooms(id: number): Promise<AlertRuleRoom[] | null> {
+    try {
+      const rooms = await firstValueFrom(this.http.get<AlertRuleRoom[]>(this.url(`/rules/${id}/rooms`)));
+      this.ruleRoomsAvailable.set(true);
+      return rooms;
+    } catch (e) {
+      // An unknown rule answers 404 too: told apart by the rule being in the list
+      if (e instanceof HttpErrorResponse && (e.status === 404 || e.status === 405) && this.rules().some((r) => r.id === id)) {
+        this.ruleRoomsAvailable.set(false);
+        return null;
+      }
+      throw e;
+    }
   }
 
   /** Its alerts in progress are cancelled (by the server). */

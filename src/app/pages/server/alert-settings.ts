@@ -9,6 +9,7 @@ import { AlertStore } from '../../services/alert.store';
 import { TbSwitch } from '../../ui/controls';
 import { TrPipe } from '../../ui/tr.pipe';
 import { TbAlertChannelSheet } from './alert-channel-sheet';
+import { TbAlertRuleRooms } from './alert-rule-rooms';
 import { TbAlertRuleSheet } from './alert-rule-sheet';
 import { duration, explain } from './alert-text';
 
@@ -20,7 +21,7 @@ import { duration, explain } from './alert-text';
  */
 @Component({
   selector: 'tb-alert-settings',
-  imports: [TrPipe, TbSwitch, TbAlertChannelSheet, TbAlertRuleSheet],
+  imports: [TrPipe, TbSwitch, TbAlertChannelSheet, TbAlertRuleSheet, TbAlertRuleRooms],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (alerts.available() !== false) {
@@ -140,6 +141,9 @@ import { duration, explain } from './alert-text';
                 <strong>{{ r.name }}</strong>
                 <span class="tb-muted">{{ ruleText(r) }}</span>
                 <span class="tb-muted">{{ ruleTargets(r) }}</span>
+                <button type="button" class="tb-link-btn tb-alert-rooms-toggle" [attr.aria-expanded]="open().has(r.id)" (click)="toggle(r.id)">
+                  <i class="pi" [class.pi-chevron-down]="!open().has(r.id)" [class.pi-chevron-up]="open().has(r.id)"></i>{{ open().has(r.id) ? ('Masquer les salles' | tr) : ('Voir les salles' | tr) }}
+                </button>
               </div>
               <div class="tb-pref-actions">
                 <button type="button" class="tb-btn tb-icon tb-flat" i18n-title title="Modifier" [attr.aria-label]="('Modifier ' | tr) + r.name" (click)="ruleSheet().edit(r)">
@@ -147,6 +151,9 @@ import { duration, explain } from './alert-text';
                 </button>
                 <tb-switch [checked]="r.enabled" [disabled]="switching() === 'r' + r.id" [label]="r.name" (checkedChange)="enableRule(r, $event)" />
               </div>
+              @if (open().has(r.id)) {
+                <tb-alert-rule-rooms [rule]="r" />
+              }
             </div>
           } @empty {
             <div class="tb-pref tb-alert-empty">
@@ -174,6 +181,8 @@ export class TbAlertSettings implements OnDestroy {
   protected readonly ruleSheet = viewChild.required(TbAlertRuleSheet);
   /** The channel being tested. */
   protected readonly testing = signal<number | null>(null);
+  /** The rules whose rooms are shown. */
+  protected readonly open = signal<ReadonlySet<number>>(new Set());
   /** The channel (c12) or rule (r3) being turned on or off. */
   protected readonly switching = signal<string | null>(null);
 
@@ -234,8 +243,22 @@ export class TbAlertSettings implements OnDestroy {
     return parts.filter(Boolean).join(' · ');
   }
 
+  protected toggle(id: number): void {
+    this.open.update((s) => {
+      const next = new Set(s);
+      if (!next.delete(id)) next.add(id);
+      return next;
+    });
+  }
+
+  /** Where and whom, short: past two elements, « et 5 autres » (the rooms are behind « Voir les salles »). */
   protected ruleTargets(r: AlertRule): string {
-    const where = r.global ? $localize`Toute l'installation` : r.scope.map((e) => e.name ?? $localize`élément supprimé`).join(', ');
+    const names = r.scope.map((e) => e.name ?? $localize`élément supprimé`);
+    const where = r.global
+      ? $localize`Toute l'installation`
+      : names.length > 2
+        ? $localize`${names.slice(0, 2).join(', ')}:names: et ${names.length - 2}:count: autre(s)`
+        : names.join(', ');
     const whom = r.channels.length ? r.channels.map((c) => c.name ?? $localize`canal supprimé`).join(', ') : $localize`aucun canal`;
     return `${where} → ${whom}`;
   }

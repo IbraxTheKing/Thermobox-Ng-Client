@@ -606,6 +606,25 @@ export interface AlertEvent {
   deliveries: AlertDelivery[] | null;
 }
 
+/** GET /api/v2/alerts/rules/{id}/rooms: a room where the rule applies, and where it stands now. */
+export interface AlertRuleRoom {
+  id: number;
+  name: string | null;
+  /** « Bâtiment A › Étage 1 » */
+  place: string;
+  /** null: no setpoint, the room is not watched. */
+  setpoint: number | null;
+  /** Setpoint + tolerance of the rule. */
+  threshold: number | null;
+  /** The hottest of its boxes measured in the last 30 min; null when none did. */
+  temperature: number | null;
+  measuredAt: DateJson;
+  exceeding: boolean;
+  /** Its alert in progress under this rule. */
+  alertId: number | null;
+  alertSince: DateJson;
+}
+
 /** GET /api/v2/alerts: everything the page of alerts shows at once. */
 export interface AlertOverview {
   status: AlertMonitorStatus;

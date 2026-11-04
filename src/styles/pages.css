@@ -372,6 +372,30 @@ a.tb-pref-link:hover strong { color: var(--md-primary); }
 .tb-link-btn { margin: 0 0 0 4px; padding: 0; border: 0; background: none; color: var(--md-primary); font: inherit; text-decoration: underline; cursor: pointer; }
 /* A text over several lines: the platforms give the fields their height of one line */
 :root body textarea.tb-input.tb-textarea { min-height: 88px; line-height: 1.45; resize: vertical; }
+/* The rooms of a rule, under it */
+.tb-alert-rooms-toggle { display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; margin: 4px 0 0; text-decoration: none; font-weight: 600; font-size: .88rem; }
+.tb-alert-rooms-toggle .pi { font-size: .75rem; }
+.tb-alert-rooms { display: block; flex: 1 1 100%; min-width: 0; margin-top: 4px; padding: 12px 14px; border-radius: var(--tb-shape-md); background: color-mix(in srgb, var(--md-on-surface) 4%, transparent); }
+.tb-alert-rooms-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
+.tb-alert-rooms-hot { color: var(--md-error); font-weight: 600; }
+.tb-alert-sort-label { display: inline-flex; align-items: center; gap: 8px; }
+:root body .tb-select.tb-alert-sort { width: auto; min-width: 210px; }
+.tb-alert-room-list { margin: 8px 0 0; padding: 0; list-style: none; }
+.tb-alert-room { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-top: 1px solid var(--md-outline-variant); }
+.tb-alert-room:first-child { border-top: 0; }
+.tb-alert-room-text { display: flex; flex-direction: column; flex: 1 1 auto; min-width: 0; }
+.tb-alert-room-text > * { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tb-alert-room-text .tb-muted, .tb-alert-room-values .tb-muted { font-size: .82rem; }
+.tb-alert-room-values { display: flex; flex-direction: column; align-items: flex-end; flex: none; font-variant-numeric: tabular-nums; }
+.tb-alert-room > .tb-tag { flex: none; }
+.tb-alert-rooms-note { margin: 0; }
+@media (max-width: 640px) {
+    .tb-alert-rooms { padding: 10px 12px; }
+    /* The name on the left, the temperature and its tag under each other on the right */
+    .tb-alert-room { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; row-gap: 4px; }
+    .tb-alert-room-text { grid-row: span 2; }
+    .tb-alert-room > .tb-tag { justify-self: end; }
+}
 @media (max-width: 640px) {
     .tb-alert-item > .tb-pref-actions { width: 100%; justify-content: flex-end; }
 }

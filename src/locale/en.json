@@ -2747,6 +2747,42 @@
     "fr": "Suppression impossible",
     "en": "Could not delete"
   },
+  "598614152118418540": {
+    "fr": "Trier",
+    "en": "Sort"
+  },
+  "4933151013436181897": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}En alerte",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}In alert"
+  },
+  "398713114870160720": {
+    "fr": "Au-dessus",
+    "en": "Above"
+  },
+  "6887214315962406721": {
+    "fr": "Non surveillée",
+    "en": "Not watched"
+  },
+  "4162568611891904453": {
+    "fr": "Une règle plus proche la remplace partout, ou ses éléments ne contiennent aucune salle.",
+    "en": "A nearer rule replaces it everywhere, or its elements hold no room."
+  },
+  "1159750622406146998": {
+    "fr": "Ce serveur ne sait pas encore lister les salles d'une règle (ThermoBox 26.12.0-alpha.8 ou plus récent).",
+    "en": "This server can't list the rooms of a rule yet (ThermoBox 26.12.0-alpha.8 or later)."
+  },
+  "8053869581429135953": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Chargement des salles…",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Loading the rooms…"
+  },
+  "5335298003950072262": {
+    "fr": "En alerte d'abord",
+    "en": "In alert first"
+  },
+  "58173536439737511": {
+    "fr": "Écart au seuil",
+    "en": "Gap to the threshold"
+  },
   "1623528658386908961": {
     "fr": "Salles serveurs, Tout le site…",
     "en": "Server rooms, Whole site…"
@@ -3003,13 +3039,17 @@
     "fr": "fin signalée",
     "en": "end reported"
   },
+  "6035785431929304383": {
+    "fr": "élément supprimé",
+    "en": "deleted element"
+  },
   "316527296059411866": {
     "fr": "Toute l'installation",
     "en": "The whole installation"
   },
-  "6035785431929304383": {
-    "fr": "élément supprimé",
-    "en": "deleted element"
+  "8834893186736507131": {
+    "fr": "{$names} et {$count} autre(s)",
+    "en": "{$names} and {$count} other(s)"
   },
   "8852031610506363536": {
     "fr": "canal supprimé",
@@ -4651,6 +4691,30 @@
     "fr": "Modifier le canal",
     "en": "Edit the channel"
   },
+  "8756616983587243588": {
+    "fr": " salles",
+    "en": " rooms"
+  },
+  "8784156470215661548": {
+    "fr": "1 salle",
+    "en": "1 room"
+  },
+  "3495620784108443180": {
+    "fr": "Aucune salle",
+    "en": "No room"
+  },
+  "1198334287432175570": {
+    "fr": "en alerte",
+    "en": "in alert"
+  },
+  "7312698747297043572": {
+    "fr": "Salle sans nom",
+    "en": "Unnamed room"
+  },
+  "3318481141396748791": {
+    "fr": "seuil ",
+    "en": "threshold "
+  },
   "6212871816692779886": {
     "fr": "Nouvelle règle",
     "en": "New rule"
@@ -4678,6 +4742,14 @@
   "4196705916062136601": {
     "fr": "Erreur inconnue",
     "en": "Unknown error"
+  },
+  "7738758020753413724": {
+    "fr": "Masquer les salles",
+    "en": "Hide the rooms"
+  },
+  "3024117353732633735": {
+    "fr": "Voir les salles",
+    "en": "Show the rooms"
   },
   "7068936762750771567": {
     "fr": " minimale",
