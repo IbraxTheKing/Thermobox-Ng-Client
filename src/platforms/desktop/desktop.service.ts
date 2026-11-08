@@ -3,7 +3,9 @@ import { Injectable, Injector, effect, inject, runInInjectionContext } from '@an
 
 import { DesktopService, SystemNotification } from '../../app/core/desktop';
 import { language } from '../../app/core/i18n';
+import { ConfirmService } from '../../app/core/messages';
 import { PreferencesService } from '../../app/core/preferences';
+import { CertificateQuestion, askCertificatesWith } from './tls';
 
 /**
  * What the three desktop apps (Tauri) share, in the place of the web's DesktopService
@@ -13,7 +15,8 @@ import { PreferencesService } from '../../app/core/preferences';
  *   macOS);
  * - the menu bar of macOS and the titles of the windows in the language of the page;
  * - the window itself: minimize, maximize, close, its theme;
- * - the notifications of the system, the images of the server fetched through Rust.
+ * - the notifications of the system, the images of the server fetched through Rust;
+ * - a server whose certificate the system does not know: trusted after its fingerprint (tls.ts).
  */
 @Injectable()
 export class TauriDesktopService extends DesktopService {
@@ -28,6 +31,34 @@ export class TauriDesktopService extends DesktopService {
     this.doc.addEventListener('click', (e) => this.externalLink(e), true);
     this.syncPreferences();
     void this.listen();
+    askCertificatesWith((q) => this.askCertificate(q));
+  }
+
+  /**
+   * A server whose certificate the system does not know (self-signed): its fingerprint, to compare
+   * with the one the server printed at startup, before trusting it. A certificate that changed
+   * since it was trusted says so.
+   */
+  private askCertificate(q: CertificateQuestion): Promise<boolean> {
+    const confirm = this.injector.get(ConfirmService);
+    const changed = q.previous != null;
+    const message = changed
+      ? $localize`Le certificat de ${q.host}:host: a changé depuis que tu lui as fait confiance. Si le serveur n'a pas été réinstallé ni son certificat renouvelé, quelqu'un se fait peut-être passer pour lui.` +
+        '\n\n' +
+        $localize`Nouvelle empreinte SHA-256 :` +
+        '\n' +
+        q.fingerprint +
+        '\n\n' +
+        $localize`Ancienne :` +
+        '\n' +
+        q.previous
+      : $localize`${q.host}:host: présente un certificat que cet ordinateur ne connaît pas (auto-signé). Compare son empreinte SHA-256 avec celle que le serveur affiche au démarrage (« its SHA-256 fingerprint » dans son journal) avant de lui faire confiance :` +
+        '\n\n' +
+        q.fingerprint;
+    return confirm.ask(changed ? $localize`Le certificat du serveur a changé` : $localize`Certificat non reconnu`, message, {
+      confirm: $localize`Faire confiance`,
+      danger: changed,
+    });
   }
 
   protected async listen(): Promise<void> {

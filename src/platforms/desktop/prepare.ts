@@ -1,4 +1,5 @@
 import { DesktopOs } from '../target';
+import { certificateError, secure, startTls, throughTls, tlsFetch } from './tls';
 
 /**
  * Before Angular starts, in every desktop app (the systems add their own: platforms/<system>/):
@@ -16,6 +17,7 @@ import { DesktopOs } from '../target';
 export async function prepareTauri(os: DesktopOs, direct = false): Promise<void> {
   document.documentElement.dataset['desktop'] = os;
   const { fetch: rustFetch } = await import('@tauri-apps/plugin-http');
+  await startTls();
   const own = window.fetch.bind(window);
   /** Servers the webview could not call itself (CORS), called through Rust. */
   const throughRustOnly = new Set<string>();
@@ -29,6 +31,7 @@ export async function prepareTauri(os: DesktopOs, direct = false): Promise<void>
       /* not a URL: the page's */
     }
     if (!outside) return own(input, init);
+    if (throughTls(new URL(url, location.href).origin)) return pinned(input, init, url);
     if (!direct) return throughRust(input, init);
     const origin = new URL(url, location.href).origin;
     if (throughRustOnly.has(origin)) return throughRust(input, init);
@@ -43,11 +46,23 @@ export async function prepareTauri(os: DesktopOs, direct = false): Promise<void>
     });
   };
 
-  // Unreachable server: a TypeError as the fetch of a browser (« Le serveur ne répond pas »)
+  // Unreachable server: a TypeError as the fetch of a browser (« Le serveur ne répond pas »).
+  // Refused for its certificate: the user may trust it (tls.ts), then the call is made again.
   function throughRust(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
-    return rustFetch(input, init).catch((e: unknown) => {
+    return rustFetch(input, init).catch(async (e: unknown) => {
       if (e instanceof DOMException && e.name === 'AbortError') throw e;
+      const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+      if (certificateError(e) && (await secure(url))) return tlsFetch(input, init);
       throw new TypeError(e instanceof Error ? e.message : String(e));
+    });
+  }
+
+  // A server trusted before: its certificate may have changed since (renewed, or another server)
+  function pinned(input: RequestInfo | URL, init: RequestInit | undefined, url: string): Promise<Response> {
+    return tlsFetch(input, init).catch(async (e: unknown) => {
+      if (e instanceof DOMException && e.name === 'AbortError') throw e;
+      if (certificateError(e) && (await secure(url))) return tlsFetch(input, init);
+      throw e;
     });
   }
 }

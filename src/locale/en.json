@@ -95,13 +95,17 @@
     "fr": "Ce navigateur ne donne pas la couleur d'accent du système (Firefox et Safari la donnent).",
     "en": "This browser does not share the system accent colour (Firefox and Safari do)."
   },
-  "131577115706825034": {
-    "fr": "Erreur inattendue",
-    "en": "Unexpected error"
-  },
   "2664497375127070803": {
     "fr": "Le serveur ThermoBox ne répond pas",
     "en": "The ThermoBox server is not responding"
+  },
+  "1566231266910306296": {
+    "fr": "(ou son certificat n'est pas reconnu par le navigateur : ouvre {$origin} dans un nouvel onglet, accepte le certificat après avoir comparé son empreinte à celle du serveur, puis réessaie)",
+    "en": "(or its certificate is not recognized by the browser: open {$origin} in a new tab, accept the certificate after comparing its fingerprint with the server’s, then try again)"
+  },
+  "131577115706825034": {
+    "fr": "Erreur inattendue",
+    "en": "Unexpected error"
   },
   "8383370810868591889": {
     "fr": "Action non autorisée",
@@ -3255,22 +3259,6 @@
     "fr": "Températures acceptées",
     "en": "Accepted temperatures"
   },
-  "1446289478995114726": {
-    "fr": "{$START_TAG_STRONG}Nom du serveur{$CLOSE_TAG_STRONG}",
-    "en": "{$START_TAG_STRONG}Server name{$CLOSE_TAG_STRONG}"
-  },
-  "7556784791015235548": {
-    "fr": " Affiché à la place de son adresse dans la liste des comptes de chacun, sur la page de connexion, dans le titre de la fenêtre et des notifications. Vide : son adresse. ",
-    "en": " Shown instead of its address in everyone’s list of accounts, on the login page, in the title of the window and of the notifications. Empty: its address. "
-  },
-  "7103144334407043761": {
-    "fr": "Ex. : Siège social, Maison…",
-    "en": "E.g. Head office, Home…"
-  },
-  "4977912145007192180": {
-    "fr": "Enregistrer",
-    "en": "Save"
-  },
   "3105066162468003472": {
     "fr": "Logo du serveur",
     "en": "Server logo"
@@ -3575,6 +3563,22 @@
     "fr": "date",
     "en": "date"
   },
+  "1446289478995114726": {
+    "fr": "{$START_TAG_STRONG}Nom du serveur{$CLOSE_TAG_STRONG}",
+    "en": "{$START_TAG_STRONG}Server name{$CLOSE_TAG_STRONG}"
+  },
+  "7556784791015235548": {
+    "fr": " Affiché à la place de son adresse dans la liste des comptes de chacun, sur la page de connexion, dans le titre de la fenêtre et des notifications. Vide : son adresse. ",
+    "en": " Shown instead of its address in everyone’s list of accounts, on the login page, in the title of the window and of the notifications. Empty: its address. "
+  },
+  "7103144334407043761": {
+    "fr": "Ex. : Siège social, Maison…",
+    "en": "E.g. Head office, Home…"
+  },
+  "4977912145007192180": {
+    "fr": "Enregistrer",
+    "en": "Save"
+  },
   "4550958265168690830": {
     "fr": "Logo",
     "en": "Logo"
@@ -3639,17 +3643,9 @@
     "fr": "Administration",
     "en": "Administration"
   },
-  "6395160381056868140": {
-    "fr": "{$START_TAG_TB_SERVER_LOGO}{$CLOSE_TAG_TB_SERVER_LOGO}Serveur",
-    "en": "{$START_TAG_TB_SERVER_LOGO}{$CLOSE_TAG_TB_SERVER_LOGO}Server"
-  },
   "3727253448677130908": {
     "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Réglages ",
     "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Settings "
-  },
-  "3516245558682414066": {
-    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Ressources ",
-    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Resources "
   },
   "5167331273202555262": {
     "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Mises à jour {$START_BLOCK_IF}{$START_TAG_SPAN}{$CLOSE_TAG_SPAN}{$CLOSE_BLOCK_IF}",
@@ -3658,6 +3654,10 @@
   "6160442325773488793": {
     "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Journal ",
     "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Log "
+  },
+  "3516245558682414066": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Ressources ",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Resources "
   },
   "4725793968405907174": {
     "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Processeur",
@@ -4590,6 +4590,34 @@
   "8443718862707583046": {
     "fr": "Ce système ne donne pas sa couleur d'accent à l'application.",
     "en": "This system does not share its accent colour with the app."
+  },
+  "8621294509929585236": {
+    "fr": "Le certificat de {$host} a changé depuis que tu lui as fait confiance. Si le serveur n'a pas été réinstallé ni son certificat renouvelé, quelqu'un se fait peut-être passer pour lui.",
+    "en": "The certificate of {$host} changed since you trusted it. If the server was not reinstalled and its certificate not renewed, someone may be impersonating it."
+  },
+  "5800380687828065729": {
+    "fr": "Nouvelle empreinte SHA-256 :",
+    "en": "New SHA-256 fingerprint:"
+  },
+  "4462470135829958177": {
+    "fr": "Ancienne :",
+    "en": "Previous:"
+  },
+  "3618524440679465915": {
+    "fr": "{$host} présente un certificat que cet ordinateur ne connaît pas (auto-signé). Compare son empreinte SHA-256 avec celle que le serveur affiche au démarrage (« its SHA-256 fingerprint » dans son journal) avant de lui faire confiance :",
+    "en": "{$host} presents a certificate this computer does not know (self-signed). Compare its SHA-256 fingerprint with the one the server prints at startup (“its SHA-256 fingerprint” in its log) before trusting it:"
+  },
+  "2045284836105030206": {
+    "fr": "Le certificat du serveur a changé",
+    "en": "The server’s certificate changed"
+  },
+  "1591938217958562009": {
+    "fr": "Certificat non reconnu",
+    "en": "Unrecognized certificate"
+  },
+  "8616722075355005447": {
+    "fr": "Faire confiance",
+    "en": "Trust"
   },
   "6727641887847285250": {
     "fr": "Windows",

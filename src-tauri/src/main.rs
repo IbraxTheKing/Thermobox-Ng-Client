@@ -24,6 +24,7 @@
 mod linux;
 #[cfg(target_os = "macos")]
 mod menu;
+mod tls;
 #[cfg(windows)]
 mod win;
 
@@ -260,6 +261,7 @@ fn main() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_notification::init())
         .manage(PageReady::default())
+        .manage(tls::Tls::default())
         .manage(Backdrop::default())
         .setup(|app| {
             #[cfg(windows)]
@@ -290,7 +292,7 @@ fn main() {
             let _ = app;
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![settings_window, snap_layouts, system_accent, page_ready, window_acrylic, window_theme, app_language, decoration_layout, clipboard_text, linux_options, set_linux_options, native_chrome]);
+        .invoke_handler(tauri::generate_handler![settings_window, snap_layouts, system_accent, page_ready, window_acrylic, window_theme, app_language, decoration_layout, clipboard_text, linux_options, set_linux_options, native_chrome, tls::tls_pins, tls::tls_probe, tls::tls_fetch]);
     #[cfg(target_os = "macos")]
     let builder = builder.menu(menu::build).on_menu_event(menu::on_event);
     builder.run(tauri::generate_context!()).expect("Thermobox could not start");

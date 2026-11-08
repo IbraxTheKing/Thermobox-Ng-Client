@@ -118,17 +118,35 @@ export function toInstant(value: Date | string): string {
 }
 
 /** Message to show for a failed request: the server's when it gave one. */
+/**
+ * No answer from the server at [url]. In a browser, an HTTPS server with a certificate the
+ * browser does not know (self-signed, ThermoBox 26.12) gives the same silence: the page cannot
+ * see why, nor accept it; the browser can, once its address is opened in a tab. The desktop apps
+ * ask themselves (platforms/desktop/tls.ts).
+ */
+function unreachable(url: string | null | undefined): string {
+  const message = $localize`Le serveur ThermoBox ne répond pas`;
+  if (TARGET.name !== 'web' || !url) return message;
+  try {
+    const u = new URL(url, location.href);
+    if (u.protocol !== 'https:' || u.origin === location.origin) return message;
+    return message + ' ' + $localize`(ou son certificat n'est pas reconnu par le navigateur : ouvre ${u.origin}:origin: dans un nouvel onglet, accepte le certificat après avoir comparé son empreinte à celle du serveur, puis réessaie)`;
+  } catch {
+    return message;
+  }
+}
+
 export function errorMessage(err: unknown, fallback = $localize`Erreur inattendue`): string {
   if (err instanceof HttpErrorResponse) {
     // No answer at all (offline, wrong address, refused): the network error says nothing more
-    if (err.status === 0 && (err.error == null || err.error instanceof Error || err.error instanceof ProgressEvent)) return $localize`Le serveur ThermoBox ne répond pas`;
+    if (err.status === 0 && (err.error == null || err.error instanceof Error || err.error instanceof ProgressEvent)) return unreachable(err.url);
     const body = err.error as { error?: string; message?: string } | string | null;
     if (body && typeof body === 'object') {
       if (body.error) return body.error;
       if (body.message) return body.message;
     }
     if (typeof body === 'string' && body.trim() && !body.trim().startsWith('<')) return body.trim();
-    if (err.status === 0) return $localize`Le serveur ThermoBox ne répond pas`;
+    if (err.status === 0) return unreachable(err.url);
     if (err.status === 403) return $localize`Action non autorisée`;
     if (err.status === 404) return $localize`Élément introuvable`;
     return `${fallback} (${err.status})`;
