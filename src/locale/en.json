@@ -359,10 +359,6 @@
     "fr": "Historique",
     "en": "History"
   },
-  "6157803967017724460": {
-    "fr": "Thermobox",
-    "en": "Thermobox"
-  },
   "6523791569554664385": {
     "fr": ", recommandée",
     "en": ", recommended"
@@ -382,6 +378,10 @@
   "417562292679571705": {
     "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Retour",
     "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Back"
+  },
+  "6157803967017724460": {
+    "fr": "Thermobox",
+    "en": "Thermobox"
   },
   "5310433711568403252": {
     "fr": "La température de chaque salle, en un coup d'œil.",
@@ -2935,6 +2935,10 @@
     "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Tout va bien",
     "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}All good"
   },
+  "4015104651016214627": {
+    "fr": "Masquer les alertes en cours",
+    "en": "Hide the alerts in progress"
+  },
   "5212069622384641148": {
     "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Un message n'a pas pu partir.",
     "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} A message could not be sent."
@@ -2975,6 +2979,18 @@
     "fr": "Quand alerter (écart à la consigne, durée), où (toute l'installation ou certains bâtiments, étages, salles) et quels canaux prévenir.",
     "en": "When to alert (margin above the setpoint, duration), where (the whole installation or some buildings, floors, rooms) and which channels to warn."
   },
+  "841728106045120432": {
+    "fr": "Le plus au-dessus du seuil",
+    "en": "Furthest above the threshold"
+  },
+  "210859465758781091": {
+    "fr": "Les plus récentes",
+    "en": "Most recent"
+  },
+  "5446042072750498832": {
+    "fr": "Nom de la salle",
+    "en": "Room name"
+  },
   "1169701023928731204": {
     "fr": "à {$PH}",
     "en": "at {$PH}"
@@ -3011,9 +3027,13 @@
     "fr": "maximum {$PH}",
     "en": "peak {$PH}"
   },
-  "6086711428351926259": {
-    "fr": "depuis {$PH}",
-    "en": "since {$PH}"
+  "864130252132811899": {
+    "fr": "depuis {$time}",
+    "en": "since {$time}"
+  },
+  "4399468000319926312": {
+    "fr": "depuis le {$date}",
+    "en": "since {$date}"
   },
   "8707080991195809673": {
     "fr": "{$PH} destinataires",
@@ -3234,6 +3254,21 @@
   "132527322677131885": {
     "fr": "Températures acceptées",
     "en": "Accepted temperatures"
+  "1446289478995114726": {
+    "fr": "{$START_TAG_STRONG}Nom du serveur{$CLOSE_TAG_STRONG}",
+    "en": "{$START_TAG_STRONG}Server name{$CLOSE_TAG_STRONG}"
+  },
+  "7556784791015235548": {
+    "fr": " Affiché à la place de son adresse dans la liste des comptes de chacun, sur la page de connexion, dans le titre de la fenêtre et des notifications. Vide : son adresse. ",
+    "en": " Shown instead of its address in everyone’s list of accounts, on the login page, in the title of the window and of the notifications. Empty: its address. "
+  },
+  "7103144334407043761": {
+    "fr": "Ex. : Siège social, Maison…",
+    "en": "E.g. Head office, Home…"
+  },
+  "4977912145007192180": {
+    "fr": "Enregistrer",
+    "en": "Save"
   },
   "3105066162468003472": {
     "fr": "Logo du serveur",
@@ -3563,13 +3598,17 @@
     "fr": "à {$TAG_INPUT}",
     "en": "to {$TAG_INPUT}"
   },
-  "4977912145007192180": {
-    "fr": "Enregistrer",
-    "en": "Save"
-  },
   "7532284812892965574": {
     "fr": "Valeurs par défaut",
     "en": "Default values"
+  },
+  "8283518462540054214": {
+    "fr": "Serveur renommé « {$PH} »",
+    "en": "Server renamed “{$PH}”"
+  },
+  "7349321098017547805": {
+    "fr": "Nom du serveur retiré",
+    "en": "Server name removed"
   },
   "1778597973847119963": {
     "fr": "Choisi par un administrateur.",
@@ -3606,6 +3645,9 @@
   "3727253448677130908": {
     "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Réglages ",
     "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Settings "
+  "3516245558682414066": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Ressources ",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Resources "
   },
   "5167331273202555262": {
     "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Mises à jour {$START_BLOCK_IF}{$START_TAG_SPAN}{$CLOSE_TAG_SPAN}{$CLOSE_BLOCK_IF}",
@@ -4595,10 +4637,6 @@
     "fr": "Afficher ou réduire la navigation",
     "en": "Show or collapse the navigation"
   },
-  "455864947852695727": {
-    "fr": "Thermobox{$START_BLOCK_IF}{$START_TAG_SPAN} · {$INTERPOLATION}{$CLOSE_TAG_SPAN}{$CLOSE_BLOCK_IF}",
-    "en": "Thermobox{$START_BLOCK_IF}{$START_TAG_SPAN} · {$INTERPOLATION}{$CLOSE_TAG_SPAN}{$CLOSE_BLOCK_IF}"
-  },
   "7362122314560708990": {
     "fr": "Réduire",
     "en": "Minimize"
@@ -5098,6 +5136,22 @@
   "1172116262798727159": {
     "fr": "Jamais",
     "en": "Never"
+  },
+  "6142312231476357438": {
+    "fr": " alertes en cours",
+    "en": " alerts in progress"
+  },
+  "691741220467438246": {
+    "fr": "Voir l'alerte en cours",
+    "en": "Show the alert in progress"
+  },
+  "4014322943624109576": {
+    "fr": "alertes en cours",
+    "en": "alerts in progress"
+  },
+  "9002871522056222346": {
+    "fr": "page",
+    "en": "page"
   },
   "5323618414989823339": {
     "fr": "Salle supprimée",

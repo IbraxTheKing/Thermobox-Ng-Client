@@ -99,9 +99,32 @@
 .tb-tree-children.tb-folded > div { visibility: hidden; transition: visibility 0s .45s; }
 
 .tb-node { display: flex; align-items: center; gap: 12px; width: 100%; min-width: 0; }
-.tb-node-main { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 10px; flex: 1 1 auto; min-width: 0; }
-.tb-node-name { font-weight: 700; }
-.tb-node-main .tb-muted { font-size: .82rem; }
+/* The icon, then the name over its kind (« Bâtiment »): never the icon on a line of its own */
+.tb-node-main {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    column-gap: 10px;
+    row-gap: 0;
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 6px 0;
+}
+.tb-node-main > .tb-tree-icon { grid-row: 1 / span 3; }
+.tb-node-main > :not(.tb-tree-icon) { grid-column: 2; min-width: 0; }
+.tb-node-name {
+    display: -webkit-box;
+    overflow: hidden;
+    font-weight: 700;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+}
+.tb-node-main .tb-muted { font-size: .82rem; line-height: 1.3; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.tb-node-main > .tb-tag { justify-self: start; margin-top: 2px; }
+.tb-node-more { display: none !important; }
 .tb-tree-icon { width: 36px; height: 36px; border-radius: var(--tb-shape-sm); font-size: .95rem; }
 .tb-node-temp {
     width: 9.5rem;
@@ -126,6 +149,37 @@
 .tb-node-row:hover .tb-node-actions, .tb-node-actions:focus-within { opacity: 1; }
 .tb-node-actions .tb-btn.tb-icon { width: 38px; min-width: 38px; height: 38px; }
 @media (hover: none) { .tb-node-actions { opacity: 1; } }
+
+/*
+ * The tree in a narrow window (or beside the column of what is not attached): by the width of the
+ * tree itself, on every platform. Less room for the temperature, the actions of an ADMIN behind
+ * ⋮ (the sheet of phones), then the temperature under the name, the levels less indented.
+ */
+.tb-tree-rooms { container: tb-tree / inline-size; }
+@container tb-tree (max-width: 760px) {
+    .tb-node { gap: 8px; }
+    .tb-node-temp { width: 6.5rem; font-size: 1.05rem; }
+    .tb-node-actions { width: auto; opacity: 1; }
+    .tb-node-actions .tb-node-extra { display: none !important; }
+    .tb-node-actions .tb-node-more { display: inline-flex !important; }
+    .tb-node-actions .tb-btn.tb-icon { width: 34px; min-width: 34px; height: 34px; }
+    .tb-tree-rooms ul ul { padding-left: 16px; }
+}
+@container tb-tree (max-width: 500px) {
+    .tb-node {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-areas: "main actions" "temp actions";
+        column-gap: 4px;
+        row-gap: 0;
+    }
+    .tb-node-main { grid-area: main; padding-bottom: 0; }
+    .tb-node-temp { grid-area: temp; width: auto; margin: 0 0 6px 46px; text-align: left; font-size: .9rem; color: var(--md-on-surface-variant); }
+    .tb-node-temp .tb-muted { display: inline; margin-left: 6px; font-size: .76rem; }
+    .tb-node-actions { grid-area: actions; align-self: center; }
+    .tb-tree-icon { width: 32px; height: 32px; }
+    .tb-tree-rooms ul ul { padding-left: 10px; }
+}
 
 /* Top-level drop zone: dropping there detaches the element */
 .tb-tree-root {
@@ -316,6 +370,13 @@ a.tb-pref-link:hover strong { color: var(--md-primary); }
 .tb-account-forget { flex: none; color: var(--md-on-surface-variant); }
 .tb-account-adding { width: 100%; margin-top: 4px; border-top: 1px solid var(--md-outline-variant); border-radius: 0 0 var(--tb-shape-md) var(--tb-shape-md); }
 
+/* The name of a server (26.12) above its address in the account lists */
+.tb-accounts-server small { flex: none; margin-left: auto; font-size: .75rem; font-weight: 500; opacity: .75; }
+/* Login page: the server reached at the address typed, or the one of this site */
+.tb-login-server { display: flex; align-items: center; gap: 8px; margin-top: 6px; color: var(--md-on-surface); font-size: .9rem; font-weight: 600; }
+.tb-login-server .tb-server-logo { width: 22px; height: 22px; }
+.tb-login-server-here { margin: -4px 0 14px; }
+
 /* Login page: the saved accounts, above the form */
 .tb-auth-accounts { padding: 6px; }
 .tb-auth-accounts .tb-panel-title { margin: 10px 12px 6px; font-size: 1rem; font-weight: 750; color: var(--md-on-surface-variant); }
@@ -346,6 +407,8 @@ a.tb-pref-link:hover strong { color: var(--md-primary); }
 .tb-server-logo-preview { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 48px; height: 48px; overflow: hidden; border-radius: 12px; background: #fff; box-shadow: 0 0 0 1px color-mix(in srgb, var(--md-on-surface) 12%, transparent); color: var(--md-on-surface-variant); }
 .tb-server-logo-preview img { width: 100%; height: 100%; padding: 4px; object-fit: contain; }
 .tb-pref-actions { display: flex; flex: none; flex-wrap: wrap; gap: 8px; margin-left: auto; }
+.tb-name-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; }
+:root body .tb-name-row > .tb-input { flex: 1 1 220px; max-width: 360px; width: auto; }
 .tb-pref-actions label.tb-btn { cursor: pointer; }
 .tb-pref-actions .tb-disabled { opacity: .5; pointer-events: none; }
 .tb-limits { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
@@ -389,6 +452,14 @@ a.tb-pref-link:hover strong { color: var(--md-primary); }
 .tb-alert-room-values { display: flex; flex-direction: column; align-items: flex-end; flex: none; font-variant-numeric: tabular-nums; }
 .tb-alert-room > .tb-tag { flex: none; }
 .tb-alert-rooms-note { margin: 0; }
+.tb-alert-rooms .tb-pager { margin-top: 6px; }
+.tb-alert-rooms .tb-pagination { padding: 6px 0 0; }
+/* The alerts in progress: folded behind their button, in pages; each room on its lines */
+.tb-pref.tb-alert-active { flex-direction: column; align-items: stretch; gap: 6px; }
+.tb-alert-active > .tb-alert-rooms { margin-top: 0; }
+.tb-alert-event .tb-alert-room-text > .tb-alert-event-meta { font-size: .78rem; opacity: .9; white-space: normal; }
+.tb-alert-event .tb-alert-room-text > .tb-field-error { white-space: normal; font-size: .82rem; }
+.tb-alert-event .tb-alert-room-values > strong { font-size: 1.05rem; }
 @media (max-width: 640px) {
     .tb-alert-rooms { padding: 10px 12px; }
     /* The name on the left, the temperature and its tag under each other on the right */

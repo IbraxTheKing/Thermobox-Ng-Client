@@ -5,7 +5,7 @@ import { locale } from '../../core/i18n';
 import { UnitService } from '../../core/unit';
 import { AlertRule, AlertRuleRoom } from '../../models/models';
 import { AlertStore } from '../../services/alert.store';
-import { ShownCount, TbMore } from '../../ui/more';
+import { TbPager } from '../../ui/pager';
 import { TrPipe } from '../../ui/tr.pipe';
 
 type Sort = 'alert' | 'name' | 'gap';
@@ -18,7 +18,7 @@ type Sort = 'alert' | 'name' | 'gap';
  */
 @Component({
   selector: 'tb-alert-rule-rooms',
-  imports: [TrPipe, TbMore],
+  imports: [TrPipe, TbPager],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'tb-alert-rooms' },
   template: `
@@ -42,7 +42,7 @@ type Sort = 'alert' | 'name' | 'gap';
       </div>
       @if (list.length) {
         <ul class="tb-alert-room-list">
-          @for (r of sorted().slice(0, shown.count()); track r.id) {
+          @for (r of sorted().slice(page() * pageSize, (page() + 1) * pageSize); track r.id) {
             <li class="tb-alert-room">
               <span class="tb-alert-room-text">
                 <strong>{{ r.name ?? ('Salle sans nom' | tr) }}</strong>
@@ -70,7 +70,7 @@ type Sort = 'alert' | 'name' | 'gap';
             </li>
           }
         </ul>
-        <tb-more [total]="list.length" [shown]="shown.count()" (more)="shown.more()" />
+        <tb-pager [total]="list.length" [size]="pageSize" [(page)]="page" />
       } @else {
         <p i18n class="tb-muted tb-alert-rooms-note">Une règle plus proche la remplace partout, ou ses éléments ne contiennent aucune salle.</p>
       }
@@ -97,8 +97,9 @@ export class TbAlertRuleRooms {
   protected readonly sort = signal<Sort>('alert');
   protected readonly rooms = signal<AlertRuleRoom[] | null>(null);
   protected readonly error = signal<string | null>(null);
-  /** Hundreds of rooms for a rule of the whole site: a part at a time. */
-  protected readonly shown = new ShownCount(30);
+  /** Hundreds of rooms for a rule of the whole site: in pages. */
+  protected readonly pageSize = 20;
+  protected readonly page = signal(0);
 
   protected readonly alerted = computed(() => (this.rooms() ?? []).filter((r) => r.alertId != null).length);
 
@@ -131,13 +132,16 @@ export class TbAlertRuleRooms {
 
   protected setSort(s: Sort): void {
     this.sort.set(s);
-    this.shown.reset();
+    this.page.set(0);
   }
 
   private async load(id: number): Promise<void> {
     this.error.set(null);
     try {
-      this.rooms.set(await this.alerts.ruleRooms(id));
+      const rooms = await this.alerts.ruleRooms(id);
+      this.rooms.set(rooms);
+      // Fewer rooms than before: stay on a page that exists
+      this.page.update((p) => Math.min(p, Math.max(0, Math.ceil((rooms?.length ?? 0) / this.pageSize) - 1)));
     } catch (e) {
       this.error.set(errorMessage(e));
     }

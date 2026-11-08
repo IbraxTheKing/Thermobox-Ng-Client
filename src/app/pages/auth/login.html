@@ -33,11 +33,11 @@
         <h2 i18n class="tb-panel-title" id="accounts-title">Comptes enregistrés</h2>
         <ul class="tb-accounts">
           @for (g of servers(); track g.base) {
-            <li class="tb-accounts-server"><tb-server-logo [base]="g.base" /><span>{{ g.address }}</span></li>
+            <li class="tb-accounts-server" [title]="g.address"><tb-server-logo [base]="g.base" /><span>{{ g.label }}</span>@if (g.name) {<small>{{ g.address }}</small>}</li>
             @for (l of g.rows; track l.account.key) {
             <li>
               <button type="button" class="tb-account" [class.tb-account-active]="l.current" (click)="openAccount(l)"
-                      [attr.aria-label]="l.account.user.username + (' sur ' | tr) + g.address">
+                      [attr.aria-label]="l.account.user.username + (' sur ' | tr) + g.label">
                 <span class="tb-avatar" aria-hidden="true">{{ l.initial }}<tb-server-logo badge [base]="g.base" /></span>
                 <span class="tb-account-text">
                   <strong>{{ l.account.user.username }}</strong>
@@ -65,7 +65,7 @@
             <span class="tb-avatar" aria-hidden="true">{{ chosenInitial() }}</span>
             <span class="tb-account-text">
               <strong>{{ c.user.username }}</strong>
-              <span class="tb-account-address"><tb-server-logo [base]="c.server" />{{ chosenAddress() }}</span>
+              <span class="tb-account-address"><tb-server-logo [base]="c.server" />{{ versions.name(c.server) ?? chosenAddress() }}</span>
             </span>
             <button i18n type="button" class="tb-text-btn" (click)="choose(null)">Autre compte</button>
           </div>
@@ -78,7 +78,13 @@
               <span i18n class="tb-field-hint">
                 L'adresse donnée par ton administrateur, avec le port s'il y en a un.@if (server.defaultBase) { Vide : ce site.}
               </span>
+              <!-- The server answers at that address: its logo and its name -->
+              @if (typedServer(); as t) {
+                <span class="tb-login-server" aria-live="polite"><tb-server-logo [base]="t.base" />{{ t.label }}</span>
+              }
             </div>
+          } @else if (!chosen() && thisServerName()) {
+            <p class="tb-login-server tb-login-server-here"><tb-server-logo [base]="server.base()" />{{ thisServerName() }}</p>
           }
           <div class="tb-field">
             <label i18n class="tb-label" for="username">Nom d'utilisateur</label>

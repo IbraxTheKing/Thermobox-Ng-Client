@@ -33,7 +33,7 @@ import { TrPipe } from '../../ui/tr.pipe';
         <span class="tb-list-text">
           <strong>{{ auth.user()?.username }}</strong>
           <span i18n class="tb-muted">{{ role() }} · Mon profil</span>
-          <span class="tb-account-address"><tb-server-logo [base]="server.base()" />{{ auth.address() }}</span>
+          <span class="tb-account-address"><tb-server-logo [base]="server.base()" />{{ auth.serverLabel() }}</span>
         </span>
         <i class="pi pi-angle-right tb-list-continuation"></i>
       </a>
