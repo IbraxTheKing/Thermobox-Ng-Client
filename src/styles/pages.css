@@ -452,6 +452,14 @@ a.tb-pref-link:hover strong { color: var(--md-primary); }
 .tb-alert-room-values { display: flex; flex-direction: column; align-items: flex-end; flex: none; font-variant-numeric: tabular-nums; }
 .tb-alert-room > .tb-tag { flex: none; }
 .tb-alert-rooms-note { margin: 0; }
+.tb-alert-rooms .tb-pager { margin-top: 6px; }
+.tb-alert-rooms .tb-pagination { padding: 6px 0 0; }
+/* The alerts in progress: folded behind their button, in pages; each room on its lines */
+.tb-pref.tb-alert-active { flex-direction: column; align-items: stretch; gap: 6px; }
+.tb-alert-active > .tb-alert-rooms { margin-top: 0; }
+.tb-alert-event .tb-alert-room-text > .tb-alert-event-meta { font-size: .78rem; opacity: .9; white-space: normal; }
+.tb-alert-event .tb-alert-room-text > .tb-field-error { white-space: normal; font-size: .82rem; }
+.tb-alert-event .tb-alert-room-values > strong { font-size: 1.05rem; }
 @media (max-width: 640px) {
     .tb-alert-rooms { padding: 10px 12px; }
     /* The name on the left, the temperature and its tag under each other on the right */

@@ -1363,7 +1363,7 @@ function alertRule(b, current) {
 const alertCall = (f) => { try { return f(); } catch (e) { return error(400, e.message); } };
 const alertStatus = () => ({ enabled: true, running: true, lastRun: iso(Date.now() - 12_000), watchedRooms: alertRules.some((r) => r.enabled) ? elements.filter((e) => e.kind === 'ROOM').length : 0, lastError: null, runByAnotherServer: false });
 const alertsRoute = (method, path, f) => API === 'v2' && route(method, `/api/v2/alerts${path}`, 'ADMIN', f);
-alertsRoute('GET', '', () => ok({ status: alertStatus(), channels: alertChannels.map(channelView), rules: alertRules.map(ruleView), active: [], failedDeliveries: alertDeliveries.filter((d) => d.status === 'FAILED').slice(-10).reverse() }));
+alertsRoute('GET', '', () => ok({ status: alertStatus(), channels: alertChannels.map(channelView), rules: alertRules.map(ruleView), active: activeAlerts(), failedDeliveries: alertDeliveries.filter((d) => d.status === 'FAILED').slice(-10).reverse() }));
 alertsRoute('GET', '/status', () => ok(alertStatus()));
 alertsRoute('GET', '/channels', () => ok(alertChannels.map(channelView)));
 alertsRoute('POST', '/channels', ({ body }) => alertCall(() => { const c = alertChannel(json(body) ?? {}, null); alertChannels.push(c); return { status: 201, body: channelView(c) }; }));
@@ -1400,6 +1400,32 @@ alertsRoute('GET', '/rules', () => ok(alertRules.map(ruleView)));
 alertsRoute('GET', '/rules/{id}/rooms', ({ p }) => {
   const rule = alertRules.find((r) => r.id === +p.id);
   if (!rule) return error(404, 'Not found');
+  const active = new Map(activeAlerts().map((a) => [a.roomId + ':' + a.ruleId, a]));
+  return ok(ruleRooms(rule).map((row) => {
+    const a = active.get(row.id + ':' + rule.id);
+    return a ? { ...row, alertId: a.id, alertSince: a.exceededSince } : row;
+  }));
+});
+/** The alerts in progress: the rooms above the threshold of the rule that applies to them. */
+const alertSince = new Map();
+function activeAlerts() {
+  const out = [];
+  for (const rule of alertRules.filter((r) => r.enabled)) {
+    for (const row of ruleRooms(rule)) {
+      const key = row.id + ':' + rule.id;
+      if (!row.exceeding) { alertSince.delete(key); continue; }
+      if (!alertSince.has(key)) alertSince.set(key, Date.now() - Math.floor(Math.random() * 90) * MINUTE);
+      const since = alertSince.get(key);
+      out.push({ id: row.id * 1000 + rule.id, ruleId: rule.id, ruleName: rule.name, roomId: row.id, roomName: row.name, place: row.place, state: 'ACTIVE',
+        exceededSince: iso(since), triggeredAt: iso(since + rule.minDurationSeconds * 1000), resolvedAt: null, setpoint: row.setpoint, threshold: row.threshold,
+        currentSetpoint: row.setpoint, temperature: row.temperature, peak: row.temperature, lastTemperature: row.temperature, devices: [], lastNotifiedAt: null,
+        reminders: 0, reason: null, deliveryFailed: false, deliveries: null });
+    }
+  }
+  return out;
+}
+/** The rooms where [rule] applies (no nearer enabled rule replaces it), and where they stand. */
+function ruleRooms(rule) {
   const rules = [...alertRules.filter((r) => r.enabled && r.id !== rule.id), { ...rule, enabled: true }];
   const rows = [];
   for (const room of elements.filter((e) => e.kind === 'ROOM')) {
@@ -1416,8 +1442,8 @@ alertsRoute('GET', '/rules/{id}/rooms', ({ p }) => {
     rows.push({ id: room.id, name: room.name, place: pathOf(room).map((e) => e.name).join(' › '), setpoint, threshold, temperature,
       measuredAt: hottest ? iso(hottest.date) : null, exceeding, alertId: null, alertSince: null });
   }
-  return ok(rows);
-});
+  return rows;
+}
 alertsRoute('POST', '/rules', ({ body }) => alertCall(() => { const r = alertRule(json(body) ?? {}, null); alertRules.push(r); return { status: 201, body: ruleView(r) }; }));
 alertsRoute('PUT', '/rules/{id}', ({ body, p }) => alertCall(() => {
   const i = alertRules.findIndex((r) => r.id === +p.id);

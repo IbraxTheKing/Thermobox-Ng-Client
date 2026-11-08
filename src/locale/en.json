@@ -2935,6 +2935,10 @@
     "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Tout va bien",
     "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}All good"
   },
+  "4015104651016214627": {
+    "fr": "Masquer les alertes en cours",
+    "en": "Hide the alerts in progress"
+  },
   "5212069622384641148": {
     "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Un message n'a pas pu partir.",
     "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} A message could not be sent."
@@ -2975,6 +2979,18 @@
     "fr": "Quand alerter (écart à la consigne, durée), où (toute l'installation ou certains bâtiments, étages, salles) et quels canaux prévenir.",
     "en": "When to alert (margin above the setpoint, duration), where (the whole installation or some buildings, floors, rooms) and which channels to warn."
   },
+  "841728106045120432": {
+    "fr": "Le plus au-dessus du seuil",
+    "en": "Furthest above the threshold"
+  },
+  "210859465758781091": {
+    "fr": "Les plus récentes",
+    "en": "Most recent"
+  },
+  "5446042072750498832": {
+    "fr": "Nom de la salle",
+    "en": "Room name"
+  },
   "1169701023928731204": {
     "fr": "à {$PH}",
     "en": "at {$PH}"
@@ -3011,9 +3027,13 @@
     "fr": "maximum {$PH}",
     "en": "peak {$PH}"
   },
-  "6086711428351926259": {
-    "fr": "depuis {$PH}",
-    "en": "since {$PH}"
+  "864130252132811899": {
+    "fr": "depuis {$time}",
+    "en": "since {$time}"
+  },
+  "4399468000319926312": {
+    "fr": "depuis le {$date}",
+    "en": "since {$date}"
   },
   "8707080991195809673": {
     "fr": "{$PH} destinataires",
@@ -4742,6 +4762,22 @@
   "1172116262798727159": {
     "fr": "Jamais",
     "en": "Never"
+  },
+  "6142312231476357438": {
+    "fr": " alertes en cours",
+    "en": " alerts in progress"
+  },
+  "691741220467438246": {
+    "fr": "Voir l'alerte en cours",
+    "en": "Show the alert in progress"
+  },
+  "4014322943624109576": {
+    "fr": "alertes en cours",
+    "en": "alerts in progress"
+  },
+  "9002871522056222346": {
+    "fr": "page",
+    "en": "page"
   },
   "5323618414989823339": {
     "fr": "Salle supprimée",
