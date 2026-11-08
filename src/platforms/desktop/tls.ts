@@ -88,15 +88,24 @@ export function throughTls(origin: string): boolean {
   return origins.has(origin);
 }
 
-/** The error of a call refused for its certificate (tauri-plugin-http, reqwest, rustls). */
-export function certificateError(e: unknown): boolean {
-  const m = e instanceof Error ? e.message : String(e);
-  return /certificate|UnknownIssuer|CaUsedAsEndEntity|NotValidForName|BadSignature|invalid peer|self[- ]signed|tls/i.test(m);
+/**
+ * A call that failed may have been refused for its certificate: any network error of an HTTPS
+ * server. tauri-plugin-http only says « error sending request for url (…) », without the cause
+ * (reqwest shows its causes apart): [secure] asks the server itself which it is.
+ */
+export function certificateError(e: unknown, url: string): boolean {
+  if (e instanceof DOMException && e.name === 'AbortError') return false;
+  try {
+    return new URL(url).protocol === 'https:';
+  } catch {
+    return false;
+  }
 }
 
 /**
- * [url] was refused for its certificate: is it one the system knows (then its calls go through
- * Rust), or one to trust (the user is asked)? True when the call can be made again.
+ * [url] failed, maybe for its certificate: is it one the system knows (then its calls go through
+ * Rust), or one to trust (the user is asked)? False when the server is not reached at all (no
+ * certificate seen): the error stays. True when the call can be made again.
  */
 export async function secure(url: string): Promise<boolean> {
   const u = new URL(url);
@@ -115,6 +124,8 @@ async function settle(u: URL): Promise<boolean> {
     () => null,
   );
   if (!probe) return false;
+  // Accepted by tls.rs (a CA installed on the machine, as mkcert's, which tauri-plugin-http does
+  // not know, or a certificate trusted before): its calls go through it from now on
   if (!probe.trusted) {
     if (!probe.fingerprint || !asker) return false;
     const host = probe.host;

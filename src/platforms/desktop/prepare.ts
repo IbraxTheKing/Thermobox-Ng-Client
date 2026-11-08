@@ -52,7 +52,7 @@ export async function prepareTauri(os: DesktopOs, direct = false): Promise<void>
     return rustFetch(input, init).catch(async (e: unknown) => {
       if (e instanceof DOMException && e.name === 'AbortError') throw e;
       const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
-      if (certificateError(e) && (await secure(url))) return tlsFetch(input, init);
+      if (certificateError(e, url) && (await secure(url))) return tlsFetch(input, init);
       throw new TypeError(e instanceof Error ? e.message : String(e));
     });
   }
@@ -61,7 +61,7 @@ export async function prepareTauri(os: DesktopOs, direct = false): Promise<void>
   function pinned(input: RequestInfo | URL, init: RequestInit | undefined, url: string): Promise<Response> {
     return tlsFetch(input, init).catch(async (e: unknown) => {
       if (e instanceof DOMException && e.name === 'AbortError') throw e;
-      if (certificateError(e) && (await secure(url))) return tlsFetch(input, init);
+      if (certificateError(e, url) && (await secure(url))) return tlsFetch(input, init);
       throw e;
     });
   }
