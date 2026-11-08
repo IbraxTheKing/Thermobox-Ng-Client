@@ -5,9 +5,10 @@
   </div>
 </header>
 
+<!-- Réglages first (the page opens there), Ressources at the end -->
 <div class="tb-segmented tb-server-tabs" role="tablist" i18n-aria-label aria-label="Serveur">
-  <button i18n type="button" role="tab" [class.tb-seg-on]="current() === 'resources'" [attr.aria-selected]="current() === 'resources'" (click)="open('resources')">
-    <i class="pi pi-chart-line"></i>Ressources
+  <button i18n type="button" role="tab" [class.tb-seg-on]="current() === 'settings'" [attr.aria-selected]="current() === 'settings'" (click)="open('settings')">
+    <i class="pi pi-sliders-h"></i>Réglages
   </button>
   <button i18n type="button" role="tab" [class.tb-seg-on]="current() === 'updates'" [attr.aria-selected]="current() === 'updates'" (click)="open('updates')">
     <i class="pi pi-cloud-download"></i>Mises à jour
@@ -15,8 +16,8 @@
       <span class="tb-dest-badge tb-tab-badge" i18n-aria-label aria-label="Nouvelle version"></span>
     }
   </button>
-  <button i18n type="button" role="tab" [class.tb-seg-on]="current() === 'settings'" [attr.aria-selected]="current() === 'settings'" (click)="open('settings')">
-    <i class="pi pi-sliders-h"></i>Réglages
+  <button i18n type="button" role="tab" [class.tb-seg-on]="current() === 'resources'" [attr.aria-selected]="current() === 'resources'" (click)="open('resources')">
+    <i class="pi pi-chart-line"></i>Ressources
   </button>
 </div>
 

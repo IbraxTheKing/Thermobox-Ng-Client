@@ -18,9 +18,9 @@ import { TrPipe } from '../../ui/tr.pipe';
 type Tab = 'resources' | 'updates' | 'settings';
 
 /**
- * Serveur (ADMIN): the ThermoBox server itself. Its resources (processor, memory, threads, pauses
- * of the garbage collector) over the last minutes, its updates, and its settings (temperatures
- * accepted, logo, temperature alerts). Resources and settings come with 26.12 (API v2); an older server has its
+ * Serveur (ADMIN): the ThermoBox server itself, in tabs: its settings (first, where the page
+ * opens: temperatures accepted, logo, temperature alerts), its updates, and its resources
+ * (processor, memory, threads, pauses of the garbage collector) over the last minutes. Resources and settings come with 26.12 (API v2); an older server has its
  * updates only.
  */
 @Component({
@@ -41,7 +41,7 @@ export class ServerPage implements OnDestroy {
   protected readonly current = computed<Tab>(() => {
     const t = this.tab();
     if (t === 'updates' || t === 'settings' || t === 'resources') return t;
-    return this.features.v2() ? 'resources' : 'updates';
+    return 'settings';
   });
 
   constructor() {
