@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, DOCUMENT, ElementRef, computed, eff
 import { Router, RouterLink } from '@angular/router';
 
 import { readableAddress } from '../core/api.config';
+import { ApiVersionService } from '../core/api-version';
 import { AuthService, Account, byServer, openable } from '../core/auth';
 import { ConfirmService } from '../core/messages';
 import { initial } from '../core/text';
@@ -32,11 +33,11 @@ const ROLE: Record<string, string> = { ADMIN: $localize`Administrateur`, MANAGER
     <ng-template #list>
       <ul class="tb-accounts">
         @for (g of servers(); track g.base) {
-          <li class="tb-accounts-server"><tb-server-logo [base]="g.base" /><span>{{ g.address }}</span></li>
+          <li class="tb-accounts-server" [title]="g.address"><tb-server-logo [base]="g.base" /><span>{{ g.label }}</span>@if (g.name) {<small>{{ g.address }}</small>}</li>
           @for (c of g.rows; track c.key) {
           <li>
             <button type="button" class="tb-account" [class.tb-account-active]="c.active" [attr.aria-current]="c.active ? 'true' : null" (click)="choose(c)"
-                    [attr.aria-label]="c.account.user.username + (' sur ' | tr) + g.address">
+                    [attr.aria-label]="c.account.user.username + (' sur ' | tr) + g.label">
               <span class="tb-avatar" aria-hidden="true">{{ c.initial }}<tb-server-logo badge [base]="g.base" /></span>
               <span class="tb-account-text">
                 <strong>{{ c.account.user.username }}</strong>
@@ -84,6 +85,7 @@ const ROLE: Record<string, string> = { ADMIN: $localize`Administrateur`, MANAGER
 })
 export class TbAccounts {
   private readonly auth = inject(AuthService);
+  private readonly versions = inject(ApiVersionService);
   private readonly router = inject(Router);
   private readonly confirm = inject(ConfirmService);
 
@@ -126,7 +128,7 @@ export class TbAccounts {
   );
 
   /** One section per server, its logo next to its address. */
-  protected readonly servers = computed(() => byServer(this.rows()));
+  protected readonly servers = computed(() => byServer(this.rows(), (b) => this.versions.name(b)));
 
   protected choose(l: { account: Account; active: boolean }): void {
     this.open.set(false);

@@ -29,6 +29,8 @@ export interface ServerInfo {
   logoSource?: string | null;
   /** What the server can do beyond its API version: "user-import", "provisional-passwords"… */
   features?: string[];
+  /** The name an ADMIN gave the server (« Siège social »), null without one (26.12, "server-name"). */
+  displayName?: string | null;
 }
 
 export interface ServerApi {
@@ -171,6 +173,11 @@ export class ApiVersionService {
   refresh(base: string): Promise<ServerApi> {
     this.pending.delete(base);
     return this.api(base);
+  }
+
+  /** The name an ADMIN gave [base], null without one (or not known yet). */
+  name(base: string | null | undefined): string | null {
+    return (base && this.known()[base]?.info?.displayName?.trim()) || null;
   }
 
   /** The logo of [base] as an image URL ([size]: largest side in pixels), null without v2. */

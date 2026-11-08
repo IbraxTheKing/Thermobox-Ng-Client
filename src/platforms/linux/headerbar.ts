@@ -78,7 +78,7 @@ interface MainMenuItem {
               </button>
             }
           </div>
-          <span class="tb-hb-title">{{ pageTitle.title() || 'Thermobox' }}</span>
+          <span class="tb-hb-title">{{ pageTitle.title() || pageTitle.app() }}</span>
           <div class="tb-hb-side tb-hb-end">
             @if (inApp()) {
               <span class="tb-hb-content-menu"><ng-container [ngTemplateOutlet]="mainMenu" /></span>
@@ -146,7 +146,7 @@ export class TbLinuxHeaderbar {
       effect(() => {
         const inApp = this.inApp();
         void this.desktop.setNativeChrome({
-          title: this.pageTitle.title() || 'Thermobox',
+          title: this.pageTitle.title() || this.pageTitle.app(),
           back: { label: $localize`Retour`, shown: this.canGoBack() },
           sidebar: { label: $localize`Afficher la barre latérale`, shown: inApp },
           menuLabel: $localize`Menu principal`,

@@ -35,13 +35,23 @@ export function accountKey(server: string, username: string): string {
   return `${server}|${username.toLowerCase()}`;
 }
 
-/** Rows of an account list in one section per server, in the order the servers first come. */
-export function byServer<T extends { account: Account }>(rows: T[]): { base: string; address: string; rows: T[] }[] {
-  const groups = new Map<string, { base: string; address: string; rows: T[] }>();
+/**
+ * Rows of an account list in one section per server, in the order the servers first come. [label]:
+ * the name an ADMIN gave the server ([nameOf]), else its address.
+ */
+export function byServer<T extends { account: Account }>(
+  rows: T[],
+  nameOf: (base: string) => string | null = () => null,
+): { base: string; address: string; name: string | null; label: string; rows: T[] }[] {
+  const groups = new Map<string, { base: string; address: string; name: string | null; label: string; rows: T[] }>();
   for (const r of rows) {
     const base = r.account.server;
     let g = groups.get(base);
-    if (!g) groups.set(base, (g = { base, address: readableAddress(base), rows: [] }));
+    if (!g) {
+      const address = readableAddress(base);
+      const name = nameOf(base);
+      groups.set(base, (g = { base, address, name, label: name ?? address, rows: [] }));
+    }
     g.rows.push(r);
   }
   return [...groups.values()];
@@ -86,6 +96,10 @@ export class AuthService {
   readonly loggedIn = computed(() => this.account() != null);
   /** Server of the current account, as people read it. */
   readonly address = computed(() => readableAddress(this.account()?.server));
+  /** The name an ADMIN gave the server of the current account, null without one. */
+  readonly serverName = computed(() => this.versions.name(this.account()?.server));
+  /** The server of the current account as shown: its name, else its address. */
+  readonly serverLabel = computed(() => this.serverName() ?? this.address());
 
   readonly role = computed<UserRole | null>(() => this.user()?.type ?? null);
   readonly admin = computed(() => this.role() === 'ADMIN');
