@@ -1387,6 +1387,28 @@ alertsRoute('POST', '/channels/{id}/test', ({ p }) => {
   return ok(d);
 });
 alertsRoute('GET', '/rules', () => ok(alertRules.map(ruleView)));
+// The rooms where a rule applies: no nearer enabled rule (room, floor, building, then global)
+alertsRoute('GET', '/rules/{id}/rooms', ({ p }) => {
+  const rule = alertRules.find((r) => r.id === +p.id);
+  if (!rule) return error(404, 'Not found');
+  const rules = [...alertRules.filter((r) => r.enabled && r.id !== rule.id), { ...rule, enabled: true }];
+  const rows = [];
+  for (const room of elements.filter((e) => e.kind === 'ROOM')) {
+    const chain = [room.id, ...pathOf(room).map((e) => e.id).reverse()];
+    const distances = rules.map((r) => [r, r.global ? chain.length : chain.findIndex((i) => r.scope.includes(i))]).filter(([, d]) => d >= 0);
+    const nearest = Math.min(...distances.map(([, d]) => d));
+    if (!distances.some(([r, d]) => r.id === rule.id && d === nearest)) continue;
+    const setpoint = effectiveSetpoint(room)?.setpoint.value ?? null;
+    const threshold = setpoint == null ? null : setpoint + rule.tolerance;
+    const fresh = measurements(room).map((m) => m.measurement).filter((m) => m && Date.now() - m.date <= 30 * MINUTE);
+    const hottest = fresh.reduce((a, m) => (!a || m.value > a.value ? m : a), null);
+    const temperature = hottest ? Math.round(hottest.value * 10) / 10 : null;
+    const exceeding = threshold != null && temperature != null && temperature > threshold;
+    rows.push({ id: room.id, name: room.name, place: pathOf(room).map((e) => e.name).join(' › '), setpoint, threshold, temperature,
+      measuredAt: hottest ? iso(hottest.date) : null, exceeding, alertId: null, alertSince: null });
+  }
+  return ok(rows);
+});
 alertsRoute('POST', '/rules', ({ body }) => alertCall(() => { const r = alertRule(json(body) ?? {}, null); alertRules.push(r); return { status: 201, body: ruleView(r) }; }));
 alertsRoute('PUT', '/rules/{id}', ({ body, p }) => alertCall(() => {
   const i = alertRules.findIndex((r) => r.id === +p.id);
