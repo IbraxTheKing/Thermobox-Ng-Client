@@ -3254,6 +3254,7 @@
   "132527322677131885": {
     "fr": "Températures acceptées",
     "en": "Accepted temperatures"
+  },
   "1446289478995114726": {
     "fr": "{$START_TAG_STRONG}Nom du serveur{$CLOSE_TAG_STRONG}",
     "en": "{$START_TAG_STRONG}Server name{$CLOSE_TAG_STRONG}"
@@ -3645,6 +3646,7 @@
   "3727253448677130908": {
     "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Réglages ",
     "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Settings "
+  },
   "3516245558682414066": {
     "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Ressources ",
     "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Resources "
@@ -3656,10 +3658,6 @@
   "6160442325773488793": {
     "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Journal ",
     "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Log "
-  },
-  "3516245558682414066": {
-    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Ressources ",
-    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Resources "
   },
   "4725793968405907174": {
     "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Processeur",
@@ -5180,10 +5178,6 @@
   "8878813847046567019": {
     "fr": "modifications",
     "en": "changes"
-  },
-  "9002871522056222346": {
-    "fr": "page",
-    "en": "page"
   },
   "7216398619205393425": {
     "fr": "Masquer le détail",
