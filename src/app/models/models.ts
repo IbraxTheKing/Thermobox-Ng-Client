@@ -634,3 +634,36 @@ export interface AlertOverview {
   /** The last messages that could not be delivered. */
   failedDeliveries: AlertDelivery[];
 }
+
+// ---------------------------------------------------------------- log of the changes (26.12)
+
+/** GET /api/v2/audit: one change made through the API (ADMIN). */
+export interface AuditEntry {
+  id: number;
+  at: DateJson;
+  userId: number | null;
+  username: string;
+  role: UserRole | null;
+  /** « setpoint.set », « rule.create »…: the domain, a dot, the verb. */
+  action: string;
+  targetType: string | null;
+  targetId: number | null;
+  /** Its name at the time (kept after it is deleted). */
+  targetName: string | null;
+  /** changes: the JSON sent (secrets as •••); before: what it replaced; place: where. */
+  details: { changes?: Record<string, unknown> | unknown[]; before?: Record<string, unknown>; place?: string } | null;
+}
+
+export interface AuditPage {
+  total: number;
+  entries: AuditEntry[];
+}
+
+export interface AuditFilter {
+  user: number | null;
+  /** A domain (« rule ») or an action. */
+  action: string | null;
+  q: string;
+  /** Days back; null: everything. */
+  days: number | null;
+}

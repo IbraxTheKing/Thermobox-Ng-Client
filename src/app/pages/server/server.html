@@ -16,6 +16,11 @@
       <span class="tb-dest-badge tb-tab-badge" i18n-aria-label aria-label="Nouvelle version"></span>
     }
   </button>
+  @if (features.v2()) {
+    <button i18n type="button" role="tab" [class.tb-seg-on]="current() === 'log'" [attr.aria-selected]="current() === 'log'" (click)="open('log')">
+      <i class="pi pi-history"></i>Journal
+    </button>
+  }
   <button i18n type="button" role="tab" [class.tb-seg-on]="current() === 'resources'" [attr.aria-selected]="current() === 'resources'" (click)="open('resources')">
     <i class="pi pi-chart-line"></i>Ressources
   </button>
@@ -24,6 +29,9 @@
 @switch (current()) {
   @case ('updates') {
     <tb-updates-page embedded />
+  }
+  @case ('log') {
+    <tb-audit-log />
   }
   @case ('settings') {
     <tb-style-setting />
