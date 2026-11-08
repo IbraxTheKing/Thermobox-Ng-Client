@@ -219,10 +219,9 @@ pub async fn tls_probe(tls: tauri::State<'_, Tls>, url: String) -> Result<Probe,
 }
 
 /// A call to a server through [Tls] (a certificate the user trusted, or one only the system
- * knows). The body comes raw; the header x-tb-fetch is the JSON of [FetchMeta] in base64. The
- * answer, raw too: the length of its JSON (4 bytes, big-endian), the JSON {status, statusText,
- * headers}, then the body.
- */
+/// knows). The body comes raw; the header x-tb-fetch is the JSON of [FetchMeta] in base64. The
+/// answer, raw too: the length of its JSON (4 bytes, big-endian), the JSON {status, statusText,
+/// headers}, then the body.
 #[tauri::command]
 pub async fn tls_fetch(tls: tauri::State<'_, Tls>, request: tauri::ipc::Request<'_>) -> Result<tauri::ipc::Response, String> {
     use base64::Engine;
