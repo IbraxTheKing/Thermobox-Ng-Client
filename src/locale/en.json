@@ -3179,6 +3179,81 @@
     "fr": "Le rappel va de 5 min à 7 jours.",
     "en": "The reminder goes from 5 min to 7 days."
   },
+  "6560052660743814632": {
+    "fr": "Ce serveur ne tient pas encore de journal des modifications (ThermoBox 26.12 ou plus récent).",
+    "en": "This server does not keep a log of the changes yet (ThermoBox 26.12 or later)."
+  },
+  "7486023488053045401": {
+    "fr": "Journal des modifications",
+    "en": "Log of the changes"
+  },
+  "5782645999425541381": {
+    "fr": "Toute modification faite par un administrateur ou un gestionnaire : consignes, salles, comptes, alertes, réglages du serveur…",
+    "en": "Every change made by an administrator or a manager: setpoints, rooms, accounts, alerts, settings of the server…"
+  },
+  "106976209545911278": {
+    "fr": "Conserver",
+    "en": "Keep"
+  },
+  "398606645200560844": {
+    "fr": "Durée de conservation du journal",
+    "en": "How long the log is kept"
+  },
+  "8239687152882292303": {
+    "fr": "Rechercher une salle, un compte, une valeur…",
+    "en": "Search a room, an account, a value…"
+  },
+  "2874956674713332935": {
+    "fr": "Rechercher dans le journal",
+    "en": "Search the log"
+  },
+  "807351294192081580": {
+    "fr": "Tous les utilisateurs",
+    "en": "All users"
+  },
+  "469965201151158383": {
+    "fr": "Type de modification",
+    "en": "Kind of change"
+  },
+  "664041881162285569": {
+    "fr": "1 modification",
+    "en": "1 change"
+  },
+  "1918663159445874327": {
+    "fr": "Aucune modification",
+    "en": "No changes"
+  },
+  "4423046259293867064": {
+    "fr": "Rien ne correspond à ces filtres.",
+    "en": "Nothing matches these filters."
+  },
+  "8320504934970552846": {
+    "fr": "Toutes les modifications",
+    "en": "All changes"
+  },
+  "1702229450823028729": {
+    "fr": "Bâtiments, étages et salles",
+    "en": "Buildings, floors and rooms"
+  },
+  "6245262151918764849": {
+    "fr": "Comptes",
+    "en": "Accounts"
+  },
+  "6429958890383005048": {
+    "fr": "Imports de comptes",
+    "en": "Account imports"
+  },
+  "1558767290907362845": {
+    "fr": "Règles d'alerte",
+    "en": "Alert rules"
+  },
+  "2225861974087539264": {
+    "fr": "Canaux d'alerte",
+    "en": "Alert channels"
+  },
+  "132527322677131885": {
+    "fr": "Températures acceptées",
+    "en": "Accepted temperatures"
   "1446289478995114726": {
     "fr": "{$START_TAG_STRONG}Nom du serveur{$CLOSE_TAG_STRONG}",
     "en": "{$START_TAG_STRONG}Server name{$CLOSE_TAG_STRONG}"
@@ -3199,6 +3274,306 @@
     "fr": "Logo du serveur",
     "en": "Server logo"
   },
+  "6150294424363739282": {
+    "fr": "Nom du serveur",
+    "en": "Server name"
+  },
+  "657310079267053935": {
+    "fr": "Style",
+    "en": "Style"
+  },
+  "1210526375101082699": {
+    "fr": "Mises à jour",
+    "en": "Updates"
+  },
+  "2272120300351402791": {
+    "fr": "Mots de passe",
+    "en": "Passwords"
+  },
+  "841924054761993392": {
+    "fr": "Journal",
+    "en": "Log"
+  },
+  "2272494790871308047": {
+    "fr": "Dernières 24 heures",
+    "en": "Last 24 hours"
+  },
+  "8728708634042484416": {
+    "fr": "7 derniers jours",
+    "en": "Last 7 days"
+  },
+  "8977589075574786611": {
+    "fr": "30 derniers jours",
+    "en": "Last 30 days"
+  },
+  "6922018019896823240": {
+    "fr": "12 derniers mois",
+    "en": "Last 12 months"
+  },
+  "5205231287497716880": {
+    "fr": "Tout le journal",
+    "en": "The whole log"
+  },
+  "3768682333031645209": {
+    "fr": "30 jours",
+    "en": "30 days"
+  },
+  "1171615452691903809": {
+    "fr": "90 jours",
+    "en": "90 days"
+  },
+  "1190723169002749480": {
+    "fr": "6 mois",
+    "en": "6 months"
+  },
+  "613636786526486939": {
+    "fr": "1 an",
+    "en": "1 year"
+  },
+  "8578526123766963117": {
+    "fr": "2 ans",
+    "en": "2 years"
+  },
+  "97075631561596340": {
+    "fr": "5 ans",
+    "en": "5 years"
+  },
+  "5320498019589107415": {
+    "fr": "Pour toujours",
+    "en": "Forever"
+  },
+  "6404063166180641128": {
+    "fr": "Le journal est gardé pour toujours",
+    "en": "The log is kept forever"
+  },
+  "8406225660064917676": {
+    "fr": "Le journal est gardé {$days} jours",
+    "en": "The log is kept {$days} days"
+  },
+  "2378229601981597443": {
+    "fr": "administrateur",
+    "en": "administrator"
+  },
+  "1540332978848916536": {
+    "fr": "gestionnaire",
+    "en": "manager"
+  },
+  "11748711470937157": {
+    "fr": "lecteur",
+    "en": "viewer"
+  },
+  "4322163598295408311": {
+    "fr": "a réglé la consigne de",
+    "en": "set the setpoint of"
+  },
+  "4453401646319384146": {
+    "fr": " (imposée en dessous)",
+    "en": " (forced below)"
+  },
+  "1187807059381024132": {
+    "fr": "a créé",
+    "en": "created"
+  },
+  "8758007513896047171": {
+    "fr": "a modifié",
+    "en": "changed"
+  },
+  "3829347044739584001": {
+    "fr": "a déplacé",
+    "en": "moved"
+  },
+  "9189320905941258594": {
+    "fr": "a supprimé",
+    "en": "deleted"
+  },
+  "118726134908374999": {
+    "fr": "a changé la photo de",
+    "en": "changed the photo of"
+  },
+  "3235757197638750112": {
+    "fr": "a retiré la photo de",
+    "en": "removed the photo of"
+  },
+  "7637368796336326608": {
+    "fr": " (renommé « {$PH} »)",
+    "en": " (renamed “{$PH}”)"
+  },
+  "7456925890805619250": {
+    "fr": "a ajouté une mesure",
+    "en": "added a measurement"
+  },
+  "3568047906478102803": {
+    "fr": "a supprimé une mesure",
+    "en": "deleted a measurement"
+  },
+  "8651733941475843355": {
+    "fr": "a modifié une mesure",
+    "en": "changed a measurement"
+  },
+  "2585543370886495520": {
+    "fr": "a ajouté une consigne ou une mesure",
+    "en": "added a setpoint or a measurement"
+  },
+  "8454084304989459307": {
+    "fr": "a supprimé une consigne ou une mesure",
+    "en": "deleted a setpoint or a measurement"
+  },
+  "963722085432302163": {
+    "fr": "a modifié une consigne ou une mesure",
+    "en": "changed a setpoint or a measurement"
+  },
+  "2237423331108850960": {
+    "fr": "a créé le compte",
+    "en": "created the account"
+  },
+  "4418640942766809858": {
+    "fr": "a modifié le compte",
+    "en": "changed the account"
+  },
+  "710668284966137333": {
+    "fr": "a supprimé le compte",
+    "en": "deleted the account"
+  },
+  "1169176895102337799": {
+    "fr": "a changé les accès de",
+    "en": "changed the access of"
+  },
+  "8886486163256257688": {
+    "fr": "a donné un mot de passe provisoire à",
+    "en": "gave a provisional password to"
+  },
+  "6431243935784932284": {
+    "fr": "a importé des comptes",
+    "en": "imported accounts"
+  },
+  "2582417833531303581": {
+    "fr": "a créé le groupe",
+    "en": "created the group"
+  },
+  "1455567899786053999": {
+    "fr": "a supprimé le groupe",
+    "en": "deleted the group"
+  },
+  "7072405261830178114": {
+    "fr": "a modifié le groupe",
+    "en": "changed the group"
+  },
+  "3242718063838161172": {
+    "fr": "la règle d'alerte",
+    "en": "the alert rule"
+  },
+  "2265557052343299095": {
+    "fr": "le canal d'alerte",
+    "en": "the alert channel"
+  },
+  "6717242368014278597": {
+    "fr": "a coupé {$what}",
+    "en": "turned off {$what}"
+  },
+  "8028808100041969190": {
+    "fr": "a activé {$what}",
+    "en": "turned on {$what}"
+  },
+  "225783173203232039": {
+    "fr": "a créé {$what}",
+    "en": "created {$what}"
+  },
+  "1614521992548427608": {
+    "fr": "a supprimé {$what}",
+    "en": "deleted {$what}"
+  },
+  "7616848485081532254": {
+    "fr": "a modifié {$what}",
+    "en": "changed {$what}"
+  },
+  "1535585612242226814": {
+    "fr": "a remis le logo automatique du serveur",
+    "en": "put back the automatic logo of the server"
+  },
+  "5892921744803628011": {
+    "fr": "a changé le logo du serveur",
+    "en": "changed the logo of the server"
+  },
+  "372101135315566259": {
+    "fr": "a remis les températures acceptées par défaut",
+    "en": "put back the default accepted temperatures"
+  },
+  "5400661660005794385": {
+    "fr": "a changé les températures acceptées",
+    "en": "changed the accepted temperatures"
+  },
+  "2562343726446459127": {
+    "fr": "consignes",
+    "en": "setpoints"
+  },
+  "5924805436386266538": {
+    "fr": "mesures",
+    "en": "measurements"
+  },
+  "4164693804935139516": {
+    "fr": "a retiré le nom du serveur",
+    "en": "removed the name of the server"
+  },
+  "8479714046766170472": {
+    "fr": "a renommé le serveur « {$name} »",
+    "en": "renamed the server “{$name}”"
+  },
+  "9165038815754036422": {
+    "fr": "a choisi le style « Panneau de configuration »",
+    "en": "chose the “Control panel” style"
+  },
+  "3666425784718811606": {
+    "fr": "a choisi le style « Maison »",
+    "en": "chose the “Home” style"
+  },
+  "3645546083386210366": {
+    "fr": "a installé la version",
+    "en": "installed the version"
+  },
+  "8361868665425164886": {
+    "fr": "a changé son mot de passe",
+    "en": "changed their password"
+  },
+  "4807898345357738999": {
+    "fr": "a réglé la conservation du journal à {$days} jours",
+    "en": "set the log to be kept {$days} days"
+  },
+  "1106394756177908039": {
+    "fr": "a choisi de garder le journal pour toujours",
+    "en": "chose to keep the log forever"
+  },
+  "588955082819236113": {
+    "fr": "Aujourd'hui",
+    "en": "Today"
+  },
+  "4905078244639733816": {
+    "fr": "Hier",
+    "en": "Yesterday"
+  },
+  "7091625875235825212": {
+    "fr": "oui",
+    "en": "yes"
+  },
+  "6901016897408093579": {
+    "fr": "non",
+    "en": "no"
+  },
+  "2161242865334829183": {
+    "fr": "envoyé",
+    "en": "sent"
+  },
+  "5947566392434897903": {
+    "fr": "avant : {$key}",
+    "en": "before: {$key}"
+  },
+  "4250831780798367171": {
+    "fr": "identifiant",
+    "en": "id"
+  },
+  "3938396793871184620": {
+    "fr": "date",
+    "en": "date"
+  },
   "4550958265168690830": {
     "fr": "Logo",
     "en": "Logo"
@@ -3210,10 +3585,6 @@
   "2725946787939964395": {
     "fr": "Automatique",
     "en": "Automatic"
-  },
-  "132527322677131885": {
-    "fr": "Températures acceptées",
-    "en": "Accepted temperatures"
   },
   "1192065282467644189": {
     "fr": " Une consigne hors de ces bornes est refusée ; une mesure hors bornes est prise pour une erreur de capteur et ignorée. ",
@@ -3267,6 +3638,13 @@
     "fr": "Administration",
     "en": "Administration"
   },
+  "6395160381056868140": {
+    "fr": "{$START_TAG_TB_SERVER_LOGO}{$CLOSE_TAG_TB_SERVER_LOGO}Serveur",
+    "en": "{$START_TAG_TB_SERVER_LOGO}{$CLOSE_TAG_TB_SERVER_LOGO}Server"
+  },
+  "3727253448677130908": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Réglages ",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Settings "
   "3516245558682414066": {
     "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Ressources ",
     "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Resources "
@@ -3275,9 +3653,13 @@
     "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Mises à jour {$START_BLOCK_IF}{$START_TAG_SPAN}{$CLOSE_TAG_SPAN}{$CLOSE_BLOCK_IF}",
     "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Updates {$START_BLOCK_IF}{$START_TAG_SPAN}{$CLOSE_TAG_SPAN}{$CLOSE_BLOCK_IF}"
   },
-  "3727253448677130908": {
-    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Réglages ",
-    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Settings "
+  "6160442325773488793": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Journal ",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Log "
+  },
+  "3516245558682414066": {
+    "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Ressources ",
+    "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Resources "
   },
   "4725793968405907174": {
     "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT} Processeur",
@@ -3402,10 +3784,6 @@
   "4713705096146238204": {
     "fr": "Style d'origine pour tout le monde",
     "en": "Original style for everyone"
-  },
-  "1210526375101082699": {
-    "fr": "Mises à jour",
-    "en": "Updates"
   },
   "570045909749318667": {
     "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Rechercher maintenant ",
@@ -3694,10 +4072,6 @@
   "7223867857897481290": {
     "fr": "Compte actuel",
     "en": "Current account"
-  },
-  "6245262151918764849": {
-    "fr": "Comptes",
-    "en": "Accounts"
   },
   "7976395102434881372": {
     "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Ajouter un compte",
@@ -4799,6 +5173,22 @@
     "fr": "Voir les salles",
     "en": "Show the rooms"
   },
+  "3700244640301657148": {
+    "fr": "jours",
+    "en": "days"
+  },
+  "8878813847046567019": {
+    "fr": "modifications",
+    "en": "changes"
+  },
+  "9002871522056222346": {
+    "fr": "page",
+    "en": "page"
+  },
+  "7216398619205393425": {
+    "fr": "Masquer le détail",
+    "en": "Hide the detail"
+  },
   "7068936762750771567": {
     "fr": " minimale",
     "en": " minimum"
@@ -5018,10 +5408,6 @@
   "1228783011833546120": {
     "fr": "ligne",
     "en": "line"
-  },
-  "3700244640301657148": {
-    "fr": "jours",
-    "en": "days"
   },
   "4320734463559046311": {
     "fr": "jour",

@@ -530,6 +530,12 @@ button.tb-access-link:hover .tb-access-edit, button.tb-access-link:focus-visible
 .tb-server-title .tb-server-logo { width: 34px; height: 34px; border-radius: 9px; }
 .tb-server-tabs, .tb-access-tabs { margin-bottom: 18px; }
 .tb-server-tabs button { position: relative; }
+/* Four tabs on a phone: their names only, sharing the width */
+@media (max-width: 520px) {
+    .tb-server-tabs { display: flex; width: 100%; }
+    .tb-server-tabs > button { flex: 1 1 0; min-width: 0; justify-content: center; padding-left: 4px; padding-right: 4px; }
+    .tb-server-tabs > button > .pi { display: none; }
+}
 .tb-tab-badge { position: static; display: inline-block; width: 8px; height: 8px; margin-left: 2px; }
 .tb-server-stats { margin-bottom: 16px; }
 .tb-server-uptime { font-size: clamp(1.6rem, 1.2rem + 1vw, 2.2rem); }
@@ -908,3 +914,38 @@ button.tb-update-installation-head.tb-card-head { margin-bottom: 0; }
 /* Two fields side by side (first and last name), one under the other on phones */
 .tb-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
 @media (max-width: 520px) { .tb-field-row { grid-template-columns: 1fr; } }
+
+/* ============================== Serveur › Journal: the log of the changes (ADMIN, 26.12) */
+
+.tb-audit-head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px 24px; }
+.tb-audit-head .tb-pref-heading { margin: 0 0 4px; }
+.tb-audit-note { margin: 0; font-size: .88rem; }
+.tb-audit-retention { display: inline-flex; flex: none; align-items: center; gap: 8px; }
+:root body .tb-audit-retention > .tb-select { width: auto; min-width: 140px; }
+.tb-audit-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 16px 0 6px; }
+:root body .tb-audit-filters > .tb-audit-search { flex: 1 1 260px; min-width: 0; }
+:root body .tb-audit-filters > .tb-select { flex: 0 1 auto; width: auto; min-width: 0; max-width: 100%; }
+.tb-audit-count { margin: 8px 0 4px; font-size: .85rem; }
+.tb-audit-list { margin: 0; padding: 0; list-style: none; transition: opacity .15s linear; }
+.tb-audit-list.tb-audit-loading { opacity: .55; }
+.tb-audit-day { margin: 16px 0 2px; color: var(--md-on-surface-variant); font-size: .78rem; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; }
+.tb-audit-day:first-child { margin-top: 6px; }
+.tb-audit-entry { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-top: 1px solid var(--md-outline-variant); }
+.tb-audit-day + .tb-audit-entry { border-top: 0; }
+.tb-audit-entry > .tb-section-icon { margin-top: 1px; }
+.tb-audit-text { display: flex; flex: 1 1 auto; flex-direction: column; gap: 2px; min-width: 0; }
+.tb-audit-sentence { overflow-wrap: anywhere; line-height: 1.4; }
+.tb-audit-sentence strong { font-weight: 650; }
+.tb-audit-meta { font-size: .8rem; }
+.tb-audit-more { flex: none; align-self: center; }
+.tb-audit-facts { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 14px; margin: 8px 0 0; padding: 10px 12px; border-radius: var(--tb-shape-md); background: color-mix(in srgb, var(--md-on-surface) 4%, transparent); font-size: .82rem; }
+.tb-audit-facts dt { color: var(--md-on-surface-variant); }
+.tb-audit-facts dd { margin: 0; overflow-wrap: anywhere; font-family: var(--tb-font-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace); }
+.tb-audit-empty { padding: 16px 0; }
+.tb-audit .tb-pager { margin-top: 8px; }
+@media (max-width: 640px) {
+    .tb-audit-retention { width: 100%; justify-content: space-between; }
+    :root body .tb-audit-filters > .tb-select { flex: 1 1 100%; }
+    .tb-audit-facts { grid-template-columns: minmax(0, 1fr); }
+    .tb-audit-facts dd { margin-bottom: 4px; }
+}

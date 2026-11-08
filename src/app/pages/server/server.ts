@@ -11,21 +11,23 @@ import { TbServerLogo } from '../../ui/server-logo';
 import { UpdatesPage } from '../updates/updates';
 import { ServerSettings } from './server-settings';
 import { TbAlertSettings } from './alert-settings';
+import { TbAuditLog } from './audit-log';
 import { TbStyleSetting } from './style-setting';
 import { locale } from '../../core/i18n';
 import { TrPipe } from '../../ui/tr.pipe';
 
-type Tab = 'resources' | 'updates' | 'settings';
+type Tab = 'resources' | 'updates' | 'settings' | 'log';
 
 /**
  * Serveur (ADMIN): the ThermoBox server itself, in tabs: its settings (first, where the page
- * opens: temperatures accepted, logo, temperature alerts), its updates, and its resources
+ * opens: temperatures accepted, logo, temperature alerts), its updates, the log of the changes
+ * (Journal, 26.12: who changed what), and its resources
  * (processor, memory, threads, pauses of the garbage collector) over the last minutes. Resources and settings come with 26.12 (API v2); an older server has its
  * updates only.
  */
 @Component({
   selector: 'tb-server-page',
-  imports: [TrPipe, NgTemplateOutlet, TbChart, TbServerLogo, UpdatesPage, ServerSettings, TbStyleSetting, TbAlertSettings],
+  imports: [TrPipe, NgTemplateOutlet, TbChart, TbServerLogo, UpdatesPage, ServerSettings, TbStyleSetting, TbAlertSettings, TbAuditLog],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './server.html',
 })
@@ -41,6 +43,7 @@ export class ServerPage implements OnDestroy {
   protected readonly current = computed<Tab>(() => {
     const t = this.tab();
     if (t === 'updates' || t === 'settings' || t === 'resources') return t;
+    if (t === 'log' && this.features.v2()) return t;
     return 'settings';
   });
 
