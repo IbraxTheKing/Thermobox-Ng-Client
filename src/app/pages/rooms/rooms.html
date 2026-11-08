@@ -215,8 +215,8 @@
           <span class="tb-node">
             <span class="tb-node-main">
               <i class="pi tb-tree-icon" [class]="icon(n)"></i>
-              <span class="tb-node-name">{{ n.name }}</span>
-              <span class="tb-muted">{{ label(n) }}</span>
+              <span class="tb-node-name" [title]="n.name">{{ n.name }}</span>
+              <span class="tb-muted tb-node-kind">{{ label(n) }}</span>
               @if (!n.attached) {
                 <span i18n class="tb-tag tb-tag-warning">Non rattaché</span>
               }
@@ -236,14 +236,16 @@
                 <a [routerLink]="['/app/room', n.id]" class="tb-btn tb-icon tb-flat tb-node-keep" i18n-title title="Voir" i18n-aria-label aria-label="Voir"><i class="pi pi-eye"></i></a>
               }
               @if (auth.admin()) {
+                <!-- A narrow tree: these behind ⋮ (the same sheet as on phones) -->
                 @if (childrenOf(n).length) {
-                  <button type="button" class="tb-btn tb-icon tb-flat" [title]="('Ajouter dans « {name} »' | tr: { name: n.name })" (click)="create(childrenOf(n)[0], n)"><i class="pi pi-plus"></i></button>
+                  <button type="button" class="tb-btn tb-icon tb-flat tb-node-extra" [title]="('Ajouter dans « {name} »' | tr: { name: n.name })" (click)="create(childrenOf(n)[0], n)"><i class="pi pi-plus"></i></button>
                 }
-                <button type="button" class="tb-btn tb-icon tb-flat" i18n-title title="Modifier / déplacer" (click)="edit(n)"><i class="pi pi-pencil"></i></button>
+                <button type="button" class="tb-btn tb-icon tb-flat tb-node-extra" i18n-title title="Modifier / déplacer" (click)="edit(n)"><i class="pi pi-pencil"></i></button>
                 @if (n.attached && n.kind !== 'BUILDING') {
-                  <button type="button" class="tb-btn tb-icon tb-flat" i18n-title title="Détacher" (click)="detach(n)"><i class="pi pi-link"></i></button>
+                  <button type="button" class="tb-btn tb-icon tb-flat tb-node-extra" i18n-title title="Détacher" (click)="detach(n)"><i class="pi pi-link"></i></button>
                 }
-                <button type="button" class="tb-btn tb-icon tb-flat tb-btn-danger" i18n-title title="Supprimer" (click)="remove(n)"><i class="pi pi-trash"></i></button>
+                <button type="button" class="tb-btn tb-icon tb-flat tb-btn-danger tb-node-extra" i18n-title title="Supprimer" (click)="remove(n)"><i class="pi pi-trash"></i></button>
+                <button type="button" class="tb-btn tb-icon tb-flat tb-node-more" i18n-title title="Actions" i18n-aria-label aria-label="Actions" (click)="choose(n)"><i class="pi pi-ellipsis-v"></i></button>
               }
             </span>
           </span>
