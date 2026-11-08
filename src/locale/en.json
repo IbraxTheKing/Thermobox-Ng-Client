@@ -359,10 +359,6 @@
     "fr": "Historique",
     "en": "History"
   },
-  "6157803967017724460": {
-    "fr": "Thermobox",
-    "en": "Thermobox"
-  },
   "6523791569554664385": {
     "fr": ", recommandée",
     "en": ", recommended"
@@ -382,6 +378,10 @@
   "417562292679571705": {
     "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Retour",
     "en": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Back"
+  },
+  "6157803967017724460": {
+    "fr": "Thermobox",
+    "en": "Thermobox"
   },
   "5310433711568403252": {
     "fr": "La température de chaque salle, en un coup d'œil.",
@@ -3159,6 +3159,22 @@
     "fr": "Le rappel va de 5 min à 7 jours.",
     "en": "The reminder goes from 5 min to 7 days."
   },
+  "1446289478995114726": {
+    "fr": "{$START_TAG_STRONG}Nom du serveur{$CLOSE_TAG_STRONG}",
+    "en": "{$START_TAG_STRONG}Server name{$CLOSE_TAG_STRONG}"
+  },
+  "7556784791015235548": {
+    "fr": " Affiché à la place de son adresse dans la liste des comptes de chacun, sur la page de connexion, dans le titre de la fenêtre et des notifications. Vide : son adresse. ",
+    "en": " Shown instead of its address in everyone’s list of accounts, on the login page, in the title of the window and of the notifications. Empty: its address. "
+  },
+  "7103144334407043761": {
+    "fr": "Ex. : Siège social, Maison…",
+    "en": "E.g. Head office, Home…"
+  },
+  "4977912145007192180": {
+    "fr": "Enregistrer",
+    "en": "Save"
+  },
   "3105066162468003472": {
     "fr": "Logo du serveur",
     "en": "Server logo"
@@ -3191,13 +3207,17 @@
     "fr": "à {$TAG_INPUT}",
     "en": "to {$TAG_INPUT}"
   },
-  "4977912145007192180": {
-    "fr": "Enregistrer",
-    "en": "Save"
-  },
   "7532284812892965574": {
     "fr": "Valeurs par défaut",
     "en": "Default values"
+  },
+  "8283518462540054214": {
+    "fr": "Serveur renommé « {$PH} »",
+    "en": "Server renamed “{$PH}”"
+  },
+  "7349321098017547805": {
+    "fr": "Nom du serveur retiré",
+    "en": "Server name removed"
   },
   "1778597973847119963": {
     "fr": "Choisi par un administrateur.",
@@ -3226,10 +3246,6 @@
   "7844706011418789951": {
     "fr": "Administration",
     "en": "Administration"
-  },
-  "6395160381056868140": {
-    "fr": "{$START_TAG_TB_SERVER_LOGO}{$CLOSE_TAG_TB_SERVER_LOGO}Serveur",
-    "en": "{$START_TAG_TB_SERVER_LOGO}{$CLOSE_TAG_TB_SERVER_LOGO}Server"
   },
   "3516245558682414066": {
     "fr": "{$START_ITALIC_TEXT}{$CLOSE_ITALIC_TEXT}Ressources ",
@@ -4226,10 +4242,6 @@
   "1358099129174798424": {
     "fr": "Afficher ou réduire la navigation",
     "en": "Show or collapse the navigation"
-  },
-  "455864947852695727": {
-    "fr": "Thermobox{$START_BLOCK_IF}{$START_TAG_SPAN} · {$INTERPOLATION}{$CLOSE_TAG_SPAN}{$CLOSE_BLOCK_IF}",
-    "en": "Thermobox{$START_BLOCK_IF}{$START_TAG_SPAN} · {$INTERPOLATION}{$CLOSE_TAG_SPAN}{$CLOSE_BLOCK_IF}"
   },
   "7362122314560708990": {
     "fr": "Réduire",

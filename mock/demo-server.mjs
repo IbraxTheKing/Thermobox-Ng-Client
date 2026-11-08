@@ -1235,7 +1235,7 @@ let logo = null;
 const logoVersion = () => (logo ? String(logo.version) : 'default');
 const serverInfo = () =>
   API === 'v2'
-    ? { name: 'ThermoBox', version: SERVER_VERSION, apiVersions: ['v1', 'v2'], logo: `/api/v2/server/logo?v=${logoVersion()}`, logoSource: logo ? 'custom' : 'default', features: ['user-import', 'provisional-passwords'] }
+    ? { name: 'ThermoBox', version: SERVER_VERSION, apiVersions: ['v1', 'v2'], logo: `/api/v2/server/logo?v=${logoVersion()}`, logoSource: logo ? 'custom' : 'default', features: ['user-import', 'provisional-passwords', 'server-name'], displayName: serverName }
     : { name: 'ThermoBox', version: SERVER_VERSION, apiVersions: ['v1'] };
 route('GET', '/api/v2/server', 'public', () => ok(serverInfo()));
 route('GET', '/api/v2/server/logo', 'public', () => {
@@ -1251,6 +1251,15 @@ route('PUT', '/api/v2/server/logo', 'ADMIN', ({ body, req }) => {
   return ok(serverInfo());
 });
 route('DELETE', '/api/v2/server/logo', 'ADMIN', () => ((logo = null), ok(serverInfo())));
+/** The name an ADMIN gives the server (26.12), null without one. */
+let serverName = option('name', null);
+route('PUT', '/api/v2/server/name', 'ADMIN', ({ body }) => {
+  const name = String(json(body)?.name ?? '').trim().replace(/\s+/g, ' ');
+  if ([...name].length > 60) return error(400, 'The name must not exceed 60 characters.');
+  serverName = name || null;
+  return ok(serverInfo());
+});
+route('DELETE', '/api/v2/server/name', 'ADMIN', () => ((serverName = null), ok(serverInfo())));
 route('GET', '/api/v2/server/limits', 'auth', () => ok(limits));
 // What this process uses (26.12, ADMIN): the figures of Node, as the server gives those of its JVM
 let cpuBefore = { usage: process.cpuUsage(), at: process.hrtime.bigint() };
