@@ -1,24 +1,741 @@
 /*
- * macOS: the page is under the title bar (titleBarStyle Overlay); the traffic lights sit in the
- * top left corner of the side bar, a strip lets the window be dragged (platforms/macos/).
+ * macOS: the app as one of the system (AppKit), in the look of the macOS it runs on
+ * (platforms/macos/: target.ts sets html[data-mac], html[data-backdrop]; toolbar.ts):
+ *
+ * - html[data-mac="tahoe"], macOS 26 and up: Liquid Glass. The window is glass (NSGlassEffectView,
+ *   main.rs), the side bar floats in it as a rounded panel, the buttons of the toolbar are
+ *   capsules of glass, the controls rounder (capsules, larger corners).
+ * - html[data-mac="classic"], macOS 11 to 15 (Big Sur to Sequoia): the side bar from the top of
+ *   the window in the vibrancy of the system (NSVisualEffectView, material Sidebar), the unified
+ *   toolbar of Big Sur, blurred with its line once the page scrolls under it.
+ *
+ * The window is see-through, its material behind it (html[data-backdrop="glass" | "vibrancy"]):
+ * the page paints its content around the side bar (.tb-mac-canvas, its hole). Without a
+ * material (an older app, the page in a browser) the side bar is painted in its grey.
  */
 
-/* The settings window of macOS: the window is the page, its title under the traffic lights */
-:root body .tb-main.tb-standalone-window { padding-top: 38px; }
+/* ============================== Tokens */
 
-.tb-mac-drag {
+:root[data-desktop="macos"] {
+    --tb-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", system-ui, sans-serif;
+    --tb-font-figures: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", system-ui, sans-serif;
+    --tb-figure-weight: 500;
+    --tb-title-weight: 700;
+
+    /* The unified toolbar: the traffic lights in its middle (tauri.macos.conf.json, x 20 y 26) */
+    --tb-chrome-top: 52px;
+    --mac-toolbar: 52px;
+    /* The side bar: its width, its inset from the edges of the window (Tahoe: it floats) */
+    --mac-sidebar: 220px;
+    --mac-inset: 0px;
+    --mac-panel-radius: 0px;
+    /* The corners of the window */
+    --mac-corner: 10px;
+    /* After the traffic lights (20 + 3 × 14 + 2 × 6 ≈ 74 px) */
+    --mac-after-lights: 84px;
+
+    --mac-radius-control: 6px;
+    --mac-radius-field: 5px;
+    --mac-radius-box: 10px;
+    --mac-radius-sheet: 12px;
+    --mac-control-h: 28px;
+    /* The button of the side bar */
+    --mac-side-btn: 32px;
+
+    --tb-shape-xs: 4px;
+    --tb-shape-sm: 5px;
+    --tb-shape-md: 6px;
+    --tb-shape-lg: 10px;
+    --tb-shape-xl: 10px;
+    --tb-shape-xxl: 12px;
+
+    /* The colours of AppKit, light (labelColor, secondaryLabelColor, separatorColor…) */
+    --mac-label: rgb(0 0 0 / .85);
+    --mac-secondary: rgb(0 0 0 / .5);
+    --mac-tertiary: rgb(0 0 0 / .26);
+    --mac-separator: rgb(0 0 0 / .1);
+    --mac-content: #f6f6f6;
+    --mac-box: #ffffff;
+    --mac-box-line: rgb(0 0 0 / .07);
+    --mac-box-shadow: 0 0 0 .5px rgb(0 0 0 / .05), 0 .5px 1.5px rgb(0 0 0 / .07);
+    --mac-sheet: #f6f6f6;
+    --mac-sidebar-paint: #e6e5e8;
+    --mac-row-on: rgb(0 0 0 / .1);
+    --mac-hover: rgb(0 0 0 / .05);
+    --mac-press: rgb(0 0 0 / .1);
+    --mac-control: #ffffff;
+    --mac-control-shadow: 0 0 0 .5px rgb(0 0 0 / .14), 0 .5px 1.5px rgb(0 0 0 / .14), inset 0 .5px 0 rgb(255 255 255 / .6);
+    --mac-field: #ffffff;
+    --mac-field-shadow: 0 0 0 .5px rgb(0 0 0 / .2), inset 0 .5px 1px rgb(0 0 0 / .06);
+    --mac-fill: rgb(0 0 0 / .05);
+    --mac-fill-strong: rgb(0 0 0 / .09);
+    --mac-menu: rgb(246 246 246 / .82);
+    --mac-focus: color-mix(in srgb, var(--md-primary) 50%, transparent);
+    --mac-glass: rgb(255 255 255 / .62);
+    --mac-glass-edge: inset 0 0 0 .5px rgb(255 255 255 / .7), 0 0 0 .5px rgb(0 0 0 / .1), 0 2px 10px rgb(0 0 0 / .08);
+
+    --tb-background: var(--mac-content);
+    --md-surface-container-lowest: var(--mac-box);
+    --md-surface-container-low: #f9f9f9;
+    --md-surface-container: #f2f2f2;
+    --md-surface-container-high: #ebebeb;
+    --md-surface-container-highest: #e2e2e2;
+    --md-on-surface: var(--mac-label);
+    --md-on-surface-variant: var(--mac-secondary);
+    --md-outline: rgb(0 0 0 / .25);
+    --md-outline-variant: var(--mac-separator);
+    --md-secondary-container: var(--mac-fill);
+    --md-on-secondary-container: var(--mac-label);
+    --tb-glass: var(--mac-box);
+    --tb-glass-solid: var(--mac-box);
+    --tb-glass-hover: #fbfbfb;
+    --tb-glass-line: var(--mac-box-line);
+    --tb-glass-shadow: var(--mac-box-shadow);
+    --tb-glass-shadow-hover: var(--mac-box-shadow);
+    --tb-field: var(--mac-field);
+    --tb-field-hover: var(--mac-field);
+    --tb-field-line: transparent;
+    --tb-tile: var(--mac-box);
+    --tb-tint-base: var(--mac-box);
+
+    /* systemGreen, systemOrange, systemRed */
+    --tb-stable: #248a3d;
+    --tb-stable-container: color-mix(in srgb, #34c759 18%, #ffffff);
+    --tb-on-stable-container: #1c6b30;
+    --tb-heating: #c25e00;
+    --tb-heating-container: color-mix(in srgb, #ff9500 20%, #ffffff);
+    --tb-on-heating-container: #8a4300;
+    --md-error: #d70015;
+    --md-error-container: color-mix(in srgb, #ff3b30 15%, #ffffff);
+    --md-on-error-container: #b0000f;
+
+    --tb-raised-1: var(--mac-box-shadow);
+    --tb-raised-2: 0 0 0 .5px rgb(0 0 0 / .12), 0 4px 14px rgb(0 0 0 / .12);
+    --tb-raised-3: 0 0 0 .5px rgb(0 0 0 / .15), 0 10px 30px rgb(0 0 0 / .2);
+}
+:root[data-desktop="macos"][data-theme="dark"] {
+    --mac-label: rgb(255 255 255 / .85);
+    --mac-secondary: rgb(255 255 255 / .55);
+    --mac-tertiary: rgb(255 255 255 / .25);
+    --mac-separator: rgb(255 255 255 / .1);
+    --mac-content: #1e1e1e;
+    --mac-box: #2a2a2a;
+    --mac-box-line: rgb(255 255 255 / .06);
+    --mac-box-shadow: 0 0 0 .5px rgb(0 0 0 / .5), 0 .5px 1.5px rgb(0 0 0 / .3);
+    --mac-sheet: #2c2c2c;
+    --mac-sidebar-paint: #2b2a2e;
+    --mac-row-on: rgb(255 255 255 / .1);
+    --mac-hover: rgb(255 255 255 / .06);
+    --mac-press: rgb(255 255 255 / .12);
+    --mac-control: rgb(255 255 255 / .17);
+    --mac-control-shadow: 0 0 0 .5px rgb(0 0 0 / .3), 0 .5px 1px rgb(0 0 0 / .3), inset 0 .5px 0 rgb(255 255 255 / .1);
+    --mac-field: rgb(255 255 255 / .05);
+    --mac-field-shadow: 0 0 0 .5px rgb(255 255 255 / .15), inset 0 .5px 1px rgb(0 0 0 / .2);
+    --mac-fill: rgb(255 255 255 / .08);
+    --mac-fill-strong: rgb(255 255 255 / .14);
+    --mac-menu: rgb(40 40 40 / .8);
+    --mac-glass: rgb(58 58 62 / .58);
+    --mac-glass-edge: inset 0 0 0 .5px rgb(255 255 255 / .14), 0 0 0 .5px rgb(0 0 0 / .4), 0 2px 10px rgb(0 0 0 / .3);
+
+    --md-surface-container-low: #242424;
+    --md-surface-container: #2a2a2a;
+    --md-surface-container-high: #323232;
+    --md-surface-container-highest: #3a3a3a;
+    --md-outline: rgb(255 255 255 / .3);
+    --tb-glass-hover: #303030;
+
+    --tb-stable: #30d158;
+    --tb-stable-container: color-mix(in srgb, #30d158 22%, #2a2a2a);
+    --tb-on-stable-container: #7ee69a;
+    --tb-heating: #ff9f0a;
+    --tb-heating-container: color-mix(in srgb, #ff9f0a 24%, #2a2a2a);
+    --tb-on-heating-container: #ffc570;
+    --md-error: #ff453a;
+    --md-error-container: color-mix(in srgb, #ff453a 24%, #2a2a2a);
+    --md-on-error-container: #ff9d97;
+
+    --tb-raised-2: 0 0 0 .5px rgb(0 0 0 / .5), 0 4px 14px rgb(0 0 0 / .35);
+    --tb-raised-3: 0 0 0 .5px rgb(0 0 0 / .6), 0 10px 30px rgb(0 0 0 / .5);
+}
+
+/* Liquid Glass (macOS 26): the side bar floats, everything is rounder */
+:root[data-desktop="macos"][data-mac="tahoe"] {
+    --mac-inset: 8px;
+    --mac-panel-radius: 18px;
+    --mac-corner: 26px;
+    --mac-radius-control: 999px;
+    --mac-radius-field: 8px;
+    --mac-radius-box: 16px;
+    --mac-radius-sheet: 26px;
+    --mac-control-h: 30px;
+    --mac-side-btn: 36px;
+    --tb-shape-md: 8px;
+    --tb-shape-lg: 16px;
+    --tb-shape-xl: 16px;
+    --tb-shape-xxl: 22px;
+    --mac-content: #fbfbfd;
+    --mac-sheet: rgb(250 250 252 / .86);
+    --mac-sidebar-paint: #eeeef1;
+    --mac-row-on: rgb(0 0 0 / .08);
+    --mac-control: rgb(0 0 0 / .05);
+    --mac-control-shadow: none;
+    --mac-field: rgb(0 0 0 / .04);
+    --mac-field-shadow: inset 0 0 0 .5px rgb(0 0 0 / .08);
+    --mac-menu: rgb(250 250 252 / .72);
+}
+:root[data-desktop="macos"][data-mac="tahoe"][data-theme="dark"] {
+    --mac-content: #1c1c1e;
+    --mac-box: #2c2c2e;
+    --mac-sheet: rgb(44 44 46 / .86);
+    --mac-sidebar-paint: #2a2a2d;
+    --mac-row-on: rgb(255 255 255 / .1);
+    --mac-control: rgb(255 255 255 / .1);
+    --mac-field: rgb(255 255 255 / .06);
+    --mac-field-shadow: inset 0 0 0 .5px rgb(255 255 255 / .1);
+    --mac-menu: rgb(44 44 46 / .72);
+}
+
+/* The room the side bar takes beside the page: docked (as NSSplitViewController), or hidden whole
+   (html:root…: over the widths of the shared side bar, theme.css) */
+html:root[data-desktop="macos"]:not([data-sidebar="collapsed"]) { --tb-rail: calc(var(--mac-sidebar) + 2 * var(--mac-inset)); }
+html:root[data-desktop="macos"][data-sidebar="collapsed"] { --tb-rail: 0px; }
+@media (max-width: 840px) {
+    html:root[data-desktop="macos"]:is(*, [data-sidebar="collapsed"]) { --tb-rail: 0px; }
+}
+
+/* ============================== The window: the material behind the side bar, the page around it */
+
+:root[data-desktop="macos"] { background: var(--tb-background); }
+/* The material shows: the page no longer paints the window, only around the side bar */
+:root[data-desktop="macos"][data-backdrop]:has(body.tb-app) { background: transparent; }
+:root[data-desktop="macos"] body { background: transparent; }
+/* The colour of the room shown in « Maison » is painted by the canvas, not by the whole window */
+:root[data-desktop="macos"] .tb-background-page { display: none; }
+
+.tb-mac-canvas { display: none; }
+:root[data-desktop="macos"][data-backdrop] body.tb-app .tb-mac-canvas {
     position: fixed;
-    inset: 0 0 auto 0;
-    z-index: 40;
-    height: 28px;
+    inset: 0;
+    z-index: -3;
+    display: block;
+    overflow: hidden;
+    border-radius: var(--mac-corner);
+    pointer-events: none;
 }
-/* The traffic lights (about 70 × 28 px from the top left corner) inside the side bar */
-:root[data-desktop="macos"] .tb-rail { padding-top: 44px; }
-:root[data-desktop="macos"] .tb-rail-fold { top: 44px; }
-@media (min-width: 1200px) and (not ((orientation: landscape) and (max-height: 520px))) {
-    :root[data-desktop="macos"]:not([data-sidebar="collapsed"]) .tb-rail { padding-top: 48px; }
-    :root[data-desktop="macos"]:not([data-sidebar="collapsed"]) .tb-rail-fold { top: 46px; }
+/* The hole of the side bar: its shadow, as large as the window, is the page */
+.tb-mac-hole {
+    --mac-paint: var(--tb-tint-page, var(--tb-background));
+    position: absolute;
+    top: var(--mac-inset);
+    bottom: var(--mac-inset);
+    left: var(--mac-inset);
+    width: var(--mac-sidebar);
+    border-radius: var(--mac-panel-radius);
+    box-shadow: 0 0 0 200vmax var(--mac-paint);
+    transition: box-shadow .8s ease;
 }
+:root[data-desktop="macos"]:is([data-tint="off"], [data-style="panel"]) .tb-mac-hole { --mac-paint: var(--tb-background); }
+:root[data-desktop="macos"][data-sidebar="collapsed"] .tb-mac-hole { width: 0; box-shadow: 0 0 0 200vmax var(--mac-paint); left: -10px; }
+@media (max-width: 840px) {
+    :root[data-desktop="macos"] .tb-mac-hole { width: 0; left: -10px; }
+}
+/* Without a material, the window is the page: the colour of the room shown, as on the web */
+:root[data-desktop="macos"]:not([data-backdrop]) body.tb-app { background: var(--tb-tint-page, var(--tb-background)); transition: background-color .8s ease; }
+:root[data-desktop="macos"]:not([data-backdrop]):is([data-tint="off"], [data-style="panel"]) body.tb-app { background: var(--tb-background); }
+
+/* What covers the whole window keeps its corners */
+:root[data-desktop="macos"] :is(.tb-scrim, .tb-guide-dim, .tb-guide-scrim, .tb-help-keyboard) { border-radius: var(--mac-corner); }
+
+/* ============================== Type: the fonts of the system, 13 px as AppKit */
+
+:root[data-desktop="macos"] body {
+    font-family: var(--tb-font);
+    font-size: 13px;
+    color: var(--mac-label);
+    -webkit-font-smoothing: antialiased;
+}
+:root[data-desktop="macos"] :is(.tb-page-title h1, .tb-auth-name) { font-family: var(--tb-font-figures); font-weight: 700; letter-spacing: -.01em; }
+:root[data-desktop="macos"] .tb-page-title h1 { font-size: 26px; line-height: 32px; }
+:root[data-desktop="macos"] :is(.tb-panel-title, .tb-card-head h2, .tb-section-title) { font-weight: 600; letter-spacing: 0; }
+:root[data-desktop="macos"] .tb-dialog-head h2 { font-weight: 700; font-size: 13px; letter-spacing: 0; }
+/* The headings of the groups (as System Settings): 13 px, semibold, in the colour of the text */
+:root[data-desktop="macos"] :is(.tb-eyebrow, .tb-pref-heading) { letter-spacing: 0; text-transform: none; font-weight: 600; font-size: 13px; color: var(--mac-label); }
+:root[data-desktop="macos"] .tb-label { font-weight: 400; font-size: 12px; color: var(--mac-secondary); }
+/* Figures: tabular, as the system's */
+:root[data-desktop="macos"] body { font-variant-numeric: tabular-nums; }
+/* No selection of the chrome's texts (as an app, not a web page) */
+:root[data-desktop="macos"] :is(.tb-rail, .tb-mac-toolbar, .tb-btn, .tb-segmented, .tb-tag, .tb-label) { -webkit-user-select: none; user-select: none; }
+:root[data-desktop="macos"] :is(a, button) { cursor: default; }
+
+/* ============================== Focus: the ring of AppKit */
+
+:root[data-desktop="macos"] :is(button, a, input, select, textarea, [tabindex]):focus-visible {
+    outline: 3px solid var(--mac-focus);
+    outline-offset: 0;
+    box-shadow: none;
+}
+
+/* ============================== Buttons (NSButton, push and toolbar) */
+
+:root[data-desktop="macos"] .tb-btn {
+    min-height: var(--mac-control-h);
+    padding: 4px 14px;
+    gap: 6px;
+    border: 0;
+    border-radius: var(--mac-radius-control);
+    box-shadow: var(--mac-control-shadow);
+    font-size: 13px;
+    font-weight: 400;
+    transform: none;
+    transition: background-color .12s linear, filter .12s linear;
+}
+/* The default button (keyEquivalent ↩): the accent, white text */
+:root[data-desktop="macos"] .tb-btn:not(.tb-tonal, .tb-flat) {
+    background: linear-gradient(rgb(255 255 255 / .17), rgb(255 255 255 / 0)), var(--md-primary);
+    color: var(--md-on-primary);
+    box-shadow: 0 0 0 .5px color-mix(in srgb, var(--md-primary) 70%, black), 0 .5px 1.5px rgb(0 0 0 / .2), inset 0 .5px 0 rgb(255 255 255 / .25);
+}
+:root[data-desktop="macos"] .tb-btn:not(.tb-tonal, .tb-flat):hover { background: linear-gradient(rgb(255 255 255 / .17), rgb(255 255 255 / 0)), var(--md-primary); box-shadow: 0 0 0 .5px color-mix(in srgb, var(--md-primary) 70%, black), 0 .5px 1.5px rgb(0 0 0 / .2), inset 0 .5px 0 rgb(255 255 255 / .25); }
+:root[data-desktop="macos"] .tb-btn:not(.tb-tonal, .tb-flat):active { filter: brightness(.88); transform: none; }
+/* A push button */
+:root[data-desktop="macos"] .tb-btn.tb-tonal { background: var(--mac-control); color: var(--mac-label); }
+:root[data-desktop="macos"] .tb-btn.tb-tonal:hover { background: var(--mac-control); }
+:root[data-desktop="macos"] .tb-btn.tb-tonal:active { filter: brightness(.92); }
+:root[data-desktop="macos"][data-theme="dark"] .tb-btn.tb-tonal:active { filter: brightness(1.3); }
+/* Borderless buttons */
+:root[data-desktop="macos"] :is(.tb-btn.tb-flat, .tb-icon-btn, .tb-text-btn) { background: transparent; box-shadow: none; border-radius: var(--mac-radius-control); }
+:root[data-desktop="macos"] .tb-btn.tb-flat { color: var(--mac-label); }
+:root[data-desktop="macos"] :is(.tb-btn.tb-flat, .tb-icon-btn):hover { background: var(--mac-hover); }
+:root[data-desktop="macos"] :is(.tb-btn.tb-flat, .tb-icon-btn):active { background: var(--mac-press); }
+:root[data-desktop="macos"] .tb-btn.tb-icon { width: var(--mac-control-h); min-width: var(--mac-control-h); height: var(--mac-control-h); padding: 0; }
+/* The main action of a page: a large control */
+:root[data-desktop="macos"] .tb-btn.tb-btn-lg { min-height: 32px; padding: 6px 20px; font-size: 13px; }
+:root[data-desktop="macos"][data-mac="classic"] .tb-btn.tb-btn-lg { border-radius: 7px; }
+/* Destructive: the push button, its text in systemRed (as the alerts of macOS) */
+:root[data-desktop="macos"] .tb-btn.tb-btn-danger:not(.tb-flat) { background: var(--mac-control); color: var(--md-error); box-shadow: var(--mac-control-shadow); }
+:root[data-desktop="macos"] .tb-btn.tb-btn-danger.tb-flat { color: var(--md-error); }
+:root[data-desktop="macos"] .tb-btn:disabled { opacity: .45; filter: none; }
+:root[data-desktop="macos"] .tb-text-btn { color: var(--md-primary); font-weight: 400; }
+:root[data-desktop="macos"] .tb-text-btn:hover { background: transparent; text-decoration: underline; }
+
+/* ============================== Text fields, pop-up buttons */
+
+:root[data-desktop="macos"] :is(.tb-input, .tb-select) {
+    min-height: var(--mac-control-h);
+    padding: 4px 8px;
+    border: 0;
+    border-radius: var(--mac-radius-field);
+    background-color: var(--mac-field);
+    box-shadow: var(--mac-field-shadow);
+    color: var(--mac-label);
+    font-size: 13px;
+    transition: box-shadow .12s linear;
+}
+:root[data-desktop="macos"] :is(.tb-input, .tb-select):hover { background-color: var(--mac-field); border-color: transparent; }
+:root[data-desktop="macos"] :is(.tb-input, .tb-select):focus { outline: 3px solid var(--mac-focus); outline-offset: 0; background-color: var(--mac-field); box-shadow: var(--mac-field-shadow); }
+:root[data-desktop="macos"] :is(.tb-input, .tb-select).tb-invalid { outline: 3px solid color-mix(in srgb, var(--md-error) 45%, transparent); outline-offset: 0; }
+:root[data-desktop="macos"] .tb-input::placeholder { color: var(--mac-tertiary); }
+/* NSPopUpButton: a push button with its two arrows, its little accent square on classic */
+:root[data-desktop="macos"] .tb-select {
+    padding-right: 30px;
+    border-radius: var(--mac-radius-control);
+    background-color: var(--mac-control);
+    box-shadow: var(--mac-control-shadow);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M5 6.25 8 3.5l3 2.75M5 9.75 8 12.5l3-2.75' fill='none' stroke='%23000' stroke-opacity='.7' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-position: right 7px center;
+    background-size: 14px;
+}
+:root[data-desktop="macos"] .tb-select:hover { background-color: var(--mac-control); }
+:root[data-desktop="macos"] .tb-select:focus { background-color: var(--mac-control); box-shadow: var(--mac-control-shadow); }
+:root[data-desktop="macos"][data-theme="dark"] .tb-select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M5 6.25 8 3.5l3 2.75M5 9.75 8 12.5l3-2.75' fill='none' stroke='%23fff' stroke-opacity='.8' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+:root[data-desktop="macos"] body .tb-search > .tb-input { height: var(--mac-control-h); min-height: var(--mac-control-h); padding-left: 28px; border-radius: var(--mac-radius-control); }
+:root[data-desktop="macos"][data-mac="classic"] body .tb-search > .tb-input { border-radius: 7px; }
+:root[data-desktop="macos"] body .tb-search > i.pi { left: 9px; font-size: 12px; color: var(--mac-secondary); }
+:root[data-desktop="macos"] .tb-select.tb-filter { height: var(--mac-control-h); }
+:root[data-desktop="macos"] :is(.tb-entry, .tb-stepper) { border: 0; border-radius: var(--mac-radius-field); background: var(--mac-field); box-shadow: var(--mac-field-shadow); }
+:root[data-desktop="macos"] :is(input[type="checkbox"], input[type="radio"]) { accent-color: var(--md-primary); }
+:root[data-desktop="macos"] .tb-password > button { border-radius: var(--mac-radius-field); }
+
+/* ============================== Switch (NSSwitch) */
+
+:root[data-desktop="macos"] .tb-switch {
+    width: 38px;
+    height: 22px;
+    border: 0;
+    border-radius: 11px;
+    background: var(--mac-fill-strong);
+    box-shadow: inset 0 0 0 .5px rgb(0 0 0 / .08);
+    transition: background-color .2s ease;
+}
+:root[data-desktop="macos"] .tb-switch::before {
+    top: 1px;
+    left: 1px;
+    width: 20px;
+    height: 20px;
+    background: #fff;
+    box-shadow: 0 0 0 .5px rgb(0 0 0 / .06), 0 1px 2px rgb(0 0 0 / .25);
+    transition: transform .2s ease, width .2s ease;
+}
+:root[data-desktop="macos"] .tb-switch[aria-checked="true"] { background: var(--md-primary); }
+:root[data-desktop="macos"] .tb-switch[aria-checked="true"]::before { transform: translateX(16px); }
+:root[data-desktop="macos"][data-theme="dark"] .tb-switch::before { background: #e6e6e6; }
+:root[data-desktop="macos"] .tb-switch:focus-visible { outline: 3px solid var(--mac-focus); box-shadow: none; }
+/* Liquid Glass: the knob is a wide capsule */
+:root[data-desktop="macos"][data-mac="tahoe"] .tb-switch { width: 42px; height: 24px; border-radius: 12px; }
+:root[data-desktop="macos"][data-mac="tahoe"] .tb-switch::before { top: 2px; left: 2px; width: 26px; height: 20px; border-radius: 10px; }
+:root[data-desktop="macos"][data-mac="tahoe"] .tb-switch[aria-checked="true"]::before { transform: translateX(12px); }
+
+/* ============================== Segmented controls (NSSegmentedControl) */
+
+:root[data-desktop="macos"] .tb-segmented { padding: 2px; gap: 2px; border: 0; border-radius: 7px; background: var(--mac-fill); box-shadow: inset 0 0 0 .5px rgb(0 0 0 / .04); }
+:root[data-desktop="macos"] .tb-segmented > button { min-height: 22px; padding: 2px 12px; border-radius: 5px; font-weight: 400; font-size: 13px; color: var(--mac-label); background: transparent; box-shadow: none; }
+:root[data-desktop="macos"] .tb-segmented > button:hover { background: transparent; }
+:root[data-desktop="macos"] .tb-segmented > button.tb-seg-on { background: #fff; color: var(--mac-label); box-shadow: 0 0 0 .5px rgb(0 0 0 / .08), 0 1px 2px rgb(0 0 0 / .14); }
+:root[data-desktop="macos"][data-theme="dark"] .tb-segmented > button.tb-seg-on { background: rgb(255 255 255 / .22); box-shadow: 0 .5px 1px rgb(0 0 0 / .3); }
+:root[data-desktop="macos"][data-mac="tahoe"] .tb-segmented { border-radius: 999px; padding: 3px; }
+:root[data-desktop="macos"][data-mac="tahoe"] .tb-segmented > button { min-height: 26px; border-radius: 999px; padding: 2px 14px; }
+
+/* ============================== Grouped boxes (as System Settings), tables, tags */
+
+:root[data-desktop="macos"] :is(.tb-panel, .tb-card, .tb-list-group, .tb-table, .tb-stat, .tb-banner, .tb-empty, .tb-user, .tb-tree-rooms, .tb-rooms-side, .tb-lights, .tb-filters) {
+    border: 0;
+    border-radius: var(--mac-radius-box);
+    box-shadow: var(--mac-box-shadow);
+}
+:root[data-desktop="macos"] :is(.tb-panel, .tb-card, .tb-list-group, .tb-table, .tb-stat, .tb-user, .tb-tree-rooms) { background: var(--mac-box); }
+:root[data-desktop="macos"] .tb-table :is(th, td) { border-color: var(--mac-separator); }
+:root[data-desktop="macos"] .tb-table th { font-weight: 400; font-size: 11px; color: var(--mac-secondary); text-transform: none; letter-spacing: 0; }
+:root[data-desktop="macos"] :is(.tb-node-row, .tb-list-row, .tb-table tbody tr):hover { background: var(--mac-hover); }
+:root[data-desktop="macos"] .tb-pref { border-top-color: var(--mac-separator); }
+:root[data-desktop="macos"] .tb-summary-chip { min-height: 24px; border: 0; border-radius: 999px; background: var(--mac-fill); box-shadow: none; font-weight: 500; font-size: 12px; }
+:root[data-desktop="macos"] .tb-summary-chip:hover { background: var(--mac-fill-strong); }
+:root[data-desktop="macos"] .tb-summary-chip.tb-chip-on { background: var(--md-primary); color: var(--md-on-primary); }
+:root[data-desktop="macos"] :is(.tb-tag, .tb-chip-group, .tb-role-tag) { border-radius: 999px; font-weight: 500; font-size: 11px; }
+:root[data-desktop="macos"] .tb-message { border: 0; border-radius: var(--mac-radius-box); }
+
+/* ============================== Sheets, menus, notifications */
+
+/* A sheet of macOS: the window dims a little, the sheet in the colour of the window */
+:root[data-desktop="macos"] .tb-scrim { z-index: 3100; background: rgb(0 0 0 / .14); }
+:root[data-desktop="macos"][data-theme="dark"] .tb-scrim { background: rgb(0 0 0 / .32); }
+:root[data-desktop="macos"] .tb-dialog {
+    border: 0;
+    border-radius: var(--mac-radius-sheet);
+    background: var(--mac-sheet);
+    color: var(--mac-label);
+    box-shadow: 0 0 0 .5px rgb(0 0 0 / .2), 0 16px 48px rgb(0 0 0 / .25);
+    -webkit-backdrop-filter: blur(40px) saturate(180%);
+    backdrop-filter: blur(40px) saturate(180%);
+}
+:root[data-desktop="macos"][data-theme="dark"] .tb-dialog { box-shadow: 0 0 0 .5px rgb(0 0 0 / .6), inset 0 0 0 .5px rgb(255 255 255 / .1), 0 16px 48px rgb(0 0 0 / .5); }
+:root[data-desktop="macos"] .tb-dialog:focus, :root[data-desktop="macos"] .tb-dialog:focus-visible { outline: none; }
+:root[data-desktop="macos"] .tb-dialog-head { min-height: 44px; }
+:root[data-desktop="macos"] .tb-dialog-body { color: var(--mac-label); }
+/* Menus (NSMenu): the material of menus, rows of 22 px, the accent under the pointer */
+:root[data-desktop="macos"] .tb-accounts-menu {
+    padding: 5px;
+    border: 0;
+    border-radius: 7px;
+    background: var(--mac-menu);
+    box-shadow: 0 0 0 .5px rgb(0 0 0 / .18), 0 8px 24px rgb(0 0 0 / .18);
+    -webkit-backdrop-filter: blur(30px) saturate(180%);
+    backdrop-filter: blur(30px) saturate(180%);
+}
+:root[data-desktop="macos"][data-mac="tahoe"] .tb-accounts-menu { border-radius: 14px; padding: 6px; }
+:root[data-desktop="macos"] .tb-accounts-menu .tb-sheet-item { min-height: 24px; border-radius: 4px; font-size: 13px; }
+:root[data-desktop="macos"][data-mac="tahoe"] .tb-accounts-menu .tb-sheet-item { border-radius: 8px; }
+:root[data-desktop="macos"] .tb-accounts-menu .tb-sheet-item:hover { background: var(--md-primary); color: var(--md-on-primary); }
+:root[data-desktop="macos"] .tb-account { border-radius: 6px; }
+/* Toasts: as the notifications of macOS, in the top right corner, in their material */
+:root[data-desktop="macos"] .tb-toasts { top: calc(var(--mac-toolbar) + 6px); right: 16px; left: auto; width: min(360px, calc(100vw - 32px)); }
+:root[data-desktop="macos"] .tb-toast {
+    border: 0;
+    border-radius: 14px;
+    background: var(--mac-menu);
+    color: var(--mac-label);
+    box-shadow: 0 0 0 .5px rgb(0 0 0 / .14), 0 6px 20px rgb(0 0 0 / .16);
+    -webkit-backdrop-filter: blur(30px) saturate(180%);
+    backdrop-filter: blur(30px) saturate(180%);
+}
+:root[data-desktop="macos"][data-mac="tahoe"] .tb-toast { border-radius: 20px; }
+
+/* « Retour » in the head of a page (a room…): the back button of the toolbar is there */
+:root[data-desktop="macos"] body.tb-app .tb-page-head .tb-back { display: none; }
+
+/* ============================== The side bar (NSSplitViewController, source list) */
+
+@media (min-width: 841px) {
+    :root[data-desktop="macos"] .tb-rail {
+        inset: var(--mac-inset) auto var(--mac-inset) var(--mac-inset);
+        width: var(--mac-sidebar);
+        margin: 0 !important;
+        /* Under the traffic lights and the button of the side bar */
+        padding: calc(var(--mac-toolbar) - var(--mac-inset)) 0 10px;
+        gap: 0;
+        align-items: stretch;
+        border: 0;
+        border-radius: var(--mac-panel-radius);
+        background: transparent;
+        box-shadow: none;
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+        view-transition-name: none;
+        transition: transform .25s cubic-bezier(.3, 0, .2, 1), visibility .25s;
+    }
+    /* Hidden: slid out to the left, as the side bar of macOS */
+    :root[data-desktop="macos"][data-sidebar="collapsed"] .tb-rail { transform: translateX(calc(-100% - 2 * var(--mac-inset))); visibility: hidden; }
+    /* Classic: the line between the side bar and the content */
+    :root[data-desktop="macos"][data-mac="classic"] .tb-rail { box-shadow: inset -.5px 0 0 rgb(0 0 0 / .12); }
+    :root[data-desktop="macos"][data-mac="classic"][data-theme="dark"] .tb-rail { box-shadow: inset -1px 0 0 rgb(0 0 0 / .5); }
+    /* Liquid Glass: a panel of glass floating in the window, its light edge and its shadow */
+    :root[data-desktop="macos"][data-mac="tahoe"] .tb-rail {
+        background: rgb(255 255 255 / .18);
+        box-shadow: inset 0 0 0 .5px rgb(255 255 255 / .55), 0 0 0 .5px rgb(0 0 0 / .08), 0 6px 24px rgb(0 0 0 / .08);
+    }
+    :root[data-desktop="macos"][data-mac="tahoe"][data-theme="dark"] .tb-rail {
+        background: rgb(255 255 255 / .03);
+        box-shadow: inset 0 0 0 .5px rgb(255 255 255 / .14), 0 0 0 .5px rgb(0 0 0 / .5), 0 6px 24px rgb(0 0 0 / .3);
+    }
+    /* No material behind the window: the side bar in its own grey */
+    :root[data-desktop="macos"]:not([data-backdrop]) .tb-rail { background: var(--mac-sidebar-paint); }
+
+    :root[data-desktop="macos"] :is(.tb-rail-brand, .tb-rail-fold, .tb-lens) { display: none !important; }
+
+    /* Its rows: 28 px (Liquid Glass 32 px), the symbol in the accent, the selection a grey veil */
+    :root[data-desktop="macos"] .tb-dests { align-items: stretch; gap: 1px; padding: 0 10px; }
+    :root[data-desktop="macos"][data-mac="tahoe"] .tb-dests { padding: 0 8px; gap: 2px; }
+    :root[data-desktop="macos"] .tb-dests::before {
+        content: "Thermobox";
+        display: block;
+        padding: 6px 8px 4px;
+        color: var(--mac-tertiary);
+        font-size: 11px;
+        font-weight: 600;
+    }
+    :root[data-desktop="macos"] .tb-dest,
+    :root[data-desktop="macos"][data-style="panel"] .tb-dest {
+        position: relative;
+        flex-direction: row;
+        align-items: center;
+        gap: 7px;
+        width: auto;
+        min-height: 28px;
+        height: 28px;
+        margin: 0;
+        padding: 0 8px;
+        border-radius: 5px;
+        background: transparent;
+        box-shadow: none;
+        color: var(--mac-label);
+        font-size: 13px;
+        font-weight: 400;
+        letter-spacing: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        transition: none;
+    }
+    :root[data-desktop="macos"][data-mac="tahoe"] .tb-dest { min-height: 32px; height: 32px; padding: 0 10px; border-radius: 10px; gap: 8px; }
+    :root[data-desktop="macos"] .tb-dest-icon {
+        flex: none;
+        width: 18px;
+        height: 18px;
+        border-radius: 0;
+        background: none !important;
+        color: var(--md-primary) !important;
+        box-shadow: none !important;
+        animation: none !important;
+    }
+    :root[data-desktop="macos"] .tb-dest-icon .pi { font-size: 14px; }
+    :root[data-desktop="macos"] .tb-dest-badge { top: -2px; right: -3px; width: 7px; height: 7px; box-shadow: none; }
+    :root[data-desktop="macos"] .tb-dest-label { display: inline; overflow: hidden; text-overflow: ellipsis; padding: 0; }
+    :root[data-desktop="macos"] .tb-dest:hover:not(.tb-dest-on) { background: transparent; color: var(--mac-label); }
+    :root[data-desktop="macos"] .tb-dest:active:not(.tb-dest-on) { background: var(--mac-hover); }
+    :root[data-desktop="macos"] .tb-dest.tb-dest-on,
+    :root[data-desktop="macos"][data-style="panel"] .tb-dest.tb-dest-on { background: var(--mac-row-on); color: var(--mac-label); font-weight: 400; box-shadow: none; }
+    :root[data-desktop="macos"] .tb-dest.tb-dest-on::before { display: none; }
+    /* The window in the background: the symbols grey, as the side bars of the system */
+    :root[data-desktop="macos"].tb-mac-blurred .tb-dest-icon { color: var(--mac-secondary) !important; }
+
+    /* The foot: the account, as a row with its avatar */
+    :root[data-desktop="macos"] .tb-rail-end { gap: 2px; padding: 8px 10px 0; border-top: 0; align-items: stretch; }
+    :root[data-desktop="macos"] .tb-rail-end .tb-rail-actions { display: none; }
+    :root[data-desktop="macos"] .tb-rail-account {
+        width: 100%;
+        min-height: 40px;
+        margin: 0;
+        padding: 0 6px;
+        gap: 8px;
+        border: 0;
+        border-radius: 6px;
+        background: transparent;
+        box-shadow: none;
+        overflow: hidden;
+        white-space: nowrap;
+        text-align: left;
+    }
+    :root[data-desktop="macos"][data-mac="tahoe"] .tb-rail-account { border-radius: 12px; min-height: 44px; }
+    :root[data-desktop="macos"] .tb-rail-account:hover { background: transparent; }
+    :root[data-desktop="macos"] .tb-rail-account[aria-expanded="true"], :root[data-desktop="macos"] .tb-rail-account:active { background: var(--mac-hover); }
+    :root[data-desktop="macos"] .tb-rail-account > .tb-avatar { flex: none; width: 26px; height: 26px; margin: 0; font-size: 11px; }
+    :root[data-desktop="macos"] .tb-rail-account-text { display: flex; flex-direction: column; flex: 1 1 auto; min-width: 0; padding: 0; line-height: 15px; }
+    :root[data-desktop="macos"] .tb-rail-account strong { font-weight: 500; font-size: 13px; color: var(--mac-label); overflow: hidden; text-overflow: ellipsis; }
+    :root[data-desktop="macos"] .tb-rail-account small { font-size: 11px; color: var(--mac-secondary); overflow: hidden; text-overflow: ellipsis; }
+    :root[data-desktop="macos"] .tb-rail-account-arrow { display: inline-block; flex: none; margin: 0 4px 0 auto; font-size: 9px; color: var(--mac-secondary); }
+    :root[data-desktop="macos"] .tb-accounts-menu { left: 0; bottom: calc(100% + 4px); width: 100%; }
+
+    /* The content beside the side bar */
+    :root[data-desktop="macos"] body.tb-app .tb-main { transition: margin-left .25s cubic-bezier(.3, 0, .2, 1); }
+}
+@media (prefers-reduced-motion: reduce) {
+    :root[data-desktop="macos"] :is(.tb-rail, body.tb-app .tb-main, .tb-mac-toolbar, .tb-mac-sidebar-btn) { transition: none !important; }
+}
+
+/* ============================== The toolbar (NSToolbar, unified) */
+
+.tb-mac-toolbar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: var(--tb-rail);
+    z-index: 3000;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: var(--mac-toolbar);
+    padding: 0 16px 0 12px;
+    color: var(--mac-label);
+    font-family: var(--tb-font);
+    -webkit-user-select: none;
+    user-select: none;
+    transition: left .25s cubic-bezier(.3, 0, .2, 1), padding .25s cubic-bezier(.3, 0, .2, 1), background-color .2s linear, box-shadow .2s linear;
+}
+/* Nothing beside it (the side bar hidden, the login pages, the settings window): after the traffic
+   lights, and after the button of the side bar when it is there */
+:root[data-desktop="macos"][data-sidebar="collapsed"] .tb-mac-toolbar.tb-mac-in-app { padding-left: calc(var(--mac-after-lights) + var(--mac-side-btn) + 8px); }
+.tb-mac-toolbar:not(.tb-mac-in-app) { left: 0; padding-left: var(--mac-after-lights); }
+:root[data-fullscreen] .tb-mac-toolbar:not(.tb-mac-in-app) { padding-left: 16px; }
+:root[data-fullscreen][data-sidebar="collapsed"] .tb-mac-toolbar.tb-mac-in-app { padding-left: calc(16px + var(--mac-side-btn) + 8px); }
+@media (max-width: 840px) {
+    .tb-mac-toolbar.tb-mac-in-app { left: 0; padding-left: calc(var(--mac-after-lights) + var(--mac-side-btn) + 8px); }
+}
+
+.tb-mac-items { display: flex; align-items: center; gap: 2px; flex: none; }
+.tb-mac-title {
+    min-width: 0;
+    overflow: hidden;
+    font-size: 15px;
+    font-weight: 700;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    opacity: 0;
+    transition: opacity .15s linear;
+    pointer-events: none;
+}
+.tb-mac-title.tb-mac-title-on { opacity: 1; }
+/* The login pages: the window has no title */
+.tb-mac-toolbar:not(.tb-mac-in-app) .tb-mac-title { display: none; }
+/* The settings window: its title in the middle, as the settings windows of the system */
+:root[data-desktop-window="settings"] .tb-mac-toolbar { justify-content: center; padding: 0 var(--mac-after-lights); }
+:root[data-desktop-window="settings"] .tb-mac-toolbar .tb-mac-title { display: block; font-size: 13px; }
+:root[data-desktop-window="settings"] { --mac-toolbar: 38px; --tb-chrome-top: 38px; }
+:root[data-desktop-window="settings"] body .tb-main.tb-standalone-window { padding-top: 8px; }
+/* The window in the background: its title and its buttons fade */
+.tb-mac-inactive :is(.tb-mac-title, .tb-mac-btn), .tb-mac-btn.tb-mac-inactive { opacity: .45; }
+.tb-mac-inactive .tb-mac-title:not(.tb-mac-title-on) { opacity: 0; }
+
+/* Its buttons: borderless (classic), capsules of glass (Liquid Glass) */
+.tb-mac-btn {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 32px;
+    height: var(--mac-control-h);
+    padding: 0;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--mac-secondary);
+    transition: background-color .12s linear, opacity .15s linear;
+}
+.tb-mac-btn svg { width: 16px; height: 16px; }
+.tb-mac-btn:hover:not(:disabled) { background: var(--mac-hover); color: var(--mac-label); }
+.tb-mac-btn:active:not(:disabled) { background: var(--mac-press); }
+.tb-mac-btn:disabled { opacity: .35; }
+
+/* The button of the side bar: in the corner of the side bar, after the traffic lights */
+.tb-mac-sidebar-btn {
+    position: fixed;
+    top: calc((var(--mac-toolbar) - var(--mac-control-h)) / 2);
+    left: var(--mac-after-lights);
+    z-index: 3001;
+    transition: left .25s cubic-bezier(.3, 0, .2, 1), background-color .12s linear, opacity .15s linear;
+}
+.tb-mac-sidebar-btn svg { width: 18px; height: 16px; }
+:root[data-fullscreen] .tb-mac-sidebar-btn { left: 16px; }
+:root[data-fullscreen]:not([data-sidebar="collapsed"]) .tb-mac-sidebar-btn { left: calc(var(--mac-inset) + 10px); }
+
+/* Classic: the page scrolled under the toolbar: blurred, its line at the bottom */
+:root[data-mac="classic"] .tb-mac-toolbar.tb-mac-scrolled {
+    background: color-mix(in srgb, var(--tb-tint-page, var(--tb-background)) 78%, transparent);
+    box-shadow: 0 .5px 0 rgb(0 0 0 / .14);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    backdrop-filter: blur(20px) saturate(180%);
+}
+:root[data-mac="classic"][data-theme="dark"] .tb-mac-toolbar.tb-mac-scrolled { box-shadow: 0 1px 0 rgb(0 0 0 / .55); }
+:root[data-mac="classic"]:is([data-tint="off"], [data-style="panel"]) .tb-mac-toolbar.tb-mac-scrolled { background: color-mix(in srgb, var(--tb-background) 78%, transparent); }
+
+/* Liquid Glass: the buttons in capsules of glass, the edge of the page soft under the toolbar
+   (the scroll edge effect of macOS 26) */
+:root[data-mac="tahoe"] .tb-mac-toolbar.tb-mac-in-app { padding-left: 14px; }
+:root[data-mac="tahoe"] .tb-mac-items,
+:root[data-mac="tahoe"] .tb-mac-sidebar-btn {
+    border-radius: 999px;
+    background: var(--mac-glass);
+    box-shadow: var(--mac-glass-edge);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    backdrop-filter: blur(12px) saturate(180%);
+}
+:root[data-mac="tahoe"] .tb-mac-items { padding: 2px; }
+:root[data-mac="tahoe"] .tb-mac-btn { width: 34px; height: 32px; border-radius: 999px; color: var(--mac-label); }
+:root[data-mac="tahoe"] .tb-mac-sidebar-btn { width: 36px; height: 36px; top: calc((var(--mac-toolbar) - 36px) / 2); }
+:root[data-mac="tahoe"] .tb-mac-sidebar-btn:hover:not(:disabled) { background: var(--mac-glass); }
+/* In the panel of the side bar: at its top right corner, flat on the glass of the panel */
+:root[data-mac="tahoe"]:not([data-sidebar="collapsed"]) .tb-mac-sidebar-btn {
+    left: calc(var(--mac-inset) + var(--mac-sidebar) - 36px - 8px);
+    background: transparent;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+}
+:root[data-mac="tahoe"]:not([data-sidebar="collapsed"]) .tb-mac-sidebar-btn:hover { background: var(--mac-hover); }
+:root[data-mac="tahoe"] .tb-mac-toolbar::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 -14px 0;
+    z-index: -1;
+    background: linear-gradient(var(--tb-tint-page, var(--tb-background)) 40%, transparent);
+    -webkit-mask-image: linear-gradient(#000 55%, transparent);
+    mask-image: linear-gradient(#000 55%, transparent);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    opacity: 0;
+    transition: opacity .2s linear;
+    pointer-events: none;
+}
+:root[data-mac="tahoe"]:is([data-tint="off"], [data-style="panel"]) .tb-mac-toolbar::before { background: linear-gradient(var(--tb-background) 40%, transparent); }
+:root[data-mac="tahoe"] .tb-mac-toolbar.tb-mac-scrolled::before { opacity: 1; }
+@media (max-width: 840px) {
+    :root[data-mac="tahoe"] .tb-mac-sidebar-btn { left: var(--mac-after-lights) !important; }
+}
+
+/* ============================== The pages under the toolbar */
+
+/* The page starts under the toolbar (desktop.css), the side bar from the top of the window */
+:root[data-desktop="macos"] .tb-rail { margin-top: 0; }
 :root[data-desktop="macos"] .tb-topbar { padding-left: 84px; }
-/* The fonts of the system on a Mac app, the figures stay ThermoBox's */
-:root[data-desktop="macos"] body { -webkit-font-smoothing: antialiased; }
+/* Anchors and focused fields scroll to below the toolbar */
+:root[data-desktop="macos"] { scroll-padding-top: calc(var(--mac-toolbar) + 8px); }
+/* The guard of pull to refresh: the rubber band of macOS instead */
+html[data-desktop="macos"].tb-pull-page { overscroll-behavior-y: auto; }

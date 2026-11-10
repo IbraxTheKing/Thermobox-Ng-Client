@@ -5,7 +5,9 @@
 //!
 //! - macOS: the settings are only in the menu bar (Thermobox › Réglages…, ⌘,) and open in a
 //!   window of their own; « À propos de Thermobox » opens the page of the app. The title bar is
-//!   the page's (traffic lights over it, tauri.macos.conf.json).
+//!   the page's (traffic lights over it, tauri.macos.conf.json), its toolbar too; behind the side
+//!   bar, the material of the system: Liquid Glass on macOS 26 and up, the vibrancy of a side bar
+//!   from macOS 11 to 15 (mac.rs, [mac_style]).
 //! - Windows: no native title bar (tauri.windows.conf.json): the page draws one in the WinUI 3
 //!   style (index.html at once, then Angular); its maximize button opens the snap layouts of
 //!   Windows 11. The system's comes back if the page never says it is there ([PageReady]).
@@ -22,6 +24,8 @@
 
 #[cfg(target_os = "linux")]
 mod linux;
+#[cfg(target_os = "macos")]
+mod mac;
 #[cfg(target_os = "macos")]
 mod menu;
 mod tls;
@@ -78,8 +82,13 @@ pub fn open_settings(app: &AppHandle) -> tauri::Result<()> {
     let builder = builder
         .title_bar_style(tauri::TitleBarStyle::Overlay)
         .hidden_title(true)
-        .minimizable(false);
-    builder.build()?;
+        .minimizable(false)
+        .transparent(true)
+        .traffic_light_position(tauri::LogicalPosition::new(20.0, 26.0));
+    let window = builder.build()?;
+    #[cfg(target_os = "macos")]
+    mac::apply(&window, &app.state::<mac::Materials>());
+    let _ = window;
     Ok(())
 }
 
@@ -235,6 +244,24 @@ fn window_theme(window: tauri::WebviewWindow, theme: Option<String>, dark: bool,
     let _ = (dark, backdrop);
 }
 
+/// macOS: the material behind the window (mac.rs) and the version of the system, for the page
+/// (html[data-backdrop], html[data-mac]): { backdrop: "glass" | "vibrancy" | "", version: 26 };
+/// null elsewhere.
+#[tauri::command]
+fn mac_style(window: tauri::WebviewWindow) -> Option<serde_json::Value> {
+    #[cfg(target_os = "macos")]
+    {
+        let backdrop = window.state::<mac::Materials>().of(window.label());
+        let (major, minor) = mac::version();
+        return Some(serde_json::json!({ "backdrop": backdrop, "version": major, "minor": minor }));
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+        let _ = window;
+        None
+    }
+}
+
 /// The Acrylic of the window ([window_acrylic]): Windows can draw it (set at start), it is shown.
 #[derive(Default)]
 struct Backdrop {
@@ -264,6 +291,11 @@ fn main() {
         .manage(tls::Tls::default())
         .manage(Backdrop::default())
         .setup(|app| {
+            // macOS: Liquid Glass (26 and up) or the vibrancy of a side bar behind the window
+            #[cfg(target_os = "macos")]
+            if let Some(w) = app.get_webview_window("main") {
+                mac::apply(&w, &app.state::<mac::Materials>());
+            }
             #[cfg(windows)]
             {
                 // Acrylic: the DWM backdrop of Windows 11 22H2 and up (build 22523: before, the
@@ -292,8 +324,12 @@ fn main() {
             let _ = app;
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![settings_window, snap_layouts, system_accent, page_ready, window_acrylic, window_theme, app_language, decoration_layout, clipboard_text, linux_options, set_linux_options, native_chrome, tls::tls_pins, tls::tls_probe, tls::tls_fetch]);
+        .invoke_handler(tauri::generate_handler![settings_window, snap_layouts, system_accent, page_ready, window_acrylic, window_theme, app_language, decoration_layout, clipboard_text, linux_options, set_linux_options, native_chrome, mac_style, tls::tls_pins, tls::tls_probe, tls::tls_fetch]);
     #[cfg(target_os = "macos")]
-    let builder = builder.menu(menu::build).on_menu_event(menu::on_event);
+    let builder = builder
+        .plugin(tauri_plugin_liquid_glass::init())
+        .manage(mac::Materials::default())
+        .menu(menu::build)
+        .on_menu_event(menu::on_event);
     builder.run(tauri::generate_context!()).expect("Thermobox could not start");
 }

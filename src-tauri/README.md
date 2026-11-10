@@ -27,13 +27,14 @@ http://localhost:4200: start the serve first.
 
 | File | What it holds |
 | --- | --- |
-| `tauri.conf.json` | shared: identifier, version (set from the tag by the workflows), bundle, the macOS settings window |
+| `tauri.conf.json` | shared: identifier, version (set from the tag by the workflows), bundle, the macOS settings window, `macOSPrivateApi` (the see-through window of macOS) |
 | `tauri.windows.conf.json` | Windows: no title bar of the system, transparent window (Acrylic), its build |
-| `tauri.macos.conf.json` | macOS: overlay title bar, its build |
+| `tauri.macos.conf.json` | macOS: overlay title bar, transparent window, the traffic lights in the middle of the toolbar, its build |
 | `tauri.linux.conf.json` | Linux: no decorations, opaque window hidden until set up, its build |
 | `capabilities/` | what the page may call: the core of Tauri, HTTP, notifications, opening links |
 | `src/main.rs` | the app: plugins, the commands the page calls, the start of each system |
 | `src/win.rs` | Windows: Acrylic, the theme of the window, Snap Layouts |
+| `src/mac.rs` | macOS: the material behind the window: Liquid Glass on macOS 26 and up (`tauri-plugin-liquid-glass`), the vibrancy of a side bar from macOS 11 to 15 |
 | `src/tls.rs` | the servers whose certificate the system does not know (self-signed): their calls through reqwest with a verifier that accepts the certificate the user trusted (its SHA-256 fingerprint), and the CAs installed on the machine |
 | `src/menu.rs` | macOS: the menu bar (Réglages…, À propos…, the edit menu) in the language of the page |
 | `src/linux.rs` | Linux: the options of Préférences › Fenêtre (`linux.json`), the rendering of WebKitGTK, the rounded corners, the GTK 3 header bar, the accent and the style of GNOME, the button layout and the touchpad |
@@ -51,6 +52,7 @@ Called by the page with `invoke` (`src/platforms/desktop`, `windows`, `macos`, `
 | `window_acrylic` | Windows | Acrylic on or off (Préférences › Flou) |
 | `snap_layouts` | Windows | the Snap Layouts flyout over the maximize button of the page |
 | `settings_window` | macOS | opens the settings window |
+| `mac_style` | macOS | the material the window has (`glass`, `vibrancy`, or none) and the version of macOS: the look of the page (`html[data-mac]`, `html[data-backdrop]`) |
 | `tls_probe` | all | is the certificate of a server accepted, and its SHA-256 fingerprint when it is not |
 | `tls_pins` | all | the hosts and fingerprints the user trusts |
 | `tls_fetch` | all | a call to such a server (raw body in, raw answer out) |

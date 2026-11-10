@@ -4667,6 +4667,18 @@
     "fr": "Réduire",
     "en": "Minimize"
   },
+  "8346338150289447080": {
+    "fr": "Retour (⌘[)",
+    "en": "Back (⌘[)"
+  },
+  "3951776232613752274": {
+    "fr": "Afficher la barre latérale",
+    "en": "Show the sidebar"
+  },
+  "8898039402585051029": {
+    "fr": "Masquer la barre latérale",
+    "en": "Hide the sidebar"
+  },
   "4756320131036675252": {
     "fr": "Rechercher les préférences",
     "en": "Search preferences"
@@ -4682,10 +4694,6 @@
   "9031750643984675020": {
     "fr": "Linux",
     "en": "Linux"
-  },
-  "3951776232613752274": {
-    "fr": "Afficher la barre latérale",
-    "en": "Show the sidebar"
   },
   "1632553618863251895": {
     "fr": "Menu principal",
