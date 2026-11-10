@@ -8,18 +8,21 @@ import {
   signal,
 } from '@angular/core';
 import { Location } from '@angular/common';
-import { NavigationEnd, Router } from '@angular/router';
+import { NavigationEnd, NavigationStart, Router } from '@angular/router';
 
 import { DesktopService } from '../../app/core/desktop';
 import { PreferencesService } from '../../app/core/preferences';
 import { TitleService } from '../../app/core/title';
 import { MacDesktopService } from './desktop.service';
+import { TbMacSettingsTabs } from './settings-tabs';
 
 /**
  * The frame of the macOS app, as the apps of the system (AppKit, NSSplitViewController and a
  * unified toolbar): the side bar from the top of the window, the traffic lights in its corner;
- * over the content, the toolbar: the button of the side bar, back, the name of the page once its
- * own title has scrolled under it. Two looks (macos.css): Liquid Glass on macOS 26 and up
+ * over the content, the toolbar: the button of the side bar, back and forward (⌘[ ⌘], the swipe
+ * of the trackpad: main.rs), the name of the page once its own title has scrolled under it. Its
+ * buttons are centred on the traffic lights, where AppKit drew them (target.ts). The settings
+ * window has its tabs there instead (settings-tabs.ts). Two looks (macos.css): Liquid Glass on macOS 26 and up
  * (html[data-mac="tahoe"]: the side bar floats, the buttons are capsules of glass), the look of
  * macOS 11 to 15 before (html[data-mac="classic"]: the side bar in the vibrancy of the system,
  * the toolbar blurred with its line once the page scrolls under it).
@@ -29,6 +32,7 @@ import { MacDesktopService } from './desktop.service';
  */
 @Component({
   selector: 'tb-mac-toolbar',
+  imports: [TbMacSettingsTabs],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { style: 'display: contents' },
   template: `
@@ -42,6 +46,7 @@ import { MacDesktopService } from './desktop.service';
       data-tauri-drag-region="deep"
     >
       @if (inApp()) {
+        <!-- Back and forward, as Finder and System Settings: one capsule (Liquid Glass) -->
         <div class="tb-mac-items" data-tauri-drag-region="deep">
           <button
             type="button"
@@ -49,9 +54,9 @@ import { MacDesktopService } from './desktop.service';
             tabindex="-1"
             [disabled]="!canGoBack()"
             i18n-aria-label
-            aria-label="Retour"
+            aria-label="Précédent"
             i18n-title
-            title="Retour (⌘[)"
+            title="Précédent (⌘[)"
             (click)="back()"
           >
             <svg viewBox="0 0 16 16" aria-hidden="true">
@@ -65,11 +70,37 @@ import { MacDesktopService } from './desktop.service';
               />
             </svg>
           </button>
+          <button
+            type="button"
+            class="tb-mac-btn"
+            tabindex="-1"
+            [disabled]="!canGoForward()"
+            i18n-aria-label
+            aria-label="Suivant"
+            i18n-title
+            title="Suivant (⌘])"
+            (click)="forward()"
+          >
+            <svg viewBox="0 0 16 16" aria-hidden="true">
+              <path
+                d="M6 2.75 11.25 8 6 13.25"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.7"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </button>
         </div>
       }
-      <span class="tb-mac-title" [class.tb-mac-title-on]="titleShown()">{{
-        pageTitle.title() || pageTitle.app()
-      }}</span>
+      @if (desktop.settingsWindow) {
+        <tb-mac-settings-tabs />
+      } @else {
+        <span class="tb-mac-title" [class.tb-mac-title-on]="titleShown()">{{
+          pageTitle.title() || pageTitle.app()
+        }}</span>
+      }
     </header>
     @if (inApp()) {
       <!-- sidebar.left: in the corner of the side bar, after the traffic lights when it is hidden -->
@@ -119,6 +150,15 @@ export class TbMacToolbar {
   /** In the app (not the login pages, not the settings window): the side bar is there. */
   protected readonly inApp = signal(this.isApp(location.pathname));
   protected readonly canGoBack = signal(false);
+  protected readonly canGoForward = signal(false);
+  /**
+   * The history of this window, as the router numbers its navigations: the entries before and
+   * after the current one ([at]), for the two buttons. Popstate (back, forward, the swipe) moves
+   * in it, a new navigation drops what was after.
+   */
+  private entries: number[] = [];
+  private at = -1;
+  private wasApp = false;
   protected readonly scrolled = signal(false);
   /** The name of the page in the toolbar: once its title (h1) has gone under it. */
   protected readonly titleShown = signal(false);
@@ -135,12 +175,22 @@ export class TbMacToolbar {
       const theme = this.prefs.theme();
       void this.desktop.windowTheme(choice, theme).catch(() => undefined);
     });
+    let pending: { id: number; restored: number | null; replace: boolean } | null = null;
     const nav = this.router.events.subscribe((e) => {
+      if (e instanceof NavigationStart) {
+        pending = {
+          id: e.id,
+          restored: e.navigationTrigger === 'popstate' ? (e.restoredState?.navigationId ?? null) : null,
+          replace: !!this.router.getCurrentNavigation()?.extras.replaceUrl,
+        };
+      }
       if (e instanceof NavigationEnd) {
         this.inApp.set(this.isApp(e.urlAfterRedirects));
-        this.canGoBack.set(
-          ((history.state as { navigationId?: number } | null)?.navigationId ?? 1) > 1,
-        );
+        // The history of the app starts at its first page (not at the login page before it)
+        if (!this.wasApp) this.at = -1;
+        this.wasApp = this.isApp(e.urlAfterRedirects);
+        this.follow(pending, e.id);
+        pending = null;
         // The new page starts at its top
         requestAnimationFrame(() => this.measure());
       }
@@ -150,11 +200,15 @@ export class TbMacToolbar {
     const onFocus = () => this.focused.set(true);
     const onBlur = () => this.focused.set(false);
     const onScroll = () => this.measure();
-    // ⌘[ : back, as in the apps of the system
+    // ⌘[ and ⌘] : back and forward, as in the apps of the system
     const onKey = (e: KeyboardEvent) => {
-      if (e.metaKey && !e.shiftKey && !e.altKey && e.key === '[') {
+      if (!e.metaKey || e.shiftKey || e.altKey || e.ctrlKey) return;
+      if (e.key === '[') {
         e.preventDefault();
         this.back();
+      } else if (e.key === ']') {
+        e.preventDefault();
+        this.forward();
       }
     };
     addEventListener('focus', onFocus);
@@ -196,7 +250,31 @@ export class TbMacToolbar {
     this.titleShown.set(!h1 || h1.getBoundingClientRect().bottom < 52);
   }
 
+  /** Where the navigation [id] that just ended puts this window in its history. */
+  private follow(n: { id: number; restored: number | null; replace: boolean } | null, id: number): void {
+    const known = n?.restored != null ? this.entries.indexOf(n.restored) : -1;
+    if (known >= 0) {
+      // Back or forward (the buttons, the keys, the swipe): the entry it went to
+      this.at = known;
+    } else if (n?.restored != null || this.at < 0) {
+      // An entry from before this launch, or the first page: the history starts there
+      this.entries = [n?.restored ?? id];
+      this.at = 0;
+    } else if (n?.replace) {
+      this.entries[this.at] = id;
+    } else {
+      this.entries = [...this.entries.slice(0, this.at + 1), id];
+      this.at++;
+    }
+    this.canGoBack.set(this.at > 0);
+    this.canGoForward.set(this.at < this.entries.length - 1);
+  }
+
   protected back(): void {
     if (this.canGoBack()) this.location.back();
+  }
+
+  protected forward(): void {
+    if (this.canGoForward()) this.location.forward();
   }
 }

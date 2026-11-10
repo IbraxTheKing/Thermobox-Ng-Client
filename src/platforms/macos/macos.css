@@ -22,16 +22,17 @@
     --tb-figure-weight: 500;
     --tb-title-weight: 700;
 
-    /* The unified toolbar: the traffic lights in its middle (tauri.macos.conf.json, x 20 y 26) */
-    --tb-chrome-top: 52px;
-    --mac-toolbar: 52px;
+    /* The unified toolbar: the traffic lights in its middle (tauri.macos.conf.json, x 20 y 26;
+       where AppKit really drew them: --mac-lights-middle, target.ts) */
+    --mac-toolbar: calc(2 * var(--mac-lights-middle, 26px));
+    --tb-chrome-top: var(--mac-toolbar);
     /* The side bar: its width, its inset from the edges of the window (Tahoe: it floats) */
     --mac-sidebar: 220px;
     --mac-inset: 0px;
     --mac-panel-radius: 0px;
     /* The corners of the window */
     --mac-corner: 10px;
-    /* After the traffic lights (20 + 3 × 14 + 2 × 6 ≈ 74 px) */
+    /* After the traffic lights (20 + 3 × 14 + 2 × 6 ≈ 74 px; measured: target.ts) */
     --mac-after-lights: 84px;
 
     --mac-radius-control: 6px;
@@ -636,11 +637,6 @@ html:root[data-desktop="macos"][data-sidebar="collapsed"] { --tb-rail: 0px; }
 .tb-mac-title.tb-mac-title-on { opacity: 1; }
 /* The login pages: the window has no title */
 .tb-mac-toolbar:not(.tb-mac-in-app) .tb-mac-title { display: none; }
-/* The settings window: its title in the middle, as the settings windows of the system */
-:root[data-desktop-window="settings"] .tb-mac-toolbar { justify-content: center; padding: 0 var(--mac-after-lights); }
-:root[data-desktop-window="settings"] .tb-mac-toolbar .tb-mac-title { display: block; font-size: 13px; }
-:root[data-desktop-window="settings"] { --mac-toolbar: 38px; --tb-chrome-top: 38px; }
-:root[data-desktop-window="settings"] body .tb-main.tb-standalone-window { padding-top: 8px; }
 /* The window in the background: its title and its buttons fade */
 .tb-mac-inactive :is(.tb-mac-title, .tb-mac-btn), .tb-mac-btn.tb-mac-inactive { opacity: .45; }
 .tb-mac-inactive .tb-mac-title:not(.tb-mac-title-on) { opacity: 0; }
@@ -737,5 +733,87 @@ html:root[data-desktop="macos"][data-sidebar="collapsed"] { --tb-rail: 0px; }
 :root[data-desktop="macos"] .tb-topbar { padding-left: 84px; }
 /* Anchors and focused fields scroll to below the toolbar */
 :root[data-desktop="macos"] { scroll-padding-top: calc(var(--mac-toolbar) + 8px); }
-/* The guard of pull to refresh: the rubber band of macOS instead */
-html[data-desktop="macos"].tb-pull-page { overscroll-behavior-y: auto; }
+/* The page does not stretch past its ends: the rubber band of WebKit would take the whole window
+   with it, toolbar and side bar (they are the page's). Horizontally it stays, for the swipe of
+   the trackpad between pages (main.rs). */
+html[data-desktop="macos"], html[data-desktop="macos"] body,
+html[data-desktop="macos"].tb-pull-page { overscroll-behavior-y: none; }
+
+/* ============================== The settings window (Safari, Mail, Finder: tabs in the toolbar)
+
+   The name of the tab in the title bar, centred on the traffic lights; under it a row of tabs, an
+   icon over a label, the one shown in the accent colour on a soft rounded ground (a capsule of
+   glass on macOS 26). One group of Préférences at a time, without its heading (the title says
+   it); the window is as tall as it (settings-tabs.ts). */
+
+:root[data-desktop-window="settings"] {
+    --mac-settings-title: calc(2 * var(--mac-lights-middle, 14px));
+    --mac-toolbar: calc(var(--mac-settings-title) + 58px);
+    --tb-chrome-top: var(--mac-toolbar);
+}
+:root[data-desktop-window="settings"] .tb-mac-toolbar {
+    left: 0;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 0;
+    padding: 0;
+    background: color-mix(in srgb, var(--tb-background) 72%, transparent);
+    box-shadow: 0 .5px 0 var(--mac-separator);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    backdrop-filter: blur(20px) saturate(180%);
+}
+:root[data-desktop-window="settings"][data-theme="dark"] .tb-mac-toolbar { box-shadow: 0 1px 0 rgb(0 0 0 / .5); }
+:root[data-desktop-window="settings"][data-mac="tahoe"] .tb-mac-toolbar::before { display: none; }
+.tb-mac-settings { display: flex; flex-direction: column; align-items: stretch; }
+.tb-mac-settings-title {
+    height: var(--mac-settings-title);
+    padding: 0 var(--mac-after-lights);
+    overflow: hidden;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: var(--mac-settings-title);
+    text-align: center;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+.tb-mac-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 2px;
+    height: 58px;
+    padding: 2px 12px 6px;
+}
+.tb-mac-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-width: 64px;
+    padding: 4px 8px;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--mac-secondary);
+    font: inherit;
+    font-size: 11px;
+    line-height: 13px;
+    white-space: nowrap;
+    transition: background-color .12s linear, color .12s linear;
+}
+.tb-mac-tab .pi { font-size: 21px; line-height: 24px; }
+.tb-mac-tab:hover { color: var(--mac-label); }
+.tb-mac-tab:active { background: var(--mac-press); }
+.tb-mac-tab.tb-mac-tab-on { background: var(--mac-fill-strong); color: var(--md-primary); }
+.tb-mac-inactive .tb-mac-tab.tb-mac-tab-on { color: var(--mac-label); }
+:root[data-mac="tahoe"] .tb-mac-tab { border-radius: 14px; }
+:root[data-mac="tahoe"] .tb-mac-tab.tb-mac-tab-on {
+    background: var(--mac-glass);
+    box-shadow: var(--mac-glass-edge);
+}
+/* The page: one group, no heading of the page nor of the group (the title bar says it) */
+:root[data-desktop-window="settings"] body .tb-main.tb-standalone-window { padding-top: 20px; padding-bottom: 0; min-height: 0; }
+:root[data-desktop-window="settings"][data-settings-tab] :is(.tb-page-head, .tb-pref-heading) { display: none; }
+:root[data-desktop-window="settings"][data-settings-tab] .tb-pref-group:not(.tb-mac-tab-shown) { display: none; }
+:root[data-desktop-window="settings"] .tb-narrow { padding-bottom: 0; }

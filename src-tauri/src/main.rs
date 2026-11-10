@@ -4,7 +4,9 @@
 //! Thermobox for Windows, macOS and Linux: the Angular client (../dist) in a native window.
 //!
 //! - macOS: the settings are only in the menu bar (Thermobox › Réglages…, ⌘,) and open in a
-//!   window of their own; « À propos de Thermobox » opens the page of the app. The title bar is
+//!   window of their own, with tabs as the settings windows of the system; « À propos de
+//!   Thermobox » opens the About panel of the system. The swipe of the trackpad goes from page
+//!   to page. The title bar is
 //!   the page's (traffic lights over it, tauri.macos.conf.json), its toolbar too; behind the side
 //!   bar, the material of the system: Liquid Glass on macOS 26 and up, the vibrancy of a side bar
 //!   from macOS 11 to 15 (mac.rs, [mac_style]).
@@ -78,13 +80,17 @@ pub fn open_settings(app: &AppHandle) -> tauri::Result<()> {
         .min_inner_size(440.0, 480.0)
         .center()
         .focused(true);
+    // As the settings windows of the system: the width of its tabs, the height of the one shown
+    // (settings_height), neither minimized nor zoomed, the traffic lights where AppKit puts them
     #[cfg(target_os = "macos")]
     let builder = builder
+        .inner_size(660.0, 520.0)
+        .resizable(false)
         .title_bar_style(tauri::TitleBarStyle::Overlay)
         .hidden_title(true)
         .minimizable(false)
-        .transparent(true)
-        .traffic_light_position(tauri::LogicalPosition::new(20.0, 26.0));
+        .maximizable(false)
+        .transparent(true);
     let window = builder.build()?;
     #[cfg(target_os = "macos")]
     mac::apply(&window, &app.state::<mac::Materials>());
@@ -253,13 +259,45 @@ fn mac_style(window: tauri::WebviewWindow) -> Option<serde_json::Value> {
     {
         let backdrop = window.state::<mac::Materials>().of(window.label());
         let (major, minor) = mac::version();
-        return Some(serde_json::json!({ "backdrop": backdrop, "version": major, "minor": minor }));
+        // The traffic lights, where AppKit drew them (on the main thread: a command without async)
+        let lights = objc2::MainThreadMarker::new()
+            .and_then(|_| mac::lights(&window))
+            .map(|(left, right, middle)| serde_json::json!({ "left": left, "right": right, "middle": middle }));
+        return Some(serde_json::json!({ "backdrop": backdrop, "version": major, "minor": minor, "lights": lights }));
     }
     #[cfg(not(target_os = "macos"))]
     {
         let _ = window;
         None
     }
+}
+
+/// macOS: the settings window takes the height of the tab shown (points), animated.
+#[tauri::command]
+fn settings_height(window: tauri::WebviewWindow, height: f64) {
+    #[cfg(target_os = "macos")]
+    {
+        let w = window.clone();
+        let _ = window.run_on_main_thread(move || mac::settings_height(&w, height));
+    }
+    #[cfg(not(target_os = "macos"))]
+    let _ = (window, height);
+}
+
+/// macOS: the About panel of the system, with what the page wrote in it (« À propos de
+/// Thermobox » of the menu bar, or of the page).
+#[tauri::command]
+fn about_panel(app: AppHandle, #[allow(unused_variables)] info: serde_json::Value) {
+    #[cfg(target_os = "macos")]
+    {
+        let Ok(info) = serde_json::from_value::<mac::AboutInfo>(info) else { return };
+        let _ = app.run_on_main_thread(move || {
+            if let Some(mtm) = objc2::MainThreadMarker::new() {
+                mac::about_panel(&info, mtm);
+            }
+        });
+    }
+    let _ = app;
 }
 
 /// The Acrylic of the window ([window_acrylic]): Windows can draw it (set at start), it is shown.
@@ -295,6 +333,8 @@ fn main() {
             #[cfg(target_os = "macos")]
             if let Some(w) = app.get_webview_window("main") {
                 mac::apply(&w, &app.state::<mac::Materials>());
+                // The swipe of the trackpad between the pages
+                mac::gestures(&w);
             }
             #[cfg(windows)]
             {
@@ -324,7 +364,7 @@ fn main() {
             let _ = app;
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![settings_window, snap_layouts, system_accent, page_ready, window_acrylic, window_theme, app_language, decoration_layout, clipboard_text, linux_options, set_linux_options, native_chrome, mac_style, tls::tls_pins, tls::tls_probe, tls::tls_fetch]);
+        .invoke_handler(tauri::generate_handler![settings_window, snap_layouts, system_accent, page_ready, window_acrylic, window_theme, app_language, decoration_layout, clipboard_text, linux_options, set_linux_options, native_chrome, mac_style, settings_height, about_panel, tls::tls_pins, tls::tls_probe, tls::tls_fetch]);
     #[cfg(target_os = "macos")]
     let builder = builder
         .plugin(tauri_plugin_liquid_glass::init())

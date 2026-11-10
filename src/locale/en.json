@@ -4671,9 +4671,33 @@
     "fr": "Réduire",
     "en": "Minimize"
   },
-  "8346338150289447080": {
-    "fr": "Retour (⌘[)",
+  "4400564979333262351": {
+    "fr": "Nouvelle version du client",
+    "en": "New client version"
+  },
+  "3879256044346361748": {
+    "fr": "Version non communiquée par le serveur",
+    "en": "Version not given by the server"
+  },
+  "6254525022265217477": {
+    "fr": "Canal",
+    "en": "Channel"
+  },
+  "4505140112192454657": {
+    "fr": "Précédent",
+    "en": "Back"
+  },
+  "1197765926733628133": {
+    "fr": "Précédent (⌘[)",
     "en": "Back (⌘[)"
+  },
+  "3779003498131248588": {
+    "fr": "Suivant",
+    "en": "Next"
+  },
+  "8268590460695895080": {
+    "fr": "Suivant (⌘])",
+    "en": "Forward (⌘])"
   },
   "3951776232613752274": {
     "fr": "Afficher la barre latérale",
@@ -4774,10 +4798,6 @@
   "4130363522774997977": {
     "fr": "Deux doigts vers la droite sur le pavé tactile reviennent à la page précédente, qui suit les doigts.",
     "en": "Two fingers to the right on the touchpad go back to the previous page, which follows the fingers."
-  },
-  "4400564979333262351": {
-    "fr": "Nouvelle version du client",
-    "en": "New client version"
   },
   "3783042854089147367": {
     "fr": "Dernière version publiée du client",
@@ -5390,10 +5410,6 @@
   "530295141492622432": {
     "fr": "C'est parti",
     "en": "Let's go"
-  },
-  "3779003498131248588": {
-    "fr": "Suivant",
-    "en": "Next"
   },
   "2602235345093169301": {
     "fr": "Copier le mot de passe de ",
