@@ -41,6 +41,10 @@ export class ServerFeaturesService {
   readonly info = computed<ServerInfo | null>(() => this.api()?.info ?? null);
   /** What the server says it can do beyond its API ("user-import", "provisional-passwords"…). */
   readonly features = computed(() => new Set(this.info()?.features ?? []));
+  /** The name an ADMIN gave the server, null without one. */
+  readonly name = computed(() => this.info()?.displayName?.trim() || null);
+  /** The server can be named (PUT server/name, 26.12). */
+  readonly nameable = computed(() => this.features().has('server-name'));
   /** Accounts with a first name, a last name and an address (ThermoBox 26.12, V8). */
   readonly people = computed(() => this.features().has('provisional-passwords'));
   /** Its logo, null before 26.12. */
@@ -98,6 +102,12 @@ export class ServerFeaturesService {
     const r = await firstValueFrom(this.http.delete<TemperatureLimits>(this.server.url('/server/limits')));
     this.limits.set(r);
     return r;
+  }
+
+  /** ADMIN — 60 characters at most; empty removes the name. */
+  async setName(name: string): Promise<void> {
+    const info = await firstValueFrom(this.http.put<ServerInfo>(this.server.url('/server/name'), { name: name.trim() || null }));
+    this.versions.update(this.server.base(), info);
   }
 
   /** ADMIN — PNG, JPEG, GIF or SVG, 5 MB at most. */

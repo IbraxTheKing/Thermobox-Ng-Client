@@ -442,6 +442,84 @@ function node(e, user, p) {
 
 const routes = [];
 const route = (method, pattern, role, f) => routes.push({ method, re: new RegExp(`^${pattern.replace(/\{(\w+)\}/g, '(?<$1>[^/]+)')}$`), role, f });
+// ================================================================ log of the changes (26.12)
+
+/** What the server logs (@Audited), by method and path: [action, target type, id from the path]. */
+const AUDITED = [
+  ['PUT', /^\/api\/v2\/climate\/(\d+)\/setpoint$/, 'setpoint.set', 'element'],
+  ['POST', /^\/api\/v2\/hierarchy\/elements$/, 'element.create', 'element'],
+  ['PUT', /^\/api\/v2\/hierarchy\/elements\/(\d+)$/, 'element.update', 'element'],
+  ['PUT', /^\/api\/v2\/hierarchy\/elements\/(\d+)\/parent$/, 'element.move', 'element'],
+  ['DELETE', /^\/api\/v2\/rooms\/(\d+)$/, 'element.delete', 'element'],
+  ['PUT', /^\/api\/v2\/rooms\/(\d+)\/image$/, 'element.image', 'element'],
+  ['DELETE', /^\/api\/v2\/rooms\/(\d+)\/image$/, 'element.image-delete', 'element'],
+  ['POST', /^\/api\/v2\/users$/, 'user.create', 'user'],
+  ['PUT', /^\/api\/v2\/users\/(\d+)$/, 'user.update', 'user'],
+  ['DELETE', /^\/api\/v2\/users\/(\d+)$/, 'user.delete', 'user'],
+  ['PUT', /^\/api\/v2\/users\/(\d+)\/access$/, 'user.access', 'user'],
+  ['POST', /^\/api\/v2\/users\/(\d+)\/provisional-password$/, 'user.provisional-password', 'user'],
+  ['POST', /^\/api\/v2\/groups$/, 'group.create', 'group'],
+  ['PUT', /^\/api\/v2\/groups\/(\d+)$/, 'group.update', 'group'],
+  ['DELETE', /^\/api\/v2\/groups\/(\d+)$/, 'group.delete', 'group'],
+  ['POST', /^\/api\/v2\/alerts\/channels$/, 'channel.create', 'channel'],
+  ['PUT', /^\/api\/v2\/alerts\/channels\/(\d+)$/, 'channel.update', 'channel'],
+  ['PUT', /^\/api\/v2\/alerts\/channels\/(\d+)\/enabled$/, 'channel.enable', 'channel'],
+  ['DELETE', /^\/api\/v2\/alerts\/channels\/(\d+)$/, 'channel.delete', 'channel'],
+  ['POST', /^\/api\/v2\/alerts\/rules$/, 'rule.create', 'rule'],
+  ['PUT', /^\/api\/v2\/alerts\/rules\/(\d+)$/, 'rule.update', 'rule'],
+  ['PUT', /^\/api\/v2\/alerts\/rules\/(\d+)\/enabled$/, 'rule.enable', 'rule'],
+  ['DELETE', /^\/api\/v2\/alerts\/rules\/(\d+)$/, 'rule.delete', 'rule'],
+  ['PUT', /^\/api\/v2\/server\/logo$/, 'logo.set', ''],
+  ['DELETE', /^\/api\/v2\/server\/logo$/, 'logo.reset', ''],
+  ['PUT', /^\/api\/v2\/server\/limits$/, 'limits.set', ''],
+  ['DELETE', /^\/api\/v2\/server\/limits$/, 'limits.reset', ''],
+  ['PUT', /^\/api\/v2\/server\/name$/, 'name.set', ''],
+  ['DELETE', /^\/api\/v2\/server\/name$/, 'name.reset', ''],
+  ['PUT', /^\/api\/v2\/settings$/, 'style.set', ''],
+  ['POST', /^\/api\/v2\/auth\/password$/, 'account.password', ''],
+  ['PUT', /^\/api\/v2\/audit\/settings$/, 'audit.retention', ''],
+];
+const auditLog = [];
+let auditRetention = 90;
+const SECRET_KEY = /password|secret|token|authorization|url|hash|key/i;
+const withoutSecrets = (v) =>
+  Array.isArray(v) ? v.map(withoutSecrets)
+    : v && typeof v === 'object' ? Object.fromEntries(Object.entries(v).filter(([k, x]) => !SECRET_KEY.test(k) || x != null).map(([k, x]) => [k, SECRET_KEY.test(k) ? '•••' : withoutSecrets(x)]))
+      : v;
+function audited(method, path, ctx, res) {
+  const a = AUDITED.find(([m, re]) => m === method && re.test(path));
+  if (!a) return;
+  const [, re, action, type] = a;
+  const id = +(re.exec(path)?.[1] ?? res?.body?.id ?? NaN);
+  const target = Number.isFinite(id) && type ? id : null;
+  const name = target == null ? null
+    : type === 'element' ? elements.find((e) => e.id === target)?.name ?? res?.body?.name
+      : type === 'user' ? users.find((u) => u.id === target)?.username
+        : type === 'group' ? (typeof groups !== 'undefined' ? groups.find((g) => g.id === target)?.name : null)
+          : res?.body?.name ?? null;
+  const element = type === 'element' && target != null ? elements.find((e) => e.id === target) : null;
+  const changes = (() => { try { const b = json(ctx.body); return b == null ? undefined : withoutSecrets(b); } catch { return undefined; } })();
+  auditLog.push({ id: auditLog.length + 1, at: iso(Date.now()), userId: ctx.user.id, username: ctx.user.username, role: ctx.user.type, action, targetType: type || null, targetId: target,
+    targetName: name ?? null, details: { ...(changes !== undefined ? { changes } : {}), ...(element ? { place: pathOf(element).map((e) => e.name).join(' › ') || undefined } : {}) } });
+}
+route('GET', '/api/v2/audit', 'ADMIN', ({ q }) => {
+  const offset = +(q.get('offset') ?? 0), limit = +(q.get('limit') ?? 50);
+  const user = q.get('user'), action = q.get('action'), text = (q.get('q') ?? '').toLowerCase(), from = q.get('from') ? Date.parse(q.get('from')) : null;
+  const rows = auditLog.filter((e) =>
+    (!user || e.userId === +user) && (!action || (action.includes('.') ? e.action === action : e.action.startsWith(action + '.'))) &&
+    (!from || Date.parse(e.at) >= from) && (!text || [e.username, e.targetName ?? '', JSON.stringify(e.details)].join(' ').toLowerCase().includes(text))).reverse();
+  return ok({ total: rows.length, entries: rows.slice(offset, offset + limit) });
+});
+route('GET', '/api/v2/audit/users', 'ADMIN', () => ok([...new Map(auditLog.filter((e) => e.userId != null).map((e) => [e.userId, e.username])).entries()].map(([id, username]) => ({ id, username })).sort((a, b) => a.username.localeCompare(b.username))));
+route('GET', '/api/v2/audit/settings', 'ADMIN', () => ok({ retentionDays: auditRetention }));
+route('PUT', '/api/v2/audit/settings', 'ADMIN', ({ body }) => {
+  const d = json(body)?.retentionDays ?? null;
+  if (d != null && !(d >= 1 && d <= 3650)) return error(400, 'retentionDays: from 1 to 3650 days, or null to keep them for good');
+  auditRetention = d;
+  return ok({ retentionDays: d });
+});
+
+
 
 const ok = (body, status = 200) => ({ status, body });
 const empty = (status = 204) => ({ status });
@@ -1235,7 +1313,7 @@ let logo = null;
 const logoVersion = () => (logo ? String(logo.version) : 'default');
 const serverInfo = () =>
   API === 'v2'
-    ? { name: 'ThermoBox', version: SERVER_VERSION, apiVersions: ['v1', 'v2'], logo: `/api/v2/server/logo?v=${logoVersion()}`, logoSource: logo ? 'custom' : 'default', features: ['user-import', 'provisional-passwords'] }
+    ? { name: 'ThermoBox', version: SERVER_VERSION, apiVersions: ['v1', 'v2'], logo: `/api/v2/server/logo?v=${logoVersion()}`, logoSource: logo ? 'custom' : 'default', features: ['user-import', 'provisional-passwords', 'server-name'], displayName: serverName }
     : { name: 'ThermoBox', version: SERVER_VERSION, apiVersions: ['v1'] };
 route('GET', '/api/v2/server', 'public', () => ok(serverInfo()));
 route('GET', '/api/v2/server/logo', 'public', () => {
@@ -1251,6 +1329,15 @@ route('PUT', '/api/v2/server/logo', 'ADMIN', ({ body, req }) => {
   return ok(serverInfo());
 });
 route('DELETE', '/api/v2/server/logo', 'ADMIN', () => ((logo = null), ok(serverInfo())));
+/** The name an ADMIN gives the server (26.12), null without one. */
+let serverName = option('name', null);
+route('PUT', '/api/v2/server/name', 'ADMIN', ({ body }) => {
+  const name = String(json(body)?.name ?? '').trim().replace(/\s+/g, ' ');
+  if ([...name].length > 60) return error(400, 'The name must not exceed 60 characters.');
+  serverName = name || null;
+  return ok(serverInfo());
+});
+route('DELETE', '/api/v2/server/name', 'ADMIN', () => ((serverName = null), ok(serverInfo())));
 route('GET', '/api/v2/server/limits', 'auth', () => ok(limits));
 // What this process uses (26.12, ADMIN): the figures of Node, as the server gives those of its JVM
 let cpuBefore = { usage: process.cpuUsage(), at: process.hrtime.bigint() };
@@ -1354,7 +1441,7 @@ function alertRule(b, current) {
 const alertCall = (f) => { try { return f(); } catch (e) { return error(400, e.message); } };
 const alertStatus = () => ({ enabled: true, running: true, lastRun: iso(Date.now() - 12_000), watchedRooms: alertRules.some((r) => r.enabled) ? elements.filter((e) => e.kind === 'ROOM').length : 0, lastError: null, runByAnotherServer: false });
 const alertsRoute = (method, path, f) => API === 'v2' && route(method, `/api/v2/alerts${path}`, 'ADMIN', f);
-alertsRoute('GET', '', () => ok({ status: alertStatus(), channels: alertChannels.map(channelView), rules: alertRules.map(ruleView), active: [], failedDeliveries: alertDeliveries.filter((d) => d.status === 'FAILED').slice(-10).reverse() }));
+alertsRoute('GET', '', () => ok({ status: alertStatus(), channels: alertChannels.map(channelView), rules: alertRules.map(ruleView), active: activeAlerts(), failedDeliveries: alertDeliveries.filter((d) => d.status === 'FAILED').slice(-10).reverse() }));
 alertsRoute('GET', '/status', () => ok(alertStatus()));
 alertsRoute('GET', '/channels', () => ok(alertChannels.map(channelView)));
 alertsRoute('POST', '/channels', ({ body }) => alertCall(() => { const c = alertChannel(json(body) ?? {}, null); alertChannels.push(c); return { status: 201, body: channelView(c) }; }));
@@ -1387,6 +1474,54 @@ alertsRoute('POST', '/channels/{id}/test', ({ p }) => {
   return ok(d);
 });
 alertsRoute('GET', '/rules', () => ok(alertRules.map(ruleView)));
+// The rooms where a rule applies: no nearer enabled rule (room, floor, building, then global)
+alertsRoute('GET', '/rules/{id}/rooms', ({ p }) => {
+  const rule = alertRules.find((r) => r.id === +p.id);
+  if (!rule) return error(404, 'Not found');
+  const active = new Map(activeAlerts().map((a) => [a.roomId + ':' + a.ruleId, a]));
+  return ok(ruleRooms(rule).map((row) => {
+    const a = active.get(row.id + ':' + rule.id);
+    return a ? { ...row, alertId: a.id, alertSince: a.exceededSince } : row;
+  }));
+});
+/** The alerts in progress: the rooms above the threshold of the rule that applies to them. */
+const alertSince = new Map();
+function activeAlerts() {
+  const out = [];
+  for (const rule of alertRules.filter((r) => r.enabled)) {
+    for (const row of ruleRooms(rule)) {
+      const key = row.id + ':' + rule.id;
+      if (!row.exceeding) { alertSince.delete(key); continue; }
+      if (!alertSince.has(key)) alertSince.set(key, Date.now() - Math.floor(Math.random() * 90) * MINUTE);
+      const since = alertSince.get(key);
+      out.push({ id: row.id * 1000 + rule.id, ruleId: rule.id, ruleName: rule.name, roomId: row.id, roomName: row.name, place: row.place, state: 'ACTIVE',
+        exceededSince: iso(since), triggeredAt: iso(since + rule.minDurationSeconds * 1000), resolvedAt: null, setpoint: row.setpoint, threshold: row.threshold,
+        currentSetpoint: row.setpoint, temperature: row.temperature, peak: row.temperature, lastTemperature: row.temperature, devices: [], lastNotifiedAt: null,
+        reminders: 0, reason: null, deliveryFailed: false, deliveries: null });
+    }
+  }
+  return out;
+}
+/** The rooms where [rule] applies (no nearer enabled rule replaces it), and where they stand. */
+function ruleRooms(rule) {
+  const rules = [...alertRules.filter((r) => r.enabled && r.id !== rule.id), { ...rule, enabled: true }];
+  const rows = [];
+  for (const room of elements.filter((e) => e.kind === 'ROOM')) {
+    const chain = [room.id, ...pathOf(room).map((e) => e.id).reverse()];
+    const distances = rules.map((r) => [r, r.global ? chain.length : chain.findIndex((i) => r.scope.includes(i))]).filter(([, d]) => d >= 0);
+    const nearest = Math.min(...distances.map(([, d]) => d));
+    if (!distances.some(([r, d]) => r.id === rule.id && d === nearest)) continue;
+    const setpoint = effectiveSetpoint(room)?.setpoint.value ?? null;
+    const threshold = setpoint == null ? null : setpoint + rule.tolerance;
+    const fresh = measurements(room).map((m) => m.measurement).filter((m) => m && Date.now() - m.date <= 30 * MINUTE);
+    const hottest = fresh.reduce((a, m) => (!a || m.value > a.value ? m : a), null);
+    const temperature = hottest ? Math.round(hottest.value * 10) / 10 : null;
+    const exceeding = threshold != null && temperature != null && temperature > threshold;
+    rows.push({ id: room.id, name: room.name, place: pathOf(room).map((e) => e.name).join(' › '), setpoint, threshold, temperature,
+      measuredAt: hottest ? iso(hottest.date) : null, exceeding, alertId: null, alertSince: null });
+  }
+  return rows;
+}
 alertsRoute('POST', '/rules', ({ body }) => alertCall(() => { const r = alertRule(json(body) ?? {}, null); alertRules.push(r); return { status: 201, body: ruleView(r) }; }));
 alertsRoute('PUT', '/rules/{id}', ({ body, p }) => alertCall(() => {
   const i = alertRules.findIndex((r) => r.id === +p.id);
@@ -1519,7 +1654,9 @@ createServer(async (req, res) => {
       Object.assign(ctx, { user, token, scopeOf: scope(user) });
     }
     try {
-      return reply(await r.f(ctx));
+      const res = await r.f(ctx);
+      if (ctx.user && req.method !== 'GET' && (res?.status ?? 200) < 300) audited(req.method, path, ctx, res);
+      return reply(res);
     } catch (e) {
       console.error(e);
       return reply(error(500, e.message));

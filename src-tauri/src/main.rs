@@ -28,6 +28,7 @@ mod linux;
 mod mac;
 #[cfg(target_os = "macos")]
 mod menu;
+mod tls;
 #[cfg(windows)]
 mod win;
 
@@ -287,6 +288,7 @@ fn main() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_notification::init())
         .manage(PageReady::default())
+        .manage(tls::Tls::default())
         .manage(Backdrop::default())
         .setup(|app| {
             // macOS: Liquid Glass (26 and up) or the vibrancy of a side bar behind the window
@@ -322,7 +324,7 @@ fn main() {
             let _ = app;
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![settings_window, snap_layouts, system_accent, page_ready, window_acrylic, window_theme, app_language, decoration_layout, clipboard_text, linux_options, set_linux_options, native_chrome, mac_style]);
+        .invoke_handler(tauri::generate_handler![settings_window, snap_layouts, system_accent, page_ready, window_acrylic, window_theme, app_language, decoration_layout, clipboard_text, linux_options, set_linux_options, native_chrome, mac_style, tls::tls_pins, tls::tls_probe, tls::tls_fetch]);
     #[cfg(target_os = "macos")]
     let builder = builder
         .plugin(tauri_plugin_liquid_glass::init())

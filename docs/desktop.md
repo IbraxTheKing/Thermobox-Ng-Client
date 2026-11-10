@@ -34,6 +34,7 @@ client inside, which starts at once.
 | | |
 |---|---|
 | Server calls | Through Rust (`tauri-plugin-http`, `src/platforms/desktop/prepare.ts`): no CORS, and an `http://` server of the local network works from the `tauri://` page of macOS and Linux. The images of the server (its logo) too. |
+| HTTPS self-signed (ThermoBox 26.12) | A server whose certificate the system does not know: the app shows its SHA-256 fingerprint, to compare with the one the server prints at startup, and asks to trust it; then that certificate (and only it) is accepted for that host, its calls through `src-tauri/src/tls.rs`. A changed certificate is asked again, with a warning. A certificate of a CA installed on the machine (mkcert, an enterprise CA) is accepted without a question. In a browser, the browser decides: open the server's address in a tab and accept it there. |
 | Links | Other sites open in the browser of the system (`tauri-plugin-opener`). |
 | Service worker | Off: the files are in the app. |
 | Window | At least 900 × 600: the layout of phones never shows. |

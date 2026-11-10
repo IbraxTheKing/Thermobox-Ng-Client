@@ -498,7 +498,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 /* Confirmation */
 .tb-confirm { display: flex; gap: 14px; align-items: flex-start; }
 .tb-confirm > .pi { flex: none; margin-top: 2px; color: var(--md-error); font-size: 1.6rem; }
-.tb-confirm p { margin: 0; color: var(--md-on-surface-variant); line-height: 1.5; }
+.tb-confirm p { margin: 0; color: var(--md-on-surface-variant); line-height: 1.5; white-space: pre-line; overflow-wrap: anywhere; }
 
 /* ============================== Toasts (p:growl) ============================== */
 

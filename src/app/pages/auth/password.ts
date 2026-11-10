@@ -38,7 +38,7 @@ export class PasswordPage {
   protected readonly inProgress = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly policy = signal<PasswordPolicy>(DEFAULT_POLICY);
-  protected readonly address = computed(() => readableAddress(this.auth.account()?.server));
+  protected readonly address = computed(() => this.auth.serverName() ?? readableAddress(this.auth.account()?.server));
   protected readonly expires = computed(() => {
     const at = this.auth.user()?.provisionalExpiresAt;
     return at ? new Date(at) : null;

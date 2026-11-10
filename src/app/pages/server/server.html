@@ -1,13 +1,14 @@
 <header class="tb-page-head">
   <div class="tb-page-title">
     <span i18n class="tb-eyebrow">Administration</span>
-    <h1 i18n class="tb-server-title"><tb-server-logo [base]="features.base()" />Serveur</h1>
+    <h1 class="tb-server-title"><tb-server-logo [base]="features.base()" />{{ features.name() ?? ('Serveur' | tr) }}</h1>
   </div>
 </header>
 
+<!-- Réglages first (the page opens there), Ressources at the end -->
 <div class="tb-segmented tb-server-tabs" role="tablist" i18n-aria-label aria-label="Serveur">
-  <button i18n type="button" role="tab" [class.tb-seg-on]="current() === 'resources'" [attr.aria-selected]="current() === 'resources'" (click)="open('resources')">
-    <i class="pi pi-chart-line"></i>Ressources
+  <button i18n type="button" role="tab" [class.tb-seg-on]="current() === 'settings'" [attr.aria-selected]="current() === 'settings'" (click)="open('settings')">
+    <i class="pi pi-sliders-h"></i>Réglages
   </button>
   <button i18n type="button" role="tab" [class.tb-seg-on]="current() === 'updates'" [attr.aria-selected]="current() === 'updates'" (click)="open('updates')">
     <i class="pi pi-cloud-download"></i>Mises à jour
@@ -15,14 +16,22 @@
       <span class="tb-dest-badge tb-tab-badge" i18n-aria-label aria-label="Nouvelle version"></span>
     }
   </button>
-  <button i18n type="button" role="tab" [class.tb-seg-on]="current() === 'settings'" [attr.aria-selected]="current() === 'settings'" (click)="open('settings')">
-    <i class="pi pi-sliders-h"></i>Réglages
+  @if (features.v2()) {
+    <button i18n type="button" role="tab" [class.tb-seg-on]="current() === 'log'" [attr.aria-selected]="current() === 'log'" (click)="open('log')">
+      <i class="pi pi-history"></i>Journal
+    </button>
+  }
+  <button i18n type="button" role="tab" [class.tb-seg-on]="current() === 'resources'" [attr.aria-selected]="current() === 'resources'" (click)="open('resources')">
+    <i class="pi pi-chart-line"></i>Ressources
   </button>
 </div>
 
 @switch (current()) {
   @case ('updates') {
     <tb-updates-page embedded />
+  }
+  @case ('log') {
+    <tb-audit-log />
   }
   @case ('settings') {
     <tb-style-setting />

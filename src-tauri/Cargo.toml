@@ -18,6 +18,14 @@ tauri = { version = "2.12", features = ["macos-private-api"] }
 # API calls to the ThermoBox servers: through Rust, not the webview (no mixed content with a
 # server in plain http on the local network, from the tauri:// page of macOS and Linux)
 tauri-plugin-http = "2.8"
+# The servers with a certificate the system does not know (self-signed): trusted by the user
+# after comparing its fingerprint, then pinned (tls.rs). Same reqwest and rustls as the plugin.
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
+rustls-native-certs = "0.8"
+webpki-roots = "1"
+sha2 = "0.10"
+base64 = "0.22"
 # Links of the page (GitHub, release notes) in the browser of the system
 tauri-plugin-opener = "2.7"
 serde = { version = "1", features = ["derive"] }

@@ -606,6 +606,25 @@ export interface AlertEvent {
   deliveries: AlertDelivery[] | null;
 }
 
+/** GET /api/v2/alerts/rules/{id}/rooms: a room where the rule applies, and where it stands now. */
+export interface AlertRuleRoom {
+  id: number;
+  name: string | null;
+  /** « Bâtiment A › Étage 1 » */
+  place: string;
+  /** null: no setpoint, the room is not watched. */
+  setpoint: number | null;
+  /** Setpoint + tolerance of the rule. */
+  threshold: number | null;
+  /** The hottest of its boxes measured in the last 30 min; null when none did. */
+  temperature: number | null;
+  measuredAt: DateJson;
+  exceeding: boolean;
+  /** Its alert in progress under this rule. */
+  alertId: number | null;
+  alertSince: DateJson;
+}
+
 /** GET /api/v2/alerts: everything the page of alerts shows at once. */
 export interface AlertOverview {
   status: AlertMonitorStatus;
@@ -614,4 +633,37 @@ export interface AlertOverview {
   active: AlertEvent[];
   /** The last messages that could not be delivered. */
   failedDeliveries: AlertDelivery[];
+}
+
+// ---------------------------------------------------------------- log of the changes (26.12)
+
+/** GET /api/v2/audit: one change made through the API (ADMIN). */
+export interface AuditEntry {
+  id: number;
+  at: DateJson;
+  userId: number | null;
+  username: string;
+  role: UserRole | null;
+  /** « setpoint.set », « rule.create »…: the domain, a dot, the verb. */
+  action: string;
+  targetType: string | null;
+  targetId: number | null;
+  /** Its name at the time (kept after it is deleted). */
+  targetName: string | null;
+  /** changes: the JSON sent (secrets as •••); before: what it replaced; place: where. */
+  details: { changes?: Record<string, unknown> | unknown[]; before?: Record<string, unknown>; place?: string } | null;
+}
+
+export interface AuditPage {
+  total: number;
+  entries: AuditEntry[];
+}
+
+export interface AuditFilter {
+  user: number | null;
+  /** A domain (« rule ») or an action. */
+  action: string | null;
+  q: string;
+  /** Days back; null: everything. */
+  days: number | null;
 }

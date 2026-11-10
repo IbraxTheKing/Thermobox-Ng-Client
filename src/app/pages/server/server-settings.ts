@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, linkedSignal, signal } from '@angular/core';
 
 import { errorMessage } from '../../core/api.config';
 import { ToastService } from '../../core/messages';
@@ -8,7 +8,7 @@ import { ABSOLUTE_LIMITS, ServerFeaturesService } from '../../services/server-fe
 import { TrPipe } from '../../ui/tr.pipe';
 
 /**
- * The settings of the server itself (ADMIN, 26.12): its logo, and the temperatures it accepts
+ * The settings of the server itself (ADMIN, 26.12): its name, its logo, and the temperatures it accepts
  * (setpoints, measurements). A tab of the Serveur page.
  */
 @Component({
@@ -18,6 +18,23 @@ import { TrPipe } from '../../ui/tr.pipe';
   template: `
     <section class="tb-panel tb-pref-server">
     <div class="tb-prefs">
+      @if (features.nameable()) {
+        <form class="tb-pref tb-pref-name" (submit)="saveName($event)">
+          <span class="tb-section-icon"><i class="pi pi-tag"></i></span>
+          <div class="tb-pref-text">
+            <label i18n for="tb-server-name"><strong>Nom du serveur</strong></label>
+            <span i18n class="tb-muted">
+              Affiché à la place de son adresse dans la liste des comptes de chacun, sur la page de connexion, dans le titre de la fenêtre et des notifications. Vide : son adresse.
+            </span>
+            <div class="tb-name-row">
+              <input id="tb-server-name" class="tb-input" maxlength="60" autocomplete="off" i18n-placeholder placeholder="Ex. : Siège social, Maison…"
+                     [value]="name()" (input)="name.set($any($event.target).value)" />
+              <button i18n type="submit" class="tb-btn" [disabled]="nameSaving() || !nameChanged()">Enregistrer</button>
+            </div>
+            @if (nameError(); as e) { <span class="tb-field-error">{{ e }}</span> }
+          </div>
+        </form>
+      }
       <div class="tb-pref tb-pref-logo">
         <span class="tb-server-logo-preview">
           @if (features.logo(); as l) { <img [src]="l" i18n-alt alt="Logo du serveur" /> } @else { <i class="pi pi-server"></i> }
@@ -71,6 +88,27 @@ export class ServerSettings {
   private readonly toasts = inject(ToastService);
 
   protected readonly logoSaving = signal(false);
+
+  /** The name being typed; follows the server's until edited. */
+  protected readonly name = linkedSignal(() => this.features.name() ?? '');
+  protected readonly nameSaving = signal(false);
+  protected readonly nameError = signal<string | null>(null);
+  protected readonly nameChanged = computed(() => this.name().trim().replace(/\s+/g, ' ') !== (this.features.name() ?? ''));
+
+  protected async saveName(e: Event): Promise<void> {
+    e.preventDefault();
+    if (!this.nameChanged()) return;
+    this.nameSaving.set(true);
+    this.nameError.set(null);
+    try {
+      await this.features.setName(this.name());
+      this.toasts.info(this.features.name() ? $localize`Serveur renommé « ${this.features.name()} »` : $localize`Nom du serveur retiré`);
+    } catch (err) {
+      this.nameError.set(errorMessage(err));
+    } finally {
+      this.nameSaving.set(false);
+    }
+  }
   protected readonly logoSource = computed(
     () => ({ custom: $localize`Choisi par un administrateur.`, site: $localize`Celui du site du serveur.`, default: $localize`Celui de ThermoBox.` })[this.features.info()?.logoSource ?? 'default'] ?? '',
   );

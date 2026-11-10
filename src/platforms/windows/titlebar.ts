@@ -31,7 +31,7 @@ import { WindowsSettings } from './settings';
         <button type="button" class="tb-titlebar-btn tb-titlebar-pane" tabindex="-1" i18n-aria-label aria-label="Navigation" i18n-title title="Afficher ou réduire la navigation" (click)="desktop.togglePane()">&#xE700;</button>
       }
       <span class="tb-titlebar-icon" aria-hidden="true"></span>
-      <span i18n class="tb-titlebar-title">Thermobox@if (pageTitle.title(); as t) {<span class="tb-titlebar-page"> · {{ t }}</span>}</span>
+      <span class="tb-titlebar-title">{{ pageTitle.app() }}@if (pageTitle.title(); as t) {<span class="tb-titlebar-page"> · {{ t }}</span>}</span>
       <div class="tb-titlebar-buttons">
         <button type="button" class="tb-caption" tabindex="-1" i18n-aria-label aria-label="Réduire" i18n-title title="Réduire" (click)="desktop.minimize()">&#xE921;</button>
         <button type="button" class="tb-caption" tabindex="-1" [attr.aria-label]="desktop.maximized() ? ('Niveau inférieur' | tr) : ('Agrandir' | tr)"

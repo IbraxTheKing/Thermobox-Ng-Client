@@ -68,7 +68,7 @@ import { MacDesktopService } from './desktop.service';
         </div>
       }
       <span class="tb-mac-title" [class.tb-mac-title-on]="titleShown()">{{
-        pageTitle.title() || 'Thermobox'
+        pageTitle.title() || pageTitle.app()
       }}</span>
     </header>
     @if (inApp()) {

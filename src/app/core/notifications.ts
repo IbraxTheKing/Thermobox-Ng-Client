@@ -11,6 +11,7 @@ import { PreferencesService } from './preferences';
 import { DesktopService } from './desktop';
 import { UnitService } from './unit';
 import { ToastService } from './messages';
+import { TitleService } from './title';
 
 /** A room that started or stopped respecting its setpoint (GET /api/v2/notifications/setpoints). */
 export interface SetpointEvent {
@@ -66,6 +67,7 @@ export class NotificationService {
   private readonly toasts = inject(ToastService);
   private readonly doc = inject(DOCUMENT);
   private readonly desktop = inject(DesktopService);
+  private readonly titles = inject(TitleService);
 
   /** The apps only: a browser tab is not kept open to notify. */
   readonly available = Capacitor.isNativePlatform() || this.desktop.active;
@@ -200,6 +202,9 @@ export class NotificationService {
   }
 
   private async send(texts: NotificationText[]): Promise<void> {
+    // A server an ADMIN named: its name first, so one knows which server speaks (home, work…)
+    const name = this.titles.serverName();
+    if (name) texts = texts.map((t) => ({ ...t, title: `${name} · ${t.title}` }));
     if (Capacitor.isNativePlatform()) {
       const { LocalNotifications } = await import('@capacitor/local-notifications');
       await LocalNotifications.schedule({

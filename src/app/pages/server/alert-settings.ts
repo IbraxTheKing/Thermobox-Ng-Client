@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnDestroy, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
 
 import { errorMessage } from '../../core/api.config';
 import { clockTime, ddmmAtHHmm, parseDate } from '../../core/dates';
@@ -7,8 +7,10 @@ import { UnitService } from '../../core/unit';
 import { AlertChannel, AlertEvent, AlertRule } from '../../models/models';
 import { AlertStore } from '../../services/alert.store';
 import { TbSwitch } from '../../ui/controls';
+import { TbPager } from '../../ui/pager';
 import { TrPipe } from '../../ui/tr.pipe';
 import { TbAlertChannelSheet } from './alert-channel-sheet';
+import { TbAlertRuleRooms } from './alert-rule-rooms';
 import { TbAlertRuleSheet } from './alert-rule-sheet';
 import { duration, explain } from './alert-text';
 
@@ -20,7 +22,7 @@ import { duration, explain } from './alert-text';
  */
 @Component({
   selector: 'tb-alert-settings',
-  imports: [TrPipe, TbSwitch, TbAlertChannelSheet, TbAlertRuleSheet],
+  imports: [TrPipe, TbSwitch, TbPager, TbAlertChannelSheet, TbAlertRuleSheet, TbAlertRuleRooms],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (alerts.available() !== false) {
@@ -59,16 +61,52 @@ import { duration, explain } from './alert-text';
             }
           </div>
 
-          @for (a of alerts.active(); track a.id) {
-            <div class="tb-pref tb-alert-event">
-              <span class="tb-section-icon tb-alert-hot"><i class="pi pi-exclamation-circle"></i></span>
-              <div class="tb-pref-text">
-                <strong>{{ a.roomName ?? ('Salle supprimée' | tr) }} · {{ unit.withSymbol(a.lastTemperature ?? a.temperature) }}</strong>
-                <span class="tb-muted">{{ eventText(a) }}</span>
-                @if (a.deliveryFailed) {
-                  <span i18n class="tb-field-error"><i class="pi pi-exclamation-triangle"></i> Un message n'a pas pu partir.</span>
+          @if (alerts.active().length; as count) {
+            <div class="tb-pref tb-alert-active">
+              <button type="button" class="tb-text-btn tb-alert-rooms-toggle" [attr.aria-expanded]="!activeFolded()" aria-controls="tb-alert-active-list" (click)="foldActive(!activeFolded())">
+                <i class="pi" [class.pi-chevron-down]="activeFolded()" [class.pi-chevron-up]="!activeFolded()"></i>
+                @if (activeFolded()) {
+                  {{ count > 1 ? ('Voir les ' | tr) + count + (' alertes en cours' | tr) : ('Voir l\\'alerte en cours' | tr) }}
+                } @else {
+                  <ng-container i18n>Masquer les alertes en cours</ng-container>
                 }
-              </div>
+              </button>
+              @if (!activeFolded()) {
+                <div class="tb-alert-rooms" id="tb-alert-active-list">
+                  @if (count > 1) {
+                    <div class="tb-alert-rooms-head">
+                      <span class="tb-muted">{{ count }} {{ 'alertes en cours' | tr }}@if (pages() > 1) { · {{ 'page' | tr }} {{ activePage() + 1 }}/{{ pages() }} }</span>
+                      <label class="tb-alert-sort-label">
+                        <span i18n class="tb-muted">Trier</span>
+                        <select class="tb-select tb-alert-sort" (change)="setActiveSort($any($event.target).value)">
+                          @for (o of activeSorts; track o.id) {
+                            <option [value]="o.id" [selected]="activeSort() === o.id">{{ o.label }}</option>
+                          }
+                        </select>
+                      </label>
+                    </div>
+                  }
+                  <ul class="tb-alert-room-list">
+                    @for (a of activeShown(); track a.id) {
+                      <li class="tb-alert-room tb-alert-event">
+                        <span class="tb-alert-room-text">
+                          <strong>{{ a.roomName ?? ('Salle supprimée' | tr) }}</strong>
+                          <span class="tb-muted">{{ a.place }}</span>
+                          <span class="tb-muted tb-alert-event-meta">{{ eventText(a) }}</span>
+                          @if (a.deliveryFailed) {
+                            <span i18n class="tb-field-error"><i class="pi pi-exclamation-triangle"></i> Un message n'a pas pu partir.</span>
+                          }
+                        </span>
+                        <span class="tb-alert-room-values">
+                          <strong class="tb-alert-hot">{{ unit.withSymbol(a.lastTemperature ?? a.temperature) }}</strong>
+                          <span class="tb-muted">{{ 'seuil ' | tr }}{{ unit.withSymbol(threshold(a)) }}</span>
+                        </span>
+                      </li>
+                    }
+                  </ul>
+                  <tb-pager [total]="count" [size]="pageSize" [(page)]="activePage" />
+                </div>
+              }
             </div>
           }
 
@@ -140,6 +178,9 @@ import { duration, explain } from './alert-text';
                 <strong>{{ r.name }}</strong>
                 <span class="tb-muted">{{ ruleText(r) }}</span>
                 <span class="tb-muted">{{ ruleTargets(r) }}</span>
+                <button type="button" class="tb-link-btn tb-alert-rooms-toggle" [attr.aria-expanded]="open().has(r.id)" (click)="toggle(r.id)">
+                  <i class="pi" [class.pi-chevron-down]="!open().has(r.id)" [class.pi-chevron-up]="open().has(r.id)"></i>{{ open().has(r.id) ? ('Masquer les salles' | tr) : ('Voir les salles' | tr) }}
+                </button>
               </div>
               <div class="tb-pref-actions">
                 <button type="button" class="tb-btn tb-icon tb-flat" i18n-title title="Modifier" [attr.aria-label]="('Modifier ' | tr) + r.name" (click)="ruleSheet().edit(r)">
@@ -147,6 +188,9 @@ import { duration, explain } from './alert-text';
                 </button>
                 <tb-switch [checked]="r.enabled" [disabled]="switching() === 'r' + r.id" [label]="r.name" (checkedChange)="enableRule(r, $event)" />
               </div>
+              @if (open().has(r.id)) {
+                <tb-alert-rule-rooms [rule]="r" />
+              }
             </div>
           } @empty {
             <div class="tb-pref tb-alert-empty">
@@ -174,8 +218,63 @@ export class TbAlertSettings implements OnDestroy {
   protected readonly ruleSheet = viewChild.required(TbAlertRuleSheet);
   /** The channel being tested. */
   protected readonly testing = signal<number | null>(null);
+  /** The rules whose rooms are shown. */
+  protected readonly open = signal<ReadonlySet<number>>(new Set());
   /** The channel (c12) or rule (r3) being turned on or off. */
   protected readonly switching = signal<string | null>(null);
+
+  // ---------------------------------------------------------------- alerts in progress
+  // Folded, in pages of [pageSize]: a big site can have hundreds at once
+
+  protected readonly pageSize = 10;
+  /** Folded or not, as chosen; null: folded once there are more than one page of them. */
+  private readonly activeFoldChoice = signal<boolean | null>(null);
+  protected readonly activeFolded = computed(() => this.activeFoldChoice() ?? this.alerts.active().length > this.pageSize);
+  protected readonly activePage = signal(0);
+  protected readonly activeSort = signal<'recent' | 'gap' | 'name'>('gap');
+  protected readonly activeSorts = [
+    { id: 'gap', label: $localize`Le plus au-dessus du seuil` },
+    { id: 'recent', label: $localize`Les plus récentes` },
+    { id: 'name', label: $localize`Nom de la salle` },
+  ] as const;
+  private readonly activeSorted = computed(() => {
+    const list = [...this.alerts.active()];
+    const gap = (a: AlertEvent) => (a.lastTemperature ?? a.temperature) - this.threshold(a);
+    const since = (a: AlertEvent) => parseDate(a.exceededSince ?? a.triggeredAt)?.getTime() ?? 0;
+    const name = (a: AlertEvent) => a.roomName ?? '';
+    switch (this.activeSort()) {
+      case 'gap':
+        return list.sort((a, b) => gap(b) - gap(a) || name(a).localeCompare(name(b)));
+      case 'recent':
+        return list.sort((a, b) => since(b) - since(a) || name(a).localeCompare(name(b)));
+      default:
+        return list.sort((a, b) => name(a).localeCompare(name(b), undefined, { numeric: true }) || a.place.localeCompare(b.place));
+    }
+  });
+  protected readonly pages = computed(() => Math.max(1, Math.ceil(this.alerts.active().length / this.pageSize)));
+  protected readonly activeShown = computed(() => {
+    const p = Math.min(this.activePage(), this.pages() - 1);
+    return this.activeSorted().slice(p * this.pageSize, (p + 1) * this.pageSize);
+  });
+  // Fewer alerts than before (some resolved): stay on a page that exists
+  private readonly keepPage = effect(() => {
+    const last = this.pages() - 1;
+    if (untracked(this.activePage) > last) this.activePage.set(last);
+  });
+
+  protected foldActive(folded: boolean): void {
+    this.activeFoldChoice.set(folded);
+  }
+
+  protected setActiveSort(sort: 'recent' | 'gap' | 'name'): void {
+    this.activeSort.set(sort);
+    this.activePage.set(0);
+  }
+
+  /** The threshold of the alert now (its setpoint may have changed since it began). */
+  protected threshold(a: AlertEvent): number {
+    return a.threshold - a.setpoint + (a.currentSetpoint ?? a.setpoint);
+  }
 
   constructor() {
     this.alerts.watch();
@@ -203,9 +302,11 @@ export class TbAlertSettings implements OnDestroy {
   }
 
   protected eventText(a: AlertEvent): string {
-    const parts = [a.place, $localize`consigne ${this.unit.withSymbol(a.currentSetpoint ?? a.setpoint)}`, $localize`maximum ${this.unit.withSymbol(a.peak)}`];
-    const since = a.exceededSince ?? a.triggeredAt;
-    if (since) parts.push($localize`depuis ${this.when(since)}`);
+    const parts = [$localize`consigne ${this.unit.withSymbol(a.currentSetpoint ?? a.setpoint)}`, $localize`maximum ${this.unit.withSymbol(a.peak)}`];
+    const since = parseDate(a.exceededSince ?? a.triggeredAt);
+    if (since) {
+      parts.push(since.toDateString() === new Date().toDateString() ? $localize`depuis ${clockTime(since)}:time:` : $localize`depuis le ${ddmmAtHHmm(since)}:date:`);
+    }
     parts.push(a.ruleName);
     return parts.filter(Boolean).join(' · ');
   }
@@ -234,8 +335,22 @@ export class TbAlertSettings implements OnDestroy {
     return parts.filter(Boolean).join(' · ');
   }
 
+  protected toggle(id: number): void {
+    this.open.update((s) => {
+      const next = new Set(s);
+      if (!next.delete(id)) next.add(id);
+      return next;
+    });
+  }
+
+  /** Where and whom, short: past two elements, « et 5 autres » (the rooms are behind « Voir les salles »). */
   protected ruleTargets(r: AlertRule): string {
-    const where = r.global ? $localize`Toute l'installation` : r.scope.map((e) => e.name ?? $localize`élément supprimé`).join(', ');
+    const names = r.scope.map((e) => e.name ?? $localize`élément supprimé`);
+    const where = r.global
+      ? $localize`Toute l'installation`
+      : names.length > 2
+        ? $localize`${names.slice(0, 2).join(', ')}:names: et ${names.length - 2}:count: autre(s)`
+        : names.join(', ');
     const whom = r.channels.length ? r.channels.map((c) => c.name ?? $localize`canal supprimé`).join(', ') : $localize`aucun canal`;
     return `${where} → ${whom}`;
   }

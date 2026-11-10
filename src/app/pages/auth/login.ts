@@ -5,6 +5,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Router, RouterLink } from '@angular/router';
 
 import { ServerService, readableAddress, errorMessage, toBase } from '../../core/api.config';
+import { ApiVersionService } from '../../core/api-version';
 import { AuthService, Account, openable, byServer } from '../../core/auth';
 import { TbServerLogo } from '../../ui/server-logo';
 import { PlatformService } from '../../core/platform';
@@ -28,6 +29,7 @@ import { TrPipe } from '../../ui/tr.pipe';
 })
 export class LoginPage {
   protected readonly auth = inject(AuthService);
+  protected readonly versions = inject(ApiVersionService);
   private readonly router = inject(Router);
   protected readonly server = inject(ServerService);
   protected readonly prefs = inject(PreferencesService);
@@ -71,7 +73,32 @@ export class LoginPage {
   );
 
   /** The saved accounts in one section per server, its logo next to its address. */
-  protected readonly servers = computed(() => byServer(this.accounts()));
+  protected readonly servers = computed(() => byServer(this.accounts(), (b) => this.versions.name(b)));
+
+  /** The server of this site (the address field hidden): its name, when an ADMIN gave it one. */
+  protected readonly thisServerName = computed(() => this.versions.name(this.server.base()));
+
+  /**
+   * The server at the address typed, once it answered: its logo and its name (or its address
+   * when it has none), so one sees the right server is reached before logging in. Asked a moment
+   * after the typing stops.
+   */
+  protected readonly typedServer = signal<{ base: string; label: string } | null>(null);
+  private lookup?: ReturnType<typeof setTimeout>;
+  private readonly lookUpTyped = effect(() => {
+    const typed = this.address().trim();
+    untracked(() => {
+      clearTimeout(this.lookup);
+      this.typedServer.set(null);
+      const base = typed ? toBase(typed) : null;
+      if (!base || !/[.:]|localhost/i.test(typed)) return;
+      this.lookup = setTimeout(async () => {
+        const api = await this.versions.api(base);
+        if (this.address().trim() !== typed || !api.info) return;
+        this.typedServer.set({ base, label: api.info.displayName?.trim() || readableAddress(base) });
+      }, 700);
+    });
+  });
 
   /** The address field: needed in the mobile app on first launch, offered elsewhere. */
   protected readonly serverField = computed(() => !this.chosen() && (this.server.unknown() || this.changeServer() || this.adding()));

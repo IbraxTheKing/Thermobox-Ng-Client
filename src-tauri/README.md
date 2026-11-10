@@ -35,6 +35,7 @@ http://localhost:4200: start the serve first.
 | `src/main.rs` | the app: plugins, the commands the page calls, the start of each system |
 | `src/win.rs` | Windows: Acrylic, the theme of the window, Snap Layouts |
 | `src/mac.rs` | macOS: the material behind the window: Liquid Glass on macOS 26 and up (`tauri-plugin-liquid-glass`), the vibrancy of a side bar from macOS 11 to 15 |
+| `src/tls.rs` | the servers whose certificate the system does not know (self-signed): their calls through reqwest with a verifier that accepts the certificate the user trusted (its SHA-256 fingerprint), and the CAs installed on the machine |
 | `src/menu.rs` | macOS: the menu bar (Réglages…, À propos…, the edit menu) in the language of the page |
 | `src/linux.rs` | Linux: the options of Préférences › Fenêtre (`linux.json`), the rendering of WebKitGTK, the rounded corners, the GTK 3 header bar, the accent and the style of GNOME, the button layout and the touchpad |
 
@@ -52,6 +53,9 @@ Called by the page with `invoke` (`src/platforms/desktop`, `windows`, `macos`, `
 | `snap_layouts` | Windows | the Snap Layouts flyout over the maximize button of the page |
 | `settings_window` | macOS | opens the settings window |
 | `mac_style` | macOS | the material the window has (`glass`, `vibrancy`, or none) and the version of macOS: the look of the page (`html[data-mac]`, `html[data-backdrop]`) |
+| `tls_probe` | all | is the certificate of a server accepted, and its SHA-256 fingerprint when it is not |
+| `tls_pins` | all | the hosts and fingerprints the user trusts |
+| `tls_fetch` | all | a call to such a server (raw body in, raw answer out) |
 | `clipboard_text` | Windows | the text of the clipboard, for « Coller » in the menus drawn by the page |
 | `decoration_layout` | Linux | where the desktop puts the window buttons (`gtk-decoration-layout`) |
 | `linux_options`, `set_linux_options` | Linux | Préférences › Fenêtre: read; store and restart |
