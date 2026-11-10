@@ -1,5 +1,5 @@
 import { DesktopOs } from '../target';
-import { certificateError, secure, startTls, throughTls, tlsFetch } from './tls';
+import { certificateError, failure, secure, startTls, throughTls, tlsFetch } from './tls';
 
 /**
  * Before Angular starts, in every desktop app (the systems add their own: platforms/<system>/):
@@ -53,7 +53,7 @@ export async function prepareTauri(os: DesktopOs, direct = false): Promise<void>
       if (e instanceof DOMException && e.name === 'AbortError') throw e;
       const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
       if (certificateError(e, url) && (await secure(url))) return tlsFetch(input, init);
-      throw new TypeError(e instanceof Error ? e.message : String(e));
+      throw failure(e, url);
     });
   }
 
@@ -62,7 +62,7 @@ export async function prepareTauri(os: DesktopOs, direct = false): Promise<void>
     return tlsFetch(input, init).catch(async (e: unknown) => {
       if (e instanceof DOMException && e.name === 'AbortError') throw e;
       if (certificateError(e, url) && (await secure(url))) return tlsFetch(input, init);
-      throw e;
+      throw failure(e, url);
     });
   }
 }
