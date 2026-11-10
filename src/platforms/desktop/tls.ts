@@ -43,8 +43,13 @@ function readOrigins(): Set<string> {
 
 let pins = readPins();
 const origins = readOrigins();
-/** Who asks the user (the app, once started); before it, nobody: refused. */
+/** Who asks the user (the app, once started). */
 let asker: ((q: CertificateQuestion) => Promise<boolean>) | null = null;
+/** The calls made before the app started (a server reached at launch) wait for it. */
+let askerReady: (() => void) | null = null;
+const started = new Promise<void>((resolve) => (askerReady = resolve));
+/** Why the last call to an origin failed, as Rust saw it (shown with « ne répond pas »). */
+const why = new Map<string, string>();
 /** One question per server at a time, whatever the number of calls waiting for it. */
 const asking = new Map<string, Promise<boolean>>();
 
@@ -70,6 +75,23 @@ export async function startTls(): Promise<void> {
 /** The app asks the user (TlsTrustService). */
 export function askCertificatesWith(ask: (q: CertificateQuestion) => Promise<boolean>): void {
   asker = ask;
+  askerReady?.();
+}
+
+/**
+ * The cause of the failure of a call to [url] when tls.rs knows it (« invalid peer certificate:
+ * UnknownIssuer », « connection refused »…), else the message of [e]: tauri-plugin-http only says
+ * « error sending request for url (…) ».
+ */
+export function failure(e: unknown, url: string): TypeError {
+  let origin = '';
+  try {
+    origin = new URL(url).origin;
+  } catch {
+    /* not a URL */
+  }
+  const own = e instanceof Error ? e.message : String(e);
+  return new TypeError(why.get(origin) ?? own);
 }
 
 /** The servers trusted: host → fingerprint (Préférences, to forget them). */
@@ -124,13 +146,21 @@ async function settle(u: URL): Promise<boolean> {
     () => null,
   );
   if (!probe) return false;
+  if (probe.error) why.set(u.origin, probe.error);
+  else why.delete(u.origin);
   // Accepted by tls.rs (a CA installed on the machine, as mkcert's, which tauri-plugin-http does
   // not know, or a certificate trusted before): its calls go through it from now on
   if (!probe.trusted) {
-    if (!probe.fingerprint || !asker) return false;
+    if (!probe.fingerprint) return false;
+    // A call made at launch, before the app could ask: it waits for it (15 s at most)
+    if (!asker) await Promise.race([started, new Promise((r) => setTimeout(r, 15000))]);
+    if (!asker) return false;
     const host = probe.host;
     const ok = await asker({ host: u.host, fingerprint: probe.fingerprint, previous: pins[host] && pins[host] !== probe.fingerprint ? pins[host] : null });
-    if (!ok) return false;
+    if (!ok) {
+      why.set(u.origin, $localize`certificat refusé`);
+      return false;
+    }
     pins = { ...pins, [host]: probe.fingerprint };
     await invoke('tls_pins', { pins });
   }
@@ -150,8 +180,13 @@ export async function tlsFetch(input: RequestInfo | URL, init?: RequestInit): Pr
   const call = invoke<ArrayBuffer>('tls_fetch', body, { headers: { 'x-tb-fetch': base64(meta) } });
   const raw = await new Promise<ArrayBuffer>((resolve, reject) => {
     request.signal.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')), { once: true });
-    call.then(resolve, (e: unknown) => reject(new TypeError(e instanceof Error ? e.message : String(e))));
+    call.then(resolve, (e: unknown) => {
+      const message = e instanceof Error ? e.message : String(e);
+      why.set(new URL(request.url).origin, message);
+      reject(new TypeError(message));
+    });
   });
+  why.delete(new URL(request.url).origin);
   const view = new DataView(raw);
   const length = view.getUint32(0);
   const head = JSON.parse(new TextDecoder().decode(new Uint8Array(raw, 4, length))) as { status: number; statusText: string; headers: [string, string][] };

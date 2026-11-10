@@ -124,8 +124,13 @@ export function toInstant(value: Date | string): string {
  * see why, nor accept it; the browser can, once its address is opened in a tab. The desktop apps
  * ask themselves (platforms/desktop/tls.ts).
  */
-function unreachable(url: string | null | undefined): string {
+function unreachable(url: string | null | undefined, cause?: unknown): string {
   const message = $localize`Le serveur ThermoBox ne répond pas`;
+  // The desktop apps know why (tls.ts: a certificate refused, a connection refused…)
+  if (TARGET.desktopOs) {
+    const why = cause instanceof Error ? cause.message.trim() : '';
+    return why && !/^(Failed to fetch|Load failed|NetworkError)/i.test(why) ? `${message} (${why})` : message;
+  }
   if (TARGET.name !== 'web' || !url) return message;
   try {
     const u = new URL(url, location.href);
@@ -139,7 +144,7 @@ function unreachable(url: string | null | undefined): string {
 export function errorMessage(err: unknown, fallback = $localize`Erreur inattendue`): string {
   if (err instanceof HttpErrorResponse) {
     // No answer at all (offline, wrong address, refused): the network error says nothing more
-    if (err.status === 0 && (err.error == null || err.error instanceof Error || err.error instanceof ProgressEvent)) return unreachable(err.url);
+    if (err.status === 0 && (err.error == null || err.error instanceof Error || err.error instanceof ProgressEvent)) return unreachable(err.url, err.error);
     const body = err.error as { error?: string; message?: string } | string | null;
     if (body && typeof body === 'object') {
       if (body.error) return body.error;
