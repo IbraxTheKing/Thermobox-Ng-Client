@@ -24,7 +24,7 @@
       <strong i18n>Thermobox</strong>
       <span i18n class="tb-muted">La température de chaque salle, en un coup d'œil.</span>
       <!-- AdwAboutDialog (Linux): the version under the name, in a pill -->
-      @if (dialog()) {
+      @if (dialog() || ownWindow) {
         <span class="tb-about-pill">{{ versionClient }}</span>
       }
     </div>

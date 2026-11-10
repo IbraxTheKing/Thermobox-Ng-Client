@@ -232,8 +232,8 @@ html:root[data-desktop="macos"][data-sidebar="collapsed"] { --tb-rail: 0px; }
     left: var(--mac-inset);
     width: var(--mac-sidebar);
     border-radius: var(--mac-panel-radius);
+    /* No transition of it: a shadow as large as the window drawn again on every frame */
     box-shadow: 0 0 0 200vmax var(--mac-paint);
-    transition: box-shadow .8s ease;
 }
 :root[data-desktop="macos"]:is([data-tint="off"], [data-style="panel"]) .tb-mac-hole { --mac-paint: var(--tb-background); }
 :root[data-desktop="macos"][data-sidebar="collapsed"] .tb-mac-hole { width: 0; box-shadow: 0 0 0 200vmax var(--mac-paint); left: -10px; }
@@ -714,8 +714,6 @@ html:root[data-desktop="macos"][data-sidebar="collapsed"] { --tb-rail: 0px; }
     background: linear-gradient(var(--tb-tint-page, var(--tb-background)) 40%, transparent);
     -webkit-mask-image: linear-gradient(#000 55%, transparent);
     mask-image: linear-gradient(#000 55%, transparent);
-    -webkit-backdrop-filter: blur(6px);
-    backdrop-filter: blur(6px);
     opacity: 0;
     transition: opacity .2s linear;
     pointer-events: none;
@@ -817,3 +815,92 @@ html[data-desktop="macos"].tb-pull-page { overscroll-behavior-y: none; }
 :root[data-desktop-window="settings"][data-settings-tab] :is(.tb-page-head, .tb-pref-heading) { display: none; }
 :root[data-desktop-window="settings"][data-settings-tab] .tb-pref-group:not(.tb-mac-tab-shown) { display: none; }
 :root[data-desktop-window="settings"] .tb-narrow { padding-bottom: 0; }
+
+/* ============================== The swipe of the trackpad (swipe.ts)
+
+   The room page put back over the window while the router goes forward again (a gesture
+   undone): over the content, under the toolbar. */
+
+.tb-mac-shot {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2900;
+    overflow: hidden;
+    background: var(--tb-tint-page, var(--tb-background));
+    pointer-events: none;
+}
+
+/* ============================== Sheets and dialogs: their close button on the left, as the
+   traffic lights of the windows of macOS */
+
+:root[data-desktop="macos"] .tb-dialog-head { padding-left: 14px; padding-right: 24px; }
+:root[data-desktop="macos"] .tb-dialog-head .tb-dialog-close { order: -1; }
+
+/* ============================== The About window (index.html?view=about)
+
+   Small, of its own, drawn as Thermobox: the logo in large over the light of the brand, the name
+   and the version, then the versions, the code and the credits in compact rows. */
+
+:root[data-desktop-window="about"] {
+    --mac-toolbar: calc(2 * var(--mac-lights-middle, 14px));
+    --tb-chrome-top: var(--mac-toolbar);
+}
+:root[data-desktop-window="about"] body {
+    background:
+        radial-gradient(90% 40% at 50% 0%, color-mix(in srgb, var(--md-primary) 30%, transparent), transparent 75%),
+        radial-gradient(70% 35% at 0% 20%, rgb(255 255 255 / .55), transparent 70%),
+        var(--tb-background);
+}
+:root[data-desktop-window="about"][data-theme="dark"] body {
+    background:
+        radial-gradient(90% 40% at 50% 0%, color-mix(in srgb, var(--md-primary) 34%, transparent), transparent 75%),
+        var(--tb-background);
+}
+:root[data-desktop-window="about"] .tb-mac-toolbar { background: transparent; box-shadow: none; }
+:root[data-desktop-window="about"] :is(.tb-standalone-back, .tb-page-head) { display: none; }
+:root[data-desktop-window="about"] body .tb-main.tb-standalone { padding: 0 20px 20px; min-height: 0; }
+:root[data-desktop-window="about"] .tb-narrow { max-width: none; padding: 0; }
+:root[data-desktop-window="about"] .tb-about-mark { flex-direction: column; gap: 10px; margin: 6px 0 22px; text-align: center; }
+:root[data-desktop-window="about"] .tb-about-mark > div { align-items: center; gap: 3px; }
+:root[data-desktop-window="about"] .tb-about-mark .tb-logo-xl {
+    width: 96px;
+    height: 96px;
+    border-radius: 23%;
+    background: linear-gradient(150deg, color-mix(in srgb, var(--md-primary) 62%, #ffffff), var(--md-primary) 70%);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / .45), 0 12px 26px color-mix(in srgb, var(--md-primary) 32%, transparent);
+}
+/* The mark of the app icon: white on the tile of the brand */
+:root[data-desktop-window="about"] .tb-about-mark .tb-logo-xl::after { inset: 20%; background: #ffffff; }
+:root[data-desktop-window="about"] .tb-about-mark strong { font-family: var(--tb-font-figures); font-size: 24px; font-weight: 750; letter-spacing: -.01em; }
+:root[data-desktop-window="about"] .tb-about-mark .tb-muted { font-size: 12px; }
+:root[data-desktop-window="about"] .tb-about-pill {
+    margin-top: 6px;
+    padding: 2px 10px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--md-primary) 16%, transparent);
+    color: var(--md-primary);
+    font-size: 12px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+:root[data-desktop-window="about"] .tb-list-title { margin: 16px 4px 6px; font-size: 11px; font-weight: 600; color: var(--mac-secondary); }
+:root[data-desktop-window="about"] .tb-list-row { min-height: 0; padding: 7px 12px; gap: 10px; }
+:root[data-desktop-window="about"] .tb-list-row strong { font-size: 13px; font-weight: 500; }
+:root[data-desktop-window="about"] .tb-list-row .tb-muted { font-size: 11px; }
+:root[data-desktop-window="about"] .tb-list-icon { width: 26px; height: 26px; font-size: 13px; }
+:root[data-desktop-window="about"] .tb-list-compact { padding-block: 5px; }
+:root[data-desktop-window="about"] .tb-about-version { padding: 2px 8px; font-size: 11px; }
+:root[data-desktop-window="about"] .tb-about-license { margin: 16px 0 0; font-size: 11px; }
+
+/* ============================== The settings window: compact, as the settings of the system */
+
+:root[data-desktop-window="settings"] .tb-pref { gap: 12px; padding-block: 10px; }
+:root[data-desktop-window="settings"] .tb-pref-text strong { font-size: 13px; font-weight: 500; }
+:root[data-desktop-window="settings"] .tb-pref-text .tb-muted { font-size: 11px; line-height: 1.35; }
+:root[data-desktop-window="settings"] .tb-pref .tb-section-icon { width: 26px; height: 26px; font-size: 13px; }
+:root[data-desktop-window="settings"] .tb-panel.tb-pref-group { padding: 4px 16px; }
+:root[data-desktop-window="settings"] .tb-pref-group + .tb-pref-group { margin-top: 12px; }
+:root[data-desktop-window="settings"] .tb-pref-scope { margin: 10px 4px 0; font-size: 11px; }
+:root[data-desktop-window="settings"] body .tb-main.tb-standalone-window { padding-left: 20px; padding-right: 20px; }

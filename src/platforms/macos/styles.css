@@ -22,4 +22,6 @@
 @import '../../styles/seasons.css';
 @import '../../styles/standalone.css';
 @import '../desktop/desktop.css';
+@import '../ios/theme-ios.css';
 @import '../macos/macos.css';
+@import '../macos/ios-look.css';

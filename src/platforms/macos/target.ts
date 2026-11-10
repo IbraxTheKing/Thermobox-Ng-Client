@@ -24,10 +24,14 @@ export const TARGET: PlatformTarget = {
   name: 'macos',
   desktopOs: 'macos',
   async prepare() {
-    if (new URLSearchParams(location.search).get('view') === 'settings') {
-      document.documentElement.dataset['desktopWindow'] = 'settings';
-      history.replaceState(null, '', '/settings');
+    // The windows of their own: the settings (/settings), About (/about)
+    const view = new URLSearchParams(location.search).get('view');
+    if (view === 'settings' || view === 'about') {
+      document.documentElement.dataset['desktopWindow'] = view;
+      history.replaceState(null, '', `/${view}`);
     }
+    // The pages as on iOS, in the frame of the Mac (ios-look.css)
+    document.documentElement.dataset['look'] = 'ios';
     await macStyle();
     installMenus(document, tauriMenus);
     await prepareTauri('macos');

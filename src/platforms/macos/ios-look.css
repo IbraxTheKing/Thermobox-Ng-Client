@@ -1,0 +1,59 @@
+/*
+ * macOS: the pages look as on iOS (html[data-look="ios"], target.ts): the tiles, panels,
+ * buttons and fields of theme-ios.css, in the frame of the Mac (side bar, toolbar, traffic
+ * lights: macos.css). Loaded after macos.css; what differs on the Mac:
+ *
+ * - no backdrop-filter on what scrolls: behind the pages is a smooth light and a flat colour, a
+ *   blur of it looks the same as the colour itself, and every blurred card had to be drawn again
+ *   on each frame of a scroll, of a page change, of a hover (the M1 dropped frames);
+ * - the light of iOS behind the pages is painted once, beside the side bar (.tb-mac-light);
+ * - the colour of the glass follows the page at once, not through a transition of a variable of
+ *   the whole document (every element styled again on each of its frames).
+ */
+
+:root[data-look="ios"] { transition: none; }
+
+:root[data-look="ios"]:not([data-style="panel"]) :is(.tb-card, .tb-box, .tb-empty, .tb-stat, .tb-hero-reading, .tb-panel,
+.tb-list-group, .tb-list-mgmt, .tb-table, .tb-banner, .tb-user, .tb-lights, .tb-room.tb-room-tile,
+.tb-btn.tb-tonal, .tb-btn.tb-icon.tb-tonal, .tb-input, .tb-select, .tb-summary-chip, .tb-segmented, .tb-dial-step button, .tb-icon-btn) {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+}
+:root[data-look="ios"]:not([data-style="panel"]) .tb-btn:not(.tb-tonal):not(.tb-flat):not(.tb-btn-danger) {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+}
+/* Without a blur, a little more of the surface, so the text keeps its contrast */
+:root[data-look="ios"]:not([data-style="panel"]) {
+    --tb-ios-glass: color-mix(in srgb, var(--tb-glass-solid) 66%, transparent);
+    --tb-ios-glass-strong: color-mix(in srgb, var(--tb-glass-solid) 80%, transparent);
+}
+:root[data-look="ios"][data-theme="dark"]:not([data-style="panel"]) {
+    --tb-ios-glass: color-mix(in srgb, var(--tb-glass-solid) 62%, transparent);
+    --tb-ios-glass-strong: color-mix(in srgb, var(--tb-glass-solid) 76%, transparent);
+}
+
+/* The light of iOS, beside the side bar (painted once: a fixed layer that never changes) */
+.tb-mac-light { display: none; }
+:root[data-look="ios"]:not([data-style="panel"]) body.tb-app .tb-mac-light {
+    position: absolute;
+    inset: 0 0 0 var(--tb-rail);
+    display: block;
+    background-image:
+        radial-gradient(70% 45% at 12% 0%, rgb(255 255 255 / .75), transparent 70%),
+        radial-gradient(55% 40% at 95% 28%, color-mix(in srgb, var(--md-primary) 22%, transparent), transparent 70%),
+        radial-gradient(80% 50% at 30% 100%, rgb(110 160 205 / .22), transparent 70%);
+}
+:root[data-look="ios"][data-theme="dark"]:not([data-style="panel"]) body.tb-app .tb-mac-light {
+    background-image:
+        radial-gradient(70% 45% at 12% 0%, rgb(255 255 255 / .07), transparent 70%),
+        radial-gradient(55% 40% at 95% 28%, color-mix(in srgb, var(--md-primary) 26%, transparent), transparent 70%),
+        radial-gradient(80% 50% at 30% 100%, rgb(70 120 170 / .18), transparent 70%);
+}
+/* Without a material behind the window, the canvas is not there: the light on the page itself */
+:root[data-look="ios"]:not([data-backdrop]):not([data-style="panel"]) body.tb-app {
+    background-image:
+        radial-gradient(70% 45% at 12% 0%, rgb(255 255 255 / .75), transparent 70%),
+        radial-gradient(55% 40% at 95% 28%, color-mix(in srgb, var(--md-primary) 22%, transparent), transparent 70%);
+    background-attachment: fixed;
+}

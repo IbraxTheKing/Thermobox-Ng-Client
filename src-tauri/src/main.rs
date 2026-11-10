@@ -5,8 +5,7 @@
 //!
 //! - macOS: the settings are only in the menu bar (Thermobox › Réglages…, ⌘,) and open in a
 //!   window of their own, with tabs as the settings windows of the system; « À propos de
-//!   Thermobox » opens the About panel of the system. The swipe of the trackpad goes from page
-//!   to page. The title bar is
+//!   Thermobox » opens a small window of its own, drawn as Thermobox ([open_about]). The title bar is
 //!   the page's (traffic lights over it, tauri.macos.conf.json), its toolbar too; behind the side
 //!   bar, the material of the system: Liquid Glass on macOS 26 and up, the vibrancy of a side bar
 //!   from macOS 11 to 15 (mac.rs, [mac_style]).
@@ -34,7 +33,7 @@ mod tls;
 #[cfg(windows)]
 mod win;
 
-use tauri::{AppHandle, Emitter, Manager, WebviewUrl, WebviewWindowBuilder};
+use tauri::{AppHandle, Manager, WebviewUrl, WebviewWindowBuilder};
 
 /// The language of the app is French (else English, its main language): the system's at start,
 /// then the one the page says ([app_language], Préférences › Langue).
@@ -84,7 +83,7 @@ pub fn open_settings(app: &AppHandle) -> tauri::Result<()> {
     // (settings_height), neither minimized nor zoomed, the traffic lights where AppKit puts them
     #[cfg(target_os = "macos")]
     let builder = builder
-        .inner_size(660.0, 520.0)
+        .inner_size(580.0, 480.0)
         .resizable(false)
         .title_bar_style(tauri::TitleBarStyle::Overlay)
         .hidden_title(true)
@@ -98,15 +97,32 @@ pub fn open_settings(app: &AppHandle) -> tauri::Result<()> {
     Ok(())
 }
 
-/// Asks the main window to open one of its pages (« about »).
-pub fn open_page(app: &AppHandle, page: &str) {
-    if let Some(w) = app.get_webview_window("main") {
-        let _ = w.unminimize();
-        let _ = w.show();
-        let _ = w.set_focus();
+/// Label of the About window (macOS).
+const ABOUT: &str = "about";
+
+/// macOS: « À propos de Thermobox », a small window of its own (index.html?view=about: the About
+/// page, drawn as Thermobox), or brought to the front.
+pub fn open_about(app: &AppHandle) -> tauri::Result<()> {
+    if let Some(w) = app.get_webview_window(ABOUT) {
+        w.unminimize()?;
+        w.show()?;
+        return w.set_focus();
     }
-    // To the main window only (not the settings window)
-    let _ = app.emit_to("main", "tb-open", page);
+    let builder = WebviewWindowBuilder::new(app, ABOUT, WebviewUrl::App("index.html?view=about".into()))
+        .title(if french() { "À propos de Thermobox" } else { "About Thermobox" })
+        .inner_size(400.0, 600.0)
+        .resizable(false)
+        .center()
+        .focused(true);
+    #[cfg(target_os = "macos")]
+    let builder = builder.title_bar_style(tauri::TitleBarStyle::Overlay).hidden_title(true).minimizable(false).maximizable(false);
+    builder.build()?;
+    Ok(())
+}
+
+#[tauri::command]
+fn about_window(app: AppHandle) -> Result<(), String> {
+    open_about(&app).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -284,22 +300,6 @@ fn settings_height(window: tauri::WebviewWindow, height: f64) {
     let _ = (window, height);
 }
 
-/// macOS: the About panel of the system, with what the page wrote in it (« À propos de
-/// Thermobox » of the menu bar, or of the page).
-#[tauri::command]
-fn about_panel(app: AppHandle, #[allow(unused_variables)] info: serde_json::Value) {
-    #[cfg(target_os = "macos")]
-    {
-        let Ok(info) = serde_json::from_value::<mac::AboutInfo>(info) else { return };
-        let _ = app.run_on_main_thread(move || {
-            if let Some(mtm) = objc2::MainThreadMarker::new() {
-                mac::about_panel(&info, mtm);
-            }
-        });
-    }
-    let _ = app;
-}
-
 /// The Acrylic of the window ([window_acrylic]): Windows can draw it (set at start), it is shown.
 #[derive(Default)]
 struct Backdrop {
@@ -333,8 +333,6 @@ fn main() {
             #[cfg(target_os = "macos")]
             if let Some(w) = app.get_webview_window("main") {
                 mac::apply(&w, &app.state::<mac::Materials>());
-                // The swipe of the trackpad between the pages
-                mac::gestures(&w);
             }
             #[cfg(windows)]
             {
@@ -364,7 +362,7 @@ fn main() {
             let _ = app;
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![settings_window, snap_layouts, system_accent, page_ready, window_acrylic, window_theme, app_language, decoration_layout, clipboard_text, linux_options, set_linux_options, native_chrome, mac_style, settings_height, about_panel, tls::tls_pins, tls::tls_probe, tls::tls_fetch]);
+        .invoke_handler(tauri::generate_handler![settings_window, snap_layouts, system_accent, page_ready, window_acrylic, window_theme, app_language, decoration_layout, clipboard_text, linux_options, set_linux_options, native_chrome, mac_style, settings_height, about_window, tls::tls_pins, tls::tls_probe, tls::tls_fetch]);
     #[cfg(target_os = "macos")]
     let builder = builder
         .plugin(tauri_plugin_liquid_glass::init())

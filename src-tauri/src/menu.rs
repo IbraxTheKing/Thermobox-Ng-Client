@@ -63,7 +63,9 @@ pub fn on_event(app: &AppHandle, event: MenuEvent) {
         "settings" => {
             let _ = crate::open_settings(app);
         }
-        "about" => crate::open_page(app, "about"),
+        "about" => {
+            let _ = crate::open_about(app);
+        }
         _ => {}
     }
 }

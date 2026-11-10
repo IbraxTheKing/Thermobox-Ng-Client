@@ -62,6 +62,8 @@ export class AboutPage {
     ? `Application ${this.desktop.name()}`
     : { ios: 'iOS · Liquid Glass', android: 'Android · Material 3', web: $localize`Web` }[this.platform.platform];
   protected readonly native = this.platform.native;
+  /** The About window of the macOS app: the version under the name, as in the dialog of Linux. */
+  protected readonly ownWindow = document.documentElement.dataset['desktopWindow'] === 'about';
   /** Version of the installed app (App Store / Play Store build), native app only. */
   protected readonly versionNative = signal<string | null>(null);
 

@@ -8,12 +8,14 @@ import {
   signal,
 } from '@angular/core';
 import { Location } from '@angular/common';
-import { NavigationEnd, NavigationStart, Router } from '@angular/router';
+import { NavigationEnd, Router } from '@angular/router';
 
 import { DesktopService } from '../../app/core/desktop';
 import { PreferencesService } from '../../app/core/preferences';
 import { TitleService } from '../../app/core/title';
 import { MacDesktopService } from './desktop.service';
+import { MacHistory } from './history';
+import { MacSwipe } from './swipe';
 import { TbMacSettingsTabs } from './settings-tabs';
 
 /**
@@ -37,7 +39,7 @@ import { TbMacSettingsTabs } from './settings-tabs';
   host: { style: 'display: contents' },
   template: `
     <!-- The page around the side bar: the material of the system shows through the hole -->
-    <div class="tb-mac-canvas" aria-hidden="true"><div class="tb-mac-hole"></div></div>
+    <div class="tb-mac-canvas" aria-hidden="true"><div class="tb-mac-hole"></div><div class="tb-mac-light"></div></div>
     <header
       class="tb-mac-toolbar"
       [class.tb-mac-scrolled]="scrolled()"
@@ -149,16 +151,9 @@ export class TbMacToolbar {
 
   /** In the app (not the login pages, not the settings window): the side bar is there. */
   protected readonly inApp = signal(this.isApp(location.pathname));
-  protected readonly canGoBack = signal(false);
-  protected readonly canGoForward = signal(false);
-  /**
-   * The history of this window, as the router numbers its navigations: the entries before and
-   * after the current one ([at]), for the two buttons. Popstate (back, forward, the swipe) moves
-   * in it, a new navigation drops what was after.
-   */
-  private entries: number[] = [];
-  private at = -1;
-  private wasApp = false;
+  private readonly history = inject(MacHistory);
+  protected readonly canGoBack = this.history.canGoBack;
+  protected readonly canGoForward = this.history.canGoForward;
   protected readonly scrolled = signal(false);
   /** The name of the page in the toolbar: once its title (h1) has gone under it. */
   protected readonly titleShown = signal(false);
@@ -175,22 +170,9 @@ export class TbMacToolbar {
       const theme = this.prefs.theme();
       void this.desktop.windowTheme(choice, theme).catch(() => undefined);
     });
-    let pending: { id: number; restored: number | null; replace: boolean } | null = null;
     const nav = this.router.events.subscribe((e) => {
-      if (e instanceof NavigationStart) {
-        pending = {
-          id: e.id,
-          restored: e.navigationTrigger === 'popstate' ? (e.restoredState?.navigationId ?? null) : null,
-          replace: !!this.router.getCurrentNavigation()?.extras.replaceUrl,
-        };
-      }
       if (e instanceof NavigationEnd) {
         this.inApp.set(this.isApp(e.urlAfterRedirects));
-        // The history of the app starts at its first page (not at the login page before it)
-        if (!this.wasApp) this.at = -1;
-        this.wasApp = this.isApp(e.urlAfterRedirects);
-        this.follow(pending, e.id);
-        pending = null;
         // The new page starts at its top
         requestAnimationFrame(() => this.measure());
       }
@@ -199,7 +181,11 @@ export class TbMacToolbar {
     effect(() => root.classList.toggle('tb-mac-blurred', !this.focused()));
     const onFocus = () => this.focused.set(true);
     const onBlur = () => this.focused.set(false);
-    const onScroll = () => this.measure();
+    // Once per frame, not on every event of the scroll (each measure reads the layout)
+    let frame = 0;
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(() => ((frame = 0), this.measure()));
+    };
     // ⌘[ and ⌘] : back and forward, as in the apps of the system
     const onKey = (e: KeyboardEvent) => {
       if (!e.metaKey || e.shiftKey || e.altKey || e.ctrlKey) return;
@@ -225,9 +211,16 @@ export class TbMacToolbar {
           else delete root.dataset['fullscreen'];
         };
         await follow();
-        unlisten = await w.onResized(() => void follow());
+        // Once the window stops changing size, not on every step of it (each asks Rust)
+        let timer: ReturnType<typeof setTimeout> | undefined;
+        unlisten = await w.onResized(() => {
+          clearTimeout(timer);
+          timer = setTimeout(() => void follow(), 150);
+        });
       })
       .catch(() => undefined);
+    // Two fingers on the trackpad: back and forward, the page following them (swipe.ts)
+    if (!this.desktop.ownWindow) inject(MacSwipe).start();
     inject(DestroyRef).onDestroy(() => {
       nav.unsubscribe();
       unlisten?.();
@@ -239,35 +232,15 @@ export class TbMacToolbar {
   }
 
   private isApp(url: string): boolean {
-    return !this.desktop.settingsWindow && url.startsWith('/app');
+    return !this.desktop.ownWindow && url.startsWith('/app');
   }
 
   private measure(): void {
     this.scrolled.set(scrollY > 1);
-    if (this.desktop.settingsWindow) return;
+    if (this.desktop.ownWindow) return;
     const h1 = this.doc.querySelector('.tb-main .tb-page-title h1, .tb-main h1');
     // No title in the page: the name in the toolbar at once
     this.titleShown.set(!h1 || h1.getBoundingClientRect().bottom < 52);
-  }
-
-  /** Where the navigation [id] that just ended puts this window in its history. */
-  private follow(n: { id: number; restored: number | null; replace: boolean } | null, id: number): void {
-    const known = n?.restored != null ? this.entries.indexOf(n.restored) : -1;
-    if (known >= 0) {
-      // Back or forward (the buttons, the keys, the swipe): the entry it went to
-      this.at = known;
-    } else if (n?.restored != null || this.at < 0) {
-      // An entry from before this launch, or the first page: the history starts there
-      this.entries = [n?.restored ?? id];
-      this.at = 0;
-    } else if (n?.replace) {
-      this.entries[this.at] = id;
-    } else {
-      this.entries = [...this.entries.slice(0, this.at + 1), id];
-      this.at++;
-    }
-    this.canGoBack.set(this.at > 0);
-    this.canGoForward.set(this.at < this.entries.length - 1);
   }
 
   protected back(): void {

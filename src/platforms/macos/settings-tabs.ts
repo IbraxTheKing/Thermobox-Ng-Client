@@ -16,6 +16,7 @@ const ICONS: Record<string, string> = {
   'tb-pref-misc': 'pi-sliders-h',
 };
 const KEY = 'tb-mac-settings-tab';
+const MAX_HEIGHT = 640;
 
 /**
  * The settings window of macOS as those of the system (Safari, Mail, Finder): in the toolbar, the
@@ -143,7 +144,8 @@ export class TbMacSettingsTabs {
   private fit(): void {
     const page = this.doc.querySelector('.tb-main .tb-narrow');
     if (!page || !this.current()) return;
-    const height = Math.ceil(page.getBoundingClientRect().bottom + scrollY + 20);
+    // As tall as the tab, up to a window that stays a settings window (the rest scrolls)
+    const height = Math.min(MAX_HEIGHT, Math.ceil(page.getBoundingClientRect().bottom + scrollY + 20));
     void import('@tauri-apps/api/core').then(({ invoke }) => invoke('settings_height', { height }).catch(() => undefined));
   }
 }
