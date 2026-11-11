@@ -74,10 +74,14 @@ export class TransitionsService {
   /**
    * Safari and every browser of iOS: pictures of the glass (backdrop-filter) come out blurred.
    * The colour of the page then changes without pictures: the background glides to the new
-   * colour (tokens.css, body::before), the rest of the palette follows at once.
+   * colour (tokens.css, body::before), the rest of the palette follows at once. Not the macOS
+   * app: nothing of glass moves in its pages (platforms/macos/ios-look.css), the palette fades
+   * with the rest (its colours popped otherwise).
    */
   private readonly webkit =
-    /AppleWebKit/.test(navigator.userAgent) && !/Chrome\/|Chromium|Edg\//.test(navigator.userAgent);
+    /AppleWebKit/.test(navigator.userAgent) &&
+    !/Chrome\/|Chromium|Edg\//.test(navigator.userAgent) &&
+    this.root.dataset['desktop'] !== 'macos';
   /** The new page is not in place yet: a colour asked now goes with it. */
   private beforeUpdate = false;
   private timer?: ReturnType<typeof setTimeout>;

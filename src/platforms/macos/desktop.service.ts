@@ -20,6 +20,7 @@ export class MacDesktopService extends TauriDesktopService {
 
   override start(): void {
     super.start();
+    this.fillSliders();
     // The links to « À propos » of the page (the login page, Préférences): the panel instead
     this.doc.addEventListener(
       'click',
@@ -34,6 +35,28 @@ export class MacDesktopService extends TauriDesktopService {
       },
       true,
     );
+  }
+
+  /**
+   * The sliders: how far the knob is (--p), for the part of the track filled in the accent colour
+   * (macos.css, Sliders): on each move, and for each slider that comes into the page.
+   */
+  private fillSliders(): void {
+    const fill = (input: HTMLInputElement) => {
+      const min = Number(input.min || 0);
+      const max = Number(input.max || 100);
+      const p = max > min ? ((Number(input.value) - min) / (max - min)) * 100 : 0;
+      input.style.setProperty('--p', `${Math.min(100, Math.max(0, p))}%`);
+    };
+    const all = () => this.doc.querySelectorAll<HTMLInputElement>('input[type="range"]').forEach(fill);
+    this.doc.addEventListener('input', (e) => {
+      if (e.target instanceof HTMLInputElement && e.target.type === 'range') fill(e.target);
+    }, true);
+    let frame = 0;
+    new MutationObserver(() => {
+      if (!frame) frame = requestAnimationFrame(() => ((frame = 0), all()));
+    }).observe(this.doc.body, { childList: true, subtree: true });
+    all();
   }
 
   /** The About window, or brought to the front. */

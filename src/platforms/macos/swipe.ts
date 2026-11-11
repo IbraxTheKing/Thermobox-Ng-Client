@@ -14,6 +14,8 @@ const THRESHOLD = 0.33;
 const FLING = 14;
 /** No wheel event for this long: the fingers (and the momentum after them) are done. */
 const END = 160;
+/** After a gesture: no new one before this long without any wheel event (its momentum). */
+const QUIET = 320;
 
 type Mode = 'morph' | 'follow';
 
@@ -80,7 +82,9 @@ export class MacSwipe {
     if (e.ctrlKey) return;
     const g = this.g;
     if (!g) {
+      // The momentum of the gesture just done: swallowed until it stops (it would start another)
       if (e.timeStamp < this.quietUntil) {
+        this.quietUntil = e.timeStamp + QUIET;
         if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) e.preventDefault();
         return;
       }
@@ -211,7 +215,7 @@ export class MacSwipe {
   private release(g: Gesture): void {
     if (this.g !== g) return;
     this.g = null;
-    this.quietUntil = performance.now() + 250;
+    this.quietUntil = performance.now() + QUIET;
     const p = this.progress(g);
     const speed = g.recent.reduce((s, v) => s + v, 0) / Math.max(1, g.recent.length);
     const go = p >= THRESHOLD || (p > 0.1 && speed > FLING);

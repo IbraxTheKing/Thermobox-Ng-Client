@@ -45,7 +45,8 @@ export const TARGET: PlatformTarget = {
   rootOverlays: [],
   appearanceRows: [],
   preferenceGroups: [],
-  traits: { ...WEB_TRAITS, settingsInMenu: true },
+  // The curves at once: a page answers quicker (macos.css, « Quick to answer »)
+  traits: { ...WEB_TRAITS, settingsInMenu: true, chartsAnimate: false },
 };
 
 /** html[data-mac], html[data-backdrop]: the look of the system, the material of the window. */

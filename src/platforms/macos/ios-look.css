@@ -6,7 +6,8 @@
  * - no backdrop-filter on what scrolls: behind the pages is a smooth light and a flat colour, a
  *   blur of it looks the same as the colour itself, and every blurred card had to be drawn again
  *   on each frame of a scroll, of a page change, of a hover (the M1 dropped frames);
- * - behind the pages, the glass of the window itself, tinted by the page (no light of iOS);
+ * - behind the pages, the colour of the page (no light of iOS); the side bar alone is the glass of
+ *   the window;
  * - the colour of the page fades on the paint around the side bar only (macos.css, --mac-paint),
  *   not through a transition of a variable of the whole document (every element styled again on
  *   each of its frames).
@@ -25,9 +26,9 @@
     backdrop-filter: none;
 }
 /*
- * Deep glass (as the apps of macOS 26): behind the pages mostly the glass of the window (Liquid
- * Glass, the desktop seen through it), lightly tinted by the page; the cards clear, a reflection
- * on their top edge and a soft shadow. No spots of colour behind (the light of iOS is not used).
+ * Deep glass for the cards (as the apps of macOS 26): clear, a reflection on their top edge and a
+ * soft shadow, over the colour of the page. Only the side bar shows the desktop through the glass
+ * of the window; no spots of colour behind (the light of iOS is not used).
  */
 :root[data-look="ios"]:not([data-style="panel"]) {
     --tb-ios-glass: color-mix(in srgb, var(--tb-glass-solid) 32%, transparent);
@@ -35,9 +36,6 @@
     --tb-ios-edge: rgb(255 255 255 / .9);
 }
 :root[data-look="ios"][data-theme="dark"]:not([data-style="panel"]) { --tb-ios-edge: rgb(255 255 255 / .14); }
-:root[data-look="ios"][data-backdrop]:not([data-style="panel"]) .tb-mac-hole {
-    --mac-paint: color-mix(in srgb, var(--tb-tint-page, var(--tb-background)) 40%, transparent);
-}
 :root[data-look="ios"]:not([data-style="panel"]) .tb-room.tb-room-tile { background: color-mix(in srgb, var(--c) 46%, transparent); }
 :root[data-look="ios"]:not([data-style="panel"]) :is(.tb-card, .tb-panel, .tb-list-group, .tb-table, .tb-banner, .tb-room.tb-room-tile, .tb-stat) {
     box-shadow: inset 0 1px 0 rgb(255 255 255 / .8), inset 0 0 0 .5px rgb(255 255 255 / .5), 0 8px 24px rgb(20 30 60 / .1);
@@ -45,3 +43,7 @@
 :root[data-look="ios"][data-theme="dark"]:not([data-style="panel"]) :is(.tb-card, .tb-panel, .tb-list-group, .tb-table, .tb-banner, .tb-room.tb-room-tile, .tb-stat) {
     box-shadow: inset 0 1px 0 rgb(255 255 255 / .18), inset 0 0 0 .5px rgb(255 255 255 / .1), 0 8px 24px rgb(0 0 0 / .3);
 }
+
+/* The light of iOS (its spots of colour behind the pages): not on the Mac. The colour of the
+   page is painted around the side bar (macos.css, .tb-mac-hole) */
+:root[data-look="ios"][data-desktop="macos"] .tb-background-page { display: none !important; }

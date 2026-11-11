@@ -935,3 +935,80 @@ html[data-desktop="macos"].tb-pull-page { overscroll-behavior-y: none; }
 :root[data-desktop="macos"] .tb-mgmt-table .tb-col-actions .tb-btn { width: 24px; min-width: 24px; height: 24px; min-height: 24px; padding: 0; }
 :root[data-desktop="macos"] .tb-mgmt-table input[type="checkbox"] { width: 14px; height: 14px; }
 :root[data-desktop="macos"] .tb-mgmt-tip { display: none; }
+
+/* ============================== The toolbar: a band of glass, always
+
+   Over the whole width of the content, at the top of the page too: the colour of the page seen
+   through a blur, a hairline under it. Without it the dark pages showed a hole there. Its colour
+   fades with the page's (a registered property of this element only). */
+
+@property --mac-band {
+    syntax: '<color>';
+    inherits: false;
+    initial-value: transparent;
+}
+:root[data-desktop="macos"]:not([data-desktop-window]) .tb-mac-toolbar {
+    --mac-band: color-mix(in srgb, var(--tb-tint-page, var(--tb-background)) 74%, transparent);
+    background: var(--mac-band);
+    box-shadow: 0 .5px 0 var(--mac-separator);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    backdrop-filter: blur(24px) saturate(180%);
+    transition: left .25s cubic-bezier(.3, 0, .2, 1), padding .25s cubic-bezier(.3, 0, .2, 1), --mac-band .6s ease;
+}
+:root[data-desktop="macos"]:not([data-desktop-window]):is([data-tint="off"], [data-style="panel"]) .tb-mac-toolbar {
+    --mac-band: color-mix(in srgb, var(--tb-background) 74%, transparent);
+}
+:root[data-desktop="macos"][data-theme="dark"]:not([data-desktop-window]) .tb-mac-toolbar { box-shadow: 0 1px 0 rgb(0 0 0 / .45); }
+:root[data-mac="tahoe"]:not([data-desktop-window]) .tb-mac-toolbar::before { display: none; }
+@media (prefers-reduced-motion: reduce) {
+    :root[data-desktop="macos"] .tb-mac-toolbar { transition: none; }
+}
+
+/* ============================== Sliders (NSSlider of macOS 26)
+
+   A thin track, filled in the accent colour up to the knob (--p, desktop.service.ts); the knob a
+   capsule of glass, that swells and clears while it is held. The handles of the scale of
+   « Maison » keep their own look. */
+
+:root[data-desktop="macos"] input[type="range"]:not(.tb-scale-handle) {
+    --p: 50%;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 22px;
+    margin: 0;
+    background: transparent;
+    accent-color: auto;
+}
+:root[data-desktop="macos"] input[type="range"]:not(.tb-scale-handle)::-webkit-slider-runnable-track {
+    height: 4px;
+    border-radius: 999px;
+    background: linear-gradient(to right, var(--md-primary) var(--p), var(--mac-fill-strong) var(--p));
+}
+:root[data-desktop="macos"] input[type="range"]:not(.tb-scale-handle)::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 26px;
+    height: 16px;
+    margin-top: -6px;
+    border: 0;
+    border-radius: 999px;
+    background: #ffffff;
+    box-shadow: 0 0 0 .5px rgb(0 0 0 / .12), 0 2px 6px rgb(0 0 0 / .2), inset 0 1px 0 rgb(255 255 255 / .9);
+    transition: transform .22s cubic-bezier(.3, 1.4, .5, 1), background-color .18s linear, box-shadow .18s linear;
+}
+:root[data-desktop="macos"] input[type="range"]:not(.tb-scale-handle):active::-webkit-slider-thumb {
+    transform: scale(1.3);
+    background: rgb(255 255 255 / .5);
+    box-shadow: inset 0 0 0 .5px rgb(255 255 255 / .9), inset 0 1px 1px rgb(255 255 255 / .8), 0 4px 12px rgb(0 0 0 / .22);
+}
+:root[data-desktop="macos"][data-theme="dark"] input[type="range"]:not(.tb-scale-handle)::-webkit-slider-thumb { background: #ececf0; }
+:root[data-desktop="macos"][data-theme="dark"] input[type="range"]:not(.tb-scale-handle):active::-webkit-slider-thumb { background: rgb(236 236 240 / .45); }
+:root[data-desktop="macos"] input[type="range"]:not(.tb-scale-handle):focus-visible { outline: none; }
+:root[data-desktop="macos"] input[type="range"]:not(.tb-scale-handle):focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px var(--mac-focus), 0 2px 6px rgb(0 0 0 / .2); }
+
+/* ============================== Quick to answer: a page shows at once
+
+   Its parts glide in over a quarter of a second, together (no cascade of 1.6 s that made the
+   window feel slow to answer); the curves are drawn at once (target.ts, chartsAnimate). */
+
+:root[data-desktop="macos"].tb-entering .tb-main * { animation-delay: 0s !important; animation-duration: .26s !important; }
