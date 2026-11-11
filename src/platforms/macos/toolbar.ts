@@ -39,7 +39,7 @@ import { TbMacSettingsTabs } from './settings-tabs';
   host: { style: 'display: contents' },
   template: `
     <!-- The page around the side bar: the material of the system shows through the hole -->
-    <div class="tb-mac-canvas" aria-hidden="true"><div class="tb-mac-hole"></div><div class="tb-mac-light"></div></div>
+    <div class="tb-mac-canvas" aria-hidden="true"><div class="tb-mac-hole"></div></div>
     <header
       class="tb-mac-toolbar"
       [class.tb-mac-scrolled]="scrolled()"

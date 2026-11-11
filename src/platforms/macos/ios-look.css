@@ -6,9 +6,10 @@
  * - no backdrop-filter on what scrolls: behind the pages is a smooth light and a flat colour, a
  *   blur of it looks the same as the colour itself, and every blurred card had to be drawn again
  *   on each frame of a scroll, of a page change, of a hover (the M1 dropped frames);
- * - the light of iOS behind the pages is painted once, beside the side bar (.tb-mac-light);
- * - the colour of the glass follows the page at once, not through a transition of a variable of
- *   the whole document (every element styled again on each of its frames).
+ * - behind the pages, the glass of the window itself, tinted by the page (no light of iOS);
+ * - the colour of the page fades on the paint around the side bar only (macos.css, --mac-paint),
+ *   not through a transition of a variable of the whole document (every element styled again on
+ *   each of its frames).
  */
 
 :root[data-look="ios"] { transition: none; }
@@ -23,37 +24,24 @@
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
 }
-/* Without a blur, a little more of the surface, so the text keeps its contrast */
+/*
+ * Deep glass (as the apps of macOS 26): behind the pages mostly the glass of the window (Liquid
+ * Glass, the desktop seen through it), lightly tinted by the page; the cards clear, a reflection
+ * on their top edge and a soft shadow. No spots of colour behind (the light of iOS is not used).
+ */
 :root[data-look="ios"]:not([data-style="panel"]) {
-    --tb-ios-glass: color-mix(in srgb, var(--tb-glass-solid) 66%, transparent);
-    --tb-ios-glass-strong: color-mix(in srgb, var(--tb-glass-solid) 80%, transparent);
+    --tb-ios-glass: color-mix(in srgb, var(--tb-glass-solid) 32%, transparent);
+    --tb-ios-glass-strong: color-mix(in srgb, var(--tb-glass-solid) 52%, transparent);
+    --tb-ios-edge: rgb(255 255 255 / .9);
 }
-:root[data-look="ios"][data-theme="dark"]:not([data-style="panel"]) {
-    --tb-ios-glass: color-mix(in srgb, var(--tb-glass-solid) 62%, transparent);
-    --tb-ios-glass-strong: color-mix(in srgb, var(--tb-glass-solid) 76%, transparent);
+:root[data-look="ios"][data-theme="dark"]:not([data-style="panel"]) { --tb-ios-edge: rgb(255 255 255 / .14); }
+:root[data-look="ios"][data-backdrop]:not([data-style="panel"]) .tb-mac-hole {
+    --mac-paint: color-mix(in srgb, var(--tb-tint-page, var(--tb-background)) 40%, transparent);
 }
-
-/* The light of iOS, beside the side bar (painted once: a fixed layer that never changes) */
-.tb-mac-light { display: none; }
-:root[data-look="ios"]:not([data-style="panel"]) body.tb-app .tb-mac-light {
-    position: absolute;
-    inset: 0 0 0 var(--tb-rail);
-    display: block;
-    background-image:
-        radial-gradient(70% 45% at 12% 0%, rgb(255 255 255 / .75), transparent 70%),
-        radial-gradient(55% 40% at 95% 28%, color-mix(in srgb, var(--md-primary) 22%, transparent), transparent 70%),
-        radial-gradient(80% 50% at 30% 100%, rgb(110 160 205 / .22), transparent 70%);
+:root[data-look="ios"]:not([data-style="panel"]) .tb-room.tb-room-tile { background: color-mix(in srgb, var(--c) 46%, transparent); }
+:root[data-look="ios"]:not([data-style="panel"]) :is(.tb-card, .tb-panel, .tb-list-group, .tb-table, .tb-banner, .tb-room.tb-room-tile, .tb-stat) {
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / .8), inset 0 0 0 .5px rgb(255 255 255 / .5), 0 8px 24px rgb(20 30 60 / .1);
 }
-:root[data-look="ios"][data-theme="dark"]:not([data-style="panel"]) body.tb-app .tb-mac-light {
-    background-image:
-        radial-gradient(70% 45% at 12% 0%, rgb(255 255 255 / .07), transparent 70%),
-        radial-gradient(55% 40% at 95% 28%, color-mix(in srgb, var(--md-primary) 26%, transparent), transparent 70%),
-        radial-gradient(80% 50% at 30% 100%, rgb(70 120 170 / .18), transparent 70%);
-}
-/* Without a material behind the window, the canvas is not there: the light on the page itself */
-:root[data-look="ios"]:not([data-backdrop]):not([data-style="panel"]) body.tb-app {
-    background-image:
-        radial-gradient(70% 45% at 12% 0%, rgb(255 255 255 / .75), transparent 70%),
-        radial-gradient(55% 40% at 95% 28%, color-mix(in srgb, var(--md-primary) 22%, transparent), transparent 70%);
-    background-attachment: fixed;
+:root[data-look="ios"][data-theme="dark"]:not([data-style="panel"]) :is(.tb-card, .tb-panel, .tb-list-group, .tb-table, .tb-banner, .tb-room.tb-room-tile, .tb-stat) {
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / .18), inset 0 0 0 .5px rgb(255 255 255 / .1), 0 8px 24px rgb(0 0 0 / .3);
 }

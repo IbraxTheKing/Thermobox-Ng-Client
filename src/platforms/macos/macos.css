@@ -223,7 +223,14 @@ html:root[data-desktop="macos"][data-sidebar="collapsed"] { --tb-rail: 0px; }
     border-radius: var(--mac-corner);
     pointer-events: none;
 }
-/* The hole of the side bar: its shadow, as large as the window, is the page */
+/* The hole of the side bar: its shadow, as large as the window, is the page. The colour of the
+   page fades there only (a room, « Maison »: no colour popping in a swipe or a quick switch), a
+   property of this one element, not of the whole document. */
+@property --mac-paint {
+    syntax: '<color>';
+    inherits: false;
+    initial-value: transparent;
+}
 .tb-mac-hole {
     --mac-paint: var(--tb-tint-page, var(--tb-background));
     position: absolute;
@@ -232,9 +239,10 @@ html:root[data-desktop="macos"][data-sidebar="collapsed"] { --tb-rail: 0px; }
     left: var(--mac-inset);
     width: var(--mac-sidebar);
     border-radius: var(--mac-panel-radius);
-    /* No transition of it: a shadow as large as the window drawn again on every frame */
     box-shadow: 0 0 0 200vmax var(--mac-paint);
+    transition: --mac-paint .6s ease;
 }
+@media (prefers-reduced-motion: reduce) { .tb-mac-hole { transition: none; } }
 :root[data-desktop="macos"]:is([data-tint="off"], [data-style="panel"]) .tb-mac-hole { --mac-paint: var(--tb-background); }
 :root[data-desktop="macos"][data-sidebar="collapsed"] .tb-mac-hole { width: 0; box-shadow: 0 0 0 200vmax var(--mac-paint); left: -10px; }
 @media (max-width: 840px) {
@@ -904,3 +912,26 @@ html[data-desktop="macos"].tb-pull-page { overscroll-behavior-y: none; }
 :root[data-desktop-window="settings"] .tb-pref-group + .tb-pref-group { margin-top: 12px; }
 :root[data-desktop-window="settings"] .tb-pref-scope { margin: 10px 4px 0; font-size: 11px; }
 :root[data-desktop-window="settings"] body .tb-main.tb-standalone-window { padding-left: 20px; padding-right: 20px; }
+
+/* ============================== Gestion: a list as Finder's, one line per item
+
+   The name then where it is, in grey, on one line of about 30 points; every other line lightly
+   striped; small icons in the accent colour, small tags; the tip is left out. */
+
+:root[data-desktop="macos"] body .tb-mgmt-table :is(th, td) { padding: 2px 10px; border-bottom: 0; }
+:root[data-desktop="macos"] body .tb-mgmt-table td { height: 30px; font-size: 12px; }
+:root[data-desktop="macos"] body .tb-mgmt-table th { height: 26px; border-bottom: .5px solid var(--mac-separator); }
+:root[data-desktop="macos"] body .tb-mgmt-table tbody tr:nth-child(even) > td { background: color-mix(in srgb, var(--md-on-surface) 3.5%, transparent); }
+:root[data-desktop="macos"] body .tb-mgmt-table tbody tr:is(:hover, .tb-row-on) > td { background: color-mix(in srgb, var(--md-primary) 10%, transparent); }
+:root[data-desktop="macos"] .tb-mgmt-table .tb-mgmt-name { gap: 8px; }
+:root[data-desktop="macos"] .tb-mgmt-table .tb-mgmt-name .tb-section-icon { width: 18px; height: 18px; background: transparent; box-shadow: none; font-size: 13px; color: var(--md-primary); }
+:root[data-desktop="macos"] .tb-mgmt-table .tb-mgmt-name-text { flex-direction: row; flex-wrap: nowrap; align-items: baseline; gap: 8px; }
+:root[data-desktop="macos"] .tb-mgmt-table .tb-mgmt-name-text strong { font-size: 12.5px; font-weight: 500; white-space: nowrap; }
+:root[data-desktop="macos"] .tb-mgmt-table .tb-mgmt-name-text .tb-muted { overflow: hidden; font-size: 11px; white-space: nowrap; text-overflow: ellipsis; }
+:root[data-desktop="macos"] .tb-mgmt-table :is(.tb-tag, .tb-state) { height: 18px; min-height: 0; padding: 0 6px; gap: 4px; font-size: 10.5px; line-height: 16px; }
+:root[data-desktop="macos"] .tb-mgmt-table .tb-state::before { width: 6px; height: 6px; }
+:root[data-desktop="macos"] .tb-mgmt-table button.tb-sp { min-height: 0; padding-block: 2px; }
+:root[data-desktop="macos"] .tb-mgmt-table button.tb-mgmt-devices { padding: 0 4px; font-size: 11px; line-height: 18px; }
+:root[data-desktop="macos"] .tb-mgmt-table .tb-col-actions .tb-btn { width: 24px; min-width: 24px; height: 24px; min-height: 24px; padding: 0; }
+:root[data-desktop="macos"] .tb-mgmt-table input[type="checkbox"] { width: 14px; height: 14px; }
+:root[data-desktop="macos"] .tb-mgmt-tip { display: none; }
