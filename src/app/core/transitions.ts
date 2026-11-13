@@ -74,10 +74,14 @@ export class TransitionsService {
   /**
    * Safari and every browser of iOS: pictures of the glass (backdrop-filter) come out blurred.
    * The colour of the page then changes without pictures: the background glides to the new
-   * colour (tokens.css, body::before), the rest of the palette follows at once.
+   * colour (tokens.css, body::before), the rest of the palette follows at once. Not the macOS
+   * app: nothing of glass moves in its pages (platforms/macos/ios-look.css), the palette fades
+   * with the rest (its colours popped otherwise).
    */
   private readonly webkit =
-    /AppleWebKit/.test(navigator.userAgent) && !/Chrome\/|Chromium|Edg\//.test(navigator.userAgent);
+    /AppleWebKit/.test(navigator.userAgent) &&
+    !/Chrome\/|Chromium|Edg\//.test(navigator.userAgent) &&
+    this.root.dataset['desktop'] !== 'macos';
   /** The new page is not in place yet: a colour asked now goes with it. */
   private beforeUpdate = false;
   private timer?: ReturnType<typeof setTimeout>;
@@ -95,6 +99,8 @@ export class TransitionsService {
    * gesture of Android): no second animation on top of it.
    */
   private byBrowser = false;
+  /** The next page change without motion ([quietNext]). */
+  private quietOnce = false;
   /** What to do on the new page before its picture is taken (names, colour, scroll…). */
   private onNewPage: (() => void) | null = null;
   private pending: (() => void)[] = [];
@@ -187,8 +193,9 @@ export class TransitionsService {
 
   /** Called by the router for each page change (app.config.ts). */
   onTransition({ transition, from, to }: ViewTransitionInfo): void {
-    const byBrowser = this.byBrowser;
+    const byBrowser = this.byBrowser || this.quietOnce;
     this.byBrowser = false;
+    this.quietOnce = false;
     if (this.prefs.reducedMotion() || byBrowser) {
       transition.skipTransition();
       return;
@@ -254,6 +261,19 @@ export class TransitionsService {
         this.root.classList.remove('tb-vt-in', 'tb-card-morph', 'tb-card-full', 'tb-vt-flight');
         if (this.tonePending) this.fade();
       });
+  }
+
+  /**
+   * The page transition under way, if any: a platform may drive it (the swipe of the trackpad of
+   * the macOS app plays the card morph as far as the fingers went).
+   */
+  ongoing(): ViewTransition | null {
+    return this.current;
+  }
+
+  /** The next page change shows no motion (it puts back what a gesture showed already). */
+  quietNext(): void {
+    this.quietOnce = true;
   }
 
   /**

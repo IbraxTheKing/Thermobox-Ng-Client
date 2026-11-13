@@ -22,16 +22,17 @@
     --tb-figure-weight: 500;
     --tb-title-weight: 700;
 
-    /* The unified toolbar: the traffic lights in its middle (tauri.macos.conf.json, x 20 y 26) */
-    --tb-chrome-top: 52px;
-    --mac-toolbar: 52px;
+    /* The unified toolbar: the traffic lights in its middle (tauri.macos.conf.json, x 20 y 26;
+       where AppKit really drew them: --mac-lights-middle, target.ts) */
+    --mac-toolbar: calc(2 * var(--mac-lights-middle, 26px));
+    --tb-chrome-top: var(--mac-toolbar);
     /* The side bar: its width, its inset from the edges of the window (Tahoe: it floats) */
     --mac-sidebar: 220px;
     --mac-inset: 0px;
     --mac-panel-radius: 0px;
     /* The corners of the window */
     --mac-corner: 10px;
-    /* After the traffic lights (20 + 3 × 14 + 2 × 6 ≈ 74 px) */
+    /* After the traffic lights (20 + 3 × 14 + 2 × 6 ≈ 74 px; measured: target.ts) */
     --mac-after-lights: 84px;
 
     --mac-radius-control: 6px;
@@ -222,7 +223,14 @@ html:root[data-desktop="macos"][data-sidebar="collapsed"] { --tb-rail: 0px; }
     border-radius: var(--mac-corner);
     pointer-events: none;
 }
-/* The hole of the side bar: its shadow, as large as the window, is the page */
+/* The hole of the side bar: its shadow, as large as the window, is the page. The colour of the
+   page fades there only (a room, « Maison »: no colour popping in a swipe or a quick switch), a
+   property of this one element, not of the whole document. */
+@property --mac-paint {
+    syntax: '<color>';
+    inherits: false;
+    initial-value: transparent;
+}
 .tb-mac-hole {
     --mac-paint: var(--tb-tint-page, var(--tb-background));
     position: absolute;
@@ -232,8 +240,9 @@ html:root[data-desktop="macos"][data-sidebar="collapsed"] { --tb-rail: 0px; }
     width: var(--mac-sidebar);
     border-radius: var(--mac-panel-radius);
     box-shadow: 0 0 0 200vmax var(--mac-paint);
-    transition: box-shadow .8s ease;
+    transition: --mac-paint .6s ease;
 }
+@media (prefers-reduced-motion: reduce) { .tb-mac-hole { transition: none; } }
 :root[data-desktop="macos"]:is([data-tint="off"], [data-style="panel"]) .tb-mac-hole { --mac-paint: var(--tb-background); }
 :root[data-desktop="macos"][data-sidebar="collapsed"] .tb-mac-hole { width: 0; box-shadow: 0 0 0 200vmax var(--mac-paint); left: -10px; }
 @media (max-width: 840px) {
@@ -636,11 +645,6 @@ html:root[data-desktop="macos"][data-sidebar="collapsed"] { --tb-rail: 0px; }
 .tb-mac-title.tb-mac-title-on { opacity: 1; }
 /* The login pages: the window has no title */
 .tb-mac-toolbar:not(.tb-mac-in-app) .tb-mac-title { display: none; }
-/* The settings window: its title in the middle, as the settings windows of the system */
-:root[data-desktop-window="settings"] .tb-mac-toolbar { justify-content: center; padding: 0 var(--mac-after-lights); }
-:root[data-desktop-window="settings"] .tb-mac-toolbar .tb-mac-title { display: block; font-size: 13px; }
-:root[data-desktop-window="settings"] { --mac-toolbar: 38px; --tb-chrome-top: 38px; }
-:root[data-desktop-window="settings"] body .tb-main.tb-standalone-window { padding-top: 8px; }
 /* The window in the background: its title and its buttons fade */
 .tb-mac-inactive :is(.tb-mac-title, .tb-mac-btn), .tb-mac-btn.tb-mac-inactive { opacity: .45; }
 .tb-mac-inactive .tb-mac-title:not(.tb-mac-title-on) { opacity: 0; }
@@ -718,8 +722,6 @@ html:root[data-desktop="macos"][data-sidebar="collapsed"] { --tb-rail: 0px; }
     background: linear-gradient(var(--tb-tint-page, var(--tb-background)) 40%, transparent);
     -webkit-mask-image: linear-gradient(#000 55%, transparent);
     mask-image: linear-gradient(#000 55%, transparent);
-    -webkit-backdrop-filter: blur(6px);
-    backdrop-filter: blur(6px);
     opacity: 0;
     transition: opacity .2s linear;
     pointer-events: none;
@@ -737,5 +739,276 @@ html:root[data-desktop="macos"][data-sidebar="collapsed"] { --tb-rail: 0px; }
 :root[data-desktop="macos"] .tb-topbar { padding-left: 84px; }
 /* Anchors and focused fields scroll to below the toolbar */
 :root[data-desktop="macos"] { scroll-padding-top: calc(var(--mac-toolbar) + 8px); }
-/* The guard of pull to refresh: the rubber band of macOS instead */
-html[data-desktop="macos"].tb-pull-page { overscroll-behavior-y: auto; }
+/* The page does not stretch past its ends: the rubber band of WebKit would take the whole window
+   with it, toolbar and side bar (they are the page's). Horizontally it stays, for the swipe of
+   the trackpad between pages (main.rs). */
+html[data-desktop="macos"], html[data-desktop="macos"] body,
+html[data-desktop="macos"].tb-pull-page { overscroll-behavior-y: none; }
+
+/* ============================== The settings window (Safari, Mail, Finder: tabs in the toolbar)
+
+   The name of the tab in the title bar, centred on the traffic lights; under it a row of tabs, an
+   icon over a label, the one shown in the accent colour on a soft rounded ground (a capsule of
+   glass on macOS 26). One group of Préférences at a time, without its heading (the title says
+   it); the window is as tall as it (settings-tabs.ts). */
+
+:root[data-desktop-window="settings"] {
+    --mac-settings-title: calc(2 * var(--mac-lights-middle, 14px));
+    --mac-toolbar: calc(var(--mac-settings-title) + 58px);
+    --tb-chrome-top: var(--mac-toolbar);
+}
+:root[data-desktop-window="settings"] .tb-mac-toolbar {
+    left: 0;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 0;
+    padding: 0;
+    background: color-mix(in srgb, var(--tb-background) 72%, transparent);
+    box-shadow: 0 .5px 0 var(--mac-separator);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    backdrop-filter: blur(20px) saturate(180%);
+}
+:root[data-desktop-window="settings"][data-theme="dark"] .tb-mac-toolbar { box-shadow: 0 1px 0 rgb(0 0 0 / .5); }
+:root[data-desktop-window="settings"][data-mac="tahoe"] .tb-mac-toolbar::before { display: none; }
+.tb-mac-settings { display: flex; flex-direction: column; align-items: stretch; }
+.tb-mac-settings-title {
+    height: var(--mac-settings-title);
+    padding: 0 var(--mac-after-lights);
+    overflow: hidden;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: var(--mac-settings-title);
+    text-align: center;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+.tb-mac-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 2px;
+    height: 58px;
+    padding: 2px 12px 6px;
+}
+.tb-mac-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-width: 64px;
+    padding: 4px 8px;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--mac-secondary);
+    font: inherit;
+    font-size: 11px;
+    line-height: 13px;
+    white-space: nowrap;
+    transition: background-color .12s linear, color .12s linear;
+}
+.tb-mac-tab .pi { font-size: 21px; line-height: 24px; }
+.tb-mac-tab:hover { color: var(--mac-label); }
+.tb-mac-tab:active { background: var(--mac-press); }
+.tb-mac-tab.tb-mac-tab-on { background: var(--mac-fill-strong); color: var(--md-primary); }
+.tb-mac-inactive .tb-mac-tab.tb-mac-tab-on { color: var(--mac-label); }
+:root[data-mac="tahoe"] .tb-mac-tab { border-radius: 14px; }
+:root[data-mac="tahoe"] .tb-mac-tab.tb-mac-tab-on {
+    background: var(--mac-glass);
+    box-shadow: var(--mac-glass-edge);
+}
+/* The page: one group, no heading of the page nor of the group (the title bar says it) */
+:root[data-desktop-window="settings"] body .tb-main.tb-standalone-window { padding-top: 20px; padding-bottom: 0; min-height: 0; }
+:root[data-desktop-window="settings"][data-settings-tab] :is(.tb-page-head, .tb-pref-heading) { display: none; }
+:root[data-desktop-window="settings"][data-settings-tab] .tb-pref-group:not(.tb-mac-tab-shown) { display: none; }
+:root[data-desktop-window="settings"] .tb-narrow { padding-bottom: 0; }
+
+/* ============================== The swipe of the trackpad (swipe.ts)
+
+   The room page put back over the window while the router goes forward again (a gesture
+   undone): over the content, under the toolbar. */
+
+.tb-mac-shot {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2900;
+    overflow: hidden;
+    background: var(--tb-tint-page, var(--tb-background));
+    pointer-events: none;
+}
+
+/* ============================== Sheets and dialogs: their close button on the left, as the
+   traffic lights of the windows of macOS */
+
+:root[data-desktop="macos"] .tb-dialog-head { padding-left: 14px; padding-right: 24px; }
+:root[data-desktop="macos"] .tb-dialog-head .tb-dialog-close { order: -1; }
+
+/* ============================== The About window (index.html?view=about)
+
+   Small, of its own, drawn as Thermobox: the logo in large over the light of the brand, the name
+   and the version, then the versions, the code and the credits in compact rows. */
+
+:root[data-desktop-window="about"] {
+    --mac-toolbar: calc(2 * var(--mac-lights-middle, 14px));
+    --tb-chrome-top: var(--mac-toolbar);
+}
+:root[data-desktop-window="about"] body {
+    background:
+        radial-gradient(90% 40% at 50% 0%, color-mix(in srgb, var(--md-primary) 30%, transparent), transparent 75%),
+        radial-gradient(70% 35% at 0% 20%, rgb(255 255 255 / .55), transparent 70%),
+        var(--tb-background);
+}
+:root[data-desktop-window="about"][data-theme="dark"] body {
+    background:
+        radial-gradient(90% 40% at 50% 0%, color-mix(in srgb, var(--md-primary) 34%, transparent), transparent 75%),
+        var(--tb-background);
+}
+:root[data-desktop-window="about"] .tb-mac-toolbar { background: transparent; box-shadow: none; }
+:root[data-desktop-window="about"] :is(.tb-standalone-back, .tb-page-head) { display: none; }
+:root[data-desktop-window="about"] body .tb-main.tb-standalone { padding: 0 20px 20px; min-height: 0; }
+:root[data-desktop-window="about"] .tb-narrow { max-width: none; padding: 0; }
+:root[data-desktop-window="about"] .tb-about-mark { flex-direction: column; gap: 10px; margin: 6px 0 22px; text-align: center; }
+:root[data-desktop-window="about"] .tb-about-mark > div { align-items: center; gap: 3px; }
+:root[data-desktop-window="about"] .tb-about-mark .tb-logo-xl {
+    width: 96px;
+    height: 96px;
+    border-radius: 23%;
+    background: linear-gradient(150deg, color-mix(in srgb, var(--md-primary) 62%, #ffffff), var(--md-primary) 70%);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / .45), 0 12px 26px color-mix(in srgb, var(--md-primary) 32%, transparent);
+}
+/* The mark of the app icon: white on the tile of the brand */
+:root[data-desktop-window="about"] .tb-about-mark .tb-logo-xl::after { inset: 20%; background: #ffffff; }
+:root[data-desktop-window="about"] .tb-about-mark strong { font-family: var(--tb-font-figures); font-size: 24px; font-weight: 750; letter-spacing: -.01em; }
+:root[data-desktop-window="about"] .tb-about-mark .tb-muted { font-size: 12px; }
+:root[data-desktop-window="about"] .tb-about-pill {
+    margin-top: 6px;
+    padding: 2px 10px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--md-primary) 16%, transparent);
+    color: var(--md-primary);
+    font-size: 12px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+:root[data-desktop-window="about"] .tb-list-title { margin: 16px 4px 6px; font-size: 11px; font-weight: 600; color: var(--mac-secondary); }
+:root[data-desktop-window="about"] .tb-list-row { min-height: 0; padding: 7px 12px; gap: 10px; }
+:root[data-desktop-window="about"] .tb-list-row strong { font-size: 13px; font-weight: 500; }
+:root[data-desktop-window="about"] .tb-list-row .tb-muted { font-size: 11px; }
+:root[data-desktop-window="about"] .tb-list-icon { width: 26px; height: 26px; font-size: 13px; }
+:root[data-desktop-window="about"] .tb-list-compact { padding-block: 5px; }
+:root[data-desktop-window="about"] .tb-about-version { padding: 2px 8px; font-size: 11px; }
+:root[data-desktop-window="about"] .tb-about-license { margin: 16px 0 0; font-size: 11px; }
+
+/* ============================== The settings window: compact, as the settings of the system */
+
+:root[data-desktop-window="settings"] .tb-pref { gap: 12px; padding-block: 10px; }
+:root[data-desktop-window="settings"] .tb-pref-text strong { font-size: 13px; font-weight: 500; }
+:root[data-desktop-window="settings"] .tb-pref-text .tb-muted { font-size: 11px; line-height: 1.35; }
+:root[data-desktop-window="settings"] .tb-pref .tb-section-icon { width: 26px; height: 26px; font-size: 13px; }
+:root[data-desktop-window="settings"] .tb-panel.tb-pref-group { padding: 4px 16px; }
+:root[data-desktop-window="settings"] .tb-pref-group + .tb-pref-group { margin-top: 12px; }
+:root[data-desktop-window="settings"] .tb-pref-scope { margin: 10px 4px 0; font-size: 11px; }
+:root[data-desktop-window="settings"] body .tb-main.tb-standalone-window { padding-left: 20px; padding-right: 20px; }
+
+/* ============================== Gestion: a list as Finder's, one line per item
+
+   The name then where it is, in grey, on one line of about 30 points; every other line lightly
+   striped; small icons in the accent colour, small tags; the tip is left out. */
+
+:root[data-desktop="macos"] body .tb-mgmt-table :is(th, td) { padding: 2px 10px; border-bottom: 0; }
+:root[data-desktop="macos"] body .tb-mgmt-table td { height: 30px; font-size: 12px; }
+:root[data-desktop="macos"] body .tb-mgmt-table th { height: 26px; border-bottom: .5px solid var(--mac-separator); }
+:root[data-desktop="macos"] body .tb-mgmt-table tbody tr:nth-child(even) > td { background: color-mix(in srgb, var(--md-on-surface) 3.5%, transparent); }
+:root[data-desktop="macos"] body .tb-mgmt-table tbody tr:is(:hover, .tb-row-on) > td { background: color-mix(in srgb, var(--md-primary) 10%, transparent); }
+:root[data-desktop="macos"] .tb-mgmt-table .tb-mgmt-name { gap: 8px; }
+:root[data-desktop="macos"] .tb-mgmt-table .tb-mgmt-name .tb-section-icon { width: 18px; height: 18px; background: transparent; box-shadow: none; font-size: 13px; color: var(--md-primary); }
+:root[data-desktop="macos"] .tb-mgmt-table .tb-mgmt-name-text { flex-direction: row; flex-wrap: nowrap; align-items: baseline; gap: 8px; }
+:root[data-desktop="macos"] .tb-mgmt-table .tb-mgmt-name-text strong { font-size: 12.5px; font-weight: 500; white-space: nowrap; }
+:root[data-desktop="macos"] .tb-mgmt-table .tb-mgmt-name-text .tb-muted { overflow: hidden; font-size: 11px; white-space: nowrap; text-overflow: ellipsis; }
+:root[data-desktop="macos"] .tb-mgmt-table :is(.tb-tag, .tb-state) { height: 18px; min-height: 0; padding: 0 6px; gap: 4px; font-size: 10.5px; line-height: 16px; }
+:root[data-desktop="macos"] .tb-mgmt-table .tb-state::before { width: 6px; height: 6px; }
+:root[data-desktop="macos"] .tb-mgmt-table button.tb-sp { min-height: 0; padding-block: 2px; }
+:root[data-desktop="macos"] .tb-mgmt-table button.tb-mgmt-devices { padding: 0 4px; font-size: 11px; line-height: 18px; }
+:root[data-desktop="macos"] .tb-mgmt-table .tb-col-actions .tb-btn { width: 24px; min-width: 24px; height: 24px; min-height: 24px; padding: 0; }
+:root[data-desktop="macos"] .tb-mgmt-table input[type="checkbox"] { width: 14px; height: 14px; }
+:root[data-desktop="macos"] .tb-mgmt-tip { display: none; }
+
+/* ============================== The toolbar: a band of glass, always
+
+   Over the whole width of the content, at the top of the page too: the colour of the page seen
+   through a blur, a hairline under it. Without it the dark pages showed a hole there. Its colour
+   fades with the page's (a registered property of this element only). */
+
+@property --mac-band {
+    syntax: '<color>';
+    inherits: false;
+    initial-value: transparent;
+}
+:root[data-desktop="macos"]:not([data-desktop-window]) .tb-mac-toolbar {
+    --mac-band: color-mix(in srgb, var(--tb-tint-page, var(--tb-background)) 74%, transparent);
+    background: var(--mac-band);
+    box-shadow: 0 .5px 0 var(--mac-separator);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    backdrop-filter: blur(24px) saturate(180%);
+    transition: left .25s cubic-bezier(.3, 0, .2, 1), padding .25s cubic-bezier(.3, 0, .2, 1), --mac-band .6s ease;
+}
+:root[data-desktop="macos"]:not([data-desktop-window]):is([data-tint="off"], [data-style="panel"]) .tb-mac-toolbar {
+    --mac-band: color-mix(in srgb, var(--tb-background) 74%, transparent);
+}
+:root[data-desktop="macos"][data-theme="dark"]:not([data-desktop-window]) .tb-mac-toolbar { box-shadow: 0 1px 0 rgb(0 0 0 / .45); }
+:root[data-mac="tahoe"]:not([data-desktop-window]) .tb-mac-toolbar::before { display: none; }
+@media (prefers-reduced-motion: reduce) {
+    :root[data-desktop="macos"] .tb-mac-toolbar { transition: none; }
+}
+
+/* ============================== Sliders (NSSlider of macOS 26)
+
+   A thin track, filled in the accent colour up to the knob (--p, desktop.service.ts); the knob a
+   capsule of glass, that swells and clears while it is held. The handles of the scale of
+   « Maison » keep their own look. */
+
+:root[data-desktop="macos"] input[type="range"]:not(.tb-scale-handle) {
+    --p: 50%;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 22px;
+    margin: 0;
+    background: transparent;
+    accent-color: auto;
+}
+:root[data-desktop="macos"] input[type="range"]:not(.tb-scale-handle)::-webkit-slider-runnable-track {
+    height: 4px;
+    border-radius: 999px;
+    background: linear-gradient(to right, var(--md-primary) var(--p), var(--mac-fill-strong) var(--p));
+}
+:root[data-desktop="macos"] input[type="range"]:not(.tb-scale-handle)::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 26px;
+    height: 16px;
+    margin-top: -6px;
+    border: 0;
+    border-radius: 999px;
+    background: #ffffff;
+    box-shadow: 0 0 0 .5px rgb(0 0 0 / .12), 0 2px 6px rgb(0 0 0 / .2), inset 0 1px 0 rgb(255 255 255 / .9);
+    transition: transform .22s cubic-bezier(.3, 1.4, .5, 1), background-color .18s linear, box-shadow .18s linear;
+}
+:root[data-desktop="macos"] input[type="range"]:not(.tb-scale-handle):active::-webkit-slider-thumb {
+    transform: scale(1.3);
+    background: rgb(255 255 255 / .5);
+    box-shadow: inset 0 0 0 .5px rgb(255 255 255 / .9), inset 0 1px 1px rgb(255 255 255 / .8), 0 4px 12px rgb(0 0 0 / .22);
+}
+:root[data-desktop="macos"][data-theme="dark"] input[type="range"]:not(.tb-scale-handle)::-webkit-slider-thumb { background: #ececf0; }
+:root[data-desktop="macos"][data-theme="dark"] input[type="range"]:not(.tb-scale-handle):active::-webkit-slider-thumb { background: rgb(236 236 240 / .45); }
+:root[data-desktop="macos"] input[type="range"]:not(.tb-scale-handle):focus-visible { outline: none; }
+:root[data-desktop="macos"] input[type="range"]:not(.tb-scale-handle):focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px var(--mac-focus), 0 2px 6px rgb(0 0 0 / .2); }
+
+/* ============================== Quick to answer: a page shows at once
+
+   Its parts glide in over a quarter of a second, together (no cascade of 1.6 s that made the
+   window feel slow to answer); the curves are drawn at once (target.ts, chartsAnimate). */
+
+:root[data-desktop="macos"].tb-entering .tb-main * { animation-delay: 0s !important; animation-duration: .26s !important; }
